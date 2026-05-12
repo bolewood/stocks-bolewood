@@ -155,6 +155,9 @@ export default function VCXNAVFinder() {
 
   // Viewport meta is handled by Next.js layout viewport export
 
+  // Track which preset scenario is active (null = custom/manual edits)
+  const [activeScenario, setActiveScenario] = useState("mark");
+
   // Initialize PPS at the 12/31/25 marks
   const [ppsOverrides, setPpsOverrides] = useState(
     SHARE_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: p.mark_pps_1231 }), {})
@@ -173,14 +176,28 @@ export default function VCXNAVFinder() {
 
   const updatePPS = (name, val) => {
     setPpsOverrides((prev) => ({ ...prev, [name]: val }));
+    setActiveScenario(null); // manual edit clears active scenario
   };
 
   const updateDollarMOIC = (name, val) => {
     setDollarMOICs((prev) => ({ ...prev, [name]: val }));
+    setActiveScenario(null);
   };
 
   const updateOtherMOIC = (name, val) => {
     setOtherMOICs((prev) => ({ ...prev, [name]: val }));
+    setActiveScenario(null);
+  };
+
+  // Update URL when scenario changes (without triggering navigation)
+  const updateURL = (scenarioKey) => {
+    const url = new URL(window.location);
+    if (scenarioKey && scenarioKey !== "mark") {
+      url.searchParams.set("scenario", scenarioKey);
+    } else {
+      url.searchParams.delete("scenario");
+    }
+    window.history.replaceState({}, "", url);
   };
 
   const resetToMark = () => {
@@ -189,9 +206,11 @@ export default function VCXNAVFinder() {
     );
     setDollarMOICs(DOLLAR_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
     setOtherMOICs(OTHER_HOLDINGS.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
+    setActiveScenario("mark");
+    updateURL("mark");
   };
 
-  const setAggressiveMay2026 = () => {
+  const applyAggressive = () => {
     setPpsOverrides({
       "Anthropic": 1400,
       "Databricks": 220,
@@ -217,9 +236,11 @@ export default function VCXNAVFinder() {
     });
     // Other holdings stay at 1.0x — these are mostly cash, fixed income, and small PE
     setOtherMOICs(OTHER_HOLDINGS.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
+    setActiveScenario("aggressive");
+    updateURL("aggressive");
   };
 
-  const setDreamScenario = () => {
+  const applyDream = () => {
     // Everything 2x from Aggressive scenario
     setPpsOverrides({
       "Anthropic": 2800,
@@ -245,7 +266,22 @@ export default function VCXNAVFinder() {
       "Visual Layer (SAFE)": 4.0,
     });
     setOtherMOICs(OTHER_HOLDINGS.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
+    setActiveScenario("dream");
+    updateURL("dream");
   };
+
+  // Read scenario from URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const scenario = params.get("scenario");
+    if (scenario === "aggressive") {
+      applyAggressive();
+    } else if (scenario === "dream") {
+      applyDream();
+    }
+    // "mark" is the default, no action needed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const calc = useMemo(() => {
     const shareRows = SHARE_DENOMINATED.map((p) => {
@@ -338,15 +374,31 @@ export default function VCXNAVFinder() {
           />
         </div>
         <div style={styles.controlGroup}>
-          <button onClick={resetToMark} style={styles.presetBtn} className="preset-btn vcx-preset-btn">
-            Reset to 12/31/25 mark
-          </button>
-          <button onClick={setAggressiveMay2026} style={styles.presetBtn} className="preset-btn vcx-preset-btn">
-            Aggressive Markup — May 2026
-          </button>
-          <button onClick={setDreamScenario} style={{ ...styles.presetBtn, borderColor: "#d97706", color: "#d97706" }} className="preset-btn vcx-preset-btn">
-            Dream Scenario (2x Aggressive)
-          </button>
+          {[
+            { key: "mark", label: "12/31/25 Mark", handler: resetToMark },
+            { key: "aggressive", label: "Aggressive — May 2026", handler: applyAggressive },
+            { key: "dream", label: "Dream Scenario (2×)", handler: applyDream },
+          ].map(({ key, label, handler }) => {
+            const isActive = activeScenario === key;
+            return (
+              <button
+                key={key}
+                onClick={handler}
+                style={{
+                  ...styles.presetBtn,
+                  ...(isActive ? styles.presetBtnActive : {}),
+                  ...(key === "dream" && !isActive ? { borderColor: "#d97706", color: "#d97706" } : {}),
+                }}
+                className="preset-btn vcx-preset-btn"
+              >
+                {isActive && <span style={styles.activeDot} />}
+                {label}
+              </button>
+            );
+          })}
+          {activeScenario === null && (
+            <span style={styles.customLabel}>Custom</span>
+          )}
         </div>
       </div>
 
@@ -748,12 +800,39 @@ const styles = {
     letterSpacing: "0.08em",
     textTransform: "uppercase",
     background: "#fefdf8",
-    color: "#1c1917",
-    border: "1px solid #1c1917",
+    color: "#78716c",
+    border: "1px solid #d6d3d1",
     padding: "10px 16px",
     cursor: "pointer",
     fontWeight: 500,
     borderRadius: 0,
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    transition: "all 0.15s ease",
+  },
+  presetBtnActive: {
+    background: "#1c1917",
+    color: "#fef3c7",
+    border: "1px solid #1c1917",
+    fontWeight: 700,
+  },
+  activeDot: {
+    width: "6px",
+    height: "6px",
+    borderRadius: "50%",
+    background: "#d97706",
+    flexShrink: 0,
+  },
+  customLabel: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: "10px",
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    color: "#d97706",
+    fontWeight: 600,
+    fontStyle: "italic",
+    padding: "10px 0",
   },
   section: {
     marginBottom: "40px",
