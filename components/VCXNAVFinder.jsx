@@ -591,7 +591,6 @@ export default function VCXNAVFinder() {
         <div>• Supply mechanics: Daily public-market sales since the NYSE listing are largely attributable to Fundrise Real Estate Interval Fund's wholly-owned subsidiary (Tech Infrastructure REIT) liquidating shares it acquired in a February 24, 2026 registered offering. This is affiliate redistribution under Rule 144, not primary issuance by VCX.</div>
         <div>• Secondary-market price-per-share inputs: User-supplied, with defaults from Fundrise's 12/31/25 marks. Recommended sources for current pricing include Hiive, Caplight, Notice, and Forge Global.</div>
         <div>• NYSE listing: VCX began trading on the New York Stock Exchange on March 19, 2026.</div>
-        <div style={{ marginTop: 10, fontStyle: "italic" }}>This tool is for informational and educational purposes only. It does not constitute investment advice, an offer to buy or sell securities, or a recommendation of any kind. Marks are estimates based on publicly disclosed share counts; SPV positions and certain convertible/SAFE holdings cannot be cleanly marked to a price-per-share. The author makes no warranty as to the accuracy of any figures shown. Do your own work.</div>
       </div>
     </div>
   );
