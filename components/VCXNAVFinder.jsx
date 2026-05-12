@@ -376,6 +376,7 @@ export default function VCXNAVFinder() {
             <div style={{ ...styles.th, flex: "1.4", textAlign: "right" }}>Your PPS ($)</div>
             <div style={{ ...styles.th, flex: "1.4", textAlign: "right" }}>Position Value</div>
             <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>$/VCX share</div>
+            <div style={{ ...styles.th, flex: "1.0", textAlign: "right" }}>¢ per $1</div>
           </div>
 
           {calc.shareRows.map((r) => {
@@ -410,6 +411,9 @@ export default function VCXNAVFinder() {
                 <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "#d97706", fontWeight: 600 }} data-label="$/VCX share">
                   ${r.navPerVcxShare.toFixed(2)}
                 </div>
+                <div style={{ ...styles.td, flex: "1.0", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "#1c1917", fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", fontSize: "12px" }} data-label="¢ per $1">
+                  {vcxPrice > 0 ? (r.navPerVcxShare / vcxPrice * 100).toFixed(1) + "¢" : "—"}
+                </div>
               </div>
             );
           })}
@@ -421,6 +425,9 @@ export default function VCXNAVFinder() {
             <div style={{ flex: "1.4", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{fmt$(calc.shareTotal)}</div>
             <div style={{ flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
               ${(calc.shareTotal / (vcxShares * 1_000_000)).toFixed(2)}
+            </div>
+            <div style={{ flex: "1.0", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+              {vcxPrice > 0 ? ((calc.shareTotal / (vcxShares * 1_000_000)) / vcxPrice * 100).toFixed(1) + "¢" : "—"}
             </div>
           </div>
         </div>
@@ -441,6 +448,7 @@ export default function VCXNAVFinder() {
             <div style={{ ...styles.th, flex: "1.0", textAlign: "right" }}>MOIC</div>
             <div style={{ ...styles.th, flex: "1.4", textAlign: "right" }}>Position Value</div>
             <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>$/VCX share</div>
+            <div style={{ ...styles.th, flex: "1.0", textAlign: "right" }}>¢ per $1</div>
           </div>
           {calc.dollarRows.map((r) => (
             <div key={r.name} style={styles.tr} className="vcx-row">
@@ -467,6 +475,9 @@ export default function VCXNAVFinder() {
               <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "#d97706", fontWeight: 600 }} data-label="$/VCX share">
                 ${r.navPerVcxShare.toFixed(2)}
               </div>
+              <div style={{ ...styles.td, flex: "1.0", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "#1c1917", fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", fontSize: "12px" }} data-label="¢ per $1">
+                {vcxPrice > 0 ? (r.navPerVcxShare / vcxPrice * 100).toFixed(1) + "¢" : "—"}
+              </div>
             </div>
           ))}
           <div style={styles.subtotalRow} className="vcx-subtotal">
@@ -476,6 +487,9 @@ export default function VCXNAVFinder() {
             <div style={{ flex: "1.4", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{fmt$(calc.dollarTotal)}</div>
             <div style={{ flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
               ${(calc.dollarTotal / (vcxShares * 1_000_000)).toFixed(2)}
+            </div>
+            <div style={{ flex: "1.0", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+              {vcxPrice > 0 ? ((calc.dollarTotal / (vcxShares * 1_000_000)) / vcxPrice * 100).toFixed(1) + "¢" : "—"}
             </div>
           </div>
         </div>
@@ -498,6 +512,7 @@ export default function VCXNAVFinder() {
             <div style={{ ...styles.th, flex: "1.0", textAlign: "right" }}>MOIC</div>
             <div style={{ ...styles.th, flex: "1.4", textAlign: "right" }}>Position Value</div>
             <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>$/VCX share</div>
+            <div style={{ ...styles.th, flex: "1.0", textAlign: "right" }}>¢ per $1</div>
           </div>
           {calc.otherRows.map((r) => {
             const isIssuance = r.moic === undefined;
@@ -530,6 +545,9 @@ export default function VCXNAVFinder() {
                 <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums", color: r.positionValue < 0 ? "#b91c1c" : "#d97706", fontWeight: 600 }} data-label="$/VCX share">
                   ${r.navPerVcxShare.toFixed(2)}
                 </div>
+                <div style={{ ...styles.td, flex: "1.0", textAlign: "right", fontVariantNumeric: "tabular-nums", color: r.positionValue < 0 ? "#b91c1c" : "#1c1917", fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", fontSize: "12px" }} data-label="¢ per $1">
+                  {vcxPrice > 0 ? (r.navPerVcxShare / vcxPrice * 100).toFixed(1) + "¢" : "—"}
+                </div>
               </div>
             );
           })}
@@ -540,6 +558,9 @@ export default function VCXNAVFinder() {
             <div style={{ flex: "1.4", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{fmt$(calc.otherTotal)}</div>
             <div style={{ flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
               ${(calc.otherTotal / (vcxShares * 1_000_000)).toFixed(2)}
+            </div>
+            <div style={{ flex: "1.0", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+              {vcxPrice > 0 ? ((calc.otherTotal / (vcxShares * 1_000_000)) / vcxPrice * 100).toFixed(1) + "¢" : "—"}
             </div>
           </div>
         </div>
