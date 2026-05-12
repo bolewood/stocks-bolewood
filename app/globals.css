@@ -205,4 +205,9 @@ a {
   .site-header-nav {
     gap: 16px !important;
   }
+
+  /* Hide sticky summary bar on mobile — too crowded */
+  .vcx-sticky-bar {
+    display: none !important;
+  }
 }

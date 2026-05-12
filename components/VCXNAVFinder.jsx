@@ -666,6 +666,38 @@ export default function VCXNAVFinder() {
         <div>• Secondary-market price-per-share inputs: User-supplied, with defaults from Fundrise's 12/31/25 marks. Recommended sources for current pricing include Hiive, Caplight, Notice, and Forge Global.</div>
         <div>• NYSE listing: VCX began trading on the New York Stock Exchange on March 19, 2026.</div>
       </div>
+
+      {/* STICKY SUMMARY BAR */}
+      <div style={styles.stickyBar} className="vcx-sticky-bar">
+        <div style={styles.stickyInner}>
+          <div style={styles.stickyMetric}>
+            <div style={styles.stickyLabel}>NAV / Share</div>
+            <div style={styles.stickyValueAccent}>${calc.navPerShare.toFixed(2)}</div>
+          </div>
+          <div style={styles.stickyDivider} />
+          <div style={styles.stickyMetric}>
+            <div style={styles.stickyLabel}>Premium</div>
+            <div style={{ ...styles.stickyValue, color: vcxPrice > calc.navPerShare ? "#fbbf24" : "#86efac" }}>
+              {((vcxPrice / calc.navPerShare - 1) * 100).toFixed(0)}%
+            </div>
+          </div>
+          <div style={styles.stickyDivider} />
+          <div style={styles.stickyMetric}>
+            <div style={styles.stickyLabel}>Price ÷ NAV</div>
+            <div style={styles.stickyValue}>{(vcxPrice / calc.navPerShare).toFixed(2)}x</div>
+          </div>
+          <div style={styles.stickyDivider} />
+          <div style={styles.stickyMetric}>
+            <div style={styles.stickyLabel}>Total NAV</div>
+            <div style={styles.stickyValue}>{fmt$(calc.totalNAV)}</div>
+          </div>
+          <div style={styles.stickyDivider} />
+          <div style={styles.stickyMetric}>
+            <div style={styles.stickyLabel}>VCX Price</div>
+            <div style={styles.stickyValue}>${vcxPrice.toFixed(0)}</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -676,7 +708,7 @@ const styles = {
     background: "#fefdf8",
     color: "#1c1917",
     minHeight: "100vh",
-    padding: "48px 56px",
+    padding: "48px 56px 80px 56px",
     maxWidth: "1180px",
     margin: "0 auto",
     boxSizing: "border-box",
@@ -1035,5 +1067,61 @@ const styles = {
     color: "#78716c",
     letterSpacing: "0.03em",
     lineHeight: 1.7,
+  },
+  stickyBar: {
+    position: "fixed",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    background: "#1c1917",
+    borderTop: "2px solid #d97706",
+    zIndex: 1000,
+    padding: "0 24px",
+  },
+  stickyInner: {
+    maxWidth: "1180px",
+    margin: "0 auto",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "0",
+    padding: "10px 0",
+  },
+  stickyMetric: {
+    padding: "0 24px",
+    textAlign: "center",
+    flexShrink: 0,
+  },
+  stickyLabel: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: "9px",
+    letterSpacing: "0.15em",
+    textTransform: "uppercase",
+    color: "#78716c",
+    fontWeight: 500,
+    marginBottom: "2px",
+  },
+  stickyValue: {
+    fontFamily: "'Fraunces', serif",
+    fontSize: "18px",
+    fontWeight: 700,
+    color: "#fef3c7",
+    fontVariantNumeric: "tabular-nums",
+    letterSpacing: "-0.01em",
+  },
+  stickyValueAccent: {
+    fontFamily: "'Fraunces', serif",
+    fontSize: "20px",
+    fontWeight: 800,
+    color: "#fbbf24",
+    fontStyle: "italic",
+    fontVariantNumeric: "tabular-nums",
+    letterSpacing: "-0.02em",
+  },
+  stickyDivider: {
+    width: "1px",
+    height: "28px",
+    background: "#44403c",
+    flexShrink: 0,
   },
 };
