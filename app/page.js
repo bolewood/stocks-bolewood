@@ -13,10 +13,10 @@ const tools = [
   },
   {
     slug: "/dxyz",
-    name: "DXYZ Dashboard",
-    status: "coming",
+    name: "DXYZ NAV Finder",
+    status: "live",
     description:
-      "Destiny Tech100 exposure analysis and scenario modeling.",
+      "Interactive calculator to estimate the real-time Net Asset Value of Destiny Tech100 (NYSE: DXYZ). Adjust underlying valuations and SPV multipliers to see implied premiums.",
     tag: "NYSE: DXYZ",
   },
   {
