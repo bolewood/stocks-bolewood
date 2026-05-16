@@ -21,11 +21,11 @@ const tools = [
   },
   {
     slug: "/bot",
-    name: "RoboStrategy",
-    status: "coming",
+    name: "BOT NAV Finder",
+    status: "live",
     description:
-      "Automated strategy backtesting for private-company wrapper trades.",
-    tag: "Strategy",
+      "Interactive calculator to estimate the Net Asset Value of RoboStrategy (NASDAQ: BOT). Mark private robotics shares (Apptronik, Figure AI) to market to determine the implied premium.",
+    tag: "NASDAQ: BOT",
   },
 ];
 

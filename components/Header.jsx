@@ -10,6 +10,7 @@ export default function Header() {
     { href: "/", label: "Home" },
     { href: "/vcx", label: "VCX" },
     { href: "/dxyz", label: "DXYZ" },
+    { href: "/bot", label: "BOT" },
     { href: "/about", label: "About" },
   ];
 
