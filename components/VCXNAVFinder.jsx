@@ -203,6 +203,28 @@ export default function VCXNAVFinder() {
     updateURL("dream");
   };
 
+  const applyNotice = () => {
+    resetToMark();
+    setDollarMOICs((prev) => ({
+      ...prev,
+      "Anthropic (co-investment vehicles)": 2.9,
+      "OpenAI (co-investment vehicles)": 1.9,
+    }));
+    setActiveScenario("notice");
+    updateURL("notice");
+  };
+
+  const applyVentuals = () => {
+    resetToMark();
+    setDollarMOICs((prev) => ({
+      ...prev,
+      "Anthropic (co-investment vehicles)": 4.0,
+      "OpenAI (co-investment vehicles)": 2.5,
+    }));
+    setActiveScenario("ventuals");
+    updateURL("ventuals");
+  };
+
   // Read scenario from URL on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -211,6 +233,10 @@ export default function VCXNAVFinder() {
       applyAggressive();
     } else if (scenario === "dream") {
       applyDream();
+    } else if (scenario === "notice") {
+      applyNotice();
+    } else if (scenario === "ventuals") {
+      applyVentuals();
     }
     // "mark" is the default, no action needed
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -310,6 +336,8 @@ export default function VCXNAVFinder() {
           {[
             { key: "mark", label: "3/31/26 Audited Marks (base case)", handler: resetToMark },
             { key: "aggressive", label: "Aggressive — May 2026", handler: applyAggressive },
+            { key: "notice", label: "Mark-to-Secondary (Notice)", handler: applyNotice, title: "Adjusts Anthropic & OpenAI only; other holdings stay at the 3/31 audited mark (no dated secondary source on file)." },
+            { key: "ventuals", label: "Derivative Ceiling (Ventuals)", handler: applyVentuals, title: "Adjusts Anthropic & OpenAI only; other holdings stay at the 3/31 audited mark (no dated secondary source on file)." },
             { key: "dream", label: "Dream Scenario (2×)", handler: applyDream },
           ].map(({ key, label, handler }) => {
             const isActive = activeScenario === key;
@@ -317,10 +345,12 @@ export default function VCXNAVFinder() {
               <button
                 key={key}
                 onClick={handler}
+                title={title || ""}
                 style={{
                   ...styles.presetBtn,
                   ...(isActive ? styles.presetBtnActive : {}),
                   ...(key === "dream" && !isActive ? { borderColor: "#d97706", color: "#d97706" } : {}),
+                  ...((key === "notice" || key === "ventuals") && !isActive ? { borderColor: "#3b82f6", color: "#3b82f6" } : {}),
                 }}
                 className="preset-btn vcx-preset-btn"
               >
@@ -479,7 +509,47 @@ export default function VCXNAVFinder() {
           </div>
         </div>
         <div style={styles.callout}>
-          These positions are held through SPVs, convertible rights, or SAFEs without a clean underlying share count disclosed in the filing, so you can't mark them with a price-per-share. Instead, apply a MOIC (multiple of invested capital) — 1.0x means the position is unchanged from the 3/31/26 audited mark; 2.0x means it has doubled in value. <strong>OpenAI:</strong> The 3/31 mark implied roughly $300B valuation; today's secondary market is around $500-700B, suggesting 1.7x-2.3x. <strong>Anduril:</strong> Marked at the Series F (2025).
+          <p style={{ marginTop: 0 }}><strong>How Fundrise set these 3/31 marks.</strong> These are Level 3 fair values determined by Fundrise Advisors (the Valuation Designee, under SEC Rule 2a-5) using the <strong>market approach</strong>, adjusted to each position's latest funding round. The audited report groups the $432.9M Level 3 book into two techniques: <strong>"Market Transaction"</strong> ($327.1M — marked to private transaction prices / non-public third-party pricing) and <strong>"Recent Transaction"</strong> ($105.8M — held at the original round or secondary entry price). Every CIV/SPV line shows <strong>N/A shares</strong>, so an exact implied company valuation cannot be computed from the filing. The figures below are our inference, triangulating the dated cost/value lots in the restricted-securities schedule against each company's last known primary round:</p>
+          <ul style={{ paddingLeft: "1.5rem", marginBottom: "1rem" }}>
+            <li><strong>Anthropic ≈ $350B.</strong> The freshest lot (acquired 2/10/26, cost $20.8M held at $20.0M — essentially flat) lines up with Anthropic's ~$350B round in Jan 2026; the older 12/23 and 8/25 lots carry the markup to that level (blended <strong>2.2× on $50.8M cost</strong>).</li>
+            <li><strong>OpenAI ≈ $450–500B.</strong> Reflects OpenAI's ~$500B primary round (Oct 2025). The 9/24 lot is up ~2.5× and the 12/23 lot ~3.7× on cost. <em>(This corrects a prior ~$300B figure — Fundrise's mark embeds the Oct-2025 round, not a 2024 valuation.)</em></li>
+            <li><strong>Databricks ≈ SPV NAV.</strong> Marked via the SPV's own reported NAV (practical expedient), not a look-through to Databricks shares.</li>
+            <li><strong>Anduril ≈ Series F (2025),</strong> ~5× on the 2023 cost basis.</li>
+          </ul>
+          <p><strong>Where secondary venues currently price the two megacaps</strong> (used by the Mark-to-Secondary and Derivative-Ceiling scenarios — see presets):</p>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", marginTop: "8px", marginBottom: "8px" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid #d6d3d1", textAlign: "left" }}>
+                <th style={{ padding: "4px 8px" }}></th>
+                <th style={{ padding: "4px 8px" }}>Fundrise 3/31 implied*</th>
+                <th style={{ padding: "4px 8px" }}>Notice consensus</th>
+                <th style={{ padding: "4px 8px" }}>Ventuals oracle / mark</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style={{ borderBottom: "1px solid #e7e5e4" }}>
+                <td style={{ padding: "4px 8px", fontWeight: "600" }}>Anthropic</td>
+                <td style={{ padding: "4px 8px" }}>~$350B</td>
+                <td style={{ padding: "4px 8px" }}>$1.03T (Jun 1)</td>
+                <td style={{ padding: "4px 8px" }}>$1.40T / $1.59T (Jun 1)</td>
+              </tr>
+              <tr style={{ borderBottom: "1px solid #e7e5e4" }}>
+                <td style={{ padding: "4px 8px", fontWeight: "600" }}>OpenAI</td>
+                <td style={{ padding: "4px 8px" }}>~$450–500B</td>
+                <td style={{ padding: "4px 8px" }}>$887B (May 30)</td>
+                <td style={{ padding: "4px 8px" }}>$1.18T / $1.37T (Jun 1)</td>
+              </tr>
+              <tr style={{ color: "#78716c", fontStyle: "italic" }}>
+                <td style={{ padding: "4px 8px" }}>implied MOIC →</td>
+                <td style={{ padding: "4px 8px" }}>1.0× (base)</td>
+                <td style={{ padding: "4px 8px" }}>Anthropic ~2.9× · OpenAI ~1.8–2.0×</td>
+                <td style={{ padding: "4px 8px" }}>Anthropic ~4.0× (oracle) · OpenAI ~2.5×</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style={{ marginBottom: 0, fontSize: "12px", color: "#57534e" }}>
+            <em>*Inferred from Fundrise's marks; not disclosed in the filing.</em> <strong>Notice</strong> is an algorithmic secondary-market consensus (transaction + reference data, dated/timestamped). <strong>Ventuals</strong> is a perpetual-futures venue — its <strong>"mark" carries a funding premium over its "oracle" index</strong> (e.g., Anthropic mark 1,594 vs oracle 1,402 on Jun 1), so treat the oracle as the reference and the mark as a sentiment ceiling, not a transaction tape. Both are accessed from a restricted jurisdiction and are not executable here.
+          </p>
         </div>
       </div>
 
@@ -587,7 +657,7 @@ export default function VCXNAVFinder() {
 
       <div style={styles.footer}>
         <div><strong>Changelog:</strong></div>
-        <div>• <strong>June 1, 2026</strong> — Rebased to 3/31/26 audited annual report. Base case changed from unaudited 12/31/25 marks to the audited 3/31/26 annual report (KPMG opinion 5/30/26). Share count set to the audited 35,797,138 (was a ~35.9M Reddit reconstruction, which proved accurate within 0.3%). Default NAV now $678.9M / $18.97 per share (was $533.8M / $14.87). The ~$145M increase is almost entirely the Q1 2026 AI markup, concentrated in five names: Anthropic +$62M, OpenAI +$31M, Anduril +$25M, SpaceX +$20M, Flock +$7M. Anthropic and SpaceX were moved from the PPS-marked box to the MOIC box, as both are held via CIV/SPV with no look-through share count. OpenAI was relabeled from "Convertible Rights + Partnership" to two co-investment-vehicle lots ($84.2M total). ServiceTitan (TTAN, $12.7M) was removed as it was sold during the year. Theory Ventures was reclassified from an LP interest to an in-kind promissory note ($4.73M, 10% coupon, matures 2033). Removed the $100M synthetic "pre-listing issuance" plug and flipped the net-other line from –$27.3M to +$64.7M — the audited balance sheet already reflects post-issuance cash ($75.7M). New/trued-up positions include Erebor Bank ($5.0M, new), Flock Class A + Class A First SAFE (new 3/2/26 tranches), Loyal share count 680→780, Stripe marked up, MMF $26.6M→$38.3M, CMBS $66.4M→$65.8M. Default price updated to $211 (premium ~11.1x / ~1,012%).</div>
+        <div>• <strong>June 1, 2026</strong> — Rebased to 3/31/26 audited annual report. Base case changed from unaudited 12/31/25 marks to the audited 3/31/26 annual report (KPMG opinion 5/30/26). The 12/31 scenario has been retired. Share count set to the audited 35,797,138 (was a ~35.9M Reddit reconstruction, which proved accurate within 0.3%). Default NAV now $678.9M / $18.97 per share (was $533.8M / $14.87). The ~$145M increase is almost entirely the Q1 2026 AI markup, concentrated in five names: Anthropic +$62M, OpenAI +$31M, Anduril +$25M, SpaceX +$20M, Flock +$7M. Anthropic and SpaceX were moved from the PPS-marked box to the MOIC box, as both are held via CIV/SPV with no look-through share count, so the prior per-share lines were structurally wrong. OpenAI was relabeled from "Convertible Rights + Partnership" to two co-investment-vehicle lots ($84.2M total). ServiceTitan (TTAN, $12.7M) was removed — no longer in the schedule; sold during the year. Theory Ventures was reclassified from a sold LP interest to an in-kind promissory note ($4.73M, 10% coupon, matures 2033). Removed the $100M synthetic "pre-listing issuance" plug and flipped the net-other line from –$27.3M to +$64.7M — the audited balance sheet already reflects post-issuance cash ($75.7M), so the bridge and the negative-liabilities assumption were double-counting / sign-wrong. New/trued-up positions include Erebor Bank ($5.0M, new), Flock Class A + Class A First SAFE (new 3/2/26 tranches), Loyal share count 680→780, Stripe marked up, MMF $26.6M→$38.3M, CMBS $66.4M→$65.8M. Premium at the default price recomputed to ~15.4x / ~1,445% (was 19.7x / 1,870%). Added two scenario presets — "Mark-to-Secondary" (Notice consensus) and "Derivative Ceiling" (Ventuals oracle) — that mark Anthropic and OpenAI to current secondary/derivative prices. Even at the Ventuals ceiling, the implied premium stays ~9x; at the Notice consensus, ~11x. Expanded the Section 02 footnote to explain how Fundrise derived the 3/31 marks (Level 3 market approach; "Market Transaction" vs "Recent Transaction") and our inferred implied valuations (Anthropic ~$350B, OpenAI ~$450–500B), and corrected the prior stale ~$300B OpenAI figure. Default price updated to $211 (premium ~11.1x / ~1,012%).</div>
         <div>• <strong>May 12, 2026</strong> — Added "¢ per $1" column to all three tables, showing how many cents of each underlying holding you get for every dollar invested in VCX at the current market price. Updated default VCX market price from $240 to $293.</div>
         <div>• <strong>May 11, 2026 (evening update)</strong> — Updated default share count from 28.3M to 35.9M based on a forensic cap-table reconciliation by Reddit user Fit_Equal6932 (<a href="https://www.reddit.com/r/VCX_Fundrise/s/bit09tvNnO" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>full analysis here</a>). His walk anchors on a Fundrise platform screenshot from February 20, 2026 ($563M AUM at $18.27 NAV, implying 30.82M shares) and walks forward through documented Q1 2026 events to reconcile against Fundrise's reported $679M pre-listing AUM, arriving at ~35.9M total shares outstanding. The prior 28.3M figure from the April 24 Form 144 appears to be the January 29 Schedule TO baseline that didn't get updated for late retail subscriptions or the Tech Infrastructure REIT block. At 35.9M shares the bear case math is sharper, not softer — the per-share NAV in every scenario is lower than the prior version showed. Bloomberg's reported ~4.7M free float at listing ties closely to the ~5.1M implied by his analysis.</div>
         <div>• <strong>May 11, 2026 (afternoon update)</strong> — Added a $100M "Pre-listing primary issuance (Jan–Mar 2026)" line to the other-holdings section. The prior version was dividing the 12/31/25 NAV by the late-April share count without accounting for the real primary issuance that occurred to platform investors between year-end and the March 19 NYSE listing. That issuance brought roughly $100M of cash into VCX at the then-published NAV of ~$19/share, and is what reconciles the year-end $437M total net assets to the ~$540M+ AUM at listing time. With this line included, the default "12/31/25 marks" scenario now produces a NAV/share close to Fundrise's own reported $19, matching the figure most outside observers reference.</div>
