@@ -339,7 +339,7 @@ export default function VCXNAVFinder() {
             { key: "notice", label: "Mark-to-Secondary (Notice)", handler: applyNotice, title: "Adjusts Anthropic & OpenAI only; other holdings stay at the 3/31 audited mark (no dated secondary source on file)." },
             { key: "ventuals", label: "Derivative Ceiling (Ventuals)", handler: applyVentuals, title: "Adjusts Anthropic & OpenAI only; other holdings stay at the 3/31 audited mark (no dated secondary source on file)." },
             { key: "dream", label: "Dream Scenario (2×)", handler: applyDream },
-          ].map(({ key, label, handler }) => {
+          ].map(({ key, label, handler, title }) => {
             const isActive = activeScenario === key;
             return (
               <button
