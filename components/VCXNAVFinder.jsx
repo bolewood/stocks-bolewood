@@ -137,41 +137,8 @@ export default function VCXNAVFinder() {
     updateURL("mark");
   };
 
-  const applyAggressive = () => {
-    setPpsOverrides({
-      "Databricks": 220,
-      "Ramp Business": 120,
-      "Flock Group": 18,
-      "Epic Games": 566,
-      "dbt Labs": 42,
-      "Vanta": 20,
-      "Canva": 1800,
-      "Loyal Animal Health": 15,
-      "Anduril": 100, // seed
-      "Erebor Bank": 300,
-      "Handshake": 80,
-      "Intercom": 60,
-      "Anyscale": 6,
-      "Hightouch": 60,
-      "Stripe": 70,
-    });
-    setDollarMOICs({
-      "Anthropic (co-investment vehicles)": 1.5,
-      "OpenAI (co-investment vehicles)": 1.8,
-      "Databricks SPV": 1.2,
-      "Anduril Industries CIV": 1.2, // already marked to Series F
-      "SpaceX SPV": 1.1,
-      "Visual Layer (SAFE)": 1.0,
-      "AI-LLM, LLC (CIV)": 2.0,
-    });
-    // Other holdings stay at 1.0x — these are mostly cash, fixed income, and small PE
-    setOtherMOICs(OTHER_HOLDINGS.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
-    setActiveScenario("aggressive");
-    updateURL("aggressive");
-  };
-
   const applyDream = () => {
-    // Everything 2x from Aggressive scenario
+    // Everything 2x from base assumptions
     setPpsOverrides({
       "Databricks": 440,
       "Ramp Business": 240,
@@ -229,9 +196,7 @@ export default function VCXNAVFinder() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const scenario = params.get("scenario");
-    if (scenario === "aggressive") {
-      applyAggressive();
-    } else if (scenario === "dream") {
+    if (scenario === "dream") {
       applyDream();
     } else if (scenario === "notice") {
       applyNotice();
@@ -335,7 +300,6 @@ export default function VCXNAVFinder() {
         <div style={styles.controlGroup}>
           {[
             { key: "mark", label: "3/31/26 Audited Marks (base case)", handler: resetToMark },
-            { key: "aggressive", label: "Aggressive — May 2026", handler: applyAggressive },
             { key: "notice", label: "Mark-to-Secondary (Notice)", handler: applyNotice, title: "Adjusts Anthropic & OpenAI only; other holdings stay at the 3/31 audited mark (no dated secondary source on file)." },
             { key: "ventuals", label: "Derivative Ceiling (Ventuals)", handler: applyVentuals, title: "Adjusts Anthropic & OpenAI only; other holdings stay at the 3/31 audited mark (no dated secondary source on file)." },
             { key: "dream", label: "Dream Scenario (2×)", handler: applyDream },
