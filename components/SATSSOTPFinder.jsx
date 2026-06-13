@@ -545,14 +545,14 @@ export default function SATSSOTPFinder() {
 
     return (
       <div style={styles.modalOverlay} onClick={() => setActiveModalChart(null)}>
-        <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <div style={styles.modalContent} className="sats-modal-content" onClick={(e) => e.stopPropagation()}>
           <button style={styles.modalCloseBtn} onClick={() => setActiveModalChart(null)}>
             ✕ Close
           </button>
           
           {activeModalChart === "waterfall" ? (
             <div>
-              <div style={styles.modalChartHeader}>
+              <div style={styles.modalChartHeader} className="sats-chart-header">
                 <span style={styles.sectionNum}>VISUAL 01 (ENLARGED)</span>
                 <h3 style={{ ...styles.chartTitle, fontSize: "20px" }}>SATS SOTP Bridge ($ / Share)</h3>
               </div>
@@ -562,7 +562,7 @@ export default function SATSSOTPFinder() {
             </div>
           ) : (
             <div>
-              <div style={styles.modalChartHeader}>
+              <div style={styles.modalChartHeader} className="sats-chart-header">
                 <span style={styles.sectionNum}>VISUAL 02 (ENLARGED)</span>
                 <h3 style={{ ...styles.chartTitle, fontSize: "20px" }}>NAV Sensitivity Matrix</h3>
                 <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
@@ -597,7 +597,7 @@ export default function SATSSOTPFinder() {
   };
 
   return (
-    <div style={styles.container} className="vcx-container">
+    <div style={styles.container} className="vcx-container sats-container">
       
       {/* HEADER */}
       <div style={styles.header}>
@@ -635,7 +635,7 @@ export default function SATSSOTPFinder() {
       </div>
 
       {/* QUALITATIVE RISKS BLOCK */}
-      <div style={styles.qualitativeContainer}>
+      <div style={styles.qualitativeContainer} className="sats-qualitative-container">
         <div style={styles.qualitativeCard}>
           <div style={styles.qualitativeHeader}>
             <span style={styles.qualitativeIcon}>⚠️</span>
@@ -736,7 +736,7 @@ export default function SATSSOTPFinder() {
       {/* SCENARIO CARD PRESETS */}
       <div style={{ marginBottom: "32px" }}>
         <div style={styles.howToTitle}>Preset Scenarios</div>
-        <div style={styles.scenarioGrid}>
+        <div style={styles.scenarioGrid} className="sats-scenario-grid">
           {[
             { key: "base", label: "Base — SPCX $135 (IPO)", desc: "Standard 20% liquidity disc., 25% tax rate, default credit distress.", handler: applyBase },
             { key: "bull", label: "Bull — SPCX $175", desc: "SpaceX post-IPO re-rate to $175. Lower 15% tax (partial trust deferral), credit cured.", handler: applyBull },
@@ -764,19 +764,19 @@ export default function SATSSOTPFinder() {
       </div>
 
       {/* THREE INTERACTIVE CHARTS CARD */}
-      <div style={styles.visualsBlock}>
+      <div style={styles.visualsBlock} className="sats-visuals-block">
         {/* SVG WATERFALL CHART */}
         <div 
           style={{ ...styles.chartCard, cursor: "zoom-in" }} 
           onClick={() => setActiveModalChart("waterfall")}
           title="Click to enlarge"
         >
-          <div style={styles.chartHeader}>
+          <div style={styles.chartHeader} className="sats-chart-header">
             <span style={styles.sectionNum}>VISUAL 01</span>
             <h3 style={styles.chartTitle}>SATS SOTP Bridge ($ / Share)</h3>
             <span style={styles.zoomHint}>🔍 Click to enlarge</span>
           </div>
-          <div style={{ position: "relative", width: "100%", height: "360px", background: "#fefdf8", border: "1px solid #e7e5e4", padding: "16px" }}>
+          <div style={{ position: "relative", width: "100%", height: "360px", background: "#fefdf8", border: "1px solid #e7e5e4", padding: "16px" }} className="sats-chart-container">
             {renderWaterfallSVG(false)}
           </div>
         </div>
@@ -787,7 +787,7 @@ export default function SATSSOTPFinder() {
           onClick={() => setActiveModalChart("heatmap")}
           title="Click to enlarge"
         >
-          <div style={styles.chartHeader}>
+          <div style={styles.chartHeader} className="sats-chart-header">
             <span style={styles.sectionNum}>VISUAL 02</span>
             <h3 style={styles.chartTitle}>NAV Sensitivity Matrix</h3>
             <span style={styles.zoomHint} style={{ ...styles.zoomHint, marginRight: "12px" }}>🔍 Click to enlarge</span>
@@ -825,7 +825,7 @@ export default function SATSSOTPFinder() {
 
       {/* VISUAL 3: PARTS CONTRIBUTION STACKED BAR */}
       <div style={{ ...styles.chartCard, marginBottom: "40px" }}>
-        <div style={styles.chartHeader}>
+        <div style={styles.chartHeader} className="sats-chart-header">
           <span style={styles.sectionNum}>VISUAL 03</span>
           <h3 style={styles.chartTitle}>SOTP Asset Contribution vs Deductions</h3>
           <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
@@ -955,7 +955,8 @@ export default function SATSSOTPFinder() {
         <p style={{ fontSize: "13px", color: "#44403c", lineHeight: 1.5, marginBottom: "12px" }}>
           Reconcile your model's outputs against reported Wall Street targets. Both Cowen and Barron's apply a tax haircut to the spectrum gain, but their cash and operating stub assumptions vary:
         </p>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", fontFamily: "monospace" }}>
+        <div className="sats-table-scroll" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <table style={{ width: "100%", minWidth: "600px", borderCollapse: "collapse", fontSize: "13px", fontFamily: "monospace" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid #d6d3d1", textAlign: "left" }}>
               <th style={{ padding: "6px 8px" }}>Anchor Target Source</th>
@@ -1003,6 +1004,7 @@ export default function SATSSOTPFinder() {
             </tr>
           </tbody>
         </table>
+        </div>
         <div style={{ fontSize: "11px", color: "#78716c", marginTop: "10px", fontStyle: "italic" }}>
           *Note: To align with Barron's target of ~$185-190/sh, check the **Diluted** share count toggle (modeling convertibles), set SPCX price to **$175**, and select the **Bull Preset** (which sets a conservative 15% effective tax rate and 20% liquidity discount).
         </div>
@@ -1458,9 +1460,9 @@ export default function SATSSOTPFinder() {
           <span style={styles.sectionMeta} className="vcx-section-meta">Compare Pre-tax vs. Risk-Adjusted values</span>
         </div>
 
-        <div style={styles.summaryBlockContainer}>
+        <div style={styles.summaryBlockContainer} className="sats-summary-row">
           {/* Pre-tax Card */}
-          <div style={styles.summaryCard}>
+          <div style={styles.summaryCard} className="sats-summary-card">
             <div style={styles.summaryCardTitle}>PRE-TAX SOTP VALUE</div>
             <div style={{ ...styles.gtValue, fontSize: "40px", marginBottom: "8px" }} className="vcx-gt-value-large">
               {fmt$exact(calc.preTaxDiscountedTotalM)}
@@ -1495,7 +1497,7 @@ export default function SATSSOTPFinder() {
           </div>
 
           {/* Risk-adjusted Card */}
-          <div style={{ ...styles.summaryCard, border: "2px solid #fbbf24", background: "#1c1917" }}>
+          <div style={{ ...styles.summaryCard, border: "2px solid #fbbf24", background: "#1c1917" }} className="sats-summary-card">
             <div style={{ ...styles.summaryCardTitle, color: "#fbbf24" }}>RISK-ADJUSTED SOTP VALUE</div>
             <div style={{ ...styles.gtValue, fontSize: "40px", marginBottom: "8px", color: "#fff" }} className="vcx-gt-value-large">
               {fmt$exact(calc.riskAdjustedTotalM)}
@@ -1532,9 +1534,9 @@ export default function SATSSOTPFinder() {
       </div>
 
       {/* EXPLAINER BOXES */}
-      <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", marginBottom: "48px" }}>
+      <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", marginBottom: "48px" }} className="sats-explainer-row">
         {/* Share Count explainer */}
-        <div style={{ ...styles.issuanceBox, flex: 1, minWidth: "300px" }}>
+        <div style={{ ...styles.issuanceBox, flex: 1, minWidth: "300px" }} className="sats-explainer-box">
           <div style={styles.issuanceHeader}>
             <span style={styles.sectionNum}>ⓘ</span>
             <h3 style={{ ...styles.sectionTitle, fontSize: "16px", margin: 0 }}>About SATS share count</h3>
@@ -1545,7 +1547,7 @@ export default function SATSSOTPFinder() {
         </div>
 
         {/* Tax Assumption explainer */}
-        <div style={{ ...styles.issuanceBox, flex: 1, minWidth: "300px" }}>
+        <div style={{ ...styles.issuanceBox, flex: 1, minWidth: "300px" }} className="sats-explainer-box">
           <div style={styles.issuanceHeader}>
             <span style={styles.sectionNum}>ⓘ</span>
             <h3 style={{ ...styles.sectionTitle, fontSize: "16px", margin: 0 }}>About the spectrum tax</h3>

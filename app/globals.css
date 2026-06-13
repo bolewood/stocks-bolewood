@@ -210,4 +210,85 @@ a {
   .vcx-sticky-bar {
     display: none !important;
   }
+
+  /* ── SATS-SPECIFIC MOBILE OVERRIDES ────────────────────── */
+
+  /* Visuals grid: force single column so charts don't overflow */
+  .sats-visuals-block {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Chart containers: reduce height for mobile viewport */
+  .sats-chart-container {
+    height: 240px !important;
+    padding: 8px !important;
+  }
+
+  /* Chart headers: allow toggle buttons to wrap below title */
+  .sats-chart-header {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .sats-chart-header > div:last-child {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+
+  /* Scenario preset grid: single column on mobile */
+  .sats-scenario-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Summary output cards: no min-width, tighter padding, smaller fonts */
+  .sats-summary-card {
+    min-width: 0 !important;
+    padding: 20px 16px !important;
+  }
+  .sats-summary-card .vcx-gt-value-large {
+    font-size: 24px !important;
+  }
+  .sats-summary-card .vcx-gt-value-accent {
+    font-size: 32px !important;
+  }
+
+  /* Wall Street table: touch-friendly horizontal scroll */
+  .sats-table-scroll {
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -4px;
+    padding: 0 4px;
+  }
+
+  /* Modal: near-full-screen on mobile */
+  .sats-modal-content {
+    padding: 16px !important;
+    max-height: 92vh !important;
+    overflow-y: auto !important;
+    margin: 4px !important;
+  }
+
+  /* Explainer info boxes: stack vertically, remove min-width */
+  .sats-explainer-row {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+  .sats-explainer-box {
+    min-width: 0 !important;
+  }
+
+  /* Qualitative warning cards: tighter gap on mobile */
+  .sats-qualitative-container {
+    gap: 12px !important;
+  }
+
+  /* Section titles: slightly smaller on mobile for long SATS titles */
+  .sats-container .vcx-section-header h2 {
+    font-size: 18px !important;
+  }
+
+  /* Footer source links: better tap targets */
+  .sats-container .footer a {
+    padding: 4px 0;
+    display: inline-block;
+  }
 }
+
