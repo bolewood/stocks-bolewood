@@ -304,7 +304,7 @@ export default function DXYZNAVFinder() {
                 style={{
                   ...styles.presetBtn,
                   ...(isActive ? styles.presetBtnActive : {}),
-                  ...(key === "dream" && !isActive ? { borderColor: "#d97706", color: "#d97706" } : {}),
+                  ...(key === "dream" && !isActive ? { border: "1px solid #d97706", color: "#d97706" } : {}),
                 }}
                 className="preset-btn vcx-preset-btn"
               >

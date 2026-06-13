@@ -11,6 +11,7 @@ export default function Header() {
     { href: "/vcx", label: "VCX" },
     { href: "/dxyz", label: "DXYZ" },
     { href: "/bot", label: "BOT" },
+    { href: "/sats", label: "SATS" },
     { href: "/about", label: "About" },
   ];
 

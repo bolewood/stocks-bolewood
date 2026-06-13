@@ -21,6 +21,10 @@ export default function Footer() {
               VCX NAV Finder
             </Link>
             <span style={styles.sep}>·</span>
+            <Link href="/sats" style={styles.link}>
+              SATS SOTP Finder
+            </Link>
+            <span style={styles.sep}>·</span>
             <Link href="/about" style={styles.link}>
               About
             </Link>

@@ -313,8 +313,8 @@ export default function VCXNAVFinder() {
                 style={{
                   ...styles.presetBtn,
                   ...(isActive ? styles.presetBtnActive : {}),
-                  ...(key === "dream" && !isActive ? { borderColor: "#d97706", color: "#d97706" } : {}),
-                  ...((key === "notice" || key === "ventuals") && !isActive ? { borderColor: "#3b82f6", color: "#3b82f6" } : {}),
+                  ...(key === "dream" && !isActive ? { border: "1px solid #d97706", color: "#d97706" } : {}),
+                  ...((key === "notice" || key === "ventuals") && !isActive ? { border: "1px solid #3b82f6", color: "#3b82f6" } : {}),
                 }}
                 className="preset-btn vcx-preset-btn"
               >

@@ -27,6 +27,14 @@ const tools = [
       "Interactive calculator to estimate the Net Asset Value of RoboStrategy (NASDAQ: BOT). Mark private robotics shares (Apptronik, Figure AI) to market to determine the implied premium.",
     tag: "NASDAQ: BOT",
   },
+  {
+    slug: "/sats",
+    name: "SATS SOTP Finder",
+    status: "live",
+    description:
+      "Sum-of-the-parts & SpaceX proxy calculator for EchoStar Corp (NASDAQ: SATS). Visualize the SpaceX re-rate upside against spectrum tax liabilities and credit default risk.",
+    tag: "NASDAQ: SATS",
+  },
 ];
 
 export default function HomePage() {

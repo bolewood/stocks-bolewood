@@ -304,7 +304,7 @@ export default function BOTNAVFinder() {
             step="0.01"
             value={cefSharesIssued}
             onChange={(e) => setCefSharesIssued(parseFloat(e.target.value) || 0)}
-            style={{ ...styles.smallInput, borderColor: cefSharesIssued > 0 ? "#15803d" : "#d6d3d1" }}
+            style={{ ...styles.smallInput, border: cefSharesIssued > 0 ? "1px solid #15803d" : "1px solid #d6d3d1" }}
             className="vcx-input vcx-small-input"
           />
         </div>
@@ -315,7 +315,7 @@ export default function BOTNAVFinder() {
             step="0.01"
             value={cefIssuePrice}
             onChange={(e) => setCefIssuePrice(parseFloat(e.target.value) || 0)}
-            style={{ ...styles.smallInput, borderColor: cefSharesIssued > 0 ? "#15803d" : "#d6d3d1" }}
+            style={{ ...styles.smallInput, border: cefSharesIssued > 0 ? "1px solid #15803d" : "1px solid #d6d3d1" }}
             className="vcx-input vcx-small-input"
           />
         </div>
