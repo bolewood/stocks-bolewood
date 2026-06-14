@@ -194,14 +194,6 @@ export default function BOTNAVFinder() {
     } else if (scenario === "dream") {
       applyDream();
     }
-
-    // Fetch real-time price
-    fetch("/api/prices")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.BOT) setBotPrice(data.BOT);
-      })
-      .catch((err) => console.error("Error loading BOT price:", err));
   }, []);
 
   const calc = useMemo(() => {
