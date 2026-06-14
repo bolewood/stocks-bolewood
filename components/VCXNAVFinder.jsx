@@ -204,6 +204,14 @@ export default function VCXNAVFinder() {
       applyVentuals();
     }
     // "mark" is the default, no action needed
+
+    // Fetch real-time price
+    fetch("/api/prices")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.VCX) setVcxPrice(data.VCX);
+      })
+      .catch((err) => console.error("Error loading VCX price:", err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

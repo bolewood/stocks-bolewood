@@ -202,6 +202,14 @@ export default function DXYZNAVFinder() {
     } else if (scenario === "dream") {
       applyDream();
     }
+
+    // Fetch real-time price
+    fetch("/api/prices")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.DXYZ) setDxyzPrice(data.DXYZ);
+      })
+      .catch((err) => console.error("Error loading DXYZ price:", err));
   }, []);
 
   const calc = useMemo(() => {
