@@ -56,10 +56,16 @@ export default function SATSSOTPFinder() {
   const [nols, setNols] = useState(1.0); // $B (Available NOLs)
   const [taxRate, setTaxRate] = useState(25); // 0-28% (Effective corporate tax rate)
 
+  // Tower lease termination costs
+  const [towerLeaseCosts, setTowerLeaseCosts] = useState(2.40); // $B (Tower lease termination liability)
+
   // Credit default risk
   const [cured, setCured] = useState("no"); // "yes" or "no" (June 1 payment default)
   const [distressHaircut, setDistressHaircut] = useState(20); // 0-50%
   const [preDealDistress, setPreDealDistress] = useState(false); // Simulate pre-deal Net Debt of $27.7B
+
+  // Real-time price state
+  const [priceSource, setPriceSource] = useState("default"); // "live", "partial", "fallback", "default"
 
   // Chart settings
   const [heatmapColMode, setHeatmapColMode] = useState("tax"); // "tax" or "liquidity"
@@ -89,6 +95,7 @@ export default function SATSSOTPFinder() {
     setTaxBasis(5.0);
     setNols(1.0);
     setTaxRate(25);
+    setTowerLeaseCosts(2.40);
     setCured("no");
     setDistressHaircut(20);
     setPreDealDistress(false);
@@ -109,6 +116,7 @@ export default function SATSSOTPFinder() {
     setTaxBasis(5.0);
     setNols(1.0);
     setTaxRate(15);
+    setTowerLeaseCosts(2.40);
     setCured("yes");
     setDistressHaircut(0);
     setPreDealDistress(false);
@@ -129,6 +137,7 @@ export default function SATSSOTPFinder() {
     setTaxBasis(5.0);
     setNols(1.0);
     setTaxRate(0); // tax-deferred structure fully realized
+    setTowerLeaseCosts(2.40);
     setCured("yes");
     setDistressHaircut(0);
     setPreDealDistress(false);
@@ -149,6 +158,7 @@ export default function SATSSOTPFinder() {
     setTaxBasis(3.0); // lower basis = higher tax
     setNols(1.0);
     setTaxRate(28);
+    setTowerLeaseCosts(2.40);
     setCured("no");
     setDistressHaircut(25);
     setPreDealDistress(true); // deal stress / pre-deal net debt
@@ -169,6 +179,7 @@ export default function SATSSOTPFinder() {
     setTaxBasis(5.0);
     setNols(1.0);
     setTaxRate(0); // structured as tax-free stock-for-stock swap
+    setTowerLeaseCosts(0); // assumed absorbed by acquirer
     setCured("yes");
     setDistressHaircut(0);
     setPreDealDistress(false);
@@ -176,7 +187,7 @@ export default function SATSSOTPFinder() {
     updateURL("takeout");
   };
 
-  // Read scenario from URL on mount
+  // Read scenario from URL on mount + fetch real-time SATS market price
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const scenario = params.get("scenario");
@@ -191,6 +202,15 @@ export default function SATSSOTPFinder() {
     } else {
       applyBase();
     }
+
+    // Fetch real-time SATS market price (doesn't override scenario SPCX prices)
+    fetch("/api/prices")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.prices?.SATS) setSatsPrice(data.prices.SATS);
+        setPriceSource(data.source || "fallback");
+      })
+      .catch(() => setPriceSource("fallback"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -248,12 +268,17 @@ export default function SATSSOTPFinder() {
     const corporateTaxVal = taxableGain * (taxRate / 100);
     const corporateTaxPerSatsShare = corporateTaxVal / (sharesOutstanding * 1_000_000);
 
+    // Tower lease termination costs
+    const towerLeaseCostsM = towerLeaseCosts * 1_000_000_000;
+    const towerLeaseCostsPerSatsShare = towerLeaseCostsM / (sharesOutstanding * 1_000_000);
+
     // Credit overlay / distress haircut
-    const distressHaircutAmt = cured === "no" ? (preTaxDiscountedTotalM - corporateTaxVal) * (distressHaircut / 100) : 0;
+    const preDistressNavM = preTaxDiscountedTotalM - corporateTaxVal - towerLeaseCostsM;
+    const distressHaircutAmt = cured === "no" ? preDistressNavM * (distressHaircut / 100) : 0;
     const distressHaircutPerSatsShare = distressHaircutAmt / (sharesOutstanding * 1_000_000);
 
-    // Risk-Adjusted SOTP Total (After tax + credit)
-    const riskAdjustedTotalM = preTaxDiscountedTotalM - corporateTaxVal - distressHaircutAmt;
+    // Risk-Adjusted SOTP Total (After tax + tower leases + credit)
+    const riskAdjustedTotalM = preDistressNavM - distressHaircutAmt;
     const riskAdjustedPerSatsShare = riskAdjustedTotalM / (sharesOutstanding * 1_000_000);
 
     // Market Metrics
@@ -264,7 +289,7 @@ export default function SATSSOTPFinder() {
     const preDealDebt = 27.7 * 1_000_000_000;
     const ev = preDealDistress
       ? (marketCap + preDealDebt - spectrumValM - stubValM)
-      : (marketCap - netCashValM - spectrumValM - stubValM + corporateTaxVal);
+      : (marketCap - netCashValM - spectrumValM - stubValM + corporateTaxVal + towerLeaseCostsM);
     const effectiveSpcxCostPerShare = ev / (SPACEX_FIXED_SHARES_M * 1_000_000);
 
     return {
@@ -289,6 +314,8 @@ export default function SATSSOTPFinder() {
       preTaxDiscountedPerSatsShare,
       corporateTaxVal,
       corporateTaxPerSatsShare,
+      towerLeaseCostsM,
+      towerLeaseCostsPerSatsShare,
       distressHaircutAmt,
       distressHaircutPerSatsShare,
       riskAdjustedTotalM,
@@ -310,6 +337,7 @@ export default function SATSSOTPFinder() {
     taxBasis,
     nols,
     taxRate,
+    towerLeaseCosts,
     cured,
     distressHaircut,
     preDealDistress
@@ -347,11 +375,15 @@ export default function SATSSOTPFinder() {
     const cellNolsM = nols * 1_000_000_000;
     const cellTaxableGain = Math.max(0, cellProceedsM - cellTaxBasisM - cellNolsM);
     const cellCorporateTaxVal = cellTaxableGain * (cellTaxRate / 100);
+
+    // Tower lease costs
+    const cellTowerLeaseCostsM = towerLeaseCosts * 1_000_000_000;
     
     // Credit overlay
-    const cellDistressHaircutAmt = cured === "no" ? (cellPreTaxDiscountedTotalM - cellCorporateTaxVal) * (distressHaircut / 100) : 0;
+    const cellPreDistressNav = cellPreTaxDiscountedTotalM - cellCorporateTaxVal - cellTowerLeaseCostsM;
+    const cellDistressHaircutAmt = cured === "no" ? cellPreDistressNav * (distressHaircut / 100) : 0;
     
-    const cellRiskAdjustedTotalM = cellPreTaxDiscountedTotalM - cellCorporateTaxVal - cellDistressHaircutAmt;
+    const cellRiskAdjustedTotalM = cellPreDistressNav - cellDistressHaircutAmt;
     return cellRiskAdjustedTotalM / (cellShares * 1_000_000);
   };
 
@@ -362,6 +394,8 @@ export default function SATSSOTPFinder() {
   const activeCols = heatmapColMode === "tax" ? colValsTax : colValsLiquidity;
 
   // Waterfall Chart Math
+  const postTaxStart = calc.preTaxDiscountedPerSatsShare - calc.corporateTaxPerSatsShare;
+  const postTowerStart = postTaxStart - calc.towerLeaseCostsPerSatsShare;
   const waterfallSteps = [
     { label: "SpaceX Gross", val: calc.grossSpaceXPerSatsShare, start: 0, end: calc.grossSpaceXPerSatsShare, type: "start" },
     { label: "Liquidity Disc.", val: -calc.liquidityDiscountPerSatsShare, start: calc.grossSpaceXPerSatsShare, end: calc.grossSpaceXPerSatsShare - calc.liquidityDiscountPerSatsShare, type: "subtract" },
@@ -369,8 +403,9 @@ export default function SATSSOTPFinder() {
     { label: "Spectrum", val: calc.spectrumPerSatsShare, start: calc.netSpaceXPerSatsShare, end: calc.netSpaceXPerSatsShare + calc.spectrumPerSatsShare, type: "add" },
     { label: "Net Cash/Debt", val: calc.netCashPerSatsShare, start: calc.netSpaceXPerSatsShare + calc.spectrumPerSatsShare, end: calc.netSpaceXPerSatsShare + calc.spectrumPerSatsShare + calc.netCashPerSatsShare, type: calc.netCashPerSatsShare >= 0 ? "add" : "subtract" },
     { label: "Operating Stub", val: calc.stubPerSatsShare, start: calc.netSpaceXPerSatsShare + calc.spectrumPerSatsShare + calc.netCashPerSatsShare, end: calc.preTaxDiscountedPerSatsShare, type: "add" },
-    { label: "Spectrum Tax", val: -calc.corporateTaxPerSatsShare, start: calc.preTaxDiscountedPerSatsShare, end: calc.preTaxDiscountedPerSatsShare - calc.corporateTaxPerSatsShare, type: "subtract" },
-    { label: "Credit default", val: -calc.distressHaircutPerSatsShare, start: calc.preTaxDiscountedPerSatsShare - calc.corporateTaxPerSatsShare, end: calc.riskAdjustedPerSatsShare, type: "subtract" },
+    { label: "Spectrum Tax", val: -calc.corporateTaxPerSatsShare, start: calc.preTaxDiscountedPerSatsShare, end: postTaxStart, type: "subtract" },
+    { label: "Tower Leases", val: -calc.towerLeaseCostsPerSatsShare, start: postTaxStart, end: postTowerStart, type: "subtract" },
+    { label: "Credit default", val: -calc.distressHaircutPerSatsShare, start: postTowerStart, end: calc.riskAdjustedPerSatsShare, type: "subtract" },
     { label: "Risk-Adj NAV", val: calc.riskAdjustedPerSatsShare, start: 0, end: calc.riskAdjustedPerSatsShare, type: "end" }
   ];
 
@@ -410,8 +445,8 @@ export default function SATSSOTPFinder() {
 
         {/* Render Bars */}
         {waterfallSteps.map((b, idx) => {
-          const x = 70 + idx * 76;
-          const barWidth = 44;
+          const x = 65 + idx * 68;
+          const barWidth = 38;
           const yStart = 260 - (b.start / waterfallMax) * 230;
           const yEnd = 260 - (b.end / waterfallMax) * 230;
           
@@ -693,14 +728,27 @@ export default function SATSSOTPFinder() {
 
         <div style={styles.controlGroup}>
           <label style={styles.label}>SATS Market Price ($)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={satsPrice}
-            onChange={(e) => { setSatsPrice(parseFloat(e.target.value) || 0); handleManualEdit(); }}
-            style={styles.smallInput}
-            className="vcx-input vcx-small-input"
-          />
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <input
+              type="number"
+              step="0.01"
+              value={satsPrice}
+              onChange={(e) => { setSatsPrice(parseFloat(e.target.value) || 0); handleManualEdit(); }}
+              style={styles.smallInput}
+              className="vcx-input vcx-small-input"
+            />
+            <span style={{
+              fontSize: "10px",
+              fontFamily: "monospace",
+              padding: "2px 6px",
+              borderRadius: "3px",
+              border: `1px solid ${priceSource === "live" ? "#15803d" : priceSource === "partial" ? "#d97706" : "#78716c"}`,
+              color: priceSource === "live" ? "#15803d" : priceSource === "partial" ? "#d97706" : "#78716c",
+              background: priceSource === "live" ? "#f0fdf4" : priceSource === "partial" ? "#fffbeb" : "transparent"
+            }}>
+              {priceSource === "live" ? "● LIVE" : priceSource === "partial" ? "◐ PARTIAL" : priceSource === "fallback" ? "○ FALLBACK" : "○ DEFAULT"}
+            </span>
+          </div>
         </div>
 
         <div style={styles.controlGroup}>
@@ -862,6 +910,9 @@ export default function SATSSOTPFinder() {
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <div style={{ width: "12px", height: "12px", background: "#991b1b" }} /> Credit distress
             </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <div style={{ width: "12px", height: "12px", background: "#78350f" }} /> Tower Leases
+            </div>
             {calc.netCashValM < 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <div style={{ width: "12px", height: "12px", background: "#44403c" }} /> Net Debt (pre-deal)
@@ -883,11 +934,13 @@ export default function SATSSOTPFinder() {
             const stubPct = (stubVal / totalAssets) * 100;
 
             const taxVal = calc.corporateTaxVal;
+            const towerLeaseVal = calc.towerLeaseCostsM;
             const creditVal = calc.distressHaircutAmt;
             const debtVal = calc.netCashValM < 0 ? -calc.netCashValM : 0;
-            const netAdjusted = Math.max(0, totalAssets - taxVal - creditVal - debtVal);
+            const netAdjusted = Math.max(0, totalAssets - taxVal - towerLeaseVal - creditVal - debtVal);
 
             const taxPct = (taxVal / totalAssets) * 100;
+            const towerLeasePct = (towerLeaseVal / totalAssets) * 100;
             const creditPct = (creditVal / totalAssets) * 100;
             const debtPct = (debtVal / totalAssets) * 100;
             const netPct = (netAdjusted / totalAssets) * 100;
@@ -929,6 +982,11 @@ export default function SATSSOTPFinder() {
                     {taxPct > 0 && (
                       <div style={{ width: `${taxPct}%`, background: "#ea580c", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "10px", fontWeight: "bold" }} title={`Spectrum Tax: ${taxPct.toFixed(0)}%`}>
                         {taxPct > 8 ? `Tax (${taxPct.toFixed(0)}%)` : ""}
+                      </div>
+                    )}
+                    {towerLeasePct > 0 && (
+                      <div style={{ width: `${towerLeasePct}%`, background: "#78350f", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "10px", fontWeight: "bold" }} title={`Tower Leases: ${towerLeasePct.toFixed(0)}%`}>
+                        {towerLeasePct > 8 ? `Leases (${towerLeasePct.toFixed(0)}%)` : ""}
                       </div>
                     )}
                     {creditPct > 0 && (
@@ -1363,6 +1421,41 @@ export default function SATSSOTPFinder() {
             </div>
           </div>
 
+          {/* Tower Lease Termination Costs Row */}
+          <div style={styles.tr} className="vcx-row">
+            <div style={{ ...styles.td, flex: "2.4" }}>
+              <div style={styles.companyName}>Tower Lease Termination Costs</div>
+              <div style={styles.companyNote}>
+                EchoStar must terminate or reassign long-term tower site leases as part of the spectrum transaction wind-down. Estimated liability per Barron's.
+              </div>
+              <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "10px", color: "#78716c" }}>Tower Lease Liability</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  value={towerLeaseCosts}
+                  onChange={(e) => { setTowerLeaseCosts(parseFloat(e.target.value)); handleManualEdit(); }}
+                  style={{ width: "120px", accentColor: "#d97706" }}
+                />
+                <span style={{ fontSize: "11px", fontFamily: "monospace", fontWeight: "bold" }}>${towerLeaseCosts.toFixed(2)}B</span>
+              </div>
+            </div>
+            <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", fontSize: "11px" }}>
+              Lease breakage costs
+            </div>
+            <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", color: "#b91c1c", fontWeight: 600 }}>
+              -{fmt$(calc.towerLeaseCostsM)}
+            </div>
+            <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontFamily: "monospace", color: "#b91c1c", fontWeight: 600 }}>
+              -${calc.towerLeaseCostsPerSatsShare.toFixed(2)}
+            </div>
+            <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}>
+              <span style={styles.estimateBadge} title="Estimated tower lease termination liability">[ ESTIMATE]</span>
+            </div>
+          </div>
+
           {/* Credit Default Haircut Row */}
           <div style={styles.tr} className="vcx-row">
             <div style={{ ...styles.td, flex: "2.4" }}>
@@ -1492,7 +1585,7 @@ export default function SATSSOTPFinder() {
               </span>
             </div>
             <p style={{ fontSize: "11px", color: "#78716c", marginTop: "12px", fontStyle: "italic" }}>
-              *Pre-tax SOTP NAV ignores corporate taxes on the spectrum transfer gain and DBS default distress overlays.
+              *Pre-tax SOTP NAV ignores corporate taxes on the spectrum transfer gain, tower lease termination costs, and DBS default distress overlays.
             </p>
           </div>
 
@@ -1527,7 +1620,7 @@ export default function SATSSOTPFinder() {
               </span>
             </div>
             <p style={{ fontSize: "11px", color: "#a8a29e", marginTop: "12px", fontStyle: "italic" }}>
-              *Risk-adjusted SOTP NAV includes C-corp tax drag on gain and credit distress default adjustments.
+              *Risk-adjusted SOTP NAV includes C-corp tax drag on gain, tower lease termination costs, and credit distress default adjustments.
             </p>
           </div>
         </div>
