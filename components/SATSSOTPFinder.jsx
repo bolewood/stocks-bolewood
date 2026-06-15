@@ -203,11 +203,15 @@ export default function SATSSOTPFinder() {
       applyBase();
     }
 
-    // Fetch real-time SATS market price (doesn't override scenario SPCX prices)
+    // Fetch real-time prices for SATS + SPCX
+    const isBaseScenario = !scenario || scenario === "base";
     fetch("/api/prices")
       .then((res) => res.json())
       .then((data) => {
         if (data.prices?.SATS) setSatsPrice(data.prices.SATS);
+        // Update SPCX slider to live price only on the default (base) scenario.
+        // Other scenarios (bull=$175, moon=$200, etc.) keep their hypothetical SPCX prices.
+        if (isBaseScenario && data.prices?.SPCX) setSpcxPrice(data.prices.SPCX);
         setPriceSource(data.source || "fallback");
       })
       .catch(() => setPriceSource("fallback"));
