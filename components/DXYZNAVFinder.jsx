@@ -3,10 +3,12 @@
 import React, { useState, useMemo, useEffect } from "react";
 
 // DXYZ NAV Finder
-// Source: Destiny Tech100 Website and SEC Filings (N-CSR 12/31/2025, 424B3 05/12/2026)
-// Share counts from 12/31/2025 where available. SPVs and newer holdings use Q1 2026 percentage-implied values.
+// Source: Destiny Tech100 SEC filings (N-CSR 12/31/2025, 424B3 05/12/2026, 424B5 05/26/2026)
+// Share counts from 12/31/2025 where available. March 31, 2026 defaults are tied to the filed $742.5M portfolio value.
 
-const DXYZ_SHARES_OUTSTANDING_M = 21.97; // millions — as of May 14, 2026
+const DXYZ_PORTFOLIO_VALUE_K = 742_500; // March 31, 2026 portfolio value from 424B3
+const DXYZ_SHARES_OUTSTANDING_M = 30.23; // implied by $742.5M portfolio value / $24.56 NAV per share
+const pctValueK = (pct) => Math.round(DXYZ_PORTFOLIO_VALUE_K * pct / 100);
 
 // Positions where we have a clean underlying share count from the 12/31/2025 N-CSR.
 // share_count is in THOUSANDS.
@@ -14,59 +16,61 @@ const SHARE_DENOMINATED = [
   {
     name: "SpaceX",
     shares_k: 177.992, // DXYZ SpaceX I (135,135) + MWAM VC SpaceX-II (42,857)
-    mark_pps_1231: 395.44, // Implied: $70.385M / 178k
-    note: "Held via SPVs (Common + Pref)",
+    mark_pps_1231: 517.27, // 12.4% of March 31, 2026 portfolio value / known shares
+    note: "DXYZ SpaceX I + MWAM VC SpaceX-II SPVs",
   },
   {
     name: "Revolut",
     shares_k: 8.200,
-    mark_pps_1231: 1516.87,
-    note: "Common Stock",
+    mark_pps_1231: 1448.78,
+    note: "Common Stock (1.6% March 31 weighting)",
   },
   {
     name: "Discord",
     shares_k: 2.380, // 1,311 Series G + 1,069 Common
-    mark_pps_1231: 277.04,
-    note: "Series G + Common",
+    mark_pps_1231: 277.66,
+    note: "Series G + Common (<0.1% March 31 weighting)",
   },
   {
     name: "Klarna",
     shares_k: 36.924,
-    mark_pps_1231: 28.91,
-    note: "Common Stock",
+    mark_pps_1231: 20.11,
+    note: "Common Stock (0.1% March 31 weighting)",
   },
   {
     name: "Chime",
     shares_k: 60.250,
-    mark_pps_1231: 25.17,
-    note: "Common Stock",
+    mark_pps_1231: 24.65,
+    note: "Common Stock (0.2% March 31 weighting)",
   },
   {
     name: "Flexport",
     shares_k: 26.000,
-    mark_pps_1231: 3.17,
-    note: "Common Stock",
+    mark_pps_1231: 3.14,
+    note: "Common Stock (<0.1% March 31 weighting)",
   },
 ];
 
-// Implied values based on March 31, 2026 percentages of ~$491M implied total NAV.
+// Implied values based on March 31, 2026 percentages of $742.5M filed portfolio value.
 // Value is in thousands.
 const DOLLAR_DENOMINATED = [
-  { name: "Anthropic", value_k: 88871, note: "18.1% weighting (held via Magnitude ANC III SPV)" },
-  { name: "OpenAI", value_k: 28478, note: "5.8% weighting" },
-  { name: "OpenEvidence", value_k: 22586, note: "4.6% weighting" },
-  { name: "Shield AI", value_k: 20622, note: "4.2% weighting" },
-  { name: "Databricks", value_k: 12275, note: "2.5% weighting" },
-  { name: "CHAOS Industries", value_k: 10311, note: "2.1% weighting" },
-  { name: "Hermeus", value_k: 9820, note: "2.0% weighting" },
-  { name: "Beast Industries", value_k: 9820, note: "2.0% weighting" },
-  { name: "Tenstorrent", value_k: 8347, note: "1.7% weighting" },
-  { name: "General Intuition", value_k: 7365, note: "1.5% weighting" },
+  { name: "Anthropic", value_k: pctValueK(18.1), note: "18.1% weighting (Magnitude ANC III SPV)" },
+  { name: "OpenAI", value_k: pctValueK(5.7), note: "5.7% weighting (DXYZ OAI I + Goanna Capital SPVs)" },
+  { name: "OpenEvidence", value_k: pctValueK(4.6), note: "4.6% weighting (SP21Z Opportunities SPV)" },
+  { name: "Shield AI", value_k: pctValueK(4.2), note: "4.2% weighting (Snowpoint Growth 2.5 SPV)" },
+  { name: "Databricks", value_k: pctValueK(2.5), note: "2.5% weighting (DA-1125 + MCTC SPVs)" },
+  { name: "CHAOS Industries", value_k: pctValueK(2.1), note: "2.1% weighting" },
+  { name: "Hermeus", value_k: pctValueK(2.0), note: "2.0% weighting" },
+  { name: "Beast Industries", value_k: pctValueK(2.0), note: "2.0% weighting" },
+  { name: "SpaceX (Snowpoint SPV)", value_k: pctValueK(2.0), note: "2.0% weighting; no disclosed share count" },
+  { name: "Tenstorrent", value_k: pctValueK(1.7), note: "1.7% weighting" },
+  { name: "General Intuition", value_k: pctValueK(1.5), note: "1.5% weighting" },
+  { name: "Skild AI", value_k: pctValueK(1.4), note: "1.4% weighting" },
 ];
 
 const OTHER_HOLDINGS = [
-  { name: "Cash & Cash Equivalents", value_k: 154174, note: "31.4% weighting" },
-  { name: "Long Tail Private Holdings", value_k: 20131, note: "~4.1% weighting (Astranis, Monzo, Stripe, etc.)" },
+  { name: "Cash & Cash Equivalents", value_k: pctValueK(31.4), note: "31.4% First American Treasury Obligations weighting" },
+  { name: "Long Tail Private Holdings", value_k: 47520, note: "~6.4% residual to reconcile filed $742.5M portfolio value" },
 ];
 
 const fmt$ = (n) =>
@@ -99,6 +103,7 @@ export default function DXYZNAVFinder() {
   );
   const [dxyzShares, setDxyzShares] = useState(DXYZ_SHARES_OUTSTANDING_M);
   const [dxyzPrice, setDxyzPrice] = useState(50);
+  const [priceSource, setPriceSource] = useState("default");
 
   const [dollarMOICs, setDollarMOICs] = useState(
     DOLLAR_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {})
@@ -202,6 +207,14 @@ export default function DXYZNAVFinder() {
     } else if (scenario === "dream") {
       applyDream();
     }
+
+    fetch("/api/prices")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.prices?.DXYZ) setDxyzPrice(data.prices.DXYZ);
+        setPriceSource(data.source || "fallback");
+      })
+      .catch(() => setPriceSource("fallback"));
   }, []);
 
   const calc = useMemo(() => {
@@ -262,7 +275,7 @@ export default function DXYZNAVFinder() {
         <ol style={styles.howToList}>
           <li style={{ marginBottom: 6 }}>The fund holds shares directly (Box 1) and through SPVs (Box 2). </li>
           <li style={{ marginBottom: 6 }}>Update price-per-share for Box 1 and MOIC (Multiple on Invested Capital) for Box 2.</li>
-          <li style={{ marginBottom: 6 }}>Defaults are derived from the December 31, 2025 N-CSR and March 31, 2026 portfolio weightings.</li>
+          <li style={{ marginBottom: 6 }}>Defaults are tied to the March 31, 2026 NAV filing and use December 31, 2025 share counts where the newer filing only discloses portfolio weights.</li>
           <li>The bottom bar shows the implied premium vs. the current DXYZ market price.</li>
         </ol>
       </div>
@@ -281,18 +294,31 @@ export default function DXYZNAVFinder() {
         </div>
         <div style={styles.controlGroup}>
           <label style={styles.label}>DXYZ Market Price ($)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={dxyzPrice}
-            onChange={(e) => setDxyzPrice(parseFloat(e.target.value) || 0)}
-            style={styles.smallInput}
-            className="vcx-input vcx-small-input"
-          />
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <input
+              type="number"
+              step="0.01"
+              value={dxyzPrice}
+              onChange={(e) => { setDxyzPrice(parseFloat(e.target.value) || 0); setPriceSource("manual"); }}
+              style={styles.smallInput}
+              className="vcx-input vcx-small-input"
+            />
+            <span style={{
+              fontSize: "10px",
+              fontFamily: "monospace",
+              padding: "2px 6px",
+              borderRadius: "3px",
+              border: `1px solid ${priceSource === "live" || priceSource === "cache" ? "#15803d" : priceSource === "partial" ? "#d97706" : "#78716c"}`,
+              color: priceSource === "live" || priceSource === "cache" ? "#15803d" : priceSource === "partial" ? "#d97706" : "#78716c",
+              background: priceSource === "live" || priceSource === "cache" ? "#f0fdf4" : priceSource === "partial" ? "#fffbeb" : "transparent"
+            }}>
+              {priceSource === "live" || priceSource === "cache" ? "● LIVE" : priceSource === "partial" ? "◐ PARTIAL" : priceSource === "manual" ? "● MANUAL" : priceSource === "fallback" ? "○ FALLBACK" : "○ DEFAULT"}
+            </span>
+          </div>
         </div>
         <div style={styles.controlGroup}>
           {[
-            { key: "mark", label: "Baseline / 12/31/25 Mark", handler: resetToMark },
+            { key: "mark", label: "Baseline / 3/31/26 NAV", handler: resetToMark },
             { key: "aggressive", label: "Aggressive", handler: applyAggressive },
             { key: "dream", label: "Dream Scenario", handler: applyDream },
           ].map(({ key, label, handler }) => {
@@ -325,7 +351,7 @@ export default function DXYZNAVFinder() {
           <h3 style={{ ...styles.sectionTitle, fontSize: "16px", margin: 0 }}>Note on Holding Data</h3>
         </div>
         <div style={styles.issuanceMeta}>
-          Because Destiny Tech100 acquires many of its largest stakes (e.g. Anthropic, OpenAI) through Special Purpose Vehicles (SPVs) and added several positions in Q1 2026, exact per-share counts are not fully available in public EDGAR filings. Share-denominated holdings use counts from the Dec 31, 2025 N-CSR. Dollar-denominated SPV holdings use a baseline value inferred from DXYZ's reported portfolio weightings as of March 31, 2026.
+          Because Destiny Tech100 acquires many of its largest stakes (e.g. Anthropic, OpenAI) through Special Purpose Vehicles (SPVs), exact per-share counts are not fully available in public EDGAR filings. The baseline now reconciles to DXYZ's March 31, 2026 NAV disclosure: $24.56 per share and an approximate $742.5M portfolio value. Share-denominated holdings use December 31, 2025 counts where available and March 31, 2026 portfolio weights for the baseline marks.
         </div>
       </div>
 
@@ -403,7 +429,7 @@ export default function DXYZNAVFinder() {
         <div style={styles.sectionHeader} className="vcx-section-header">
           <span style={styles.sectionNum}>02</span>
           <h2 style={styles.sectionTitle}>SPVs & Percentage-Weighted Holdings</h2>
-          <span style={styles.sectionMeta} className="vcx-section-meta">1.0x = Baseline implied Q1 NAV</span>
+          <span style={styles.sectionMeta} className="vcx-section-meta">1.0x = March 31, 2026 filed NAV baseline</span>
         </div>
 
         <div style={styles.tableWrap}>
@@ -560,11 +586,16 @@ export default function DXYZNAVFinder() {
       </div>
 
       <div style={styles.footer}>
+        <div><strong>Changelog:</strong></div>
+        <div style={{ marginBottom: "16px" }}>
+          • <strong>June 15, 2026</strong> — Updated the baseline NAV math to reconcile with DXYZ's March 31, 2026 SEC disclosures: $24.56 NAV per share, approximately $742.5M of portfolio value, March 31 portfolio weights, and an implied 30.23M share count. Added real-time DXYZ market price fetching from Yahoo Finance via the shared price API.<br />
+        </div>
+
         <div><strong>Sources & Methodology:</strong></div>
-        <div>• <strong>Baseline Net Assets:</strong> $438M (as of Dec 31, 2025) per the <a href="https://www.sec.gov/Archives/edgar/data/1826674/000121390026025304/0001213900-26-025304-index.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSR filed March 10, 2026</a>.</div>
-        <div>• <strong>Share Counts:</strong> Extracted directly from the December 31, 2025 Schedule of Investments within the N-CSR. (e.g. SpaceX: 177,992 total shares).</div>
-        <div>• <strong>SPVs & Q1 2026 Additions:</strong> For positions where DXYZ has not disclosed exact underlying share counts (like Anthropic and OpenAI), we established a baseline dollar value. This was inferred by applying DXYZ's publicly disclosed portfolio weightings as of March 31, 2026 against an estimated ~$491M Q1 NAV (extrapolated from the SpaceX carrying value). Users can apply a Multiple on Invested Capital (MOIC) to mark these holdings.</div>
-        <div>• <strong>Outstanding Shares:</strong> Defaults to ~21.97M (as of May 14, 2026 per the May 12 424B3 filing).</div>
+        <div>• <strong>Baseline NAV:</strong> $24.56 per share as of March 31, 2026, per the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000157587226000359/dxyz102_424b5.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>May 26, 2026 424B5</a>.</div>
+        <div>• <strong>Portfolio Value:</strong> Approximately $742.5M as of March 31, 2026, per the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000157587226000288/dxyz100_424b3.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>May 12, 2026 424B3 portfolio supplement</a>.</div>
+        <div>• <strong>Share Counts:</strong> Extracted from the December 31, 2025 Schedule of Investments within the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000121390026025304/ea0276106-01_ncsr.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSR filed March 10, 2026</a> where available. For holdings where March 31 only discloses portfolio percentages, baseline value is inferred from the filed $742.5M portfolio value.</div>
+        <div>• <strong>Outstanding Shares:</strong> Defaults to ~30.23M, implied by $742.5M portfolio value divided by the filed $24.56 NAV per share.</div>
       </div>
 
       <div style={styles.stickyBar} className="vcx-sticky-bar">
