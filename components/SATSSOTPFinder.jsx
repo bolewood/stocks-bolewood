@@ -416,6 +416,10 @@ export default function SATSSOTPFinder() {
   const waterfallMax = Math.max(...waterfallSteps.flatMap(s => [s.start, s.end]), satsPrice) * 1.12;
 
   const renderWaterfallSVG = (isModal) => {
+    const priceLineY = 260 - (satsPrice / waterfallMax) * 230;
+    const showPriceLine = priceLineY >= 20 && priceLineY <= 290;
+    const priceCalloutTextY = 20;
+
     return (
       <svg viewBox="0 0 800 340" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
         {/* Grid Lines */}
@@ -434,13 +438,12 @@ export default function SATSSOTPFinder() {
 
         {/* SATS Price Line */}
         {(() => {
-          const yLine = 260 - (satsPrice / waterfallMax) * 230;
-          if (yLine < 20 || yLine > 290) return null;
+          if (!showPriceLine) return null;
           return (
             <g>
-              <line x1="60" y1={yLine} x2="760" y2={yLine} stroke="#d97706" strokeWidth="2" strokeDasharray="4 4" />
-              <rect x="620" y={yLine - 18} width="130" height="16" fill="#fef3c7" stroke="#d97706" strokeWidth="1" />
-              <text x="685" y={yLine - 6} fill="#78350f" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
+              <line x1="60" y1={priceLineY} x2="760" y2={priceLineY} stroke="#d97706" strokeWidth="2" strokeDasharray="4 4" />
+              <rect x="620" y={priceCalloutTextY - 12} width="130" height="16" fill="#fef3c7" stroke="#d97706" strokeWidth="1" />
+              <text x="685" y={priceCalloutTextY} fill="#78350f" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
                 SATS Price: ${satsPrice.toFixed(2)}
               </text>
             </g>
@@ -463,6 +466,9 @@ export default function SATSSOTPFinder() {
           if (b.type === "end") fill = "#fbbf24"; // NAV yellow
 
           const displayVal = (b.val >= 0 ? "+" : "") + b.val.toFixed(2);
+          const valueLabelY = b.type === "end" && showPriceLine && y - 6 > priceLineY - 34 && y - 6 < priceLineY + 20
+            ? Math.max(14, priceLineY - 34)
+            : y - 6;
 
           return (
             <g key={b.label} className="waterfall-bar">
@@ -479,7 +485,7 @@ export default function SATSSOTPFinder() {
               {/* Value label */}
               <text
                 x={x + barWidth / 2}
-                y={y - 6}
+                y={valueLabelY}
                 fill="#1c1917"
                 fontSize="9"
                 fontFamily="monospace"
@@ -707,7 +713,7 @@ export default function SATSSOTPFinder() {
       {/* GLOBAL INPUTS & CONTROLS */}
       <div style={styles.controls} className="vcx-controls">
         <div style={styles.controlGroup}>
-          <label style={styles.label}>SPCX Price ($ post-split)</label>
+          <label style={styles.label}>SPCX Price</label>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <input
               type="number"
@@ -717,7 +723,6 @@ export default function SATSSOTPFinder() {
               style={styles.smallInput}
               className="vcx-input vcx-small-input"
             />
-            <span style={{ fontSize: "12px", color: "#78716c", fontFamily: "monospace" }}>[VERIFIED S-1]</span>
           </div>
           <input
             type="range"
@@ -779,7 +784,7 @@ export default function SATSSOTPFinder() {
               Diluted (304.4M)
             </label>
           </div>
-          <span style={styles.companyNote} style={{ fontSize: "11px", color: "#78716c", marginTop: "4px", display: "block" }}>
+          <span style={{ ...styles.companyNote, fontSize: "11px", color: "#78716c", marginTop: "4px", display: "block" }}>
             Diluted includes bond conversion dilution risk noted by Barron's.
           </span>
         </div>
@@ -842,7 +847,7 @@ export default function SATSSOTPFinder() {
           <div style={styles.chartHeader} className="sats-chart-header">
             <span style={styles.sectionNum}>VISUAL 02</span>
             <h3 style={styles.chartTitle}>NAV Sensitivity Matrix</h3>
-            <span style={styles.zoomHint} style={{ ...styles.zoomHint, marginRight: "12px" }}>🔍 Click to enlarge</span>
+            <span style={{ ...styles.zoomHint, marginRight: "12px" }}>🔍 Click to enlarge</span>
             <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
               <button
                 onClick={(e) => { e.stopPropagation(); setHeatmapColMode("tax"); }}
@@ -1659,6 +1664,7 @@ export default function SATSSOTPFinder() {
       <div style={styles.footer}>
         <div><strong>Changelog:</strong></div>
         <div style={{ marginBottom: "16px" }}>
+          • <strong>June 15, 2026</strong> — Added visual upgrades for the SATS bridge and sensitivity matrix, including cleaner chart header spacing, a compact heatmap layout, top-aligned input controls, and a non-overlapping SATS price annotation. Added real-time SATS and SPCX price fetching for the live price inputs and base scenario defaults.<br />
           • <strong>June 12, 2026</strong> — Reconciled calculator targets against Barron's strategic analysis ("EchoStar Is Falling as SpaceX Surges. Why the Stock Looks Cheap.") and TD Cowen targets ($155 NAV). Added convertible bond dilution toggle (basic 289.8M vs diluted 304.4M). Added "Takeout" preset scenario for Oppenheimer buyout optionality (SpaceX acquires SATS/Boost in tax-free stock swap, $8.0B stub). Added Wall Street targets reconciliation card. Added qualitative callouts (Ergen key-man risk, multi-year closing delays, proxy-unwind decay).<br />
           • <strong>May 12, 2026</strong> — Updated S-1 regulatory track: FCC officially approved the SATS spectrum transfer application (FCC Order Granting SpaceX-EchoStar Applications, 5/12/26). DOJ antitrust review and closing conditions remain pending. Updated default SATS close probability to 85%.<br />
           • <strong>March 3, 2026</strong> — Initial SOTP model built on terms from SpaceX's S-1 Note F-26 (accession `000162828026036936`): 261.8M post-split shares of SPCX, $42.25B spectrum transfer proceeds, and SpaceX junior lien funding of SATS debt service.
@@ -1818,7 +1824,7 @@ const styles = {
   controls: {
     display: "flex",
     gap: "32px",
-    alignItems: "flex-end",
+    alignItems: "flex-start",
     marginBottom: "32px",
     flexWrap: "wrap",
   },
@@ -1894,6 +1900,7 @@ const styles = {
   chartHeader: {
     display: "flex",
     alignItems: "center",
+    gap: "12px",
     padding: "12px 16px",
     background: "#fafaf9",
     borderBottom: "1px solid #e7e5e4"
@@ -1925,9 +1932,9 @@ const styles = {
   },
   heatmapGrid: {
     display: "grid",
-    gridTemplateColumns: "140px repeat(6, 1fr)",
+    gridTemplateColumns: "104px repeat(6, minmax(0, 1fr))",
     gap: "4px",
-    minWidth: "520px"
+    minWidth: 0
   },
   heatmapHeaderCell: {
     fontFamily: "'JetBrains Mono', monospace",
@@ -2296,6 +2303,7 @@ const styles = {
   modalChartHeader: {
     display: "flex",
     alignItems: "center",
+    gap: "12px",
     borderBottom: "1px solid #d6d3d1",
     paddingBottom: "16px",
     marginBottom: "8px"
