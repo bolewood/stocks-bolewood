@@ -8,7 +8,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (M
 ### Changed
 - The DXYZ bridge's inferred Apr–May proceeds are now capped at the original $1B ATM program's filed remainder (~$429M gross per the N-CSR and Q1 424B3), deriving a ~$39 effective average price instead of assuming the $46.23 close-VWAP — the new $1B prospectus wasn't effective until May 26, so the old shelf was the only legal capacity. Default pro forma NAV moves from $32.39 to ~$30.77.
 - Commission default recalibrated to 1.0% from the audited 2025 gross-vs-net disclosure (~0.95% effective), replacing the 0.5% placeholder.
-- Sensitivity high bound raised from 10% to 16% volume participation — the filed Aug–Sep 2025 issuance pace.
+- Sensitivity high bound raised from 10% to 16.4% volume participation — the Aug–Sep 2025 pace (filed share issuance over observed volume), the program's high-water mark. Custom Apr–May price overrides are honored uncapped as explicit counterfactuals.
 
 ### Added
 - Prior ATM program history in the sources (original shelf effective July 15, 2025; 11.1M shares at $29.48 through December 2025) and a "next filed NAV: June 30 N-PORT, due ~Aug 29, 2026" checkpoint note.

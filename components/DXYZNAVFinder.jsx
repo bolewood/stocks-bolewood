@@ -409,9 +409,10 @@ export default function DXYZNAVFinder() {
     return [
       { label: "Low", participation: 0.05 },
       { label: "Calibrated", participation: atmCal.participation },
-      // 16.4% is the filed Aug–Sep 2025 issuance pace (2.97M shares into
-      // ~18.1M traded) — the historical high-water mark, not a guess.
-      { label: "High", participation: 0.16 },
+      // 16.4% = the Aug–Sep 2025 pace: ~2.97M filed shares (N-CSR total less
+      // the Oct–Dec 8,121,853 disclosed in the shareholder letter) into
+      // ~18.1M observed traded volume — inferred, the historical high-water mark.
+      { label: "High", participation: 0.164 },
     ].map(({ label, participation }) => ({
       label,
       participation,
@@ -573,7 +574,9 @@ export default function DXYZNAVFinder() {
               <>
                 {[
                   { key: "aprSharesM", label: "Apr–May Shares (M)", ph: fmtM(atmCal.aprMayShares).replace("M", "") },
-                  { key: "aprPrice", label: "Apr–May Avg Price ($)", ph: atmCal.aprMayAvgPrice.toFixed(2) },
+                  // Effective default: the calibrated VWAP after the prior-shelf
+                  // capacity cap — what a blank field actually models.
+                  { key: "aprPrice", label: "Apr–May Avg Price ($)", ph: (atmCal.aprMayShares > 0 ? Math.min(atmCal.aprMayAvgPrice, priorShelfRemainingApr1() / atmCal.aprMayShares) : atmCal.aprMayAvgPrice).toFixed(2) },
                   { key: "partPct", label: "Participation (%)", ph: (atmCal.participation * 100).toFixed(1) },
                   { key: "capacityM", label: "ATM Capacity ($M)", ph: String(PROSPECTUS_424B5.capacityGross / 1_000_000) },
                   { key: "premPct", label: "Min Premium (%)", ph: "0" },
@@ -642,8 +645,10 @@ export default function DXYZNAVFinder() {
                 <div style={{ ...styles.td, flex: "2.4" }}>
                   <div style={styles.companyName}>+ Apr 1 – May 21 ATM (prior program) <ConfBadge level="INFERRED" /></div>
                   <div style={styles.companyNote}>
-                    {fmtM(atmBridge.aprMay.shares)} shares backed out of the 424B5 share count
-                    {atmBridge.aprMay.capped
+                    {fmtM(atmBridge.aprMay.shares)} shares {atmMode === "custom" && atmCustom.aprSharesM !== "" ? "(your custom input)" : "backed out of the 424B5 share count"}
+                    {atmMode === "custom" && atmCustom.aprPrice !== ""
+                      ? ` @ $${atmBridge.aprMay.avgPrice.toFixed(2)} (your custom price${atmBridge.aprMay.gross > atmBridge.aprMay.priorRemaining ? ` — ⚠ implies ${fmt$(atmBridge.aprMay.gross)} gross, EXCEEDING the prior program's ${fmt$(atmBridge.aprMay.priorRemaining)} filed remainder; not possible under the actual shelf` : `; within the prior program's ${fmt$(atmBridge.aprMay.priorRemaining)} filed remainder`})`
+                      : atmBridge.aprMay.capped
                       ? `; gross capped at the prior $1B program's ${fmt$(atmBridge.aprMay.priorRemaining)} filed remainder → ~$${atmBridge.aprMay.avgPrice.toFixed(2)} effective avg (shelf exhausted by May 21; new program effective May 26)`
                       : ` @ ~$${atmBridge.aprMay.avgPrice.toFixed(2)} close-volume-weighted`}
                   </div>
@@ -729,7 +734,7 @@ export default function DXYZNAVFinder() {
                 <div style={{ ...styles.td, flex: "1.6" }}>
                   <div style={styles.companyName}>{label} — {(participation * 100).toFixed(1)}%</div>
                   {label === "High" && (
-                    <div style={styles.companyNote}>Filed Aug–Sep 2025 issuance pace — the program&apos;s high-water mark</div>
+                    <div style={styles.companyNote}>Aug–Sep 2025 pace (filed shares ÷ observed volume) — the program&apos;s high-water mark</div>
                   )}
                 </div>
                 <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Post-5/26 Shares">{fmtM(bridge.postMay.shares)}</div>
