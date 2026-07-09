@@ -1,13 +1,24 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
+import {
+  FILED,
+  PROSPECTUS_424B5,
+  calibrate,
+  computeAtmBridge,
+} from "../lib/dxyzAtm.mjs";
+import historySnapshot from "../app/api/dxyz-history/snapshot.json";
 
 // DXYZ NAV Finder
-// Source: Destiny Tech100 SEC filings (N-CSR 12/31/2025, 424B3 05/12/2026, 424B5 05/26/2026)
-// Share counts from 12/31/2025 where available. March 31, 2026 defaults are tied to the filed $742.5M portfolio value.
+// Source: Destiny Tech100 SEC filings (N-CSR 12/31/2025, NPORT-P 3/31/2026,
+// 424B3 05/12/2026, 424B5 05/26/2026)
+// Share counts from 12/31/2025 where available. March 31, 2026 defaults are tied
+// to the filed $742.5M portfolio value plus $5.9M other net assets, reconciling
+// to $748.36M filed net assets (NPORT-P).
 
 const DXYZ_PORTFOLIO_VALUE_K = 742_500; // March 31, 2026 portfolio value from 424B3
-const DXYZ_SHARES_OUTSTANDING_M = 30.23; // implied by $742.5M portfolio value / $24.56 NAV per share
+const DXYZ_OTHER_NET_ASSETS_K = 5_861; // filed net assets $748.361M − $742.5M portfolio
+const DXYZ_SHARES_OUTSTANDING_M = 30.47; // implied by $748.361M filed net assets / $24.56 NAV per share
 const pctValueK = (pct) => Math.round(DXYZ_PORTFOLIO_VALUE_K * pct / 100);
 
 // Positions where we have a clean underlying share count from the 12/31/2025 N-CSR.
@@ -69,8 +80,9 @@ const DOLLAR_DENOMINATED = [
 ];
 
 const OTHER_HOLDINGS = [
-  { name: "Cash & Cash Equivalents", value_k: pctValueK(31.4), note: "31.4% First American Treasury Obligations weighting" },
+  { name: "Cash & Cash Equivalents", value_k: pctValueK(31.4), locked: true, note: "31.4% First American Treasury Obligations weighting" },
   { name: "Long Tail Private Holdings", value_k: 47520, note: "~6.4% residual to reconcile filed $742.5M portfolio value" },
+  { name: "Other Net Assets", value_k: DXYZ_OTHER_NET_ASSETS_K, locked: true, note: "Receivables less liabilities — reconciles $742.5M portfolio to $748.36M filed net assets (3/31/26 NPORT-P)" },
 ];
 
 const fmt$ = (n) =>
@@ -87,6 +99,34 @@ const fmt$exact = (n) =>
 
 const fmtNum = (n) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(n);
 
+const fmtM = (n) => `${(n / 1_000_000).toFixed(2)}M`;
+
+const CONF_COLORS = {
+  FILED: { color: "#15803d", background: "#f0fdf4", border: "#15803d" },
+  INFERRED: { color: "#b45309", background: "#fffbeb", border: "#d97706" },
+  ESTIMATED: { color: "#57534e", background: "#f5f5f4", border: "#78716c" },
+};
+
+function ConfBadge({ level }) {
+  const c = CONF_COLORS[level] || CONF_COLORS.ESTIMATED;
+  return (
+    <span style={{
+      fontSize: "9px",
+      fontFamily: "'JetBrains Mono', monospace",
+      letterSpacing: "0.08em",
+      padding: "2px 6px",
+      borderRadius: "3px",
+      border: `1px solid ${c.border}`,
+      color: c.color,
+      background: c.background,
+      fontWeight: 600,
+      whiteSpace: "nowrap",
+    }}>
+      {level}
+    </span>
+  );
+}
+
 export default function DXYZNAVFinder() {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -102,8 +142,26 @@ export default function DXYZNAVFinder() {
     SHARE_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: p.mark_pps_1231 }), {})
   );
   const [dxyzShares, setDxyzShares] = useState(DXYZ_SHARES_OUTSTANDING_M);
-  const [dxyzPrice, setDxyzPrice] = useState(50);
+  const [dxyzPrice, setDxyzPrice] = useState(27.6);
   const [priceSource, setPriceSource] = useState("default");
+
+  // ── ATM Issuance Bridge state ──────────────────────────────────────────
+  // Ships with the checked-in snapshot so first paint is deterministic;
+  // replaced by the live Yahoo feed once /api/dxyz-history responds.
+  const [historyRows, setHistoryRows] = useState(historySnapshot.rows);
+  const [historySource, setHistorySource] = useState("snapshot");
+  const [atmMode, setAtmMode] = useState("calibrated"); // "filed" | "calibrated" | "custom"
+  const [commissionPct, setCommissionPct] = useState("0.5");
+  // Custom-mode overrides; empty string = use the calibrated default.
+  const [atmCustom, setAtmCustom] = useState({
+    aprSharesM: "",
+    aprPrice: "",
+    partPct: "",
+    capacityM: "",
+    premPct: "",
+    dragPct: "",
+    asOf: "",
+  });
 
   const [dollarMOICs, setDollarMOICs] = useState(
     DOLLAR_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {})
@@ -215,6 +273,16 @@ export default function DXYZNAVFinder() {
         setPriceSource(data.source || "fallback");
       })
       .catch(() => setPriceSource("fallback"));
+
+    fetch("/api/dxyz-history")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.rows) && data.rows.length > 0) {
+          setHistoryRows(data.rows);
+          setHistorySource(data.source || "snapshot");
+        }
+      })
+      .catch(() => setHistorySource("snapshot"));
   }, []);
 
   const calc = useMemo(() => {
@@ -257,6 +325,68 @@ export default function DXYZNAVFinder() {
 
     return { shareRows, dollarRows, otherRows, shareTotal, dollarTotal, otherTotal, totalNAV, navPerShare };
   }, [ppsOverrides, dxyzShares, dollarMOICs, otherMOICs]);
+
+  // ── ATM Issuance Bridge math ───────────────────────────────────────────
+  const atmCal = useMemo(() => calibrate(historyRows), [historyRows]);
+
+  const num = (s) => {
+    const v = parseFloat(s);
+    return Number.isFinite(v) ? v : null;
+  };
+
+  const atmBridge = useMemo(() => {
+    const commission = num(commissionPct);
+    const opts = {
+      mode: atmMode,
+      rows: historyRows,
+      markedNetAssets: calc.totalNAV,
+      baselineShares: dxyzShares * 1_000_000,
+      commissionRate: (commission ?? 0.5) / 100,
+    };
+    if (atmMode === "custom") {
+      const s = num(atmCustom.aprSharesM);
+      if (s !== null) opts.aprMayShares = s * 1_000_000;
+      const p = num(atmCustom.aprPrice);
+      if (p !== null) opts.aprMayAvgPrice = p;
+      const part = num(atmCustom.partPct);
+      if (part !== null) opts.participation = part / 100;
+      const cap = num(atmCustom.capacityM);
+      if (cap !== null) opts.capacityGross = cap * 1_000_000;
+      const prem = num(atmCustom.premPct);
+      if (prem !== null) opts.minPremium = prem / 100;
+      const drag = num(atmCustom.dragPct);
+      if (drag !== null) opts.expenseDragAnnualRate = drag / 100;
+      if (atmCustom.asOf) opts.asOfDate = atmCustom.asOf;
+    }
+    return computeAtmBridge(opts);
+  }, [atmMode, historyRows, calc.totalNAV, dxyzShares, commissionPct, atmCustom]);
+
+  // Low / base / high participation sensitivity (post-May-26 program)
+  const atmSensitivity = useMemo(() => {
+    if (atmMode === "filed") return [];
+    const commission = ((num(commissionPct) ?? 0.5)) / 100;
+    return [
+      { label: "Low", participation: 0.05 },
+      { label: "Calibrated", participation: atmCal.participation },
+      { label: "High", participation: 0.10 },
+    ].map(({ label, participation }) => ({
+      label,
+      participation,
+      bridge: computeAtmBridge({
+        mode: "calibrated",
+        rows: historyRows,
+        markedNetAssets: calc.totalNAV,
+        baselineShares: dxyzShares * 1_000_000,
+        commissionRate: commission,
+        participation,
+      }),
+    }));
+  }, [atmMode, historyRows, calc.totalNAV, dxyzShares, commissionPct, atmCal]);
+
+  // Headline NAV: pro forma when the bridge is active, marked baseline otherwise.
+  const effectiveNav = atmBridge.proFormaNav;
+  const effectiveShares = atmBridge.proFormaShares;
+  const bridgeActive = atmMode !== "filed";
 
   return (
     <div style={styles.container} className="vcx-container">
@@ -345,13 +475,221 @@ export default function DXYZNAVFinder() {
         </div>
       </div>
 
+      <div style={styles.section}>
+        <div style={styles.sectionHeader} className="vcx-section-header">
+          <span style={styles.sectionNum}>⇄</span>
+          <h2 style={{ ...styles.sectionTitle, fontSize: "20px" }}>ATM Issuance Bridge</h2>
+          <span style={styles.sectionMeta} className="vcx-section-meta">Estimated share issuance since the March 31 filing</span>
+        </div>
+
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "12px" }} className="vcx-controls">
+          {[
+            { key: "filed", label: "Filed Only" },
+            { key: "calibrated", label: "Calibrated Estimate" },
+            { key: "custom", label: "Custom" },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setAtmMode(key)}
+              style={{ ...styles.presetBtn, ...(atmMode === key ? styles.presetBtnActive : {}) }}
+              className="preset-btn vcx-preset-btn"
+            >
+              {atmMode === key && <span style={styles.activeDot} />}
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {bridgeActive && (
+          <div style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: "11px",
+            fontWeight: 700,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "#92400e",
+            background: "#fef3c7",
+            border: "1px solid #d97706",
+            padding: "10px 14px",
+            marginBottom: "12px",
+          }}>
+            ⚠ Estimated, not company reported — DXYZ&apos;s last filed NAV is ${FILED.navPerShare.toFixed(2)} as of March 31, 2026
+          </div>
+        )}
+
+        <div style={styles.tableWrap}>
+          <div style={styles.tr} className="vcx-row">
+            <div style={{ ...styles.td, flex: "2.4" }}>
+              <div style={styles.companyName}>Filed NAV — March 31, 2026 <ConfBadge level="FILED" /></div>
+              <div style={styles.companyNote}>NPORT-P: $748.36M net assets; ~30.47M shares implied by the filed $24.56 NAV</div>
+            </div>
+            <div style={{ ...styles.td, flex: "1.3", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Shares">{fmtM(FILED.netAssets / FILED.navPerShare)}</div>
+            <div style={{ ...styles.td, flex: "1.5", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Net Assets">{fmt$(FILED.netAssets)}</div>
+            <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600 }} data-label="NAV/Share">${FILED.navPerShare.toFixed(2)}</div>
+          </div>
+
+          {(Math.abs(atmBridge.markedNav - FILED.navPerShare) > 0.005 || Math.abs(dxyzShares - DXYZ_SHARES_OUTSTANDING_M) > 0.005) && (
+            <div style={styles.tr} className="vcx-row">
+              <div style={{ ...styles.td, flex: "2.4" }}>
+                <div style={styles.companyName}>Your re-marked baseline <ConfBadge level="ESTIMATED" /></div>
+                <div style={styles.companyNote}>Your holding marks and share count from the tables below — replaces the filed baseline in this bridge</div>
+              </div>
+              <div style={{ ...styles.td, flex: "1.3", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Shares">{fmtM(1_000_000 * dxyzShares)}</div>
+              <div style={{ ...styles.td, flex: "1.5", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Net Assets">{fmt$(calc.totalNAV)}</div>
+              <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600 }} data-label="NAV/Share">${atmBridge.markedNav.toFixed(2)}</div>
+            </div>
+          )}
+
+          {bridgeActive && (
+            <>
+              <div style={styles.tr} className="vcx-row">
+                <div style={{ ...styles.td, flex: "2.4" }}>
+                  <div style={styles.companyName}>+ Apr 1 – May 21 ATM (prior program) <ConfBadge level="INFERRED" /></div>
+                  <div style={styles.companyNote}>
+                    Backed out of the 424B5 share count: {fmtM(atmBridge.aprMay.shares)} shares @ ~${atmBridge.aprMay.avgPrice.toFixed(2)} close-volume-weighted
+                  </div>
+                </div>
+                <div style={{ ...styles.td, flex: "1.3", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Shares">+{fmtM(atmBridge.aprMay.shares)}</div>
+                <div style={{ ...styles.td, flex: "1.5", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Net Proceeds">+{fmt$(atmBridge.aprMay.net)}</div>
+                <div style={{ ...styles.td, flex: "1.2", textAlign: "right" }} data-label="NAV/Share" />
+              </div>
+
+              <div style={styles.tr} className="vcx-row">
+                <div style={{ ...styles.td, flex: "2.4" }}>
+                  <div style={styles.companyName}>+ May 26 – {atmBridge.asOfDate} ATM (new $1B program) <ConfBadge level="ESTIMATED" /></div>
+                  <div style={styles.companyNote}>
+                    {(atmBridge.participation * 100).toFixed(1)}% of daily volume; issued {atmBridge.postMay.daysIssued} of {atmBridge.postMay.daysIssued + atmBridge.postMay.daysSkipped} days (none when price ≤ rolling NAV{atmBridge.postMay.exhaustedOn ? `; capacity exhausted ${atmBridge.postMay.exhaustedOn}` : ""})
+                  </div>
+                </div>
+                <div style={{ ...styles.td, flex: "1.3", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Shares">+{fmtM(atmBridge.postMay.shares)}</div>
+                <div style={{ ...styles.td, flex: "1.5", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Net Proceeds">+{fmt$(atmBridge.postMay.net)}</div>
+                <div style={{ ...styles.td, flex: "1.2", textAlign: "right" }} data-label="NAV/Share" />
+              </div>
+
+              <div style={styles.tr} className="vcx-row">
+                <div style={{ ...styles.td, flex: "2.4" }}>
+                  <div style={styles.companyName}>− Expense accrual <ConfBadge level="ESTIMATED" /></div>
+                  <div style={styles.companyNote}>2.50% management fee (424B5) annualized over {atmBridge.days} days since March 31</div>
+                </div>
+                <div style={{ ...styles.td, flex: "1.3", textAlign: "right" }} data-label="Shares">—</div>
+                <div style={{ ...styles.td, flex: "1.5", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Net Proceeds">−{fmt$(atmBridge.drag)}</div>
+                <div style={{ ...styles.td, flex: "1.2", textAlign: "right" }} data-label="NAV/Share" />
+              </div>
+            </>
+          )}
+
+          <div style={{ ...styles.subtotalRow, background: "#1c1917", color: "#fef3c7" }} className="vcx-subtotal">
+            <div style={{ flex: "2.4" }}>
+              {bridgeActive ? `= Pro forma (est. ${atmBridge.asOfDate})` : "= Filed baseline (no estimated issuance)"}
+            </div>
+            <div style={{ flex: "1.3", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Shares">{fmtM(atmBridge.proFormaShares)}</div>
+            <div style={{ flex: "1.5", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Net Assets">{fmt$(atmBridge.proFormaAssets)}</div>
+            <div style={{ flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "#fbbf24", fontWeight: 700 }} data-label="NAV/Share">${atmBridge.proFormaNav.toFixed(2)}</div>
+          </div>
+        </div>
+
+        {bridgeActive && (
+          <div style={{
+            display: "flex",
+            gap: "24px",
+            flexWrap: "wrap",
+            marginTop: "10px",
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: "11px",
+            color: "#57534e",
+          }}>
+            <span>ATM accretion: <strong style={{ color: atmBridge.accretionPerShare >= 0 ? "#15803d" : "#b91c1c" }}>{atmBridge.accretionPerShare >= 0 ? "+" : ""}${atmBridge.accretionPerShare.toFixed(2)}/sh</strong></span>
+            <span>Remaining new-ATM capacity: <strong>{fmt$(atmBridge.postMay.capacityRemaining)}</strong> of {fmt$(PROSPECTUS_424B5.capacityGross)} gross</span>
+            <span>History: {historyRows.length} trading days ·{" "}
+              <span style={{ color: historySource === "live" || historySource === "cache" ? "#15803d" : "#78716c" }}>
+                {historySource === "live" || historySource === "cache" ? "● LIVE (Yahoo)" : "○ SNAPSHOT (7/9/26)"}
+              </span>
+            </span>
+          </div>
+        )}
+
+        {bridgeActive && (
+          <div style={{ display: "flex", gap: "20px", alignItems: "flex-end", flexWrap: "wrap", marginTop: "16px" }} className="vcx-controls">
+            <div style={styles.controlGroup}>
+              <label style={styles.label}>Commission (%)</label>
+              <input
+                type="number" step="0.1" min="0" max="3"
+                value={commissionPct}
+                onChange={(e) => setCommissionPct(e.target.value)}
+                style={{ ...styles.smallInput, width: "90px", fontSize: "14px" }}
+                className="vcx-input vcx-small-input"
+              />
+              <div style={{ fontSize: "10px", color: "#78716c", fontFamily: "'JetBrains Mono', monospace", marginTop: "4px" }}>
+                Cap 3.0%; filed Q1 implies ~0.02% effective
+              </div>
+            </div>
+            {atmMode === "custom" && (
+              <>
+                {[
+                  { key: "aprSharesM", label: "Apr–May Shares (M)", ph: fmtM(atmCal.aprMayShares).replace("M", "") },
+                  { key: "aprPrice", label: "Apr–May Avg Price ($)", ph: atmCal.aprMayAvgPrice.toFixed(2) },
+                  { key: "partPct", label: "Participation (%)", ph: (atmCal.participation * 100).toFixed(1) },
+                  { key: "capacityM", label: "ATM Capacity ($M)", ph: "1000" },
+                  { key: "premPct", label: "Min Premium (%)", ph: "0" },
+                  { key: "dragPct", label: "Expense Drag (%/yr)", ph: "2.5" },
+                ].map(({ key, label, ph }) => (
+                  <div style={styles.controlGroup} key={key}>
+                    <label style={styles.label}>{label}</label>
+                    <input
+                      type="number" step="any"
+                      value={atmCustom[key]}
+                      placeholder={ph}
+                      onChange={(e) => setAtmCustom((prev) => ({ ...prev, [key]: e.target.value }))}
+                      style={{ ...styles.smallInput, width: "110px", fontSize: "14px" }}
+                      className="vcx-input vcx-small-input"
+                    />
+                  </div>
+                ))}
+                <div style={styles.controlGroup}>
+                  <label style={styles.label}>As-of Date</label>
+                  <input
+                    type="date"
+                    min="2026-05-26"
+                    value={atmCustom.asOf}
+                    onChange={(e) => setAtmCustom((prev) => ({ ...prev, asOf: e.target.value }))}
+                    style={{ ...styles.smallInput, width: "160px", fontSize: "13px" }}
+                    className="vcx-input vcx-small-input"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {bridgeActive && atmSensitivity.length > 0 && (
+          <div style={{ ...styles.tableWrap, marginTop: "16px" }}>
+            <div style={styles.tableHeaderRow} className="vcx-table-header">
+              <div style={{ ...styles.th, flex: "1.6" }}>Participation Scenario</div>
+              <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>Post-5/26 Shares</div>
+              <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>Gross Raised</div>
+              <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>Pro Forma NAV</div>
+            </div>
+            {atmSensitivity.map(({ label, participation, bridge }) => (
+              <div key={label} style={{ ...styles.tr, ...(label === "Calibrated" ? { background: "#fffbeb" } : {}) }} className="vcx-row">
+                <div style={{ ...styles.td, flex: "1.6" }}>
+                  <div style={styles.companyName}>{label} — {(participation * 100).toFixed(1)}%</div>
+                </div>
+                <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Post-5/26 Shares">{fmtM(bridge.postMay.shares)}</div>
+                <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Gross Raised">{fmt$(bridge.postMay.gross)}</div>
+                <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600, color: "#d97706" }} data-label="Pro Forma NAV">${bridge.proFormaNav.toFixed(2)}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div style={styles.issuanceBox}>
         <div style={styles.issuanceHeader}>
           <span style={styles.sectionNum}>ⓘ</span>
           <h3 style={{ ...styles.sectionTitle, fontSize: "16px", margin: 0 }}>Note on Holding Data</h3>
         </div>
         <div style={styles.issuanceMeta}>
-          Because Destiny Tech100 acquires many of its largest stakes (e.g. Anthropic, OpenAI) through Special Purpose Vehicles (SPVs), exact per-share counts are not fully available in public EDGAR filings. The baseline now reconciles to DXYZ's March 31, 2026 NAV disclosure: $24.56 per share and an approximate $742.5M portfolio value. Share-denominated holdings use December 31, 2025 counts where available and March 31, 2026 portfolio weights for the baseline marks.
+          Because Destiny Tech100 acquires many of its largest stakes (e.g. Anthropic, OpenAI) through Special Purpose Vehicles (SPVs), exact per-share counts are not fully available in public EDGAR filings. The baseline reconciles to DXYZ&apos;s March 31, 2026 NPORT-P: $742.5M portfolio value plus $5.9M other net assets equals $748.36M filed net assets, which at the filed $24.56 NAV per share implies ~30.47M shares outstanding. Share-denominated holdings use December 31, 2025 counts where available and March 31, 2026 portfolio weights for the baseline marks. Issuance after March 31 is modeled separately in the ATM Issuance Bridge above and never restates these filed figures.
         </div>
       </div>
 
@@ -502,7 +840,7 @@ export default function DXYZNAVFinder() {
             <div style={{ ...styles.th, flex: "1.0", textAlign: "right" }}>¢ per $1</div>
           </div>
           {calc.otherRows.map((r) => {
-            const isCash = r.name.includes("Cash");
+            const isLocked = r.locked;
             return (
               <div key={r.name} style={styles.tr} className="vcx-row">
                 <div style={{ ...styles.td, flex: "2.6" }}>
@@ -513,7 +851,7 @@ export default function DXYZNAVFinder() {
                   {fmt$(r.markValue)}
                 </div>
                 <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }} className="vcx-moic-cell" data-label="MOIC">
-                  {isCash ? (
+                  {isLocked ? (
                     <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "#a8a29e" }}>locked</span>
                   ) : (
                     <input
@@ -554,11 +892,21 @@ export default function DXYZNAVFinder() {
       </div>
 
       <div style={styles.grandTotal} className="vcx-grand-total">
-        <div style={styles.gtLabel}>TOTAL ESTIMATED NAV</div>
+        <div style={styles.gtLabel}>TOTAL MARKED NET ASSETS (3/31 BASIS)</div>
         <div style={styles.gtValue} className="vcx-gt-value-large">{fmt$exact(calc.totalNAV)}</div>
         <div style={styles.gtDivider} />
-        <div style={styles.gtLabel}>NAV PER DXYZ SHARE</div>
-        <div style={styles.gtValueAccent} className="vcx-gt-value-accent">${calc.navPerShare.toFixed(2)}</div>
+        <div style={{ display: "flex", gap: "64px", flexWrap: "wrap" }} className="vcx-gt-metrics">
+          <div className="vcx-gt-metric">
+            <div style={styles.gtLabel}>NAV / SHARE (3/31 SHARES)</div>
+            <div style={{ ...styles.gtValueAccent, ...(bridgeActive ? { fontSize: "40px", color: "#fff" } : {}) }} className="vcx-gt-value-accent">${calc.navPerShare.toFixed(2)}</div>
+          </div>
+          {bridgeActive && (
+            <div className="vcx-gt-metric">
+              <div style={styles.gtLabel}>EST. PRO FORMA NAV / SHARE — INCL. ATM, NOT COMPANY REPORTED</div>
+              <div style={styles.gtValueAccent} className="vcx-gt-value-accent">${effectiveNav.toFixed(2)}</div>
+            </div>
+          )}
+        </div>
         <div style={styles.gtDivider} />
         <div style={{ display: "flex", gap: "48px", flexWrap: "wrap", marginTop: "8px" }} className="vcx-gt-metrics">
           <div className="vcx-gt-metric">
@@ -566,60 +914,65 @@ export default function DXYZNAVFinder() {
             <div style={{ ...styles.gtValue, fontSize: "32px", marginBottom: "4px" }} className="vcx-gt-value-small">${dxyzPrice.toFixed(2)}</div>
           </div>
           <div className="vcx-gt-metric">
-            <div style={styles.gtLabel}>Premium to NAV</div>
-            <div style={{ ...styles.gtValue, fontSize: "32px", marginBottom: "4px", color: dxyzPrice > calc.navPerShare ? "#fbbf24" : "#86efac" }} className="vcx-gt-value-small">
-              {((dxyzPrice / calc.navPerShare - 1) * 100).toFixed(0)}%
+            <div style={styles.gtLabel}>{bridgeActive ? "Premium to PF NAV" : "Premium to NAV"}</div>
+            <div style={{ ...styles.gtValue, fontSize: "32px", marginBottom: "4px", color: dxyzPrice > effectiveNav ? "#fbbf24" : "#86efac" }} className="vcx-gt-value-small">
+              {((dxyzPrice / effectiveNav - 1) * 100).toFixed(0)}%
             </div>
           </div>
           <div className="vcx-gt-metric">
-            <div style={styles.gtLabel}>Price ÷ NAV</div>
-            <div style={{ ...styles.gtValue, fontSize: "32px", marginBottom: "4px" }} className="vcx-gt-value-small">{(dxyzPrice / calc.navPerShare).toFixed(2)}x</div>
+            <div style={styles.gtLabel}>{bridgeActive ? "Price ÷ PF NAV" : "Price ÷ NAV"}</div>
+            <div style={{ ...styles.gtValue, fontSize: "32px", marginBottom: "4px" }} className="vcx-gt-value-small">{(dxyzPrice / effectiveNav).toFixed(2)}x</div>
           </div>
           <div className="vcx-gt-metric">
             <div style={styles.gtLabel}>Implied DXYZ Mkt Cap</div>
-            <div style={{ ...styles.gtValue, fontSize: "32px", marginBottom: "4px" }} className="vcx-gt-value-small">{fmt$(dxyzPrice * dxyzShares * 1_000_000)}</div>
+            <div style={{ ...styles.gtValue, fontSize: "32px", marginBottom: "4px" }} className="vcx-gt-value-small">{fmt$(dxyzPrice * effectiveShares)}</div>
           </div>
         </div>
         <div style={styles.gtMeta}>
-          Estimated NAV based on user-supplied marks · {dxyzShares.toFixed(2)}M shares outstanding · Compare to DXYZ market price to see premium or discount
+          {bridgeActive
+            ? `Estimated NAV from user-supplied marks + modeled ATM issuance (${atmMode} mode) · ${fmtM(effectiveShares)} est. pro forma shares · Estimated, not company reported`
+            : `Filed-basis NAV from user-supplied marks · ${dxyzShares.toFixed(2)}M shares outstanding (3/31/26) · No post-March issuance modeled`}
         </div>
       </div>
 
       <div style={styles.footer}>
         <div><strong>Changelog:</strong></div>
         <div style={{ marginBottom: "16px" }}>
-          • <strong>June 15, 2026</strong> — Updated the baseline NAV math to reconcile with DXYZ's March 31, 2026 SEC disclosures: $24.56 NAV per share, approximately $742.5M of portfolio value, March 31 portfolio weights, and an implied 30.23M share count. Added real-time DXYZ market price fetching from Yahoo Finance via the shared price API.<br />
+          • <strong>July 9, 2026</strong> — Added the ATM Issuance Bridge. Reconciled the March 31 baseline to filed net assets ($742.5M portfolio + $5.9M other net assets = $748.36M per the NPORT-P), correcting implied shares outstanding from 30.23M to ~30.47M. Added Filed Only / Calibrated Estimate / Custom modes that estimate post-March ATM share issuance: Apr 1–May 21 shares (~10.90M) inferred from the May 26 424B5 share count, post-May-26 issuance modeled daily from Yahoo price/volume history at a calibrated ~8.3% volume-participation rate, capped at $1B gross capacity, with no issuance on days at or below rolling NAV. Commission, participation, capacity, premium threshold, expense drag, and as-of date are adjustable. Every figure is labeled Filed, Inferred, or Estimated.<br />
+          • <strong>June 15, 2026</strong> — Updated the baseline NAV math to reconcile with DXYZ&apos;s March 31, 2026 SEC disclosures: $24.56 NAV per share, approximately $742.5M of portfolio value, March 31 portfolio weights, and an implied 30.23M share count. Added real-time DXYZ market price fetching from Yahoo Finance via the shared price API.<br />
         </div>
 
         <div><strong>Sources & Methodology:</strong></div>
-        <div>• <strong>Baseline NAV:</strong> $24.56 per share as of March 31, 2026, per the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000157587226000359/dxyz102_424b5.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>May 26, 2026 424B5</a>.</div>
+        <div>• <strong>Baseline NAV & Net Assets:</strong> $24.56 per share; $753.29M total assets, $4.93M liabilities, $748.36M net assets as of March 31, 2026, per the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000089418926016628/xslFormNPORT-P_X01/primary_doc.xml" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>March 31, 2026 NPORT-P</a> and <a href="https://www.sec.gov/Archives/edgar/data/1843974/000157587226000359/dxyz102_424b5.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>May 26, 2026 424B5</a>.</div>
         <div>• <strong>Portfolio Value:</strong> Approximately $742.5M as of March 31, 2026, per the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000157587226000288/dxyz100_424b3.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>May 12, 2026 424B3 portfolio supplement</a>.</div>
         <div>• <strong>Share Counts:</strong> Extracted from the December 31, 2025 Schedule of Investments within the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000121390026025304/ea0276106-01_ncsr.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSR filed March 10, 2026</a> where available. For holdings where March 31 only discloses portfolio percentages, baseline value is inferred from the filed $742.5M portfolio value.</div>
-        <div>• <strong>Outstanding Shares:</strong> Defaults to ~30.23M, implied by $742.5M portfolio value divided by the filed $24.56 NAV per share.</div>
+        <div>• <strong>Outstanding Shares:</strong> Defaults to ~30.47M, implied by $748.36M filed net assets divided by the filed $24.56 NAV per share (inferred — the NPORT-P does not state a share count directly).</div>
+        <div>• <strong>ATM Program:</strong> Q1 2026 sales of 8,489,359 shares at $28.76 weighted average (~$244.1M net; already reflected in the March 31 baseline) per the 424B3. New $1B gross-capacity program through Jefferies (commission up to 3.0% of gross sales price) per the 424B5, which discloses up to 57,591,678 shares outstanding <em>after</em> a full offering at the assumed $61.66 price — implying ~41.37M pre-offering shares and thus ~10.90M shares issued April 1–May 21 under the prior program (inferred).</div>
+        <div>• <strong>Post-May-26 Issuance (estimated):</strong> Modeled daily as a fixed share of Yahoo Finance trading volume (calibrated ~8.3%), issuing only on days above rolling pro forma NAV, until gross capacity is exhausted. Estimated, not company reported.</div>
       </div>
 
       <div style={styles.stickyBar} className="vcx-sticky-bar">
         <div style={styles.stickyInner}>
           <div style={styles.stickyMetric}>
-            <div style={styles.stickyLabel}>NAV / Share</div>
-            <div style={styles.stickyValueAccent}>${calc.navPerShare.toFixed(2)}</div>
+            <div style={styles.stickyLabel}>{bridgeActive ? "Est. PF NAV / Share" : "NAV / Share"}</div>
+            <div style={styles.stickyValueAccent}>${effectiveNav.toFixed(2)}</div>
           </div>
           <div style={styles.stickyDivider} />
           <div style={styles.stickyMetric}>
             <div style={styles.stickyLabel}>Premium</div>
-            <div style={{ ...styles.stickyValue, color: dxyzPrice > calc.navPerShare ? "#fbbf24" : "#86efac" }}>
-              {((dxyzPrice / calc.navPerShare - 1) * 100).toFixed(0)}%
+            <div style={{ ...styles.stickyValue, color: dxyzPrice > effectiveNav ? "#fbbf24" : "#86efac" }}>
+              {((dxyzPrice / effectiveNav - 1) * 100).toFixed(0)}%
             </div>
           </div>
           <div style={styles.stickyDivider} />
           <div style={styles.stickyMetric}>
             <div style={styles.stickyLabel}>Price ÷ NAV</div>
-            <div style={styles.stickyValue}>{(dxyzPrice / calc.navPerShare).toFixed(2)}x</div>
+            <div style={styles.stickyValue}>{(dxyzPrice / effectiveNav).toFixed(2)}x</div>
           </div>
           <div style={styles.stickyDivider} />
           <div style={styles.stickyMetric}>
-            <div style={styles.stickyLabel}>Total NAV</div>
-            <div style={styles.stickyValue}>{fmt$(calc.totalNAV)}</div>
+            <div style={styles.stickyLabel}>{bridgeActive ? "Est. Net Assets" : "Total NAV"}</div>
+            <div style={styles.stickyValue}>{fmt$(atmBridge.proFormaAssets)}</div>
           </div>
           <div style={styles.stickyDivider} />
           <div style={styles.stickyMetric}>
