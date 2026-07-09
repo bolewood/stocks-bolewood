@@ -8,7 +8,7 @@
 
 **Why:** The history route's resilience layers (cache, in-flight coalescing, stale fallback, snapshot) are the feature's whole failure story and currently only verifiable against a running dev server — `next/server` cannot be imported under bare `node --test`.
 
-**Context:** Attempted during the v0.2.0.0 ship review; import fails with "Cannot find module next/server" because the export alias needs bundler resolution. Options: extract the Yahoo-parse and fallback logic into a pure `lib/` function (testable today), or add vitest with the Next server condition. The 5 route branches are enumerated in the ship review's coverage diagram.
+**Context:** Attempted during the v0.2.0.0 ship review; import fails with "Cannot find module next/server" because the export alias needs bundler resolution. Options: extract the Yahoo-parse and fallback logic into a pure `lib/` function (testable today), or add vitest with the Next server condition. The route's branches (cache hit, live parse, stale fallback, snapshot fallback, failure window) are enumerated in the ship review's coverage diagram.
 
 **Effort:** M
 **Priority:** P2

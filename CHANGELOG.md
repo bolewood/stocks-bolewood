@@ -7,9 +7,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (M
 
 ### Added
 - **DXYZ ATM Issuance Bridge** — the DXYZ NAV Finder now estimates share issuance since the March 31, 2026 filing, so the headline NAV reflects the fund as it likely exists today instead of a quarter-old snapshot. Three modes: Filed Only (the filed baseline), Calibrated Estimate (inferred Apr–May issuance of ~10.9M shares from the May 26 424B5, plus daily post-May-26 simulation at a market-calibrated ~8.3% volume-participation rate), and Custom (every assumption editable: shares, prices, participation, commission, capacity, premium threshold, expense drag, as-of date).
-- Every bridge figure carries a FILED / INFERRED / ESTIMATED confidence badge, with a prominent "Estimated, not company reported" notice; user re-marks are never displayed under a FILED label.
+- Every bridge row carries a FILED / INFERRED / ESTIMATED confidence badge, with a prominent "Estimated, not company reported" notice; user re-marks are never displayed under a FILED label.
 - Low / calibrated / high participation sensitivity table, remaining $1B ATM capacity readout, and per-share accretion.
-- Daily DXYZ price/volume history served by a new `/api/dxyz-history` route with layered resilience: 1-hour cache, single in-flight upstream fetch, stale-cache fallback, and a checked-in snapshot as last resort — each labeled in the UI.
+- Daily DXYZ price/volume history served by a new `/api/dxyz-history` route with layered resilience: 1-hour cache, single in-flight upstream fetch, stale-cache fallback, and a checked-in snapshot as last resort — the UI badges live/cached data as LIVE, degraded data as CACHED or SNAPSHOT.
 - Test infrastructure: `npm test` (node --test) with 22 tests covering the issuance math, gates, clamps, and calibration.
 
 ### Changed
