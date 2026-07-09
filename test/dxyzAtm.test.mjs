@@ -9,6 +9,7 @@ import {
   impliedMarch31Shares,
   inferredAprMayShares,
   windowStats,
+  completedTradingRows,
   calibrate,
   simulatePostMay,
   computeAtmBridge,
@@ -126,13 +127,66 @@ test("empty windows are zero-safe: windowStats, calibrate, and computeAtmBridge"
   assert.equal(cal.participation, 0); // division-by-zero guard
   assert.equal(cal.aprMayAvgPrice, 0);
 
-  // No history rows: as-of falls back to the filed date, no drag, no NaN.
+  // No history rows means the inferred bridge cannot be valued: no inferred
+  // shares are added (10.9M shares at $0 proceeds would crater NAV), so the
+  // bridge degrades to the marked baseline.
   const b = computeAtmBridge({ mode: "calibrated", rows: [] });
   assert.equal(b.asOfDate, FILED.asOf);
   assert.equal(b.days, 0);
   assert.equal(b.drag, 0);
+  assert.equal(b.aprMay.shares, 0);
   assert.equal(b.postMay.shares, 0);
-  assert.ok(Number.isFinite(b.proFormaNav), `got ${b.proFormaNav}`);
+  assert.equal(b.proFormaNav.toFixed(2), "24.56");
+});
+
+test("modeled issuance is invariant to user re-marks (filed-basis gate)", () => {
+  // The fund issues against its own NAV, not the viewer's hypothetical marks:
+  // tripling the marked net assets must not change how many shares the model
+  // says were sold, only the asset side of the pro forma NAV.
+  const atFiled = computeAtmBridge({ mode: "calibrated", rows: snapshot.rows });
+  const atDream = computeAtmBridge({
+    mode: "calibrated",
+    rows: snapshot.rows,
+    markedNetAssets: FILED.netAssets * 3,
+  });
+  assert.equal(atDream.postMay.shares, atFiled.postMay.shares);
+  assert.equal(atDream.postMay.gross, atFiled.postMay.gross);
+  assert.equal(atDream.aprMay.shares, atFiled.aprMay.shares);
+  assert.ok(atDream.proFormaAssets > atFiled.proFormaAssets);
+  assert.ok(atDream.proFormaNav > atFiled.proFormaNav);
+});
+
+test("out-of-range rates are clamped: commission to [0,1], participation to >= 0", () => {
+  const rows = Array.from({ length: 5 }, (_, i) => ({
+    date: `2026-06-${String(i + 1).padStart(2, "0")}`,
+    close: 60,
+    volume: 5_000_000,
+  }));
+  const base = {
+    rows,
+    startingNetAssets: FILED.netAssets,
+    startingShares: impliedMarch31Shares(),
+  };
+  const overCommission = simulatePostMay({ ...base, participation: 0.083, commissionRate: 1.5 });
+  assert.ok(overCommission.shares > 0);
+  assert.equal(overCommission.net, 0); // clamped to 100%, never negative
+
+  const negParticipation = simulatePostMay({ ...base, participation: -0.5, commissionRate: 0.005 });
+  assert.equal(negParticipation.shares, 0);
+  assert.equal(negParticipation.gross, 0);
+});
+
+test("completedTradingRows drops the in-progress session only", () => {
+  const rows = [
+    { date: "2026-07-07", close: 24.54, volume: 862_300 },
+    { date: "2026-07-08", close: 24.86, volume: 751_400 },
+    { date: "2026-07-09", close: 27.6, volume: 1_121_930 },
+  ];
+  const trimmed = completedTradingRows(rows, "2026-07-09");
+  assert.equal(trimmed.length, 2);
+  assert.equal(trimmed[trimmed.length - 1].date, "2026-07-08");
+  // A later "today" keeps the now-completed bar.
+  assert.equal(completedTradingRows(rows, "2026-07-10").length, 3);
 });
 
 test("minPremium gates issuance on days at a premium below the threshold", () => {

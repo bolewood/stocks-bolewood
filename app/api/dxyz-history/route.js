@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import snapshot from "./snapshot.json";
+import { completedTradingRows } from "../../../lib/dxyzAtm.mjs";
 
 // Daily DXYZ close/volume history for the ATM issuance bridge.
 // Mirrors app/api/prices/route.js conventions: in-memory cache, per-request
@@ -9,9 +10,24 @@ import snapshot from "./snapshot.json";
 // 2026-03-31 00:00 ET — history starts at the filed NAV baseline date.
 const PERIOD1 = 1774929600;
 const CACHE_TTL_MS = 60 * 60 * 1000; // historical bars change once a day
+// After a Yahoo failure, serve the snapshot without re-hitting the upstream
+// (and its 8s timeout) on every request for a short window.
+const FAILURE_TTL_MS = 60 * 1000;
 
 let cachedRows = null;
 let cacheTimestamp = 0;
+let failureTimestamp = 0;
+
+const todayNY = () =>
+  new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+
+function snapshotResponse() {
+  return NextResponse.json({
+    rows: completedTradingRows(snapshot.rows, todayNY()),
+    source: "snapshot",
+    asOf: new Date(snapshot.asOf).toISOString(),
+  });
+}
 
 export async function GET() {
   const now = Date.now();
@@ -22,6 +38,10 @@ export async function GET() {
       source: "cache",
       asOf: new Date(cacheTimestamp).toISOString(),
     });
+  }
+
+  if (now - failureTimestamp < FAILURE_TTL_MS) {
+    return snapshotResponse();
   }
 
   try {
@@ -42,7 +62,7 @@ export async function GET() {
     const timestamps = result?.timestamp || [];
     const quote = result?.indicators?.quote?.[0] || {};
 
-    const rows = [];
+    let rows = [];
     for (let i = 0; i < timestamps.length; i++) {
       const close = quote.close?.[i];
       const volume = quote.volume?.[i];
@@ -53,6 +73,11 @@ export async function GET() {
       });
       rows.push({ date, close: Math.round(close * 100) / 100, volume });
     }
+
+    // Consumers (lib/dxyzAtm.mjs) require ascending dates and completed
+    // sessions only — the in-progress bar carries partial volume.
+    rows.sort((a, b) => a.date.localeCompare(b.date));
+    rows = completedTradingRows(rows, todayNY());
 
     if (rows.length === 0) throw new Error("Yahoo returned no usable rows");
 
@@ -65,10 +90,7 @@ export async function GET() {
     });
   } catch (err) {
     console.warn(`DXYZ history fetch failed: ${err.message}`);
-    return NextResponse.json({
-      rows: snapshot.rows,
-      source: "snapshot",
-      asOf: snapshot.asOf,
-    });
+    failureTimestamp = now;
+    return snapshotResponse();
   }
 }
