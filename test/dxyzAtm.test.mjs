@@ -222,6 +222,28 @@ test("completedTradingRows drops the in-progress session only", () => {
   assert.equal(trimmed[trimmed.length - 1].date, "2026-07-08");
   // A later "today" keeps the now-completed bar.
   assert.equal(completedTradingRows(rows, "2026-07-10").length, 3);
+  // After the 16:00 ET close (16:05 buffer), today's bar is completed and kept
+  // — dropping it until midnight would leave the bridge a session stale.
+  assert.equal(completedTradingRows(rows, "2026-07-09", 15 * 60).length, 2); // 3:00pm
+  assert.equal(completedTradingRows(rows, "2026-07-09", 16 * 60 + 5).length, 3); // 4:05pm
+});
+
+test("computeAtmBridge enforces the filed 3% commission cap", () => {
+  // The UI advertises "up to 3.0%"; a typed 30 must not model 30% commission.
+  const capped = computeAtmBridge({
+    mode: "custom",
+    rows: snapshot.rows,
+    commissionRate: 0.30,
+    expenseDragAnnualRate: 0,
+  });
+  const atCap = computeAtmBridge({
+    mode: "custom",
+    rows: snapshot.rows,
+    commissionRate: PROSPECTUS_424B5.commissionCap,
+    expenseDragAnnualRate: 0,
+  });
+  assert.equal(capped.aprMay.net, atCap.aprMay.net);
+  assert.equal(capped.proFormaNav, atCap.proFormaNav);
 });
 
 test("minPremium gates issuance on days at a premium below the threshold", () => {

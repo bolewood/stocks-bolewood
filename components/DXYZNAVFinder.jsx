@@ -293,10 +293,19 @@ export default function DXYZNAVFinder() {
 
     // Client-side only: drop the in-progress session from the baked-in
     // snapshot (the route applies the same filter to what it serves).
+    // Post-close, today's completed bar is kept.
+    const nyParts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/New_York",
+      hour12: false,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit",
+    }).formatToParts(new Date());
+    const nyGet = (type) => nyParts.find((p) => p.type === type)?.value;
     setHistoryRows(
       completedTradingRows(
         historySnapshot.rows,
-        new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" })
+        `${nyGet("year")}-${nyGet("month")}-${nyGet("day")}`,
+        parseInt(nyGet("hour"), 10) * 60 + parseInt(nyGet("minute"), 10)
       )
     );
 
