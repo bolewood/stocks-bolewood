@@ -10,5 +10,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # API routes
 
-- `/api/dxyz-history` — daily DXYZ price/volume history (Yahoo upstream) with a 1-hour cache, stale-cache fallback, and a checked-in snapshot (`app/api/dxyz-history/snapshot.json`) as last resort. Consumed by `components/DXYZNAVFinder.jsx` via `lib/dxyzAtm.mjs`.
+- `/api/dxyz-history` — daily DXYZ price/volume history (Yahoo upstream) with a 1-hour cache, stale-cache fallback, and a checked-in snapshot (`app/api/dxyz-history/snapshot.json`) as last resort. Returns `{ rows, source, asOf }` where `source` is `live | cache | stale | snapshot`. Consumed by `components/DXYZNAVFinder.jsx` via `lib/dxyzAtm.mjs`.
 - `/api/prices` — real-time quote fetch shared by the finders.
