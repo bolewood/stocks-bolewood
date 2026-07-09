@@ -6,8 +6,12 @@ import {
   FILED,
   OTHER_NET_ASSETS,
   PROSPECTUS_424B5,
+  PRIOR_ATM,
+  Q1_ATM,
+  DEFAULTS,
   impliedMarch31Shares,
   inferredAprMayShares,
+  priorShelfRemainingApr1,
   windowStats,
   completedTradingRows,
   calibrate,
@@ -211,6 +215,24 @@ test("negative or NaN custom inputs cannot invert the issuance gate", () => {
   assert.ok(Number.isFinite(nan.proFormaNav));
 });
 
+test("partial calibration windows are rejected, not misinterpreted", () => {
+  // One Apr row would assign all 10.9M inferred shares to a single day's
+  // volume (absurd participation) — a truncated feed must degrade exactly
+  // like an empty one.
+  const partial = [
+    { date: "2026-04-15", close: 35, volume: 3_000_000 },
+    { date: "2026-06-01", close: 40, volume: 2_000_000 },
+  ];
+  const cal = calibrate(partial);
+  assert.equal(cal.participation, 0);
+  assert.equal(cal.aprMayAvgPrice, 0);
+  const b = computeAtmBridge({ mode: "calibrated", rows: partial });
+  assert.equal(b.aprMay.shares, 0);
+  assert.equal(b.postMay.shares, 0);
+  // Full snapshot still calibrates normally.
+  assert.ok(calibrate(snapshot.rows).participation > 0.08);
+});
+
 test("completedTradingRows drops the in-progress session only", () => {
   const rows = [
     { date: "2026-07-07", close: 24.54, volume: 862_300 },
@@ -226,6 +248,95 @@ test("completedTradingRows drops the in-progress session only", () => {
   // — dropping it until midnight would leave the bridge a session stale.
   assert.equal(completedTradingRows(rows, "2026-07-09", 15 * 60).length, 2); // 3:00pm
   assert.equal(completedTradingRows(rows, "2026-07-09", 16 * 60 + 5).length, 3); // 4:05pm
+});
+
+test("prior shelf remainder reconciles to filed gross usage", () => {
+  // $1B registered − 2025 gross (11,096,400 × $29.48, N-CSR) − Q1 gross
+  // (8,489,359 × $28.76, 424B3) ≈ $428.7M entering April 1.
+  const remaining = priorShelfRemainingApr1();
+  assert.ok(Math.abs(remaining - 428_724_163) < 1_000, `got ${remaining}`);
+  // Pin each filed component independently (not the formula against itself):
+  // 2025 gross ≈ $327.1M (N-CSR) and Q1 gross ≈ $244.2M (424B3).
+  assert.ok(Math.abs(PRIOR_ATM.sold2025.shares * PRIOR_ATM.sold2025.wavgPrice - 327_121_872) < 1_000);
+  assert.ok(Math.abs(Q1_ATM.shares * Q1_ATM.wavgPrice - 244_153_965) < 1_000);
+  assert.equal(PRIOR_ATM.registered, 1_000_000_000);
+});
+
+test("Apr–May proceeds are capped at the prior shelf's filed remainder", () => {
+  // At the observed ~$46.23 close-VWAP, 10.9M shares would gross ~$504M —
+  // more than the old shelf could legally supply. The cap binds and the
+  // effective average price falls out of the division.
+  const b = computeAtmBridge({ mode: "calibrated", rows: snapshot.rows });
+  assert.equal(b.aprMay.capped, true);
+  assert.ok(Math.abs(b.aprMay.gross - priorShelfRemainingApr1()) < 1);
+  assert.ok(Math.abs(b.aprMay.avgPrice - 39.32) < 0.05, `got ${b.aprMay.avgPrice}`);
+  assert.ok(b.aprMay.avgPrice < 46); // strictly below the uncapped VWAP
+  // Cap must not bind when modeled proceeds fit inside the remainder.
+  const low = computeAtmBridge({
+    mode: "custom",
+    rows: snapshot.rows,
+    aprMayAvgPrice: 30,
+  });
+  assert.equal(low.aprMay.capped, false);
+  assert.equal(low.aprMay.avgPrice, 30);
+});
+
+test("explicit price overrides bypass the cap; shares-only overrides stay capped", () => {
+  // A typed price is the user's counterfactual — honoring it silently clamped
+  // would present unchanged math as if the override were applied.
+  const explicit = computeAtmBridge({
+    mode: "custom",
+    rows: snapshot.rows,
+    aprMayAvgPrice: 50,
+    expenseDragAnnualRate: 0,
+  });
+  assert.equal(explicit.aprMay.capped, false);
+  assert.equal(explicit.aprMay.avgPrice, 50);
+  assert.ok(explicit.aprMay.gross > priorShelfRemainingApr1());
+
+  // Shares-only override: price stays estimated (VWAP), so the filed shelf
+  // cap still applies and re-derives the effective average.
+  const sharesOnly = computeAtmBridge({
+    mode: "custom",
+    rows: snapshot.rows,
+    aprMayShares: 20_000_000,
+    expenseDragAnnualRate: 0,
+  });
+  assert.equal(sharesOnly.aprMay.capped, true);
+  assert.ok(Math.abs(sharesOnly.aprMay.gross - priorShelfRemainingApr1()) < 1);
+  assert.ok(Math.abs(sharesOnly.aprMay.avgPrice - priorShelfRemainingApr1() / 20_000_000) < 0.01);
+});
+
+test("every mode exposes the cap flag and prior-shelf remainder the UI reads", () => {
+  // The UI renders atmBridge.aprMay.capped / .priorRemaining unconditionally;
+  // the filed-mode early return must supply the same contract as the full path.
+  const filed = computeAtmBridge({ mode: "filed", rows: snapshot.rows });
+  assert.equal(filed.aprMay.capped, false); // no inferred layer → cap never binds
+  assert.equal(filed.aprMay.priorRemaining, priorShelfRemainingApr1());
+
+  const cal = computeAtmBridge({ mode: "calibrated", rows: snapshot.rows });
+  assert.equal(cal.aprMay.priorRemaining, priorShelfRemainingApr1());
+
+  // Empty history degrades to zero inferred issuance — must not report capped.
+  const empty = computeAtmBridge({ mode: "calibrated", rows: [] });
+  assert.equal(empty.aprMay.capped, false);
+  assert.equal(empty.aprMay.priorRemaining, priorShelfRemainingApr1());
+});
+
+test("commission default is calibrated to the filed ~0.95% effective rate", () => {
+  // N-CSR: 11,096,400 shares at $29.48 wavg grossed ~$327.1M for $324.0M net
+  // → ~0.95% effective; the 1.0% default must round from that, and flow into
+  // the capped Apr–May net proceeds.
+  const gross2025 = PRIOR_ATM.sold2025.shares * PRIOR_ATM.sold2025.wavgPrice;
+  const effective = 1 - PRIOR_ATM.sold2025.netProceeds / gross2025;
+  assert.ok(Math.abs(effective - 0.0095) < 0.0005, `got ${effective}`);
+  assert.equal(DEFAULTS.commissionRate, 0.01);
+
+  const b = computeAtmBridge({ mode: "calibrated", rows: snapshot.rows });
+  assert.ok(
+    Math.abs(b.aprMay.net - priorShelfRemainingApr1() * (1 - DEFAULTS.commissionRate)) < 1,
+    `net ${b.aprMay.net}`
+  );
 });
 
 test("computeAtmBridge enforces the filed 3% commission cap", () => {
