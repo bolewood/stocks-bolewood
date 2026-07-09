@@ -6,8 +6,11 @@ import {
   FILED,
   OTHER_NET_ASSETS,
   PROSPECTUS_424B5,
+  PRIOR_ATM,
+  Q1_ATM,
   impliedMarch31Shares,
   inferredAprMayShares,
+  priorShelfRemainingApr1,
   windowStats,
   completedTradingRows,
   calibrate,
@@ -226,6 +229,38 @@ test("completedTradingRows drops the in-progress session only", () => {
   // — dropping it until midnight would leave the bridge a session stale.
   assert.equal(completedTradingRows(rows, "2026-07-09", 15 * 60).length, 2); // 3:00pm
   assert.equal(completedTradingRows(rows, "2026-07-09", 16 * 60 + 5).length, 3); // 4:05pm
+});
+
+test("prior shelf remainder reconciles to filed gross usage", () => {
+  // $1B registered − 2025 gross (11,096,400 × $29.48, N-CSR) − Q1 gross
+  // (8,489,359 × $28.76, 424B3) ≈ $428.7M entering April 1.
+  const remaining = priorShelfRemainingApr1();
+  assert.ok(Math.abs(remaining - 428_724_163) < 1_000, `got ${remaining}`);
+  assert.equal(
+    PRIOR_ATM.registered -
+      PRIOR_ATM.sold2025.shares * PRIOR_ATM.sold2025.wavgPrice -
+      Q1_ATM.shares * Q1_ATM.wavgPrice,
+    remaining
+  );
+});
+
+test("Apr–May proceeds are capped at the prior shelf's filed remainder", () => {
+  // At the observed ~$46.23 close-VWAP, 10.9M shares would gross ~$504M —
+  // more than the old shelf could legally supply. The cap binds and the
+  // effective average price falls out of the division.
+  const b = computeAtmBridge({ mode: "calibrated", rows: snapshot.rows });
+  assert.equal(b.aprMay.capped, true);
+  assert.ok(Math.abs(b.aprMay.gross - priorShelfRemainingApr1()) < 1);
+  assert.ok(Math.abs(b.aprMay.avgPrice - 39.32) < 0.05, `got ${b.aprMay.avgPrice}`);
+  assert.ok(b.aprMay.avgPrice < 46); // strictly below the uncapped VWAP
+  // Cap must not bind when modeled proceeds fit inside the remainder.
+  const low = computeAtmBridge({
+    mode: "custom",
+    rows: snapshot.rows,
+    aprMayAvgPrice: 30,
+  });
+  assert.equal(low.aprMay.capped, false);
+  assert.equal(low.aprMay.avgPrice, 30);
 });
 
 test("computeAtmBridge enforces the filed 3% commission cap", () => {

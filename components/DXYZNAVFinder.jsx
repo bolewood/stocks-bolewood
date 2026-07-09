@@ -5,9 +5,11 @@ import {
   FILED,
   OTHER_NET_ASSETS,
   PROSPECTUS_424B5,
+  PRIOR_ATM,
   Q1_ATM,
   DEFAULTS as ATM_DEFAULTS,
   impliedMarch31Shares,
+  priorShelfRemainingApr1,
   completedTradingRows,
   calibrate,
   computeAtmBridge,
@@ -407,7 +409,9 @@ export default function DXYZNAVFinder() {
     return [
       { label: "Low", participation: 0.05 },
       { label: "Calibrated", participation: atmCal.participation },
-      { label: "High", participation: 0.10 },
+      // 16.4% is the filed Aug–Sep 2025 issuance pace (2.97M shares into
+      // ~18.1M traded) — the historical high-water mark, not a guess.
+      { label: "High", participation: 0.16 },
     ].map(({ label, participation }) => ({
       label,
       participation,
@@ -562,7 +566,7 @@ export default function DXYZNAVFinder() {
                 className="vcx-input vcx-small-input"
               />
               <div style={{ fontSize: "10px", color: "#78716c", fontFamily: "'JetBrains Mono', monospace", marginTop: "4px" }}>
-                Cap {(PROSPECTUS_424B5.commissionCap * 100).toFixed(1)}%; filed Q1 implies ~0.02% effective
+                Cap {(PROSPECTUS_424B5.commissionCap * 100).toFixed(1)}%; filed 2025 effective ~0.95% (N-CSR)
               </div>
             </div>
             {atmMode === "custom" && (
@@ -638,7 +642,10 @@ export default function DXYZNAVFinder() {
                 <div style={{ ...styles.td, flex: "2.4" }}>
                   <div style={styles.companyName}>+ Apr 1 – May 21 ATM (prior program) <ConfBadge level="INFERRED" /></div>
                   <div style={styles.companyNote}>
-                    Backed out of the 424B5 share count: {fmtM(atmBridge.aprMay.shares)} shares @ ~${atmBridge.aprMay.avgPrice.toFixed(2)} close-volume-weighted
+                    {fmtM(atmBridge.aprMay.shares)} shares backed out of the 424B5 share count
+                    {atmBridge.aprMay.capped
+                      ? `; gross capped at the prior $1B program's ${fmt$(atmBridge.aprMay.priorRemaining)} filed remainder → ~$${atmBridge.aprMay.avgPrice.toFixed(2)} effective avg (shelf exhausted by May 21; new program effective May 26)`
+                      : ` @ ~$${atmBridge.aprMay.avgPrice.toFixed(2)} close-volume-weighted`}
                   </div>
                 </div>
                 <div style={{ ...styles.td, flex: "1.3", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Shares">+{fmtM(atmBridge.aprMay.shares)}</div>
@@ -696,6 +703,7 @@ export default function DXYZNAVFinder() {
           }}>
             <span>ATM accretion: <strong style={{ color: atmBridge.accretionPerShare >= 0 ? "#15803d" : "#b91c1c" }}>{atmBridge.accretionPerShare >= 0 ? "+" : ""}${atmBridge.accretionPerShare.toFixed(2)}/sh</strong></span>
             <span>Remaining new-ATM capacity: <strong>{fmt$(atmBridge.postMay.capacityRemaining)}</strong> of {fmt$(PROSPECTUS_424B5.capacityGross)} gross</span>
+            <span>Next filed NAV: June 30 N-PORT, due ~Aug 29, 2026</span>
             <span>History: {historyRows.length} trading days ·{" "}
               <span style={{ color: historySource === "live" || historySource === "cache" ? "#15803d" : historySource === "stale" ? "#d97706" : "#78716c" }}>
                 {historySource === "live" || historySource === "cache"
@@ -720,6 +728,9 @@ export default function DXYZNAVFinder() {
               <div key={label} style={{ ...styles.tr, ...(label === "Calibrated" ? { background: "#fffbeb" } : {}) }} className="vcx-row">
                 <div style={{ ...styles.td, flex: "1.6" }}>
                   <div style={styles.companyName}>{label} — {(participation * 100).toFixed(1)}%</div>
+                  {label === "High" && (
+                    <div style={styles.companyNote}>Filed Aug–Sep 2025 issuance pace — the program&apos;s high-water mark</div>
+                  )}
                 </div>
                 <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Post-5/26 Shares">{fmtM(bridge.postMay.shares)}</div>
                 <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Gross Raised">{fmt$(bridge.postMay.gross)}</div>
@@ -985,6 +996,7 @@ export default function DXYZNAVFinder() {
       <div style={styles.footer}>
         <div><strong>Changelog:</strong></div>
         <div style={{ marginBottom: "16px" }}>
+          • <strong>July 9, 2026 (calibration refinement)</strong> — Capped the inferred Apr 1–May 21 issuance proceeds at the original $1B ATM program&apos;s filed remainder (~$429M gross: $1B less $327.1M of 2025 sales per the N-CSR and $244.2M of Q1 sales per the 424B3), deriving a ~$39 effective average price instead of the $46.23 close-VWAP — the new $1B prospectus is dated May 26, so the old shelf was the only capacity available. Commission default recalibrated to 1.0% from the audited 2025 gross-vs-net (~0.95% effective). Sensitivity high bound raised to 16%, the filed Aug–Sep 2025 issuance pace. Added the next filed NAV checkpoint (June 30 N-PORT, due ~Aug 29).<br />
           • <strong>July 9, 2026</strong> — Added the ATM Issuance Bridge. Reconciled the March 31 baseline to filed net assets ($742.5M portfolio + $5.9M other net assets = $748.36M per the NPORT-P), correcting implied shares outstanding from 30.23M to ~30.47M. Added Filed Only / Calibrated Estimate / Custom modes that estimate post-March ATM share issuance: Apr 1–May 21 shares (~10.90M) inferred from the May 26 424B5 share count, post-May-26 issuance modeled daily from Yahoo price/volume history at a calibrated ~8.3% volume-participation rate, capped at $1B gross capacity, with no issuance on days at or below rolling NAV. Commission, participation, capacity, premium threshold, expense drag, and as-of date are adjustable. Every figure is labeled Filed, Inferred, or Estimated.<br />
           • <strong>June 15, 2026</strong> — Updated the baseline NAV math to reconcile with DXYZ&apos;s March 31, 2026 SEC disclosures: $24.56 NAV per share, approximately $742.5M of portfolio value, March 31 portfolio weights, and an implied 30.23M share count. Added real-time DXYZ market price fetching from Yahoo Finance via the shared price API.<br />
         </div>
@@ -994,7 +1006,7 @@ export default function DXYZNAVFinder() {
         <div>• <strong>Portfolio Value:</strong> Approximately $742.5M as of March 31, 2026, per the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000157587226000288/dxyz100_424b3.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>May 12, 2026 424B3 portfolio supplement</a>.</div>
         <div>• <strong>Share Counts:</strong> Extracted from the December 31, 2025 Schedule of Investments within the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000121390026025304/ea0276106-01_ncsr.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSR filed March 10, 2026</a> where available. For holdings where March 31 only discloses portfolio percentages, baseline value is inferred from the filed $742.5M portfolio value.</div>
         <div>• <strong>Outstanding Shares:</strong> Defaults to ~30.47M, implied by $748.36M filed net assets divided by the filed $24.56 NAV per share (inferred — the NPORT-P does not state a share count directly).</div>
-        <div>• <strong>ATM Program:</strong> Q1 2026 sales of {Q1_ATM.shares.toLocaleString("en-US")} shares at ${Q1_ATM.wavgPrice} weighted average (~{fmt$(Q1_ATM.netProceeds)} net; already reflected in the March 31 baseline) per the 424B3. New $1B gross-capacity program through Jefferies (commission up to 3.0% of gross sales price) per the 424B5, which discloses up to 57,591,678 shares outstanding <em>after</em> a full offering at the assumed $61.66 price — implying ~41.37M pre-offering shares and thus ~10.90M shares issued April 1–May 21 under the prior program (inferred).</div>
+        <div>• <strong>Prior ATM Program:</strong> Original $1B shelf (File 333-278734) effective July 15, 2025; Jefferies Sales Agreement dated August 8, 2025. Sold {PRIOR_ATM.sold2025.shares.toLocaleString("en-US")} shares at ${PRIOR_ATM.sold2025.wavgPrice} weighted average through December 31, 2025 (${(PRIOR_ATM.sold2025.netProceeds / 1e6).toFixed(1)}M net; ~0.95% effective commission) per the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000121390026025304/ea0276106-01_ncsr.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSR</a>, plus Q1 2026 sales of {Q1_ATM.shares.toLocaleString("en-US")} shares at ${Q1_ATM.wavgPrice} weighted average (~{fmt$(Q1_ATM.netProceeds)} net; already reflected in the March 31 baseline) per the 424B3 — leaving ~{fmt$(priorShelfRemainingApr1())} of gross capacity entering April, which caps the inferred Apr–May proceeds. New $1B gross-capacity program through Jefferies (commission up to 3.0% of gross sales price) per the 424B5, which discloses up to 57,591,678 shares outstanding <em>after</em> a full offering at the assumed $61.66 price — implying ~41.37M pre-offering shares and thus ~10.90M shares issued April 1–May 21 under the prior program (inferred).</div>
         <div>• <strong>Post-May-26 Issuance (estimated):</strong> Modeled daily as a fixed share of Yahoo Finance trading volume (calibrated ~8.3%), issuing only on days above rolling pro forma NAV, until gross capacity is exhausted. Estimated, not company reported.</div>
       </div>
 
