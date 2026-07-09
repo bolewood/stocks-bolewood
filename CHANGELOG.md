@@ -12,6 +12,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (M
 
 ### Added
 - Prior ATM program history in the sources (original shelf effective July 15, 2025; 11.1M shares at $29.48 through December 2025) and a "next filed NAV: June 30 N-PORT, due ~Aug 29, 2026" checkpoint note.
+- Calibration-window guard: truncated price history covering fewer than 30 of the window's 36 trading days now degrades to zero inferred issuance instead of producing absurd participation rates.
 
 ## [0.2.0.0] - 2026-07-09
 
