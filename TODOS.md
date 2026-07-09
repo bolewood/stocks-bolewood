@@ -20,7 +20,7 @@
 
 **Why:** A wrong scale factor there silently mis-states pro forma NAV, and it's the one load-bearing math block still living untested inside the component.
 
-**Context:** Flagged by the testing specialist during the v0.2.0.0 ship review; behavior was browser-verified (custom 10% participation matches the sensitivity table's High row) but has no unit test. The lib now sanitizes its own inputs, so only the conversion layer is at risk.
+**Context:** Flagged by the testing specialist during the v0.2.0.0 ship review; behavior was browser-verified (custom 10% participation matched the sensitivity table's then-10% High row; the High row is 16.4% as of v0.2.1.0) but has no unit test. The lib now sanitizes its own inputs, so only the conversion layer is at risk.
 
 **Effort:** S
 **Priority:** P3
