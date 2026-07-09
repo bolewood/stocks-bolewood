@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 const FALLBACK_PRICES = {
   SATS: 114.00,
   SPCX: 160.95,
-  DXYZ: 12.50,
+  DXYZ: 27.60, // 2026-07-09 close
   VCX: 211.00,
   BOT: 15.00,
 };
