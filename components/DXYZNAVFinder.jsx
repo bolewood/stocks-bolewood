@@ -154,15 +154,12 @@ export default function DXYZNAVFinder() {
   const [priceSource, setPriceSource] = useState("default");
 
   // ── ATM Issuance Bridge state ──────────────────────────────────────────
-  // Ships with the checked-in snapshot so first paint is deterministic;
-  // replaced by the live Yahoo feed once /api/dxyz-history responds.
-  // Completed sessions only — matches the route's filtering.
-  const [historyRows, setHistoryRows] = useState(() =>
-    completedTradingRows(
-      historySnapshot.rows,
-      new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" })
-    )
-  );
+  // Ships with the checked-in snapshot so first paint is deterministic AND
+  // build-stable (a date-dependent initializer would bake the build day's
+  // filtering into the prerendered HTML and mismatch on hydration). The
+  // completed-sessions filter is applied client-side in the effect below,
+  // then the live Yahoo feed replaces the rows entirely.
+  const [historyRows, setHistoryRows] = useState(historySnapshot.rows);
   const [historySource, setHistorySource] = useState("snapshot");
   const [atmMode, setAtmMode] = useState("calibrated"); // "filed" | "calibrated" | "custom"
   const [commissionPct, setCommissionPct] = useState(String(COMMISSION_DEFAULT_PCT));
@@ -293,6 +290,15 @@ export default function DXYZNAVFinder() {
         setPriceSource(data.source || "fallback");
       })
       .catch(() => setPriceSource("fallback"));
+
+    // Client-side only: drop the in-progress session from the baked-in
+    // snapshot (the route applies the same filter to what it serves).
+    setHistoryRows(
+      completedTradingRows(
+        historySnapshot.rows,
+        new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" })
+      )
+    );
 
     fetch("/api/dxyz-history")
       .then((res) => res.json())
@@ -563,7 +569,7 @@ export default function DXYZNAVFinder() {
                   <div style={styles.controlGroup} key={key}>
                     <label style={styles.label}>{label}</label>
                     <input
-                      type="number" step="any"
+                      type="number" step="any" min="0"
                       value={atmCustom[key]}
                       placeholder={ph}
                       onChange={(e) => setAtmCustom((prev) => ({ ...prev, [key]: e.target.value }))}
@@ -682,8 +688,12 @@ export default function DXYZNAVFinder() {
             <span>ATM accretion: <strong style={{ color: atmBridge.accretionPerShare >= 0 ? "#15803d" : "#b91c1c" }}>{atmBridge.accretionPerShare >= 0 ? "+" : ""}${atmBridge.accretionPerShare.toFixed(2)}/sh</strong></span>
             <span>Remaining new-ATM capacity: <strong>{fmt$(atmBridge.postMay.capacityRemaining)}</strong> of {fmt$(PROSPECTUS_424B5.capacityGross)} gross</span>
             <span>History: {historyRows.length} trading days ·{" "}
-              <span style={{ color: historySource === "live" || historySource === "cache" ? "#15803d" : "#78716c" }}>
-                {historySource === "live" || historySource === "cache" ? "● LIVE (Yahoo)" : `○ SNAPSHOT (${historySnapshot.asOf})`}
+              <span style={{ color: historySource === "live" || historySource === "cache" ? "#15803d" : historySource === "stale" ? "#d97706" : "#78716c" }}>
+                {historySource === "live" || historySource === "cache"
+                  ? "● LIVE (Yahoo)"
+                  : historySource === "stale"
+                  ? "◐ CACHED (Yahoo unreachable)"
+                  : `○ SNAPSHOT (${historySnapshot.asOf})`}
               </span>
             </span>
           </div>

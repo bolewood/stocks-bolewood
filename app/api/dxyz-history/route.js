@@ -21,7 +21,16 @@ let failureTimestamp = 0;
 const todayNY = () =>
   new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
 
-function snapshotResponse() {
+// When Yahoo is unreachable, an expired in-memory cache from the last good
+// fetch is still fresher than the checked-in snapshot, which only ages.
+function fallbackResponse() {
+  if (cachedRows) {
+    return NextResponse.json({
+      rows: cachedRows,
+      source: "stale",
+      asOf: new Date(cacheTimestamp).toISOString(),
+    });
+  }
   return NextResponse.json({
     rows: completedTradingRows(snapshot.rows, todayNY()),
     source: "snapshot",
@@ -41,7 +50,7 @@ export async function GET() {
   }
 
   if (now - failureTimestamp < FAILURE_TTL_MS) {
-    return snapshotResponse();
+    return fallbackResponse();
   }
 
   try {
@@ -91,6 +100,6 @@ export async function GET() {
   } catch (err) {
     console.warn(`DXYZ history fetch failed: ${err.message}`);
     failureTimestamp = now;
-    return snapshotResponse();
+    return fallbackResponse();
   }
 }

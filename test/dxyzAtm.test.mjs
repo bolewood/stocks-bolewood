@@ -176,6 +176,41 @@ test("out-of-range rates are clamped: commission to [0,1], participation to >= 0
   assert.equal(negParticipation.gross, 0);
 });
 
+test("as-of dates before the new program start are clamped to May 26", () => {
+  // An earlier as-of would still carry the full Apr–May inferred layer,
+  // presenting ~10.9M shares that had not been issued by that date.
+  const b = computeAtmBridge({
+    mode: "custom",
+    rows: snapshot.rows,
+    asOfDate: "2026-04-10",
+  });
+  assert.equal(b.asOfDate, "2026-05-26");
+});
+
+test("negative or NaN custom inputs cannot invert the issuance gate", () => {
+  // Negative Apr–May shares once produced startingShares=0 → rollingNav=-Infinity
+  // → gate always open → negative pro forma NAV.
+  const neg = computeAtmBridge({
+    mode: "custom",
+    rows: snapshot.rows,
+    aprMayShares: -impliedMarch31Shares(),
+  });
+  assert.equal(neg.aprMay.shares, 0);
+  assert.ok(neg.proFormaNav > 0, `got ${neg.proFormaNav}`);
+  assert.ok(neg.proFormaShares > 0);
+
+  const nan = computeAtmBridge({
+    mode: "custom",
+    rows: snapshot.rows,
+    participation: NaN,
+    minPremium: -1, // would turn the below-NAV gate into "always issue"
+    expenseDragAnnualRate: -0.5, // would add assets
+  });
+  assert.equal(nan.postMay.shares, 0); // NaN participation → no issuance
+  assert.equal(nan.drag >= 0, true);
+  assert.ok(Number.isFinite(nan.proFormaNav));
+});
+
 test("completedTradingRows drops the in-progress session only", () => {
   const rows = [
     { date: "2026-07-07", close: 24.54, volume: 862_300 },

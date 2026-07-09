@@ -1,6 +1,6 @@
 {
   "asOf": "2026-07-09",
-  "note": "Fallback snapshot of Yahoo Finance daily DXYZ close/volume, captured 2026-07-09. Served when the live Yahoo fetch fails.",
+  "note": "Fallback snapshot of Yahoo Finance daily DXYZ close/volume, captured 2026-07-09 ~16:02 ET (after the 16:00 close; final row is that day's completed session). Served when the live Yahoo fetch fails and no in-memory cache exists.",
   "rows": [
     {
       "date": "2026-03-31",
