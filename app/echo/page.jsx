@@ -5,7 +5,7 @@ import ECHOSOTPFinder from "@/components/ECHOSOTPFinder";
 export const metadata = {
   title: "ECHO SOTP Finder",
   description:
-    "Sum-of-the-parts and SpaceX proxy calculator for EchoStar (NASDAQ: ECHO, formerly SATS). Visualize the SpaceX re-rate upside against corporate tax liabilities and the DISH DBS Chapter 11 restructuring.",
+    "Sum-of-the-parts and SpaceX proxy calculator for EchoStar (NASDAQ: ECHO, formerly SATS). Visualize the SpaceX re-rate upside against spectrum tax liabilities and the DISH DBS Chapter 11 restructuring.",
   openGraph: {
     title: "ECHO SOTP Finder",
     description:

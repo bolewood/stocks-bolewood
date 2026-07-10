@@ -5,6 +5,8 @@ import React, { useState, useMemo, useEffect } from "react";
 // ECHO SOTP / SpaceX Proxy Calculator (ticker changed from SATS on 6/24/26)
 // Sources: SpaceX Form S-1 F-26, EchoStar SEC filings (10-K, 10-Q), Barron's (6/12/26, 7/8/26)
 
+const DEFAULT_ECHO_PRICE = 95.88; // 2026-07-09 close; live-fetched on load
+const DEFAULT_SPCX_PRICE = 150; // Barron's 7/8/26 (~$148.5 live); live-fetched on base
 const ECHO_SHARES_BASIC = 289.8; // million shares (Class A + B estimate)
 const ECHO_SHARES_DILUTED = 304.4; // million shares (assuming convertible bond conversion per Barron's)
 const SPACEX_FIXED_SHARES_M = 261.8; // million shares post-split (F-26 note)
@@ -37,8 +39,8 @@ export default function ECHOSOTPFinder() {
   const [activeScenario, setActiveScenario] = useState("base");
 
   // Global inputs
-  const [spcxPrice, setSpcxPrice] = useState(150); // master driver (post-split SPCX price; live-fetched on base)
-  const [echoPrice, setEchoPrice] = useState(95.88); // current ECHO market price (live-fetched)
+  const [spcxPrice, setSpcxPrice] = useState(DEFAULT_SPCX_PRICE); // master driver (post-split SPCX price; live-fetched on base)
+  const [echoPrice, setEchoPrice] = useState(DEFAULT_ECHO_PRICE); // current ECHO market price (live-fetched)
   const [shareCountBasis, setShareCountBasis] = useState("basic"); // "basic" or "diluted"
 
   // Section 01: SpaceX Stake discounts
@@ -60,12 +62,13 @@ export default function ECHOSOTPFinder() {
   const [towerLeaseCosts, setTowerLeaseCosts] = useState(2.40); // $B (Tower lease termination liability)
 
   // Credit default risk
-  const [cured, setCured] = useState("no"); // "yes" or "no" (June 1 payment default)
+  const [cured, setCured] = useState("no"); // "yes" = DBS prepack exits on plan (no haircut), "no" = contested/prolonged (haircut applied)
   const [distressHaircut, setDistressHaircut] = useState(20); // 0-50%
   const [preDealDistress, setPreDealDistress] = useState(false); // Simulate pre-deal Net Debt of $27.7B
 
   // Real-time price state
   const [priceSource, setPriceSource] = useState("default"); // "live", "partial", "fallback", "default"
+  const [liveSpcx, setLiveSpcx] = useState(null); // last live SPCX quote, so re-clicking Base stays live
 
   // Chart settings
   const [heatmapColMode, setHeatmapColMode] = useState("tax"); // "tax" or "liquidity"
@@ -83,8 +86,8 @@ export default function ECHOSOTPFinder() {
   };
 
   const applyBase = () => {
-    setSpcxPrice(150);
-    setEchoPrice(95.88);
+    setSpcxPrice(liveSpcx ?? DEFAULT_SPCX_PRICE);
+    setEchoPrice(DEFAULT_ECHO_PRICE);
     setShareCountBasis("basic");
     setLiquidityDiscount(20);
     setCloseProbability(85);
@@ -105,7 +108,7 @@ export default function ECHOSOTPFinder() {
 
   const applyBull = () => {
     setSpcxPrice(175);
-    setEchoPrice(95.88);
+    setEchoPrice(DEFAULT_ECHO_PRICE);
     setShareCountBasis("basic");
     setLiquidityDiscount(20);
     setCloseProbability(90);
@@ -126,7 +129,7 @@ export default function ECHOSOTPFinder() {
 
   const applyMoon = () => {
     setSpcxPrice(200);
-    setEchoPrice(95.88);
+    setEchoPrice(DEFAULT_ECHO_PRICE);
     setShareCountBasis("basic");
     setLiquidityDiscount(10);
     setCloseProbability(95);
@@ -147,7 +150,7 @@ export default function ECHOSOTPFinder() {
 
   const applyBear = () => {
     setSpcxPrice(135);
-    setEchoPrice(95.88);
+    setEchoPrice(DEFAULT_ECHO_PRICE);
     setShareCountBasis("diluted"); // include bond conversion dilution
     setLiquidityDiscount(30);
     setCloseProbability(70);
@@ -168,7 +171,7 @@ export default function ECHOSOTPFinder() {
 
   const applyTakeout = () => {
     setSpcxPrice(175);
-    setEchoPrice(95.88);
+    setEchoPrice(DEFAULT_ECHO_PRICE);
     setShareCountBasis("diluted");
     setLiquidityDiscount(0); // acquired direct; zero illiquidity
     setCloseProbability(100);
@@ -211,6 +214,7 @@ export default function ECHOSOTPFinder() {
         if (data.prices?.ECHO) setEchoPrice(data.prices.ECHO);
         // Update SPCX slider to live price only on the default (base) scenario.
         // Other scenarios (bull=$175, moon=$200, etc.) keep their hypothetical SPCX prices.
+        if (data.prices?.SPCX) setLiveSpcx(data.prices.SPCX);
         if (isBaseScenario && data.prices?.SPCX) setSpcxPrice(data.prices.SPCX);
         setPriceSource(data.source || "fallback");
       })
@@ -529,7 +533,10 @@ export default function ECHOSOTPFinder() {
 
         {/* Rows */}
         {spcxPriceRows.map((rowSPCX) => {
-          const isSelectedRow = Math.abs(rowSPCX - spcxPrice) < 5;
+          // Nearest row wins — a fixed ±5 threshold left no active row when the
+          // live SPCX price (or the $200 Moon preset) fell between grid rows.
+          const nearestRow = spcxPriceRows.reduce((a, b) => (Math.abs(b - spcxPrice) < Math.abs(a - spcxPrice) ? b : a));
+          const isSelectedRow = rowSPCX === nearestRow;
           return (
             <React.Fragment key={rowSPCX}>
               {/* Row SPCX Price */}
@@ -554,7 +561,7 @@ export default function ECHOSOTPFinder() {
                   : `rgba(185, 28, 28, ${bgOpacity})`; // Red
 
                 const isCurrentInputCell = 
-                  (Math.abs(rowSPCX - spcxPrice) < 5) && 
+                  (rowSPCX === spcxPriceRows.reduce((a, b) => (Math.abs(b - spcxPrice) < Math.abs(a - spcxPrice) ? b : a))) && 
                   (heatmapColMode === "tax" 
                     ? Math.abs(colVal - taxRate) < 1 
                     : Math.abs(colVal - liquidityDiscount) < 1);
@@ -751,11 +758,11 @@ export default function ECHOSOTPFinder() {
               fontFamily: "monospace",
               padding: "2px 6px",
               borderRadius: "3px",
-              border: `1px solid ${priceSource === "live" ? "#15803d" : priceSource === "partial" ? "#d97706" : "#78716c"}`,
-              color: priceSource === "live" ? "#15803d" : priceSource === "partial" ? "#d97706" : "#78716c",
-              background: priceSource === "live" ? "#f0fdf4" : priceSource === "partial" ? "#fffbeb" : "transparent"
+              border: `1px solid ${priceSource === "live" || priceSource === "cache" ? "#15803d" : priceSource === "partial" ? "#d97706" : "#78716c"}`,
+              color: priceSource === "live" || priceSource === "cache" ? "#15803d" : priceSource === "partial" ? "#d97706" : "#78716c",
+              background: priceSource === "live" || priceSource === "cache" ? "#f0fdf4" : priceSource === "partial" ? "#fffbeb" : "transparent"
             }}>
-              {priceSource === "live" ? "● LIVE" : priceSource === "partial" ? "◐ PARTIAL" : priceSource === "fallback" ? "○ FALLBACK" : "○ DEFAULT"}
+              {priceSource === "live" || priceSource === "cache" ? "● LIVE" : priceSource === "partial" ? "◐ PARTIAL" : priceSource === "fallback" ? "○ FALLBACK" : "○ DEFAULT"}
             </span>
           </div>
         </div>
@@ -795,10 +802,10 @@ export default function ECHOSOTPFinder() {
         <div style={styles.howToTitle}>Preset Scenarios</div>
         <div style={styles.scenarioGrid} className="echo-scenario-grid">
           {[
-            { key: "base", label: "Base — SPCX ~$150 (live)", desc: "Standard 20% liquidity disc., 25% tax rate, default credit distress.", handler: applyBase },
-            { key: "bull", label: "Bull — SPCX $175", desc: "SpaceX post-IPO re-rate to $175. Lower 15% tax (partial trust deferral), credit cured.", handler: applyBull },
-            { key: "moon", label: "Moon — SPCX $200", desc: "SpaceX valuation hits $200 (~$3T). 0% tax (trust restructure), credit cured.", handler: applyMoon },
-            { key: "bear", label: "Bear — Credit Stress", desc: "Missed payment cured: No. 25% credit distress haircut. $2B cash, $0 stub.", handler: applyBear },
+            { key: "base", label: "Base — SPCX ~$150 (live)", desc: "Standard 20% liquidity disc., 25% tax rate, contested-restructuring haircut applied.", handler: applyBase },
+            { key: "bull", label: "Bull — SPCX $175", desc: "SpaceX post-IPO re-rate to $175. Lower 15% tax (partial trust deferral), prepack exits on plan.", handler: applyBull },
+            { key: "moon", label: "Moon — SPCX $200", desc: "SpaceX valuation hits $200 (~$3T) — the Citi case. 0% tax (trust restructure), prepack exits on plan.", handler: applyMoon },
+            { key: "bear", label: "Bear — Restructuring Stress", desc: "Contested / prolonged prepack: 25% restructuring haircut. $2B cash, $0 stub.", handler: applyBear },
             { key: "takeout", label: "Takeout (buyout)", desc: "SpaceX acquires Boost/ECHO in tax-free stock swap (0% tax, 0% disc, $8B stub).", handler: applyTakeout }
           ].map(({ key, label, desc, handler }) => {
             const isActive = activeScenario === key;
@@ -1063,7 +1070,7 @@ export default function ECHOSOTPFinder() {
             <tr style={{ borderBottom: "1px solid #e7e5e4" }}>
               <td style={{ padding: "6px 8px", fontWeight: "bold" }}>Citi (Michael Rollins, 7/8/26)</td>
               <td style={{ padding: "6px 8px" }}>$200 (Citi SpaceX value)</td>
-              <td style={{ padding: "6px 8px", textAlign: "right" }}>$52.0B (disc. applied)</td>
+              <td style={{ padding: "6px 8px", textAlign: "right" }}>$52.4B (pre-discount)</td>
               <td style={{ padding: "6px 8px", textAlign: "right", fontWeight: "bold" }}>$126.00</td>
               <td style={{ padding: "6px 8px", textAlign: "right", color: calc.riskAdjustedPerEchoShare > 126 ? "#15803d" : "#b91c1c" }}>
                 {(calc.riskAdjustedPerEchoShare - 126.0) >= 0 ? "+" : ""}{(calc.riskAdjustedPerEchoShare - 126.0).toFixed(2)}

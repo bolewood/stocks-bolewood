@@ -60,6 +60,10 @@ export async function GET() {
     })
   );
 
+  // Transition alias: pre-migration client bundles still read prices.SATS.
+  // Remove once cached bundles from before 2026-07-10 have aged out.
+  prices.SATS = prices.ECHO;
+
   const source = liveCount === tickers.length ? "live" : liveCount > 0 ? "partial" : "fallback";
 
   // Update cache only if we got at least one live price

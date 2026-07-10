@@ -297,7 +297,7 @@ a {
     gap: 12px !important;
   }
 
-  /* Section titles: slightly smaller on mobile for long SATS titles */
+  /* Section titles: slightly smaller on mobile for long ECHO titles */
   .echo-container .vcx-section-header h2 {
     font-size: 18px !important;
   }
