@@ -11,13 +11,13 @@ export default function Header() {
     { href: "/vcx", label: "VCX" },
     { href: "/dxyz", label: "DXYZ" },
     { href: "/bot", label: "BOT" },
-    { href: "/sats", label: "SATS" },
+    { href: "/echo", label: "ECHO" },
     { href: "/about", label: "About" },
   ];
 
   return (
     <header style={styles.header}>
-      <div style={styles.inner}>
+      <div style={styles.inner} className="site-header-inner">
         <Link href="/" style={styles.brand}>
           <span style={styles.brandName}>stocks.bolewood.com</span>
         </Link>

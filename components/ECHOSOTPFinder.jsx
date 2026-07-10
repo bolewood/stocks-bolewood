@@ -2,11 +2,13 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 
-// SATS SOTP / SpaceX Proxy Calculator
-// Sources: SpaceX Form S-1 F-26, EchoStar SEC filings (10-K, 10-Q), Barron's (6/12/26)
+// ECHO SOTP / SpaceX Proxy Calculator (ticker changed from SATS on 6/24/26)
+// Sources: SpaceX Form S-1 F-26, EchoStar SEC filings (10-K, 10-Q), Barron's (6/12/26, 7/8/26)
 
-const SATS_SHARES_BASIC = 289.8; // million shares (Class A + B estimate)
-const SATS_SHARES_DILUTED = 304.4; // million shares (assuming convertible bond conversion per Barron's)
+const DEFAULT_ECHO_PRICE = 95.88; // 2026-07-09 close; live-fetched on load
+const DEFAULT_SPCX_PRICE = 150; // Barron's 7/8/26 (~$148.5 live); live-fetched on base
+const ECHO_SHARES_BASIC = 289.8; // million shares (Class A + B estimate)
+const ECHO_SHARES_DILUTED = 304.4; // million shares (assuming convertible bond conversion per Barron's)
 const SPACEX_FIXED_SHARES_M = 261.8; // million shares post-split (F-26 note)
 const SPECTRUM_PROCEEDS_B = 42.25; // billion (SpaceX $19.6B + AT&T $22.65B)
 
@@ -24,7 +26,7 @@ const fmt$exact = (n) =>
 
 const fmtNum = (n) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(n);
 
-export default function SATSSOTPFinder() {
+export default function ECHOSOTPFinder() {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 720);
@@ -37,8 +39,8 @@ export default function SATSSOTPFinder() {
   const [activeScenario, setActiveScenario] = useState("base");
 
   // Global inputs
-  const [spcxPrice, setSpcxPrice] = useState(135); // master driver (post-split SPCX price)
-  const [satsPrice, setSatsPrice] = useState(128.13); // current SATS market price
+  const [spcxPrice, setSpcxPrice] = useState(DEFAULT_SPCX_PRICE); // master driver (post-split SPCX price; live-fetched on base)
+  const [echoPrice, setEchoPrice] = useState(DEFAULT_ECHO_PRICE); // current ECHO market price (live-fetched)
   const [shareCountBasis, setShareCountBasis] = useState("basic"); // "basic" or "diluted"
 
   // Section 01: SpaceX Stake discounts
@@ -60,12 +62,14 @@ export default function SATSSOTPFinder() {
   const [towerLeaseCosts, setTowerLeaseCosts] = useState(2.40); // $B (Tower lease termination liability)
 
   // Credit default risk
-  const [cured, setCured] = useState("no"); // "yes" or "no" (June 1 payment default)
+  const [cured, setCured] = useState("no"); // "yes" = DBS prepack exits on plan (no haircut), "no" = contested/prolonged (haircut applied)
   const [distressHaircut, setDistressHaircut] = useState(20); // 0-50%
   const [preDealDistress, setPreDealDistress] = useState(false); // Simulate pre-deal Net Debt of $27.7B
 
   // Real-time price state
   const [priceSource, setPriceSource] = useState("default"); // "live", "partial", "fallback", "default"
+  const [liveSpcx, setLiveSpcx] = useState(null); // last live SPCX quote, so re-clicking Base stays live
+  const [liveEcho, setLiveEcho] = useState(null); // last live ECHO quote — presets must not revert the market price to a dated constant
 
   // Chart settings
   const [heatmapColMode, setHeatmapColMode] = useState("tax"); // "tax" or "liquidity"
@@ -83,8 +87,8 @@ export default function SATSSOTPFinder() {
   };
 
   const applyBase = () => {
-    setSpcxPrice(135);
-    setSatsPrice(128.13);
+    setSpcxPrice(liveSpcx ?? DEFAULT_SPCX_PRICE);
+    setEchoPrice(liveEcho ?? DEFAULT_ECHO_PRICE);
     setShareCountBasis("basic");
     setLiquidityDiscount(20);
     setCloseProbability(85);
@@ -105,7 +109,7 @@ export default function SATSSOTPFinder() {
 
   const applyBull = () => {
     setSpcxPrice(175);
-    setSatsPrice(128.13);
+    setEchoPrice(liveEcho ?? DEFAULT_ECHO_PRICE);
     setShareCountBasis("basic");
     setLiquidityDiscount(20);
     setCloseProbability(90);
@@ -126,7 +130,7 @@ export default function SATSSOTPFinder() {
 
   const applyMoon = () => {
     setSpcxPrice(200);
-    setSatsPrice(128.13);
+    setEchoPrice(liveEcho ?? DEFAULT_ECHO_PRICE);
     setShareCountBasis("basic");
     setLiquidityDiscount(10);
     setCloseProbability(95);
@@ -147,7 +151,7 @@ export default function SATSSOTPFinder() {
 
   const applyBear = () => {
     setSpcxPrice(135);
-    setSatsPrice(128.13);
+    setEchoPrice(liveEcho ?? DEFAULT_ECHO_PRICE);
     setShareCountBasis("diluted"); // include bond conversion dilution
     setLiquidityDiscount(30);
     setCloseProbability(70);
@@ -168,7 +172,7 @@ export default function SATSSOTPFinder() {
 
   const applyTakeout = () => {
     setSpcxPrice(175);
-    setSatsPrice(128.13);
+    setEchoPrice(liveEcho ?? DEFAULT_ECHO_PRICE);
     setShareCountBasis("diluted");
     setLiquidityDiscount(0); // acquired direct; zero illiquidity
     setCloseProbability(100);
@@ -187,7 +191,7 @@ export default function SATSSOTPFinder() {
     updateURL("takeout");
   };
 
-  // Read scenario from URL on mount + fetch real-time SATS market price
+  // Read scenario from URL on mount + fetch real-time ECHO market price
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const scenario = params.get("scenario");
@@ -203,14 +207,15 @@ export default function SATSSOTPFinder() {
       applyBase();
     }
 
-    // Fetch real-time prices for SATS + SPCX
+    // Fetch real-time prices for ECHO + SPCX
     const isBaseScenario = !scenario || scenario === "base";
     fetch("/api/prices")
       .then((res) => res.json())
       .then((data) => {
-        if (data.prices?.SATS) setSatsPrice(data.prices.SATS);
+        if (data.prices?.ECHO) { setEchoPrice(data.prices.ECHO); setLiveEcho(data.prices.ECHO); }
         // Update SPCX slider to live price only on the default (base) scenario.
         // Other scenarios (bull=$175, moon=$200, etc.) keep their hypothetical SPCX prices.
+        if (data.prices?.SPCX) setLiveSpcx(data.prices.SPCX);
         if (isBaseScenario && data.prices?.SPCX) setSpcxPrice(data.prices.SPCX);
         setPriceSource(data.source || "fallback");
       })
@@ -223,15 +228,15 @@ export default function SATSSOTPFinder() {
   };
 
   const calc = useMemo(() => {
-    const sharesOutstanding = shareCountBasis === "basic" ? SATS_SHARES_BASIC : SATS_SHARES_DILUTED;
+    const sharesOutstanding = shareCountBasis === "basic" ? ECHO_SHARES_BASIC : ECHO_SHARES_DILUTED;
 
     // Gross SpaceX Stake
     const grossSpaceXVal = SPACEX_FIXED_SHARES_M * spcxPrice * 1_000_000; // $ value
-    const grossSpaceXPerSatsShare = grossSpaceXVal / (sharesOutstanding * 1_000_000);
+    const grossSpaceXPerEchoShare = grossSpaceXVal / (sharesOutstanding * 1_000_000);
 
     // Liquidity Discount
     const liquidityDiscountVal = grossSpaceXVal * (liquidityDiscount / 100);
-    const liquidityDiscountPerSatsShare = liquidityDiscountVal / (sharesOutstanding * 1_000_000);
+    const liquidityDiscountPerEchoShare = liquidityDiscountVal / (sharesOutstanding * 1_000_000);
 
     // Timing/Closing Discount (1.46 years to Nov 30, 2027 closing date)
     const timeToClose = 1.4658; // years
@@ -241,27 +246,27 @@ export default function SATSSOTPFinder() {
     
     const grossSpaceXAfterLiquidity = grossSpaceXVal - liquidityDiscountVal;
     const netSpaceXVal = grossSpaceXAfterLiquidity * combinedCloseDiscountFactor;
-    const netSpaceXPerSatsShare = netSpaceXVal / (sharesOutstanding * 1_000_000);
+    const netSpaceXPerEchoShare = netSpaceXVal / (sharesOutstanding * 1_000_000);
     const closingTimingDiscountVal = grossSpaceXAfterLiquidity - netSpaceXVal;
-    const closingTimingDiscountPerSatsShare = closingTimingDiscountVal / (sharesOutstanding * 1_000_000);
+    const closingTimingDiscountPerEchoShare = closingTimingDiscountVal / (sharesOutstanding * 1_000_000);
 
     // Other Parts
     const spectrumValM = spectrumVal * 1_000_000_000;
-    const spectrumPerSatsShare = spectrumValM / (sharesOutstanding * 1_000_000);
+    const spectrumPerEchoShare = spectrumValM / (sharesOutstanding * 1_000_000);
 
     const activeCashVal = preDealDistress ? -27.7 : netCashVal; // swap cash with pre-deal net debt if toggled
     const netCashValM = activeCashVal * 1_000_000_000;
-    const netCashPerSatsShare = netCashValM / (sharesOutstanding * 1_000_000);
+    const netCashPerEchoShare = netCashValM / (sharesOutstanding * 1_000_000);
 
     const stubValM = stubVal * 1_000_000_000;
-    const stubPerSatsShare = stubValM / (sharesOutstanding * 1_000_000);
+    const stubPerEchoShare = stubValM / (sharesOutstanding * 1_000_000);
 
     // Pre-Tax SOTP Total (Gross vs Discounted)
     const preTaxGrossTotalM = grossSpaceXVal + spectrumValM + netCashValM + stubValM;
-    const preTaxGrossPerSatsShare = preTaxGrossTotalM / (sharesOutstanding * 1_000_000);
+    const preTaxGrossPerEchoShare = preTaxGrossTotalM / (sharesOutstanding * 1_000_000);
 
     const preTaxDiscountedTotalM = netSpaceXVal + spectrumValM + netCashValM + stubValM;
-    const preTaxDiscountedPerSatsShare = preTaxDiscountedTotalM / (sharesOutstanding * 1_000_000);
+    const preTaxDiscountedPerEchoShare = preTaxDiscountedTotalM / (sharesOutstanding * 1_000_000);
 
     // Risk Deductions
     // Spectrum corporate tax on gain
@@ -270,26 +275,26 @@ export default function SATSSOTPFinder() {
     const nolsM = nols * 1_000_000_000;
     const taxableGain = Math.max(0, proceedsM - taxBasisM - nolsM);
     const corporateTaxVal = taxableGain * (taxRate / 100);
-    const corporateTaxPerSatsShare = corporateTaxVal / (sharesOutstanding * 1_000_000);
+    const corporateTaxPerEchoShare = corporateTaxVal / (sharesOutstanding * 1_000_000);
 
     // Tower lease termination costs
     const towerLeaseCostsM = towerLeaseCosts * 1_000_000_000;
-    const towerLeaseCostsPerSatsShare = towerLeaseCostsM / (sharesOutstanding * 1_000_000);
+    const towerLeaseCostsPerEchoShare = towerLeaseCostsM / (sharesOutstanding * 1_000_000);
 
     // Credit overlay / distress haircut
     const preDistressNavM = preTaxDiscountedTotalM - corporateTaxVal - towerLeaseCostsM;
     const distressHaircutAmt = cured === "no" ? preDistressNavM * (distressHaircut / 100) : 0;
-    const distressHaircutPerSatsShare = distressHaircutAmt / (sharesOutstanding * 1_000_000);
+    const distressHaircutPerEchoShare = distressHaircutAmt / (sharesOutstanding * 1_000_000);
 
     // Risk-Adjusted SOTP Total (After tax + tower leases + credit)
     const riskAdjustedTotalM = preDistressNavM - distressHaircutAmt;
-    const riskAdjustedPerSatsShare = riskAdjustedTotalM / (sharesOutstanding * 1_000_000);
+    const riskAdjustedPerEchoShare = riskAdjustedTotalM / (sharesOutstanding * 1_000_000);
 
     // Market Metrics
-    const marketCap = satsPrice * sharesOutstanding * 1_000_000;
+    const marketCap = echoPrice * sharesOutstanding * 1_000_000;
     
     // Implied cost per SPCX share (EV / 261.8M)
-    // SATS EV = Market Cap + Net Debt (or - Net Cash) - Spectrum - Stub [+ Tax]
+    // ECHO EV = Market Cap + Net Debt (or - Net Cash) - Spectrum - Stub [+ Tax]
     const preDealDebt = 27.7 * 1_000_000_000;
     const ev = preDealDistress
       ? (marketCap + preDealDebt - spectrumValM - stubValM)
@@ -299,38 +304,38 @@ export default function SATSSOTPFinder() {
     return {
       sharesOutstanding,
       grossSpaceXVal,
-      grossSpaceXPerSatsShare,
+      grossSpaceXPerEchoShare,
       liquidityDiscountVal,
-      liquidityDiscountPerSatsShare,
+      liquidityDiscountPerEchoShare,
       netSpaceXVal,
-      netSpaceXPerSatsShare,
+      netSpaceXPerEchoShare,
       closingTimingDiscountVal,
-      closingTimingDiscountPerSatsShare,
+      closingTimingDiscountPerEchoShare,
       spectrumValM,
-      spectrumPerSatsShare,
+      spectrumPerEchoShare,
       netCashValM,
-      netCashPerSatsShare,
+      netCashPerEchoShare,
       stubValM,
-      stubPerSatsShare,
+      stubPerEchoShare,
       preTaxGrossTotalM,
-      preTaxGrossPerSatsShare,
+      preTaxGrossPerEchoShare,
       preTaxDiscountedTotalM,
-      preTaxDiscountedPerSatsShare,
+      preTaxDiscountedPerEchoShare,
       corporateTaxVal,
-      corporateTaxPerSatsShare,
+      corporateTaxPerEchoShare,
       towerLeaseCostsM,
-      towerLeaseCostsPerSatsShare,
+      towerLeaseCostsPerEchoShare,
       distressHaircutAmt,
-      distressHaircutPerSatsShare,
+      distressHaircutPerEchoShare,
       riskAdjustedTotalM,
-      riskAdjustedPerSatsShare,
+      riskAdjustedPerEchoShare,
       marketCap,
       ev,
       effectiveSpcxCostPerShare
     };
   }, [
     spcxPrice,
-    satsPrice,
+    echoPrice,
     shareCountBasis,
     liquidityDiscount,
     closeProbability,
@@ -349,7 +354,7 @@ export default function SATSSOTPFinder() {
 
   // Helper to calculate cell value dynamically for the sensitivity heatmap
   const calculateCellNAV = (rowSPCX, colVal) => {
-    const cellShares = shareCountBasis === "basic" ? SATS_SHARES_BASIC : SATS_SHARES_DILUTED;
+    const cellShares = shareCountBasis === "basic" ? ECHO_SHARES_BASIC : ECHO_SHARES_DILUTED;
     const cellGrossSpaceX = SPACEX_FIXED_SHARES_M * rowSPCX * 1_000_000;
     
     let cellLiquidityDiscount = liquidityDiscount;
@@ -398,25 +403,25 @@ export default function SATSSOTPFinder() {
   const activeCols = heatmapColMode === "tax" ? colValsTax : colValsLiquidity;
 
   // Waterfall Chart Math
-  const postTaxStart = calc.preTaxDiscountedPerSatsShare - calc.corporateTaxPerSatsShare;
-  const postTowerStart = postTaxStart - calc.towerLeaseCostsPerSatsShare;
+  const postTaxStart = calc.preTaxDiscountedPerEchoShare - calc.corporateTaxPerEchoShare;
+  const postTowerStart = postTaxStart - calc.towerLeaseCostsPerEchoShare;
   const waterfallSteps = [
-    { label: "SpaceX Gross", val: calc.grossSpaceXPerSatsShare, start: 0, end: calc.grossSpaceXPerSatsShare, type: "start" },
-    { label: "Liquidity Disc.", val: -calc.liquidityDiscountPerSatsShare, start: calc.grossSpaceXPerSatsShare, end: calc.grossSpaceXPerSatsShare - calc.liquidityDiscountPerSatsShare, type: "subtract" },
-    { label: "Timing Disc.", val: -calc.closingTimingDiscountPerSatsShare, start: calc.grossSpaceXPerSatsShare - calc.liquidityDiscountPerSatsShare, end: calc.netSpaceXPerSatsShare, type: "subtract" },
-    { label: "Spectrum", val: calc.spectrumPerSatsShare, start: calc.netSpaceXPerSatsShare, end: calc.netSpaceXPerSatsShare + calc.spectrumPerSatsShare, type: "add" },
-    { label: "Net Cash/Debt", val: calc.netCashPerSatsShare, start: calc.netSpaceXPerSatsShare + calc.spectrumPerSatsShare, end: calc.netSpaceXPerSatsShare + calc.spectrumPerSatsShare + calc.netCashPerSatsShare, type: calc.netCashPerSatsShare >= 0 ? "add" : "subtract" },
-    { label: "Operating Stub", val: calc.stubPerSatsShare, start: calc.netSpaceXPerSatsShare + calc.spectrumPerSatsShare + calc.netCashPerSatsShare, end: calc.preTaxDiscountedPerSatsShare, type: "add" },
-    { label: "Spectrum Tax", val: -calc.corporateTaxPerSatsShare, start: calc.preTaxDiscountedPerSatsShare, end: postTaxStart, type: "subtract" },
-    { label: "Tower Leases", val: -calc.towerLeaseCostsPerSatsShare, start: postTaxStart, end: postTowerStart, type: "subtract" },
-    { label: "Credit default", val: -calc.distressHaircutPerSatsShare, start: postTowerStart, end: calc.riskAdjustedPerSatsShare, type: "subtract" },
-    { label: "Risk-Adj NAV", val: calc.riskAdjustedPerSatsShare, start: 0, end: calc.riskAdjustedPerSatsShare, type: "end" }
+    { label: "SpaceX Gross", val: calc.grossSpaceXPerEchoShare, start: 0, end: calc.grossSpaceXPerEchoShare, type: "start" },
+    { label: "Liquidity Disc.", val: -calc.liquidityDiscountPerEchoShare, start: calc.grossSpaceXPerEchoShare, end: calc.grossSpaceXPerEchoShare - calc.liquidityDiscountPerEchoShare, type: "subtract" },
+    { label: "Timing Disc.", val: -calc.closingTimingDiscountPerEchoShare, start: calc.grossSpaceXPerEchoShare - calc.liquidityDiscountPerEchoShare, end: calc.netSpaceXPerEchoShare, type: "subtract" },
+    { label: "Spectrum", val: calc.spectrumPerEchoShare, start: calc.netSpaceXPerEchoShare, end: calc.netSpaceXPerEchoShare + calc.spectrumPerEchoShare, type: "add" },
+    { label: "Net Cash/Debt", val: calc.netCashPerEchoShare, start: calc.netSpaceXPerEchoShare + calc.spectrumPerEchoShare, end: calc.netSpaceXPerEchoShare + calc.spectrumPerEchoShare + calc.netCashPerEchoShare, type: calc.netCashPerEchoShare >= 0 ? "add" : "subtract" },
+    { label: "Operating Stub", val: calc.stubPerEchoShare, start: calc.netSpaceXPerEchoShare + calc.spectrumPerEchoShare + calc.netCashPerEchoShare, end: calc.preTaxDiscountedPerEchoShare, type: "add" },
+    { label: "Spectrum Tax", val: -calc.corporateTaxPerEchoShare, start: calc.preTaxDiscountedPerEchoShare, end: postTaxStart, type: "subtract" },
+    { label: "Tower Leases", val: -calc.towerLeaseCostsPerEchoShare, start: postTaxStart, end: postTowerStart, type: "subtract" },
+    { label: "Credit default", val: -calc.distressHaircutPerEchoShare, start: postTowerStart, end: calc.riskAdjustedPerEchoShare, type: "subtract" },
+    { label: "Risk-Adj NAV", val: calc.riskAdjustedPerEchoShare, start: 0, end: calc.riskAdjustedPerEchoShare, type: "end" }
   ];
 
-  const waterfallMax = Math.max(...waterfallSteps.flatMap(s => [s.start, s.end]), satsPrice) * 1.12;
+  const waterfallMax = Math.max(...waterfallSteps.flatMap(s => [s.start, s.end]), echoPrice) * 1.12;
 
   const renderWaterfallSVG = (isModal) => {
-    const priceLineY = 260 - (satsPrice / waterfallMax) * 230;
+    const priceLineY = 260 - (echoPrice / waterfallMax) * 230;
     const showPriceLine = priceLineY >= 20 && priceLineY <= 290;
     const priceCalloutTextY = 20;
 
@@ -436,7 +441,7 @@ export default function SATSSOTPFinder() {
           );
         })}
 
-        {/* SATS Price Line */}
+        {/* ECHO Price Line */}
         {(() => {
           if (!showPriceLine) return null;
           return (
@@ -444,7 +449,7 @@ export default function SATSSOTPFinder() {
               <line x1="60" y1={priceLineY} x2="760" y2={priceLineY} stroke="#d97706" strokeWidth="2" strokeDasharray="4 4" />
               <rect x="620" y={priceCalloutTextY - 12} width="130" height="16" fill="#fef3c7" stroke="#d97706" strokeWidth="1" />
               <text x="685" y={priceCalloutTextY} fill="#78350f" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
-                SATS Price: ${satsPrice.toFixed(2)}
+                ECHO Price: ${echoPrice.toFixed(2)}
               </text>
             </g>
           );
@@ -529,7 +534,10 @@ export default function SATSSOTPFinder() {
 
         {/* Rows */}
         {spcxPriceRows.map((rowSPCX) => {
-          const isSelectedRow = Math.abs(rowSPCX - spcxPrice) < 5;
+          // Nearest row wins — a fixed ±5 threshold left no active row when the
+          // live SPCX price (or the $200 Moon preset) fell between grid rows.
+          const nearestRow = spcxPriceRows.reduce((a, b) => (Math.abs(b - spcxPrice) < Math.abs(a - spcxPrice) ? b : a));
+          const isSelectedRow = rowSPCX === nearestRow;
           return (
             <React.Fragment key={rowSPCX}>
               {/* Row SPCX Price */}
@@ -543,8 +551,8 @@ export default function SATSSOTPFinder() {
               {/* Cells */}
               {activeCols.map((colVal) => {
                 const cellVal = calculateCellNAV(rowSPCX, colVal);
-                const premiumPercent = ((cellVal / satsPrice) - 1) * 100;
-                const isUpside = cellVal > satsPrice;
+                const premiumPercent = ((cellVal / echoPrice) - 1) * 100;
+                const isUpside = cellVal > echoPrice;
                 
                 // Calculate opacity based on premium/discount size
                 const diffRatio = Math.min(1.0, Math.abs(premiumPercent) / 100);
@@ -554,7 +562,7 @@ export default function SATSSOTPFinder() {
                   : `rgba(185, 28, 28, ${bgOpacity})`; // Red
 
                 const isCurrentInputCell = 
-                  (Math.abs(rowSPCX - spcxPrice) < 5) && 
+                  (rowSPCX === spcxPriceRows.reduce((a, b) => (Math.abs(b - spcxPrice) < Math.abs(a - spcxPrice) ? b : a))) && 
                   (heatmapColMode === "tax" 
                     ? Math.abs(colVal - taxRate) < 1 
                     : Math.abs(colVal - liquidityDiscount) < 1);
@@ -590,16 +598,16 @@ export default function SATSSOTPFinder() {
 
     return (
       <div style={styles.modalOverlay} onClick={() => setActiveModalChart(null)}>
-        <div style={styles.modalContent} className="sats-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div style={styles.modalContent} className="echo-modal-content" onClick={(e) => e.stopPropagation()}>
           <button style={styles.modalCloseBtn} onClick={() => setActiveModalChart(null)}>
             ✕ Close
           </button>
           
           {activeModalChart === "waterfall" ? (
             <div>
-              <div style={styles.modalChartHeader} className="sats-chart-header">
+              <div style={styles.modalChartHeader} className="echo-chart-header">
                 <span style={styles.sectionNum}>VISUAL 01 (ENLARGED)</span>
-                <h3 style={{ ...styles.chartTitle, fontSize: "20px" }}>SATS SOTP Bridge ($ / Share)</h3>
+                <h3 style={{ ...styles.chartTitle, fontSize: "20px" }}>ECHO SOTP Bridge ($ / Share)</h3>
               </div>
               <div style={{ position: "relative", width: "100%", height: "480px", background: "#fefdf8", border: "1px solid #e7e5e4", padding: "24px", marginTop: "16px" }}>
                 {renderWaterfallSVG(true)}
@@ -607,7 +615,7 @@ export default function SATSSOTPFinder() {
             </div>
           ) : (
             <div>
-              <div style={styles.modalChartHeader} className="sats-chart-header">
+              <div style={styles.modalChartHeader} className="echo-chart-header">
                 <span style={styles.sectionNum}>VISUAL 02 (ENLARGED)</span>
                 <h3 style={{ ...styles.chartTitle, fontSize: "20px" }}>NAV Sensitivity Matrix</h3>
                 <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
@@ -642,18 +650,18 @@ export default function SATSSOTPFinder() {
   };
 
   return (
-    <div style={styles.container} className="vcx-container sats-container">
+    <div style={styles.container} className="vcx-container echo-container">
       
       {/* HEADER */}
       <div style={styles.header}>
         <div style={styles.eyebrow} className="vcx-eyebrow">
-          ECHOSTAR CORP · NASDAQ: SATS · SUM-OF-THE-PARTS / SpaceX-PROXY CALCULATOR
+          ECHOSTAR CORP · NASDAQ: ECHO (FORMERLY SATS, CHANGED 6/24/26) · SUM-OF-THE-PARTS / SpaceX-PROXY CALCULATOR
         </div>
         <h1 style={styles.title} className="vcx-title">
-          SATS <span style={styles.titleAccent}>SOTP Finder</span>
+          ECHO <span style={styles.titleAccent}>SOTP Finder</span>
         </h1>
         <p style={styles.subtitle} className="vcx-subtitle">
-          EchoStar Corp (SATS) is a highly leveraged satellite, Dish TV, and wireless spectrum provider. SATS has agreed to sell its key spectrum assets to AT&T (cash) and SpaceX (primarily SpaceX stock), making SATS shares trade as a highly liquid proxy for SpaceX. This sum-of-the-parts (SOTP) model details the SpaceX re-rate upside against the hidden drags: corporate cash taxes on the spectrum transfer, regulatory closing timelines, and credit/default distress overlays. Inputs default to S-1 deal terms and filings; modify them below to test your own thesis.
+          EchoStar Corp (ECHO, formerly SATS — ticker changed June 24, 2026) is a satellite, pay-TV, and wireless spectrum company. ECHO has agreed to sell its key spectrum assets to AT&T (cash) and SpaceX (primarily SpaceX stock), making ECHO shares trade as a highly liquid proxy for SpaceX. On June 30, 2026 its DISH DBS pay-TV subsidiary and certain wireless units filed a prepackaged Chapter 11 (88% bondholder support, expected to exit by end of Q3) after the delayed AT&T closing left $2B of notes unpaid — the parent and its SpaceX stake sit outside the filing. This sum-of-the-parts (SOTP) model details the SpaceX re-rate upside against the hidden drags: corporate cash taxes on the spectrum transfer, closing timelines, and restructuring overlays. Inputs default to filed deal terms; modify them below to test your own thesis.
         </p>
       </div>
 
@@ -671,23 +679,23 @@ export default function SATSSOTPFinder() {
             <strong>We add other parts</strong>: the value of remaining spectrum, operating assets (Dish, Boost, Hughes), and pro-forma cash.
           </li>
           <li style={{ marginBottom: 6 }}>
-            <strong>We subtract liabilities</strong>: the heavy corporate C-corp tax on the $42.25B spectrum sale gain, and credit default haircuts if SATS misses debt covenants.
+            <strong>We subtract liabilities</strong>: the heavy corporate C-corp tax on the $42.25B spectrum sale gain, and restructuring haircuts while the DISH DBS Chapter 11 and delayed AT&T closing play out.
           </li>
           <li>
-            <strong>We compare the final NAV</strong> against SATS's current stock price to find the implied proxy discount and effective price paid for SpaceX.
+            <strong>We compare the final NAV</strong> against ECHO's current stock price to find the implied proxy discount and effective price paid for SpaceX.
           </li>
         </ol>
       </div>
 
       {/* QUALITATIVE RISKS BLOCK */}
-      <div style={styles.qualitativeContainer} className="sats-qualitative-container">
+      <div style={styles.qualitativeContainer} className="echo-qualitative-container">
         <div style={styles.qualitativeCard}>
           <div style={styles.qualitativeHeader}>
             <span style={styles.qualitativeIcon}>⚠️</span>
             <strong> Charlie Ergen Key-Man & Governance Risk</strong>
           </div>
           <p style={styles.qualitativeText}>
-            Charlie Ergen (73, controlling shareholder) holds super-voting shares, giving him total control of SATS. He recently skipped the Q1 earnings call, sparking retail governance concerns. All deals, restructuring steps, and cash distributions are dependent on Ergen.
+            Charlie Ergen (73, controlling shareholder) holds super-voting shares, giving him total control of ECHO. He recently skipped the Q1 earnings call, sparking retail governance concerns. All deals, restructuring steps, and cash distributions are dependent on Ergen.
           </p>
         </div>
         <div style={styles.qualitativeCard}>
@@ -696,7 +704,7 @@ export default function SATSSOTPFinder() {
             <strong> Multi-Year Closing Delay (Nov 2027)</strong>
           </div>
           <p style={styles.qualitativeText}>
-            The SpaceX equity block is not delivered until closing, expected ~November 30, 2027. SATS is highly exposed to macro downturns, credit defaults, or SpaceX re-rates in the intervening 1.5+ years before SATS actually holds the liquid stock.
+            The SpaceX equity block is not delivered until closing, expected ~November 30, 2027. ECHO is highly exposed to macro downturns, restructuring surprises, or SpaceX re-rates in the intervening 1.5+ years before ECHO actually holds the liquid stock.
           </p>
         </div>
         <div style={styles.qualitativeCard}>
@@ -705,7 +713,7 @@ export default function SATSSOTPFinder() {
             <strong> Proxy-Unwind Demand Drop</strong>
           </div>
           <p style={styles.qualitativeText}>
-            SATS trades at a proxy discount because SpaceX is private. If SpaceX's direct stock (SPCX) starts trading actively in liquid public markets or list lockups expire, investors will buy SPCX directly, leading to an unwind of SATS's proxy premium.
+            ECHO trades at a proxy discount because SpaceX is private. If SpaceX's direct stock (SPCX) starts trading actively in liquid public markets or list lockups expire, investors will buy SPCX directly, leading to an unwind of ECHO's proxy premium.
           </p>
         </div>
       </div>
@@ -736,13 +744,13 @@ export default function SATSSOTPFinder() {
         </div>
 
         <div style={styles.controlGroup}>
-          <label style={styles.label}>SATS Market Price ($)</label>
+          <label style={styles.label}>ECHO Market Price ($)</label>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <input
               type="number"
               step="0.01"
-              value={satsPrice}
-              onChange={(e) => { setSatsPrice(parseFloat(e.target.value) || 0); handleManualEdit(); }}
+              value={echoPrice}
+              onChange={(e) => { setEchoPrice(parseFloat(e.target.value) || 0); handleManualEdit(); }}
               style={styles.smallInput}
               className="vcx-input vcx-small-input"
             />
@@ -751,17 +759,17 @@ export default function SATSSOTPFinder() {
               fontFamily: "monospace",
               padding: "2px 6px",
               borderRadius: "3px",
-              border: `1px solid ${priceSource === "live" ? "#15803d" : priceSource === "partial" ? "#d97706" : "#78716c"}`,
-              color: priceSource === "live" ? "#15803d" : priceSource === "partial" ? "#d97706" : "#78716c",
-              background: priceSource === "live" ? "#f0fdf4" : priceSource === "partial" ? "#fffbeb" : "transparent"
+              border: `1px solid ${priceSource === "live" || priceSource === "cache" ? "#15803d" : priceSource === "partial" ? "#d97706" : "#78716c"}`,
+              color: priceSource === "live" || priceSource === "cache" ? "#15803d" : priceSource === "partial" ? "#d97706" : "#78716c",
+              background: priceSource === "live" || priceSource === "cache" ? "#f0fdf4" : priceSource === "partial" ? "#fffbeb" : "transparent"
             }}>
-              {priceSource === "live" ? "● LIVE" : priceSource === "partial" ? "◐ PARTIAL" : priceSource === "fallback" ? "○ FALLBACK" : "○ DEFAULT"}
+              {priceSource === "live" || priceSource === "cache" ? "● LIVE" : priceSource === "partial" ? "◐ PARTIAL" : priceSource === "fallback" ? "○ FALLBACK" : "○ DEFAULT"}
             </span>
           </div>
         </div>
 
         <div style={styles.controlGroup}>
-          <label style={styles.label}>SATS Share count base</label>
+          <label style={styles.label}>ECHO Share count base</label>
           <div style={{ display: "flex", gap: "12px", marginTop: "6px" }}>
             <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "14px" }}>
               <input
@@ -793,13 +801,13 @@ export default function SATSSOTPFinder() {
       {/* SCENARIO CARD PRESETS */}
       <div style={{ marginBottom: "32px" }}>
         <div style={styles.howToTitle}>Preset Scenarios</div>
-        <div style={styles.scenarioGrid} className="sats-scenario-grid">
+        <div style={styles.scenarioGrid} className="echo-scenario-grid">
           {[
-            { key: "base", label: "Base — SPCX $135 (IPO)", desc: "Standard 20% liquidity disc., 25% tax rate, default credit distress.", handler: applyBase },
-            { key: "bull", label: "Bull — SPCX $175", desc: "SpaceX post-IPO re-rate to $175. Lower 15% tax (partial trust deferral), credit cured.", handler: applyBull },
-            { key: "moon", label: "Moon — SPCX $200", desc: "SpaceX valuation hits $200 (~$3T). 0% tax (trust restructure), credit cured.", handler: applyMoon },
-            { key: "bear", label: "Bear — Credit Stress", desc: "Missed payment cured: No. 25% credit distress haircut. $2B cash, $0 stub.", handler: applyBear },
-            { key: "takeout", label: "Takeout (buyout)", desc: "SpaceX acquires Boost/SATS in tax-free stock swap (0% tax, 0% disc, $8B stub).", handler: applyTakeout }
+            { key: "base", label: liveSpcx ? `Base — SPCX $${Math.round(liveSpcx)} (live)` : "Base — SPCX ~$150", desc: "Standard 20% liquidity disc., 25% tax rate, contested-restructuring haircut applied.", handler: applyBase },
+            { key: "bull", label: "Bull — SPCX $175", desc: "SpaceX post-IPO re-rate to $175. Lower 15% tax (partial trust deferral), prepack exits on plan.", handler: applyBull },
+            { key: "moon", label: "Moon — SPCX $200", desc: "SpaceX valuation hits $200 (~$3T) — the Citi case. 0% tax (trust restructure), prepack exits on plan.", handler: applyMoon },
+            { key: "bear", label: "Bear — Restructuring Stress", desc: "Contested / prolonged prepack: 25% restructuring haircut. $2B cash, $0 stub.", handler: applyBear },
+            { key: "takeout", label: "Takeout (buyout)", desc: "SpaceX acquires Boost/ECHO in tax-free stock swap (0% tax, 0% disc, $8B stub).", handler: applyTakeout }
           ].map(({ key, label, desc, handler }) => {
             const isActive = activeScenario === key;
             return (
@@ -821,19 +829,19 @@ export default function SATSSOTPFinder() {
       </div>
 
       {/* THREE INTERACTIVE CHARTS CARD */}
-      <div style={styles.visualsBlock} className="sats-visuals-block">
+      <div style={styles.visualsBlock} className="echo-visuals-block">
         {/* SVG WATERFALL CHART */}
         <div 
           style={{ ...styles.chartCard, cursor: "zoom-in" }} 
           onClick={() => setActiveModalChart("waterfall")}
           title="Click to enlarge"
         >
-          <div style={styles.chartHeader} className="sats-chart-header">
+          <div style={styles.chartHeader} className="echo-chart-header">
             <span style={styles.sectionNum}>VISUAL 01</span>
-            <h3 style={styles.chartTitle}>SATS SOTP Bridge ($ / Share)</h3>
+            <h3 style={styles.chartTitle}>ECHO SOTP Bridge ($ / Share)</h3>
             <span style={styles.zoomHint}>🔍 Click to enlarge</span>
           </div>
-          <div style={{ position: "relative", width: "100%", height: "360px", background: "#fefdf8", border: "1px solid #e7e5e4", padding: "16px" }} className="sats-chart-container">
+          <div style={{ position: "relative", width: "100%", height: "360px", background: "#fefdf8", border: "1px solid #e7e5e4", padding: "16px" }} className="echo-chart-container">
             {renderWaterfallSVG(false)}
           </div>
         </div>
@@ -844,7 +852,7 @@ export default function SATSSOTPFinder() {
           onClick={() => setActiveModalChart("heatmap")}
           title="Click to enlarge"
         >
-          <div style={styles.chartHeader} className="sats-chart-header">
+          <div style={styles.chartHeader} className="echo-chart-header">
             <span style={styles.sectionNum}>VISUAL 02</span>
             <h3 style={styles.chartTitle}>NAV Sensitivity Matrix</h3>
             <span style={{ ...styles.zoomHint, marginRight: "12px" }}>🔍 Click to enlarge</span>
@@ -872,7 +880,7 @@ export default function SATSSOTPFinder() {
           <div style={styles.heatmapTableContainer}>
             {renderHeatmapGrid(false)}
             <div style={{ fontSize: "11px", color: "#78716c", marginTop: "10px", fontStyle: "italic" }}>
-              *Shaded by upside (green) or downside (red) vs. today's SATS price of ${satsPrice.toFixed(2)}. Selected active model cell highlighted with <span style={{ color: "#d97706", fontWeight: "bold" }}>orange border</span>.
+              *Shaded by upside (green) or downside (red) vs. today's ECHO price of ${echoPrice.toFixed(2)}. Selected active model cell highlighted with <span style={{ color: "#d97706", fontWeight: "bold" }}>orange border</span>.
             </div>
           </div>
         </div>
@@ -882,7 +890,7 @@ export default function SATSSOTPFinder() {
 
       {/* VISUAL 3: PARTS CONTRIBUTION STACKED BAR */}
       <div style={{ ...styles.chartCard, marginBottom: "40px" }}>
-        <div style={styles.chartHeader} className="sats-chart-header">
+        <div style={styles.chartHeader} className="echo-chart-header">
           <span style={styles.sectionNum}>VISUAL 03</span>
           <h3 style={styles.chartTitle}>SOTP Asset Contribution vs Deductions</h3>
           <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
@@ -1020,16 +1028,16 @@ export default function SATSSOTPFinder() {
       <div style={{ ...styles.howToBox, background: "#f5f5f4", border: "1px solid #d6d3d1", marginBottom: "40px" }}>
         <div style={styles.howToTitle}>Wall Street Target Reconciliation</div>
         <p style={{ fontSize: "13px", color: "#44403c", lineHeight: 1.5, marginBottom: "12px" }}>
-          Reconcile your model's outputs against reported Wall Street targets. Both Cowen and Barron's apply a tax haircut to the spectrum gain, but their cash and operating stub assumptions vary:
+          Reconcile your model's outputs against reported Wall Street targets. Cowen and Barron's apply a tax haircut to the spectrum gain; Citi (7/8/26) applies a discount to the SpaceX stake. Across 7 covering analysts the average target is ~$146 (57% rate Buy):
         </p>
-        <div className="sats-table-scroll" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div className="echo-table-scroll" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
         <table style={{ width: "100%", minWidth: "600px", borderCollapse: "collapse", fontSize: "13px", fontFamily: "monospace" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid #d6d3d1", textAlign: "left" }}>
               <th style={{ padding: "6px 8px" }}>Anchor Target Source</th>
               <th style={{ padding: "6px 8px" }}>SPCX Price</th>
               <th style={{ padding: "6px 8px", textAlign: "right" }}>SpaceX Stake</th>
-              <th style={{ padding: "6px 8px", textAlign: "right" }}>SATS Target NAV</th>
+              <th style={{ padding: "6px 8px", textAlign: "right" }}>ECHO Target NAV</th>
               <th style={{ padding: "6px 8px", textAlign: "right" }}>Model Variance</th>
             </tr>
           </thead>
@@ -1039,8 +1047,8 @@ export default function SATSSOTPFinder() {
               <td style={{ padding: "6px 8px" }}>~$118 (implied)</td>
               <td style={{ padding: "6px 8px", textAlign: "right" }}>$31.0B</td>
               <td style={{ padding: "6px 8px", textAlign: "right", fontWeight: "bold" }}>$155.00</td>
-              <td style={{ padding: "6px 8px", textAlign: "right", color: calc.riskAdjustedPerSatsShare > 155 ? "#15803d" : "#b91c1c" }}>
-                {(calc.riskAdjustedPerSatsShare - 155.0).toFixed(2) >= 0 ? "+" : ""}{(calc.riskAdjustedPerSatsShare - 155.0).toFixed(2)}
+              <td style={{ padding: "6px 8px", textAlign: "right", color: calc.riskAdjustedPerEchoShare > 155 ? "#15803d" : "#b91c1c" }}>
+                {(calc.riskAdjustedPerEchoShare - 155.0).toFixed(2) >= 0 ? "+" : ""}{(calc.riskAdjustedPerEchoShare - 155.0).toFixed(2)}
               </td>
             </tr>
             <tr style={{ borderBottom: "1px solid #e7e5e4" }}>
@@ -1051,7 +1059,7 @@ export default function SATSSOTPFinder() {
               <td style={{ padding: "6px 8px", textAlign: "right" }}>
                 {(() => {
                   const targetMid = 187.5;
-                  const variance = calc.riskAdjustedPerSatsShare - targetMid;
+                  const variance = calc.riskAdjustedPerEchoShare - targetMid;
                   return (
                     <span style={{ color: variance >= 0 ? "#15803d" : "#b91c1c" }}>
                       {variance >= 0 ? "+" : ""}{variance.toFixed(2)} vs mid
@@ -1060,12 +1068,21 @@ export default function SATSSOTPFinder() {
                 })()}
               </td>
             </tr>
+            <tr style={{ borderBottom: "1px solid #e7e5e4" }}>
+              <td style={{ padding: "6px 8px", fontWeight: "bold" }}>Citi (Michael Rollins, 7/8/26)</td>
+              <td style={{ padding: "6px 8px" }}>$200 (Citi SpaceX value)</td>
+              <td style={{ padding: "6px 8px", textAlign: "right" }}>$52.4B (pre-discount)</td>
+              <td style={{ padding: "6px 8px", textAlign: "right", fontWeight: "bold" }}>$126.00</td>
+              <td style={{ padding: "6px 8px", textAlign: "right", color: calc.riskAdjustedPerEchoShare > 126 ? "#15803d" : "#b91c1c" }}>
+                {(calc.riskAdjustedPerEchoShare - 126.0) >= 0 ? "+" : ""}{(calc.riskAdjustedPerEchoShare - 126.0).toFixed(2)}
+              </td>
+            </tr>
             <tr style={{ borderBottom: "1px solid #e7e5e4", background: "#fef3c7" }}>
               <td style={{ padding: "6px 8px", fontWeight: "bold" }}>Your Risk-Adjusted Model (Active)</td>
               <td style={{ padding: "6px 8px" }}>${spcxPrice}</td>
               <td style={{ padding: "6px 8px", textAlign: "right" }}>{fmt$(calc.netSpaceXVal)}</td>
               <td style={{ padding: "6px 8px", textAlign: "right", fontWeight: "bold", color: "#d97706" }}>
-                ${calc.riskAdjustedPerSatsShare.toFixed(2)}
+                ${calc.riskAdjustedPerEchoShare.toFixed(2)}
               </td>
               <td style={{ padding: "6px 8px", textAlign: "right" }}>—</td>
             </tr>
@@ -1091,7 +1108,7 @@ export default function SATSSOTPFinder() {
             <div style={{ ...styles.th, flex: "2.4" }}>Asset component</div>
             <div style={{ ...styles.th, flex: "1.4", textAlign: "right" }}>Shares / Price</div>
             <div style={{ ...styles.th, flex: "1.4", textAlign: "right" }}>Value ($B)</div>
-            <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>$/SATS Share</div>
+            <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>$/ECHO Share</div>
             <div style={{ ...styles.th, flex: "1.0", textAlign: "right" }}>Tag</div>
           </div>
 
@@ -1108,7 +1125,7 @@ export default function SATSSOTPFinder() {
               {fmt$(calc.grossSpaceXVal)}
             </div>
             <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontFamily: "monospace", color: "#d97706", fontWeight: 600 }}>
-              ${calc.grossSpaceXPerSatsShare.toFixed(2)}
+              ${calc.grossSpaceXPerEchoShare.toFixed(2)}
             </div>
             <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}>
               <span style={styles.verifiedBadge} title="Contractual fixed equity consideration detailed in S-1 Note F-26">[VERIFIED]</span>
@@ -1139,7 +1156,7 @@ export default function SATSSOTPFinder() {
               -{fmt$(calc.liquidityDiscountVal)}
             </div>
             <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontFamily: "monospace", color: "#b91c1c" }}>
-              -${calc.liquidityDiscountPerSatsShare.toFixed(2)}
+              -${calc.liquidityDiscountPerEchoShare.toFixed(2)}
             </div>
             <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}>
               <span style={styles.estimateBadge} title="User modeled estimate">[ESTIMATE]</span>
@@ -1187,7 +1204,7 @@ export default function SATSSOTPFinder() {
               -{fmt$(calc.closingTimingDiscountVal)}
             </div>
             <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontFamily: "monospace", color: "#b91c1c" }}>
-              -${calc.closingTimingDiscountPerSatsShare.toFixed(2)}
+              -${calc.closingTimingDiscountPerEchoShare.toFixed(2)}
             </div>
             <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}>
               <span style={styles.estimateBadge} title="User modeled estimate">[ESTIMATE]</span>
@@ -1200,7 +1217,7 @@ export default function SATSSOTPFinder() {
             <div style={{ flex: "1.4" }} />
             <div style={{ flex: "1.4", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{fmt$(calc.netSpaceXVal)}</div>
             <div style={{ flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "#d97706" }}>
-              ${calc.netSpaceXPerSatsShare.toFixed(2)}
+              ${calc.netSpaceXPerEchoShare.toFixed(2)}
             </div>
             <div style={{ flex: "1.0" }} />
           </div>
@@ -1212,7 +1229,7 @@ export default function SATSSOTPFinder() {
         <div style={styles.sectionHeader} className="vcx-section-header">
           <span style={styles.sectionNum}>02</span>
           <h2 style={styles.sectionTitle}>Other SOTP Parts (Spectrum & Operations)</h2>
-          <span style={styles.sectionMeta} className="vcx-section-meta">Adjust assets that back SATS operating stub</span>
+          <span style={styles.sectionMeta} className="vcx-section-meta">Adjust assets that back ECHO operating stub</span>
         </div>
 
         <div style={styles.tableWrap}>
@@ -1221,7 +1238,7 @@ export default function SATSSOTPFinder() {
             <div style={{ ...styles.th, flex: "2.4" }}>Asset component</div>
             <div style={{ ...styles.th, flex: "1.4", textAlign: "right" }}>Filing baseline</div>
             <div style={{ ...styles.th, flex: "1.4", textAlign: "right" }}>Model Value ($B)</div>
-            <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>$/SATS Share</div>
+            <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>$/ECHO Share</div>
             <div style={{ ...styles.th, flex: "1.0", textAlign: "right" }}>Tag</div>
           </div>
 
@@ -1250,7 +1267,7 @@ export default function SATSSOTPFinder() {
               {fmt$(calc.spectrumValM)}
             </div>
             <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontFamily: "monospace", color: "#d97706", fontWeight: 600 }}>
-              ${calc.spectrumPerSatsShare.toFixed(2)}
+              ${calc.spectrumPerEchoShare.toFixed(2)}
             </div>
             <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}>
               <span style={styles.estimateBadge} title="Analyst valuation baseline">[ESTIMATE]</span>
@@ -1294,7 +1311,7 @@ export default function SATSSOTPFinder() {
               {calc.netCashValM < 0 ? `(${fmt$(Math.abs(calc.netCashValM))})` : fmt$(calc.netCashValM)}
             </div>
             <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontFamily: "monospace", color: calc.netCashValM < 0 ? "#b91c1c" : "#d97706", fontWeight: 600 }}>
-              ${calc.netCashPerSatsShare.toFixed(2)}
+              ${calc.netCashPerEchoShare.toFixed(2)}
             </div>
             <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}>
               <span style={styles.estimateBadge} title="Highly contested pro-forma cash builds">[ESTIMATE]</span>
@@ -1327,7 +1344,7 @@ export default function SATSSOTPFinder() {
               {fmt$(calc.stubValM)}
             </div>
             <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontFamily: "monospace", color: "#d97706", fontWeight: 600 }}>
-              ${calc.stubPerSatsShare.toFixed(2)}
+              ${calc.stubPerEchoShare.toFixed(2)}
             </div>
             <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}>
               <span style={styles.estimateBadge} title="User modeled estimate">[ESTIMATE]</span>
@@ -1340,7 +1357,7 @@ export default function SATSSOTPFinder() {
             <div style={{ flex: "1.4" }} />
             <div style={{ flex: "1.4", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{fmt$(calc.preTaxDiscountedTotalM)}</div>
             <div style={{ flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "#d97706" }}>
-              ${calc.preTaxDiscountedPerSatsShare.toFixed(2)}
+              ${calc.preTaxDiscountedPerEchoShare.toFixed(2)}
             </div>
             <div style={{ flex: "1.0" }} />
           </div>
@@ -1355,12 +1372,13 @@ export default function SATSSOTPFinder() {
           <span style={styles.sectionMeta} className="vcx-section-meta">Model the heavy drags Wall Street ignores</span>
         </div>
 
-        {/* CREDIT WARNING BANNER */}
-        {cured === "no" && (
-          <div style={styles.creditWarning}>
-            <strong>⚠️ CREDIT DEFAULT ALERT:</strong> EchoStar missed its June 1 interest payment on the DISH DBS Senior Notes. The stock is currently subject to a 30-day cure period. If default is not cured, restructuring or distress haircuts could discount asset recoveries significantly. We apply the <strong>Distress Haircut</strong> to your model.
-          </div>
-        )}
+        {/* CHAPTER 11 STATUS BANNER */}
+        <div style={styles.creditWarning}>
+          <strong>⚠️ CHAPTER 11 — DIVISIONS ONLY:</strong> On June 30, 2026, DISH DBS (pay-TV) and certain wireless subsidiaries filed a prepackaged Chapter 11 in Houston, backed by 88% of DBS bondholders, after the delayed ~$23B AT&T spectrum sale left $2B of notes maturing July 1 unpaid. The parent (ECHO) and its SpaceX stake are OUTSIDE the filing; Dish TV/Sling operations continue. Management expects the units to exit before the end of Q3 2026.{" "}
+          {cured === "no"
+            ? <>Your toggle below is set to <strong>contested / prolonged</strong>, so we apply the Distress Haircut.</>
+            : <>Your toggle below assumes the prepack <strong>exits on plan</strong> — no haircut applied.</>}
+        </div>
 
         <div style={styles.tableWrap}>
           {/* Headers */}
@@ -1368,7 +1386,7 @@ export default function SATSSOTPFinder() {
             <div style={{ ...styles.th, flex: "2.4" }}>Deduction component</div>
             <div style={{ ...styles.th, flex: "1.4", textAlign: "right" }}>Inputs</div>
             <div style={{ ...styles.th, flex: "1.4", textAlign: "right" }}>Deduction ($B)</div>
-            <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>$/SATS Share</div>
+            <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>$/ECHO Share</div>
             <div style={{ ...styles.th, flex: "1.0", textAlign: "right" }}>Tag</div>
           </div>
 
@@ -1377,7 +1395,7 @@ export default function SATSSOTPFinder() {
             <div style={{ ...styles.td, flex: "2.4" }}>
               <div style={styles.companyName}>Corporate C-Corp Tax on Spectrum Gain</div>
               <div style={styles.companyNote}>
-                SATS will realize a massive taxable gain on the $42.25B transfer of spectrum licenses to SpaceX + AT&T.
+                ECHO will realize a massive taxable gain on the $42.25B transfer of spectrum licenses to SpaceX + AT&T.
               </div>
               <div style={{ marginTop: "8px", display: "flex", flexWrap: "wrap", gap: "16px" }}>
                 <div>
@@ -1423,7 +1441,7 @@ export default function SATSSOTPFinder() {
               -{fmt$(calc.corporateTaxVal)}
             </div>
             <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontFamily: "monospace", color: "#b91c1c", fontWeight: 600 }}>
-              -${calc.corporateTaxPerSatsShare.toFixed(2)}
+              -${calc.corporateTaxPerEchoShare.toFixed(2)}
             </div>
             <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}>
               <span style={styles.estimateBadge} title="Modeled tax liability. Deferral via trust is an open question">[ESTIMATE]</span>
@@ -1458,7 +1476,7 @@ export default function SATSSOTPFinder() {
               -{fmt$(calc.towerLeaseCostsM)}
             </div>
             <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontFamily: "monospace", color: "#b91c1c", fontWeight: 600 }}>
-              -${calc.towerLeaseCostsPerSatsShare.toFixed(2)}
+              -${calc.towerLeaseCostsPerEchoShare.toFixed(2)}
             </div>
             <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}>
               <span style={styles.estimateBadge} title="Estimated tower lease termination liability">[ ESTIMATE]</span>
@@ -1468,9 +1486,9 @@ export default function SATSSOTPFinder() {
           {/* Credit Default Haircut Row */}
           <div style={styles.tr} className="vcx-row">
             <div style={{ ...styles.td, flex: "2.4" }}>
-              <div style={styles.companyName}>Credit Distress Haircut / Default overlay</div>
+              <div style={styles.companyName}>Restructuring Haircut / Chapter 11 overlay</div>
               <div style={styles.companyNote}>
-                Distress haircut applied if DBS missed interest default is not cured.
+                Haircut applied if the DBS prepack gets contested/prolonged or the delayed AT&T closing slips further.
               </div>
               <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
                 <div style={{ display: "flex", gap: "6px" }}>
@@ -1482,7 +1500,7 @@ export default function SATSSOTPFinder() {
                       onChange={() => { setCured("yes"); handleManualEdit(); }}
                       style={{ accentColor: "#d97706" }}
                     />
-                    Cured (Yes)
+                    Exits on plan (Q3 &apos;26)
                   </label>
                   <label style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", cursor: "pointer" }}>
                     <input
@@ -1492,7 +1510,7 @@ export default function SATSSOTPFinder() {
                       onChange={() => { setCured("no"); handleManualEdit(); }}
                       style={{ accentColor: "#d97706" }}
                     />
-                    Cured (No)
+                    Contested / prolonged
                   </label>
                 </div>
                 
@@ -1512,16 +1530,16 @@ export default function SATSSOTPFinder() {
               </div>
             </div>
             <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", color: cured === "yes" ? "#78716c" : "#b91c1c" }}>
-              {cured === "yes" ? "Cured (No risk)" : `Missed payment default`}
+              {cured === "yes" ? "On-plan prepack exit" : `Contested restructuring`}
             </div>
             <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", color: "#b91c1c", fontWeight: 600 }}>
               {cured === "yes" ? "$0" : `-${fmt$(calc.distressHaircutAmt)}`}
             </div>
             <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontFamily: "monospace", color: "#b91c1c", fontWeight: 600 }}>
-              {cured === "yes" ? "$0.00" : `-${calc.distressHaircutPerSatsShare.toFixed(2)}`}
+              {cured === "yes" ? "$0.00" : `-${calc.distressHaircutPerEchoShare.toFixed(2)}`}
             </div>
             <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}>
-              <span style={styles.reportedBadge} title="Missed payment was officially reported on June 1">[REPORTED]</span>
+              <span style={styles.reportedBadge} title="DISH DBS + certain wireless subsidiaries filed prepackaged Chapter 11 on June 30, 2026 (S.D. Tex.)">[REPORTED]</span>
             </div>
           </div>
 
@@ -1530,7 +1548,7 @@ export default function SATSSOTPFinder() {
             <div style={{ ...styles.td, flex: "2.4" }}>
               <div style={{ ...styles.companyName, color: "#991b1b" }}>Simulate Deal Break (Pre-deal Distress Net Debt)</div>
               <div style={styles.companyNote}>
-                Check this box to simulate the scenario where the transaction breaks, SATS receives no SpaceX equity, and remains saddled with its pre-deal Net Debt of <strong>-$27.7B</strong>.
+                Check this box to simulate the scenario where the transaction breaks, ECHO receives no SpaceX equity, and remains saddled with its pre-deal Net Debt of <strong>-$27.7B</strong>.
               </div>
             </div>
             <div style={{ ...styles.td, flex: "1.4", textAlign: "right" }}>
@@ -1558,33 +1576,33 @@ export default function SATSSOTPFinder() {
       <div style={styles.section}>
         <div style={styles.sectionHeader} className="vcx-section-header">
           <span style={styles.sectionNum}>04</span>
-          <h2 style={styles.sectionTitle}>SATS SOTP Outputs & Implied SpaceX Price</h2>
+          <h2 style={styles.sectionTitle}>ECHO SOTP Outputs & Implied SpaceX Price</h2>
           <span style={styles.sectionMeta} className="vcx-section-meta">Compare Pre-tax vs. Risk-Adjusted values</span>
         </div>
 
-        <div style={styles.summaryBlockContainer} className="sats-summary-row">
+        <div style={styles.summaryBlockContainer} className="echo-summary-row">
           {/* Pre-tax Card */}
-          <div style={styles.summaryCard} className="sats-summary-card">
+          <div style={styles.summaryCard} className="echo-summary-card">
             <div style={styles.summaryCardTitle}>PRE-TAX SOTP VALUE</div>
             <div style={{ ...styles.gtValue, fontSize: "40px", marginBottom: "8px" }} className="vcx-gt-value-large">
               {fmt$exact(calc.preTaxDiscountedTotalM)}
             </div>
             <div style={{ ...styles.gtValueAccent, fontSize: "56px", marginBottom: "16px" }} className="vcx-gt-value-accent">
-              ${calc.preTaxDiscountedPerSatsShare.toFixed(2)}
-              <span style={{ fontSize: "14px", fontStyle: "normal", color: "#a8a29e", marginLeft: "6px" }}>/ SATS share</span>
+              ${calc.preTaxDiscountedPerEchoShare.toFixed(2)}
+              <span style={{ fontSize: "14px", fontStyle: "normal", color: "#a8a29e", marginLeft: "6px" }}>/ ECHO share</span>
             </div>
             <div style={styles.gtDivider} />
             
             <div style={styles.metricRow}>
-              <span style={styles.metricLabel}>Upside vs SATS Price:</span>
-              <span style={{ ...styles.metricValue, color: calc.preTaxDiscountedPerSatsShare > satsPrice ? "#15803d" : "#b91c1c" }}>
-                {((calc.preTaxDiscountedPerSatsShare / satsPrice - 1) * 100).toFixed(0)}%
+              <span style={styles.metricLabel}>Upside vs ECHO Price:</span>
+              <span style={{ ...styles.metricValue, color: calc.preTaxDiscountedPerEchoShare > echoPrice ? "#15803d" : "#b91c1c" }}>
+                {((calc.preTaxDiscountedPerEchoShare / echoPrice - 1) * 100).toFixed(0)}%
               </span>
             </div>
             <div style={styles.metricRow}>
               <span style={styles.metricLabel}>Premium/Discount to NAV:</span>
               <span style={styles.metricValue}>
-                {((satsPrice / calc.preTaxDiscountedPerSatsShare - 1) * 100).toFixed(0)}%
+                {((echoPrice / calc.preTaxDiscountedPerEchoShare - 1) * 100).toFixed(0)}%
               </span>
             </div>
             <div style={styles.metricRow}>
@@ -1599,27 +1617,27 @@ export default function SATSSOTPFinder() {
           </div>
 
           {/* Risk-adjusted Card */}
-          <div style={{ ...styles.summaryCard, border: "2px solid #fbbf24", background: "#1c1917" }} className="sats-summary-card">
+          <div style={{ ...styles.summaryCard, border: "2px solid #fbbf24", background: "#1c1917" }} className="echo-summary-card">
             <div style={{ ...styles.summaryCardTitle, color: "#fbbf24" }}>RISK-ADJUSTED SOTP VALUE</div>
             <div style={{ ...styles.gtValue, fontSize: "40px", marginBottom: "8px", color: "#fff" }} className="vcx-gt-value-large">
               {fmt$exact(calc.riskAdjustedTotalM)}
             </div>
             <div style={{ ...styles.gtValueAccent, fontSize: "56px", marginBottom: "16px" }} className="vcx-gt-value-accent">
-              ${calc.riskAdjustedPerSatsShare.toFixed(2)}
-              <span style={{ fontSize: "14px", fontStyle: "normal", color: "#a8a29e", marginLeft: "6px" }}>/ SATS share</span>
+              ${calc.riskAdjustedPerEchoShare.toFixed(2)}
+              <span style={{ fontSize: "14px", fontStyle: "normal", color: "#a8a29e", marginLeft: "6px" }}>/ ECHO share</span>
             </div>
             <div style={{ ...styles.gtDivider, background: "#fbbf24", opacity: 0.3 }} />
             
             <div style={styles.metricRow}>
-              <span style={{ ...styles.metricLabel, color: "#a8a29e" }}>Upside vs SATS Price:</span>
-              <span style={{ ...styles.metricValue, color: calc.riskAdjustedPerSatsShare > satsPrice ? "#86efac" : "#fca5a5" }}>
-                {((calc.riskAdjustedPerSatsShare / satsPrice - 1) * 100).toFixed(0)}%
+              <span style={{ ...styles.metricLabel, color: "#a8a29e" }}>Upside vs ECHO Price:</span>
+              <span style={{ ...styles.metricValue, color: calc.riskAdjustedPerEchoShare > echoPrice ? "#86efac" : "#fca5a5" }}>
+                {((calc.riskAdjustedPerEchoShare / echoPrice - 1) * 100).toFixed(0)}%
               </span>
             </div>
             <div style={styles.metricRow}>
               <span style={{ ...styles.metricLabel, color: "#a8a29e" }}>Premium/Discount to NAV:</span>
               <span style={{ ...styles.metricValue, color: "#fff" }}>
-                {((satsPrice / calc.riskAdjustedPerSatsShare - 1) * 100).toFixed(0)}%
+                {((echoPrice / calc.riskAdjustedPerEchoShare - 1) * 100).toFixed(0)}%
               </span>
             </div>
             <div style={styles.metricRow}>
@@ -1636,34 +1654,35 @@ export default function SATSSOTPFinder() {
       </div>
 
       {/* EXPLAINER BOXES */}
-      <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", marginBottom: "48px" }} className="sats-explainer-row">
+      <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", marginBottom: "48px" }} className="echo-explainer-row">
         {/* Share Count explainer */}
-        <div style={{ ...styles.issuanceBox, flex: 1, minWidth: "300px" }} className="sats-explainer-box">
+        <div style={{ ...styles.issuanceBox, flex: 1, minWidth: "300px" }} className="echo-explainer-box">
           <div style={styles.issuanceHeader}>
             <span style={styles.sectionNum}>ⓘ</span>
-            <h3 style={{ ...styles.sectionTitle, fontSize: "16px", margin: 0 }}>About SATS share count</h3>
+            <h3 style={{ ...styles.sectionTitle, fontSize: "16px", margin: 0 }}>About ECHO share count</h3>
           </div>
           <div style={styles.issuanceMeta}>
-            The default SATS basic share count of <strong>289.8M</strong> is an estimate of Class A + B outstanding. The authoritative share count changes quarterly and can be verified against EchoStar's latest Form 10-Q / 10-K. To evaluate convertible bond dilution risk noted by Barron's and Cowen, toggle on the **Diluted** share count button (which models conversion to **304.4M** shares).
+            The default ECHO basic share count of <strong>289.8M</strong> is an estimate of Class A + B outstanding. The authoritative share count changes quarterly and can be verified against EchoStar's latest Form 10-Q / 10-K. To evaluate convertible bond dilution risk noted by Barron's and Cowen, toggle on the **Diluted** share count button (which models conversion to **304.4M** shares).
           </div>
         </div>
 
         {/* Tax Assumption explainer */}
-        <div style={{ ...styles.issuanceBox, flex: 1, minWidth: "300px" }} className="sats-explainer-box">
+        <div style={{ ...styles.issuanceBox, flex: 1, minWidth: "300px" }} className="echo-explainer-box">
           <div style={styles.issuanceHeader}>
             <span style={styles.sectionNum}>ⓘ</span>
             <h3 style={{ ...styles.sectionTitle, fontSize: "16px", margin: 0 }}>About the spectrum tax</h3>
           </div>
           <div style={styles.issuanceMeta}>
-            Bulls frequently mark SATS's spectrum sale gross of tax, but C-corp stock-for-asset exchanges are taxable at the corporate level. We model cash taxes on the spectrum transfer proceeds ($42.25B) less tax basis (default $5.0B) and SATS's available NOLs (default $1.0B) at a 25% federal + state rate. If SATS can defer tax via the "Spectrum Business Trust 2025-1" structure, the effective tax rate will be lower (preset Moon is 0%).
+            Bulls frequently mark ECHO's spectrum sale gross of tax, but C-corp stock-for-asset exchanges are taxable at the corporate level. We model cash taxes on the spectrum transfer proceeds ($42.25B) less tax basis (default $5.0B) and ECHO's available NOLs (default $1.0B) at a 25% federal + state rate. If ECHO can defer tax via the "Spectrum Business Trust 2025-1" structure, the effective tax rate will be lower (preset Moon is 0%).
           </div>
         </div>
       </div>
 
       {/* CHANGELOG AND SOURCES */}
-      <div style={styles.footer}>
+      <div style={styles.footer} className="footer">
         <div><strong>Changelog:</strong></div>
         <div style={{ marginBottom: "16px" }}>
+          • <strong>July 9, 2026</strong> — Ticker migration SATS → ECHO (effective 6/24/26 on Nasdaq; page now lives at /echo, /sats redirects). Replaced the missed-payment credit alert with the actual event: DISH DBS and certain wireless subsidiaries filed a prepackaged Chapter 11 on June 30, 2026 (88% bondholder support, expected Q3 exit) after the delayed AT&T spectrum sale left $2B of notes unpaid — the parent and SpaceX stake sit outside the filing. Restructuring toggle re-labeled (on-plan exit vs contested). Added Citi&apos;s renewed coverage (Buy, $126 PT, values SpaceX at $200/sh → $52B stake) to the Wall Street reconciliation. Updated defaults: ECHO price ~$95.88, base SPCX ~$150 (live-fetched).<br />
           • <strong>June 15, 2026</strong> — Added visual upgrades for the SATS bridge and sensitivity matrix, including cleaner chart header spacing, a compact heatmap layout, top-aligned input controls, and a non-overlapping SATS price annotation. Added real-time SATS and SPCX price fetching for the live price inputs and base scenario defaults.<br />
           • <strong>June 12, 2026</strong> — Reconciled calculator targets against Barron's strategic analysis ("EchoStar Is Falling as SpaceX Surges. Why the Stock Looks Cheap.") and TD Cowen targets ($155 NAV). Added convertible bond dilution toggle (basic 289.8M vs diluted 304.4M). Added "Takeout" preset scenario for Oppenheimer buyout optionality (SpaceX acquires SATS/Boost in tax-free stock swap, $8.0B stub). Added Wall Street targets reconciliation card. Added qualitative callouts (Ergen key-man risk, multi-year closing delays, proxy-unwind decay).<br />
           • <strong>May 12, 2026</strong> — Updated S-1 regulatory track: FCC officially approved the SATS spectrum transfer application (FCC Order Granting SpaceX-EchoStar Applications, 5/12/26). DOJ antitrust review and closing conditions remain pending. Updated default SATS close probability to 85%.<br />
@@ -1675,6 +1694,9 @@ export default function SATSSOTPFinder() {
           <div>• SpaceX Form S-1 Note F-26 "Spectrum Transactions" (Deal Terms): <a href="https://www.sec.gov/Archives/edgar/data/1181412/000162828026036936/spaceexplorationtechnologi.htm" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>SEC EDGAR</a></div>
           <div>• Amended SpaceX S-1 Prospectus (Priced Deal): <a href="https://www.sec.gov/Archives/edgar/data/1181412/000162828026039276/spaceexplorationtechnologi.htm" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>SEC Prospectus</a></div>
           <div>• Barron's (Andrew Bary, 6/12/26) "Why SATS looks cheap": <a href="https://www.barrons.com/articles/echostar-spacex-stock-cheap" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>Barron's Article</a></div>
+          <div>• Barron&apos;s (Al Root, 7/8/26) &quot;Like SpaceX? Why EchoStar Might Be a Better Bet&quot; (Citi coverage renewal): <a href="https://www.msn.com/en-us/money/topstocks/echostar-stock-is-a-better-way-to-own-spacex-citi-says/ar-AA27uhpc" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>Barron&apos;s Article (7/8)</a></div>
+          <div>• EchoStar ticker change SATS → ECHO (effective 6/24/26): <a href="https://www.satellitetoday.com/finance/2026/06/22/echostar-swaps-sats-ticker-for-echo-to-emphasize-business-shift/" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>Via Satellite</a></div>
+          <div>• DISH DBS prepackaged Chapter 11 filing (6/30/26): <a href="https://www.satellitetoday.com/finance/2026/07/01/dish-satellite-tv-and-wireless-businesses-file-for-chapter-11-bankruptcy/" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>Via Satellite</a></div>
           <div>• EchoStar Spectrum Agreement Press Release: <a href="https://www.prnewswire.com/news-releases/echostar-announces-spectrum-sale-and-commercial-agreement-with-spacex-302548650.html" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>PR Newswire</a></div>
           <div>• FCC Granting Order (May 12, 2026): <a href="https://www.fcc.gov/document/order-granting-spacex-echostar-applications" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>FCC Order</a></div>
           <div>• QuiverQuant SATS missed DBS payment report: <a href="https://www.quiverquant.com/news/EchoStar+shares+slide+as+missed+interest+payment+rekindles+default+and+liquidity+concerns" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>QuiverQuant</a></div>
@@ -1683,7 +1705,7 @@ export default function SATSSOTPFinder() {
         </div>
 
         <div style={{ marginTop: "24px", fontStyle: "italic", borderTop: "1px dashed #d6d3d1", paddingTop: "12px" }}>
-          This site is for informational and educational purposes only. It does not constitute investment advice, an offer to buy or sell securities, or a recommendation of any kind. The author makes no warranty as to the accuracy of any figures shown. SATS values are modeled estimates based on publicly available filings. The author may hold positions in SATS or other securities mentioned. Do your own work.
+          This site is for informational and educational purposes only. It does not constitute investment advice, an offer to buy or sell securities, or a recommendation of any kind. The author makes no warranty as to the accuracy of any figures shown. ECHO values are modeled estimates based on publicly available filings. The author may hold positions in ECHO or other securities mentioned. Do your own work.
         </div>
       </div>
 
@@ -1692,12 +1714,12 @@ export default function SATSSOTPFinder() {
         <div style={styles.stickyInner}>
           <div style={styles.stickyMetric}>
             <div style={styles.stickyLabel}>Risk-Adj NAV</div>
-            <div style={styles.stickyValueAccent}>${calc.riskAdjustedPerSatsShare.toFixed(2)}</div>
+            <div style={styles.stickyValueAccent}>${calc.riskAdjustedPerEchoShare.toFixed(2)}</div>
           </div>
           <div style={styles.stickyDivider} />
           <div style={styles.stickyMetric}>
             <div style={styles.stickyLabel}>Pre-tax NAV</div>
-            <div style={styles.stickyValue}>${calc.preTaxDiscountedPerSatsShare.toFixed(2)}</div>
+            <div style={styles.stickyValue}>${calc.preTaxDiscountedPerEchoShare.toFixed(2)}</div>
           </div>
           <div style={styles.stickyDivider} />
           <div style={styles.stickyMetric}>
@@ -1706,15 +1728,15 @@ export default function SATSSOTPFinder() {
           </div>
           <div style={styles.stickyDivider} />
           <div style={styles.stickyMetric}>
-            <div style={styles.stickyLabel}>SATS Upside (Risk-Adj)</div>
-            <div style={{ ...styles.stickyValue, color: calc.riskAdjustedPerSatsShare > satsPrice ? "#86efac" : "#fca5a5" }}>
-              {((calc.riskAdjustedPerSatsShare / satsPrice - 1) * 100).toFixed(0)}%
+            <div style={styles.stickyLabel}>ECHO Upside (Risk-Adj)</div>
+            <div style={{ ...styles.stickyValue, color: calc.riskAdjustedPerEchoShare > echoPrice ? "#86efac" : "#fca5a5" }}>
+              {((calc.riskAdjustedPerEchoShare / echoPrice - 1) * 100).toFixed(0)}%
             </div>
           </div>
           <div style={styles.stickyDivider} />
           <div style={styles.stickyMetric}>
-            <div style={styles.stickyLabel}>SATS Stock</div>
-            <div style={styles.stickyValue}>${satsPrice.toFixed(2)}</div>
+            <div style={styles.stickyLabel}>ECHO Stock</div>
+            <div style={styles.stickyValue}>${echoPrice.toFixed(2)}</div>
           </div>
         </div>
       </div>
