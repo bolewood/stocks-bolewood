@@ -69,6 +69,7 @@ export default function ECHOSOTPFinder() {
   // Real-time price state
   const [priceSource, setPriceSource] = useState("default"); // "live", "partial", "fallback", "default"
   const [liveSpcx, setLiveSpcx] = useState(null); // last live SPCX quote, so re-clicking Base stays live
+  const [liveEcho, setLiveEcho] = useState(null); // last live ECHO quote — presets must not revert the market price to a dated constant
 
   // Chart settings
   const [heatmapColMode, setHeatmapColMode] = useState("tax"); // "tax" or "liquidity"
@@ -87,7 +88,7 @@ export default function ECHOSOTPFinder() {
 
   const applyBase = () => {
     setSpcxPrice(liveSpcx ?? DEFAULT_SPCX_PRICE);
-    setEchoPrice(DEFAULT_ECHO_PRICE);
+    setEchoPrice(liveEcho ?? DEFAULT_ECHO_PRICE);
     setShareCountBasis("basic");
     setLiquidityDiscount(20);
     setCloseProbability(85);
@@ -108,7 +109,7 @@ export default function ECHOSOTPFinder() {
 
   const applyBull = () => {
     setSpcxPrice(175);
-    setEchoPrice(DEFAULT_ECHO_PRICE);
+    setEchoPrice(liveEcho ?? DEFAULT_ECHO_PRICE);
     setShareCountBasis("basic");
     setLiquidityDiscount(20);
     setCloseProbability(90);
@@ -129,7 +130,7 @@ export default function ECHOSOTPFinder() {
 
   const applyMoon = () => {
     setSpcxPrice(200);
-    setEchoPrice(DEFAULT_ECHO_PRICE);
+    setEchoPrice(liveEcho ?? DEFAULT_ECHO_PRICE);
     setShareCountBasis("basic");
     setLiquidityDiscount(10);
     setCloseProbability(95);
@@ -150,7 +151,7 @@ export default function ECHOSOTPFinder() {
 
   const applyBear = () => {
     setSpcxPrice(135);
-    setEchoPrice(DEFAULT_ECHO_PRICE);
+    setEchoPrice(liveEcho ?? DEFAULT_ECHO_PRICE);
     setShareCountBasis("diluted"); // include bond conversion dilution
     setLiquidityDiscount(30);
     setCloseProbability(70);
@@ -171,7 +172,7 @@ export default function ECHOSOTPFinder() {
 
   const applyTakeout = () => {
     setSpcxPrice(175);
-    setEchoPrice(DEFAULT_ECHO_PRICE);
+    setEchoPrice(liveEcho ?? DEFAULT_ECHO_PRICE);
     setShareCountBasis("diluted");
     setLiquidityDiscount(0); // acquired direct; zero illiquidity
     setCloseProbability(100);
@@ -211,7 +212,7 @@ export default function ECHOSOTPFinder() {
     fetch("/api/prices")
       .then((res) => res.json())
       .then((data) => {
-        if (data.prices?.ECHO) setEchoPrice(data.prices.ECHO);
+        if (data.prices?.ECHO) { setEchoPrice(data.prices.ECHO); setLiveEcho(data.prices.ECHO); }
         // Update SPCX slider to live price only on the default (base) scenario.
         // Other scenarios (bull=$175, moon=$200, etc.) keep their hypothetical SPCX prices.
         if (data.prices?.SPCX) setLiveSpcx(data.prices.SPCX);
@@ -802,7 +803,7 @@ export default function ECHOSOTPFinder() {
         <div style={styles.howToTitle}>Preset Scenarios</div>
         <div style={styles.scenarioGrid} className="echo-scenario-grid">
           {[
-            { key: "base", label: "Base — SPCX ~$150 (live)", desc: "Standard 20% liquidity disc., 25% tax rate, contested-restructuring haircut applied.", handler: applyBase },
+            { key: "base", label: liveSpcx ? `Base — SPCX $${Math.round(liveSpcx)} (live)` : "Base — SPCX ~$150", desc: "Standard 20% liquidity disc., 25% tax rate, contested-restructuring haircut applied.", handler: applyBase },
             { key: "bull", label: "Bull — SPCX $175", desc: "SpaceX post-IPO re-rate to $175. Lower 15% tax (partial trust deferral), prepack exits on plan.", handler: applyBull },
             { key: "moon", label: "Moon — SPCX $200", desc: "SpaceX valuation hits $200 (~$3T) — the Citi case. 0% tax (trust restructure), prepack exits on plan.", handler: applyMoon },
             { key: "bear", label: "Bear — Restructuring Stress", desc: "Contested / prolonged prepack: 25% restructuring haircut. $2B cash, $0 stub.", handler: applyBear },
@@ -1678,7 +1679,7 @@ export default function ECHOSOTPFinder() {
       </div>
 
       {/* CHANGELOG AND SOURCES */}
-      <div style={styles.footer}>
+      <div style={styles.footer} className="footer">
         <div><strong>Changelog:</strong></div>
         <div style={{ marginBottom: "16px" }}>
           • <strong>July 9, 2026</strong> — Ticker migration SATS → ECHO (effective 6/24/26 on Nasdaq; page now lives at /echo, /sats redirects). Replaced the missed-payment credit alert with the actual event: DISH DBS and certain wireless subsidiaries filed a prepackaged Chapter 11 on June 30, 2026 (88% bondholder support, expected Q3 exit) after the delayed AT&T spectrum sale left $2B of notes unpaid — the parent and SpaceX stake sit outside the filing. Restructuring toggle re-labeled (on-plan exit vs contested). Added Citi&apos;s renewed coverage (Buy, $126 PT, values SpaceX at $200/sh → $52B stake) to the Wall Street reconciliation. Updated defaults: ECHO price ~$95.88, base SPCX ~$150 (live-fetched).<br />
@@ -1693,8 +1694,8 @@ export default function ECHOSOTPFinder() {
           <div>• SpaceX Form S-1 Note F-26 "Spectrum Transactions" (Deal Terms): <a href="https://www.sec.gov/Archives/edgar/data/1181412/000162828026036936/spaceexplorationtechnologi.htm" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>SEC EDGAR</a></div>
           <div>• Amended SpaceX S-1 Prospectus (Priced Deal): <a href="https://www.sec.gov/Archives/edgar/data/1181412/000162828026039276/spaceexplorationtechnologi.htm" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>SEC Prospectus</a></div>
           <div>• Barron's (Andrew Bary, 6/12/26) "Why SATS looks cheap": <a href="https://www.barrons.com/articles/echostar-spacex-stock-cheap" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>Barron's Article</a></div>
-          <div>• Barron&apos;s (Al Root, 7/8/26) &quot;Like SpaceX? Why EchoStar Might Be a Better Bet&quot; (Citi coverage renewal): <a href="https://www.barrons.com/articles/echostar-spacex-stock-citi" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>Barron&apos;s Article (7/8)</a></div>
-          <div>• EchoStar ticker change SATS → ECHO (effective 6/24/26): <a href="https://ir.echostar.com/news-releases/news-release-details/echostar-changing-stocker-ticker-sats-echo-marking-companys-next" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>EchoStar IR</a></div>
+          <div>• Barron&apos;s (Al Root, 7/8/26) &quot;Like SpaceX? Why EchoStar Might Be a Better Bet&quot; (Citi coverage renewal): <a href="https://www.msn.com/en-us/money/topstocks/echostar-stock-is-a-better-way-to-own-spacex-citi-says/ar-AA27uhpc" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>Barron&apos;s Article (7/8)</a></div>
+          <div>• EchoStar ticker change SATS → ECHO (effective 6/24/26): <a href="https://www.satellitetoday.com/finance/2026/06/22/echostar-swaps-sats-ticker-for-echo-to-emphasize-business-shift/" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>Via Satellite</a></div>
           <div>• DISH DBS prepackaged Chapter 11 filing (6/30/26): <a href="https://www.satellitetoday.com/finance/2026/07/01/dish-satellite-tv-and-wireless-businesses-file-for-chapter-11-bankruptcy/" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>Via Satellite</a></div>
           <div>• EchoStar Spectrum Agreement Press Release: <a href="https://www.prnewswire.com/news-releases/echostar-announces-spectrum-sale-and-commercial-agreement-with-spacex-302548650.html" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>PR Newswire</a></div>
           <div>• FCC Granting Order (May 12, 2026): <a href="https://www.fcc.gov/document/order-granting-spacex-echostar-applications" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>FCC Order</a></div>

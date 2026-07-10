@@ -47,7 +47,12 @@ export async function GET() {
         if (!response.ok) return;
 
         const data = await response.json();
-        const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+        const meta = data?.chart?.result?.[0]?.meta;
+        const price = meta?.regularMarketPrice;
+
+        // Recycled-ticker guard: ECHO previously belonged to another issuer;
+        // only accept a quote when the upstream confirms the symbol we asked for.
+        if (meta?.symbol !== ticker) return;
 
         if (typeof price === "number" && price > 0) {
           prices[ticker] = price;

@@ -13,6 +13,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (M
 
 ### Fixed
 - Mobile header navigation overflowed the viewport on every page that renders the site header (pre-existing); the header now wraps within 390px.
+- Preset clicks no longer revert live market prices to dated constants (ECHO and SPCX quotes persist across scenario switches), and the heatmap's active-row highlight now picks the nearest price row instead of silently disappearing between grid steps.
+- The stale VCX default price ($211 → $69.17) on the VCX page; the price API validates that Yahoo returned the symbol it asked for (recycled-ticker guard) and emits a transitional SATS alias for pre-migration browser bundles.
 
 ## [0.2.1.0] - 2026-07-09
 

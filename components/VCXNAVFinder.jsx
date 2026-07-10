@@ -90,7 +90,7 @@ export default function VCXNAVFinder() {
     SHARE_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: p.mark_pps_0331 }), {})
   );
   const [vcxShares, setVcxShares] = useState(VCX_SHARES_OUTSTANDING_M);
-  const [vcxPrice, setVcxPrice] = useState(211);
+  const [vcxPrice, setVcxPrice] = useState(69.17); // 2026-07-09 close (live wiring tracked in TODOS.md)
 
   // MOIC overrides for SPV/SAFE positions (Box 2) and other holdings (Box 3).
   // 1.0x = held at 12/31 mark.

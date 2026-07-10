@@ -4,7 +4,8 @@ import assert from "node:assert/strict";
 import nextConfig from "../next.config.mjs";
 
 // EchoStar's Nasdaq ticker changed SATS → ECHO on 2026-06-24; the calculator
-// moved from /sats to /echo. Old bookmarks/inbound links must 301 to the new page.
+// moved from /sats to /echo. Old bookmarks/inbound links get a permanent 308
+// (Next preserves query strings, so /sats?scenario=bear deep-links survive).
 test("next.config.mjs permanently redirects /sats to /echo", async () => {
   assert.equal(typeof nextConfig.redirects, "function", "redirects() must be defined");
   const redirects = await nextConfig.redirects();
