@@ -54,6 +54,18 @@
 
 ## Infrastructure
 
+### Remove the prices.SATS transition alias
+
+**What:** Drop the `prices.SATS = prices.ECHO` alias from `app/api/prices/route.js`.
+
+**Why:** It exists only so pre-migration browser bundles (before 2026-07-10) keep receiving live quotes; once cached bundles age out it is dead weight and re-introduces a retired key.
+
+**Context:** Added during the v0.2.2.0 SATS→ECHO migration per the api-contract review. Safe to remove after ~2 weeks of production deploys.
+
+**Effort:** S
+**Priority:** P4
+**Depends on:** None
+
 ### Cross-midnight history cache staleness
 
 **What:** Decide whether the 1h history cache should be invalidated at the NY session close instead of a fixed TTL.
