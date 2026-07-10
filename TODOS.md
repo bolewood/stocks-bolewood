@@ -42,11 +42,11 @@
 
 ### Wire VCXNAVFinder to live prices
 
-**What:** VCXNAVFinder still hardcodes a $211 default price and never fetches `/api/prices`, while the API's VCX fallback now reflects the real ~$69 close.
+**What:** VCXNAVFinder never fetches `/api/prices` — its $69.17 default (refreshed from $211 in v0.2.2.0) is a static snapshot that will drift as VCX trades.
 
-**Why:** The VCX page's premium math is computed off a price that is ~3x the market — materially wrong for anyone reading it after the July slide.
+**Why:** The VCX page's premium math is computed off a hardcoded price, so it goes stale between manual refreshes instead of tracking the market.
 
-**Context:** Surfaced during the v0.2.2.0 ECHO-migration review when the stale API fallback ($211) was corrected to $69.17. The API side is now right; the component needs the same live-fetch wiring the DXYZ and ECHO components already have, plus a default refresh.
+**Context:** Surfaced during the v0.2.2.0 ECHO-migration review when the stale API fallback ($211) was corrected to $69.17. The API side and the component default are now right; the component still needs the same live-fetch wiring the DXYZ and ECHO components already have.
 
 **Effort:** S
 **Priority:** P2
