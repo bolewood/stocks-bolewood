@@ -28,12 +28,12 @@ const tools = [
     tag: "NASDAQ: BOT",
   },
   {
-    slug: "/sats",
-    name: "SATS SOTP Finder",
+    slug: "/echo",
+    name: "ECHO SOTP Finder",
     status: "live",
     description:
-      "Sum-of-the-parts & SpaceX proxy calculator for EchoStar Corp (NASDAQ: SATS). Visualize the SpaceX re-rate upside against spectrum tax liabilities and credit default risk.",
-    tag: "NASDAQ: SATS",
+      "Sum-of-the-parts & SpaceX proxy calculator for EchoStar Corp (NASDAQ: ECHO, formerly SATS). Visualize the SpaceX re-rate upside against spectrum tax liabilities and the DISH DBS Chapter 11 restructuring.",
+    tag: "NASDAQ: ECHO",
   },
 ];
 

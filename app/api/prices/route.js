@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 
 // Fallback prices used when the upstream feed is unavailable
 const FALLBACK_PRICES = {
-  SATS: 114.00,
-  SPCX: 160.95,
+  ECHO: 95.88, // 2026-07-09; ticker changed from SATS on 6/24/26
+  SPCX: 148.53, // 2026-07-09
   DXYZ: 27.60, // 2026-07-09 close
-  VCX: 211.00,
+  VCX: 69.17, // 2026-07-09 close
   BOT: 15.00,
 };
 
@@ -26,7 +26,7 @@ export async function GET() {
     });
   }
 
-  const tickers = ["SATS", "SPCX", "DXYZ", "VCX", "BOT"];
+  const tickers = ["ECHO", "SPCX", "DXYZ", "VCX", "BOT"];
   const prices = { ...FALLBACK_PRICES };
   let liveCount = 0;
 

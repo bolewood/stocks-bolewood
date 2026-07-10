@@ -3,6 +3,17 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.2.2.0] - 2026-07-10
+
+### Changed
+- EchoStar calculator migrated from SATS to ECHO, matching the Nasdaq ticker change effective June 24, 2026 — the page now lives at /echo (`/sats` redirects permanently), the price API serves `ECHO`, and all live quotes flow from the new symbol.
+- The missed-payment credit alert became the actual event: on June 30, 2026 DISH DBS and certain wireless subsidiaries filed a prepackaged Chapter 11 (88% bondholder support, expected Q3 exit) after the delayed ~$23B AT&T spectrum sale left $2B of notes unpaid. The banner now states the parent and SpaceX stake sit outside the filing, and the restructuring toggle models on-plan exit vs. contested.
+- Wall Street reconciliation gained Citi's renewed coverage (7/8/26: Buy, $126 target, SpaceX valued at $200/share → $52B stake) alongside the ~$146 average target across 7 analysts.
+- Defaults refreshed: ECHO ~$95.88, SPCX base ~$150 (live-fetched); stale VCX fallback corrected ($211 → $69.17).
+
+### Fixed
+- Mobile header navigation overflowed the viewport on every page that renders the site header (pre-existing); the header now wraps within 390px.
+
 ## [0.2.1.0] - 2026-07-09
 
 ### Changed
