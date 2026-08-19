@@ -3,6 +3,14 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.4.0.0] - 2026-08-19
+
+### Added
+- `/ai` FILED ONLY / ESTIMATED toggle (default ESTIMATED) so fund shares, net assets, stakes, and marks move together. DXYZ ESTIMATED shares come from the same `computeAtmBridge` as `/dxyz`. ATM/inflow deployment is a stated range (cash vs into-book) until the next N-PORT. Prem/NAV column on fund rows.
+
+### Changed
+- ARKVX ESTIMATED uses 21,613,728 shares as of 2026-07-31 (ARK published SO). VCX share count held stable (listed CEF as of 2026-03-19; no post-listing continuous offering); ESTIMATED rolls Anthropic/OpenAI marks to last primary. Confidence cannot be HIGH when the row as-of is >90 days. DXYZ confidence is MEDIUM.
+
 ## [0.3.2.0] - 2026-08-19
 
 ### Added

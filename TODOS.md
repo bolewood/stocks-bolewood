@@ -44,6 +44,18 @@
 
 ## Infrastructure
 
+### Wire ARKVX share count to a live ARK issuer feed
+
+**What:** `/api/arkvx-shares` currently returns the curated 21,613,728 (2026-07-31) print. Point it at ARK's published shares-outstanding figure on a schedule.
+
+**Why:** ARKVX is an interval fund in continuous offering; a stale SO overstates look-through (P0.2 of the 2026-08-19 /ai brief).
+
+**Effort:** S
+**Priority:** P2
+**Depends on:** A stable ARK URL that doesn't require a JS consent wall.
+
+## Infrastructure (existing)
+
 ### Remove the prices.SATS transition alias
 
 **What:** Drop the `prices.SATS = prices.ECHO` alias from `app/api/prices/route.js`.
