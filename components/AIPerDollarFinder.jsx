@@ -382,11 +382,13 @@ export default function AIPerDollarFinder() {
               ...styles.badge,
               ...(quoteState === "live"
                 ? styles.badgeLive
-                : quoteState === "stale"
-                  ? styles.badgeStale
-                  : quoteState === "unavailable"
-                    ? styles.badgeUnavailable
-                    : null),
+                : quoteState === "close"
+                  ? styles.badgeClose
+                  : quoteState === "stale"
+                    ? styles.badgeStale
+                    : quoteState === "unavailable"
+                      ? styles.badgeUnavailable
+                      : null),
             }}
             title={chipTitle}
           >
@@ -1076,6 +1078,10 @@ const styles = {
   badgeLive: {
     background: "#dcfce7",
     color: "#166534",
+  },
+  badgeClose: {
+    background: "#e7e5e4",
+    color: "#1c1917",
   },
   badgeStale: {
     background: "#ffedd5",

@@ -3,6 +3,14 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.7.1.0] - 2026-08-19
+
+### Changed
+- Quote chip uses **CLOSE** after the NYSE cash session (and all weekend) when the print is last session's close. **STALE** is only a lagging quote while 9:30–16:00 ET is open.
+
+### Removed
+- Internal v1 plan (`docs/ai-per-dollar-plan.md`) and Playwright `test-results/` from the published tree.
+
 ## [0.7.0.0] - 2026-08-19
 
 ### Added
