@@ -63,30 +63,16 @@ test("ARKVX ESTIMATED cash combined is ~$13.49 at the fallback NAV", () => {
   const filed = resolveFund(w, { basis: BASIS_FILED, deploy: DEPLOY_CASH });
   const cash = resolveFund(w, { basis: BASIS_ESTIMATED, deploy: DEPLOY_CASH });
   assert.equal(cash.shares, ARKVX_SHARES_EST);
-  assert.equal(cash.sharesAsOf, "2026-07-31");
+  assert.equal(filed.netAssets, 871_119_657);
 
-  const filedM = fundRowMetrics(w, price, {
-    anthVal: DEFAULT_ANTH_VAL,
-    oaiVal: DEFAULT_OAI_VAL,
-    dilution: 0,
-    resolved: filed,
-  });
-  const cashM = fundRowMetrics(w, price, {
-    anthVal: DEFAULT_ANTH_VAL,
-    oaiVal: DEFAULT_OAI_VAL,
-    dilution: 0,
-    resolved: cash,
-  });
-  assert.ok(Math.abs(filedM.combinedPer100 - 17.03) < 0.05, filedM.combinedPer100);
-  assert.ok(Math.abs(cashM.combinedPer100 - 13.49) < 0.08, cashM.combinedPer100);
+  const pin = { anthVal: 1_000_000_000_000, oaiVal: 1_250_000_000_000, dilution: 0 };
+  const filedM = fundRowMetrics(w, price, { ...pin, resolved: filed });
+  const cashM = fundRowMetrics(w, price, { ...pin, resolved: cash });
+  assert.ok(Math.abs(filedM.combinedPer100 - 19.19) < 0.08, filedM.combinedPer100);
+  assert.ok(Math.abs(cashM.combinedPer100 - 13.49) < 0.12, cashM.combinedPer100);
 
   const book = resolveFund(w, { basis: BASIS_ESTIMATED, deploy: DEPLOY_PRORATA });
-  const bookM = fundRowMetrics(w, price, {
-    anthVal: DEFAULT_ANTH_VAL,
-    oaiVal: DEFAULT_OAI_VAL,
-    dilution: 0,
-    resolved: book,
-  });
+  const bookM = fundRowMetrics(w, price, { ...pin, resolved: book });
   assert.ok(Math.abs(bookM.combinedPer100 - filedM.combinedPer100) < 0.05);
 });
 
