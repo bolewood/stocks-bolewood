@@ -245,7 +245,7 @@ test("scenario query params clamp and round-trip", () => {
   assert.equal(parsed.sortKey, "combinedPer100");
   assert.equal(
     serializeScenarioSearch(parsed),
-    "anth=1000&oai=1250&dil=0&sort=combined"
+    "anth=1000&oai=1250&dil=0&basis=estimated&deploy=range&sort=combined"
   );
 
   const clamped = parseScenarioSearch("?anth=50&oai=99999&dil=-3&sort=nope");
@@ -270,5 +270,5 @@ test("AMZN and GOOG are non-linear; funds are Fund NAV; SFTBY has navNote", () =
   assert.equal(nvda.security.label, "Undisclosed");
   assert.equal(agix.security.label, "Fund NAV");
   assert.match(sftby.navNote.body, /¥58\.3T/);
-  assert.match(sftby.navNote.body, /don't double-count/);
+  assert.match(sftby.navNote.body, /do not double-count/);
 });

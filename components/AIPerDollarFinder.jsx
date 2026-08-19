@@ -17,11 +17,22 @@ import {
   fmtLastRoundMultiple,
   fmtTrillions,
   parseScenarioSearch,
-  rowMetrics,
   serializeScenarioSearch,
   stalenessLevel,
   valToBillions,
 } from "../lib/aiWrappers.mjs";
+import {
+  BASIS_ESTIMATED,
+  BASIS_FILED,
+  DEPLOY_CASH,
+  DEPLOY_PRORATA,
+  DEPLOY_RANGE,
+  dxyzBridgeFromRows,
+  fundRowMetrics,
+  resolveFund,
+} from "../lib/aiFundBasis.mjs";
+import { FILED, completedTradingRows } from "../lib/dxyzAtm.mjs";
+import historySnapshot from "../app/api/dxyz-history/snapshot.json";
 
 const fmt$ = (n) =>
   n >= 1e12
@@ -38,6 +49,18 @@ const fmtPer100 = (n) =>
   n <= 0
     ? "—"
     : `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+const fmtPer100Cell = (lo, hi, ranged) => {
+  if (ranged && hi > lo + 0.005) return `${fmtPer100(lo)}–${fmtPer100(hi)}`;
+  return fmtPer100(lo);
+};
+
+const fmtPrem = (n) => {
+  if (n == null || !Number.isFinite(n)) return "—";
+  const pct = n * 100;
+  const sign = pct > 0.05 ? "+" : "";
+  return `${sign}${pct.toFixed(1)}%`;
+};
 
 const fmtPct = (n) => {
   if (!(n > 0)) return "—";
@@ -77,11 +100,12 @@ const COLUMNS = [
   { key: "oaiPct", label: "OAI stake", sort: "oaiPct" },
   { key: "oaiPer100", label: "OAI / $100", sort: "oaiPer100" },
   { key: "combinedPer100", label: "Combined / $100", sort: "combinedPer100" },
+  { key: "premium", label: "Prem/NAV", sort: "premium" },
   { key: "confidence", label: "Conf.", sort: "confidence" },
 ];
 
 const GRID =
-  "1.5fr 0.7fr 1fr 0.7fr 0.8fr 0.8fr 0.8fr 0.9fr 0.8fr 0.9fr 1fr 0.6fr";
+  "1.5fr 0.7fr 1fr 0.7fr 0.8fr 0.8fr 0.7fr 0.8fr 0.9fr 0.8fr 0.9fr 1fr 0.7fr 0.55fr";
 
 export default function AIPerDollarFinder() {
   const [anthB, setAnthB] = useState(valToBillions(DEFAULT_ANTH_VAL));
@@ -94,6 +118,9 @@ export default function AIPerDollarFinder() {
   const [minCombined, setMinCombined] = useState(0);
   const [hideThin, setHideThin] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [basis, setBasis] = useState(BASIS_ESTIMATED);
+  const [deploy, setDeploy] = useState(DEPLOY_RANGE);
+  const [historyRows, setHistoryRows] = useState(historySnapshot.rows);
   const skipNextWrite = useRef(true);
 
   const anthVal = billionsToVal(anthB);
@@ -116,6 +143,14 @@ export default function AIPerDollarFinder() {
     setOaiB(parsed.oaiB);
     setDilutionPct(parsed.dilutionPct);
     setSortKey(parsed.sortKey);
+    setBasis(parsed.basis === "filed" ? BASIS_FILED : BASIS_ESTIMATED);
+    setDeploy(
+      parsed.deploy === "cash"
+        ? DEPLOY_CASH
+        : parsed.deploy === "prorata"
+          ? DEPLOY_PRORATA
+          : DEPLOY_RANGE
+    );
   }, []);
 
   useEffect(() => {
@@ -129,13 +164,15 @@ export default function AIPerDollarFinder() {
         oaiB,
         dilutionPct,
         sortKey,
+        basis,
+        deploy,
       });
       const next = `${window.location.pathname}?${qs}`;
       const cur = `${window.location.pathname}${window.location.search}`;
       if (cur !== next) history.replaceState(null, "", next);
     }, 300);
     return () => clearTimeout(timer);
-  }, [anthB, oaiB, dilutionPct, sortKey]);
+  }, [anthB, oaiB, dilutionPct, sortKey, basis, deploy]);
 
   useEffect(() => {
     fetch("/api/ai-prices")
@@ -145,6 +182,32 @@ export default function AIPerDollarFinder() {
         setPriceSource(data.source || "fallback");
       })
       .catch(() => setPriceSource("fallback"));
+
+    const nyParts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/New_York",
+      hour12: false,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).formatToParts(new Date());
+    const nyGet = (type) => nyParts.find((p) => p.type === type)?.value;
+    setHistoryRows(
+      completedTradingRows(
+        historySnapshot.rows,
+        `${nyGet("year")}-${nyGet("month")}-${nyGet("day")}`,
+        parseInt(nyGet("hour"), 10) * 60 + parseInt(nyGet("minute"), 10)
+      )
+    );
+    fetch("/api/dxyz-history")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.rows) && data.rows.length > 0) {
+          setHistoryRows(data.rows);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const applyChip = (key) => {
@@ -154,7 +217,14 @@ export default function AIPerDollarFinder() {
   };
 
   const copyScenarioLink = async () => {
-    const qs = serializeScenarioSearch({ anthB, oaiB, dilutionPct, sortKey });
+    const qs = serializeScenarioSearch({
+      anthB,
+      oaiB,
+      dilutionPct,
+      sortKey,
+      basis,
+      deploy,
+    });
     const url = `${window.location.origin}${window.location.pathname}?${qs}`;
     history.replaceState(null, "", `${window.location.pathname}?${qs}`);
     try {
@@ -166,13 +236,28 @@ export default function AIPerDollarFinder() {
     }
   };
 
+  const dxyzBridge = useMemo(
+    () => dxyzBridgeFromRows(historyRows, { mode: basis }),
+    [historyRows, basis]
+  );
+
   const rows = useMemo(() => {
     return WRAPPERS.map((w) => {
       const price = prices[w.yahooSymbol] ?? FALLBACK_PRICES[w.yahooSymbol];
-      const metrics = rowMetrics(w, price, { anthVal, oaiVal, dilution });
+      const resolved = resolveFund(w, {
+        basis,
+        deploy,
+        dxyzBridge,
+      });
+      const metrics = fundRowMetrics(w, price, {
+        anthVal,
+        oaiVal,
+        dilution,
+        resolved,
+      });
       return { wrapper: w, ...metrics };
     });
-  }, [prices, anthVal, oaiVal, dilution]);
+  }, [prices, anthVal, oaiVal, dilution, basis, deploy, dxyzBridge]);
 
   const sorted = useMemo(() => {
     const filtered = hideThin
@@ -194,8 +279,13 @@ export default function AIPerDollarFinder() {
         return av.localeCompare(bv) * dir;
       }
       if (sortKey === "confidence") {
-        av = confRank[a.wrapper.confidence] || 0;
-        bv = confRank[b.wrapper.confidence] || 0;
+        av = confRank[a.confidence] || 0;
+        bv = confRank[b.confidence] || 0;
+        return (av - bv) * dir;
+      }
+      if (sortKey === "premium") {
+        av = a.premium ?? -Infinity;
+        bv = b.premium ?? -Infinity;
         return (av - bv) * dir;
       }
       av = a[sortKey] ?? 0;
@@ -313,6 +403,68 @@ export default function AIPerDollarFinder() {
         issuance at IPO). Default 0% is gross look-through.
       </p>
 
+      <div style={styles.basisRow}>
+        {[
+          { key: BASIS_FILED, label: "Filed Only" },
+          { key: BASIS_ESTIMATED, label: "Estimated" },
+        ].map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            className="preset-btn vcx-preset-btn"
+            onClick={() => setBasis(key)}
+            style={{
+              ...styles.chip,
+              ...(basis === key ? styles.chipActive : {}),
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {basis === BASIS_ESTIMATED ? (
+        <div style={styles.estBanner}>
+          ⚠ Estimated, not company reported — fund shares, net assets, and
+          stakes are rolled forward together. Strategic rows do not move.
+          DXYZ last filed NAV is ${FILED.navPerShare.toFixed(2)} as of{" "}
+          {FILED.asOf}.
+        </div>
+      ) : (
+        <p style={styles.caption}>
+          Filed Only freezes every fund row at its last filing. Strategic
+          rows are unchanged either way.
+        </p>
+      )}
+      {basis === BASIS_ESTIMATED ? (
+        <div style={styles.basisRow}>
+          <span style={styles.deployLabel}>ATM / inflows</span>
+          {[
+            { key: DEPLOY_RANGE, label: "Unknown (range)" },
+            { key: DEPLOY_CASH, label: "Held in cash" },
+            { key: DEPLOY_PRORATA, label: "Into existing book" },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              className="preset-btn vcx-preset-btn"
+              onClick={() => setDeploy(key)}
+              style={{
+                ...styles.chip,
+                ...(deploy === key ? styles.chipActive : {}),
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <p style={styles.caption}>
+        DXYZ and ARKVX raised new capital after the filing. If that cash
+        bought more of the same names, look-through is roughly unchanged; if
+        it sits in cash, per-$100 falls. Default is the range until the next
+        N-PORT pins it.
+      </p>
+
       <label style={styles.filter}>
         <input
           type="checkbox"
@@ -352,7 +504,12 @@ export default function AIPerDollarFinder() {
         {sorted.map((row) => (
           <div key={row.ticker} style={styles.tr} className="vcx-row">
             <div style={styles.tdTicker} data-label="Ticker">
-              <div style={styles.ticker}>{row.ticker}</div>
+              <div style={styles.ticker}>
+                {row.ticker}
+                {row.affected && basis === BASIS_ESTIMATED ? (
+                  <span style={styles.estPill}>EST</span>
+                ) : null}
+              </div>
               <div style={styles.name}>{row.wrapper.name}</div>
               {row.wrapper.navNote ? (
                 <details style={styles.navDetails}>
@@ -382,8 +539,8 @@ export default function AIPerDollarFinder() {
             <div style={styles.td} data-label="Shares">
               {fmtShares(row.shares)}
               <div style={styles.asOf}>
-                <StaleDot asOf={row.wrapper.sharesAsOf} />
-                {row.wrapper.sharesAsOf}
+                <StaleDot asOf={row.sharesAsOf} />
+                {row.sharesAsOf}
               </div>
             </div>
             <div style={styles.td} data-label="Mkt cap">
@@ -396,7 +553,7 @@ export default function AIPerDollarFinder() {
               style={{ ...styles.td, ...styles.tdAccent }}
               data-label="Anth. / $100"
             >
-              {fmtPer100(row.anthPer100)}
+              {fmtPer100Cell(row.anthPer100, row.anthPer100High, row.deployRange)}
             </div>
             <div style={styles.td} data-label="OAI stake">
               {fmtPct(row.oaiPct)}
@@ -405,22 +562,29 @@ export default function AIPerDollarFinder() {
               style={{ ...styles.td, ...styles.tdOai }}
               data-label="OAI / $100"
             >
-              {fmtPer100(row.oaiPer100)}
+              {fmtPer100Cell(row.oaiPer100, row.oaiPer100High, row.deployRange)}
             </div>
             <div
               style={{ ...styles.td, ...styles.tdCombined }}
               data-label="Combined / $100"
             >
-              {fmtPer100(row.combinedPer100)}
+              {fmtPer100Cell(
+                row.combinedPer100,
+                row.combinedPer100High,
+                row.deployRange
+              )}
+            </div>
+            <div style={styles.td} data-label="Prem/NAV">
+              {fmtPrem(row.premium)}
             </div>
             <div style={styles.td} data-label="Conf.">
               <span
                 style={{
                   ...styles.conf,
-                  color: CONF_COLOR[row.wrapper.confidence],
+                  color: CONF_COLOR[row.confidence],
                 }}
               >
-                {row.wrapper.confidence}
+                {row.confidence}
               </span>
             </div>
           </div>
@@ -576,6 +740,43 @@ const styles = {
     flexDirection: "column",
     gap: "10px",
     marginBottom: "8px",
+  },
+  basisRow: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px",
+    alignItems: "center",
+    marginBottom: "10px",
+  },
+  deployLabel: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: "11px",
+    color: "#44403c",
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+  },
+  estBanner: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: "11px",
+    fontWeight: 700,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+    color: "#78350f",
+    background: "#fef3c7",
+    border: "1px solid #d97706",
+    padding: "10px 14px",
+    marginBottom: "12px",
+  },
+  estPill: {
+    marginLeft: "6px",
+    fontSize: "9px",
+    letterSpacing: "0.08em",
+    color: "#78350f",
+    background: "#fef3c7",
+    border: "1px solid #d97706",
+    padding: "1px 4px",
+    fontWeight: 700,
+    verticalAlign: "middle",
   },
   chipRow: {
     display: "grid",
