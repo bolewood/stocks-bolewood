@@ -15,7 +15,7 @@ import {
   DEFAULT_ANTH_VAL,
   DEFAULT_OAI_VAL,
 } from "../lib/aiWrappers.mjs";
-import { parseChartPrice } from "../lib/yahooQuote.mjs";
+import { parseChartPrice, chartUrl } from "../lib/yahooQuote.mjs";
 
 test("lookThroughPer100 is zero when stake, cap, or IPO val is missing", () => {
   assert.equal(
@@ -186,5 +186,12 @@ test("parseChartPrice requires matching symbol and a positive price", () => {
       "AMZN"
     ),
     { ticker: "AMZN", price: 264.655 }
+  );
+});
+
+test("chartUrl is the v8 chart path used by /api/prices and /api/ai-prices", () => {
+  assert.equal(
+    chartUrl("VCX"),
+    "https://query1.finance.yahoo.com/v8/finance/chart/VCX?interval=1d&range=1d"
   );
 });

@@ -5,8 +5,8 @@ import React, { useState, useMemo, useEffect } from "react";
 // ECHO SOTP / SpaceX Proxy Calculator (ticker changed from SATS on 6/24/26)
 // Sources: SpaceX Form S-1 F-26, EchoStar SEC filings (10-K, 10-Q), Barron's (6/12/26, 7/8/26)
 
-const DEFAULT_ECHO_PRICE = 95.88; // 2026-07-09 close; live-fetched on load
-const DEFAULT_SPCX_PRICE = 150; // Barron's 7/8/26 (~$148.5 live); live-fetched on base
+const DEFAULT_ECHO_PRICE = 88.58; // 2026-08-19; live-fetched on load
+const DEFAULT_SPCX_PRICE = 138.62; // 2026-08-19; live-fetched on base
 const ECHO_SHARES_BASIC = 289.8; // million shares (Class A + B estimate)
 const ECHO_SHARES_DILUTED = 304.4; // million shares (assuming convertible bond conversion per Barron's)
 const SPACEX_FIXED_SHARES_M = 261.8; // million shares post-split (F-26 note)

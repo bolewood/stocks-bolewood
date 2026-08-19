@@ -1,5 +1,6 @@
 import BOTNAVFinder from "@/components/BOTNAVFinder";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 export const metadata = {
   title: "BOT NAV Finder | RoboStrategy Real-Time NAV Calculator",
@@ -10,9 +11,8 @@ export default function BOTPage() {
   return (
     <>
       <Header />
-      <main>
-        <BOTNAVFinder />
-      </main>
+      <BOTNAVFinder />
+      <Footer />
     </>
   );
 }

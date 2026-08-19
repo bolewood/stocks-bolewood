@@ -152,7 +152,7 @@ export default function DXYZNAVFinder() {
     SHARE_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: p.mark_pps_1231 }), {})
   );
   const [dxyzShares, setDxyzShares] = useState(DXYZ_SHARES_OUTSTANDING_M);
-  const [dxyzPrice, setDxyzPrice] = useState(27.6);
+  const [dxyzPrice, setDxyzPrice] = useState(32.97);
   const [priceSource, setPriceSource] = useState("default");
 
   // ── ATM Issuance Bridge state ──────────────────────────────────────────

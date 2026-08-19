@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
+import PriceBadge from "./PriceBadge";
 
 // BOT NAV Finder
 // Source: RoboStrategy, Inc. N-CSRS (Semi-Annual Report for period ending Feb 28, 2026)
@@ -94,7 +95,8 @@ export default function BOTNAVFinder() {
     SHARE_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: p.mark_pps_0228 }), {})
   );
   const [botShares, setBotShares] = useState(BOT_SHARES_OUTSTANDING_M);
-  const [botPrice, setBotPrice] = useState(15);
+  const [botPrice, setBotPrice] = useState(28.04); // 2026-08-19; live-fetched on load
+  const [priceSource, setPriceSource] = useState("default");
 
   const [cefSharesIssued, setCefSharesIssued] = useState(0);
   const [cefIssuePrice, setCefIssuePrice] = useState(15);
@@ -105,6 +107,16 @@ export default function BOTNAVFinder() {
   const [otherMOICs, setOtherMOICs] = useState(
     OTHER_HOLDINGS.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {})
   );
+
+  useEffect(() => {
+    fetch("/api/prices")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.prices?.BOT) setBotPrice(data.prices.BOT);
+        setPriceSource(data.source || "fallback");
+      })
+      .catch(() => setPriceSource("fallback"));
+  }, []);
 
   const updatePPS = (name, val) => {
     setPpsOverrides((prev) => ({ ...prev, [name]: val }));
@@ -288,14 +300,20 @@ export default function BOTNAVFinder() {
         </div>
         <div style={styles.controlGroup}>
           <label style={styles.label}>BOT Market Price ($)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={botPrice}
-            onChange={(e) => setBotPrice(parseFloat(e.target.value) || 0)}
-            style={styles.smallInput}
-            className="vcx-input vcx-small-input"
-          />
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <input
+              type="number"
+              step="0.01"
+              value={botPrice}
+              onChange={(e) => {
+                setBotPrice(parseFloat(e.target.value) || 0);
+                setPriceSource("manual");
+              }}
+              style={styles.smallInput}
+              className="vcx-input vcx-small-input"
+            />
+            <PriceBadge source={priceSource} />
+          </div>
         </div>
         <div style={styles.controlGroup}>
           <label style={{...styles.label, color: "#15803d"}}>CEF Shares Issued (M)</label>
