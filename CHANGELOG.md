@@ -3,6 +3,17 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.5.0.0] - 2026-08-19
+
+### Fixed
+- MSFT Anthropic is a commitment with no percentage (combined is OpenAI-only). NVDA no longer shows a bare ownership % — OpenAI is $30B ÷ $852B round-implied; Anthropic is a commitment.
+- SKM denominator is 383,368,095 ADS-equivalent from the 20-F 212,982,275 ordinary × 9/5 (ADS ratio 5/9).
+- ARKVX denominator is NPORT-EX total net assets $871,119,657 as of 2026-04-30, not a synthetic share count. Deploy range is ~$13.49 cash – ~$19.19 into-book at $1.0T/$1.25T. Row labeled as an Apr 30 snapshot.
+- AMZN Anthropic is filed $92.5B preferred + $97.9B notes = $190.4B ÷ $965B (10-Q 2026-06-30). OpenAI is $50B ÷ $852B.
+
+### Changed
+- Default sliders are 1.0× last primary (Anthropic $0.965T, OpenAI $0.852T). Per-leg Basis badges; collapsed table is Ticker / Basis / Wrapper value / per-$100 / Evidence / As of; click a row for the source arithmetic and four as-of dates. Implied exposure digits use enough precision to reproduce per-$100.
+
 ## [0.4.1.0] - 2026-08-19
 
 ### Fixed

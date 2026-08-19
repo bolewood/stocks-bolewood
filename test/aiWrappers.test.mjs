@@ -21,6 +21,9 @@ import {
   SCENARIO_CHIPS,
   DEFAULT_ANTH_VAL,
   DEFAULT_OAI_VAL,
+  PIN_ANTH_1T,
+  PIN_OAI_1_25T,
+  claimPct,
   billionsFromLogPos,
   lastRoundTickPct,
   logPosFromBillions,
@@ -139,8 +142,8 @@ test("DXYZ OpenAI Series C scales; PPU slice is not in WRAPPERS FV", () => {
 test("combined per $100 is the sum of the two legs", () => {
   const amzn = WRAPPERS.find((w) => w.ticker === "AMZN");
   const row = rowMetrics(amzn, 264.655, {
-    anthVal: DEFAULT_ANTH_VAL,
-    oaiVal: DEFAULT_OAI_VAL,
+    anthVal: PIN_ANTH_1T,
+    oaiVal: PIN_OAI_1_25T,
     dilution: 0,
   });
   assert.ok(row.anthPer100 > 0);
@@ -160,15 +163,16 @@ test("default sliders match no scenario chip", () => {
   );
 });
 
-test("AGIX and ARKVX point estimates are single FVs with range in the source note", () => {
+test("AGIX and ARKVX point estimates are single FVs from the holdings print", () => {
   const agix = WRAPPERS.find((w) => w.ticker === "AGIX");
   const arkvx = WRAPPERS.find((w) => w.ticker === "ARKVX");
   assert.equal(agix.anthropic.fairValue, 12_926_025);
   assert.match(agix.anthropic.source, /1\.9–2\.8%/);
   assert.equal(arkvx.anthropic.fairValue, 23_083_673);
   assert.equal(arkvx.openai.fairValue, 72_512_628);
-  assert.match(arkvx.anthropic.source, /3\.5–6\.4%/);
-  assert.match(arkvx.openai.source, /8\.5–11\.5%/);
+  assert.equal(arkvx.denomKind, "netAssets");
+  assert.match(arkvx.anthropic.source, /871,119,657/);
+  assert.match(arkvx.openai.source, /72,512,628/);
 });
 
 test("parseChartPrice requires matching symbol and a positive price", () => {
@@ -289,4 +293,42 @@ test("AMZN and GOOG are non-linear; funds are Fund NAV; SFTBY has navNote", () =
   assert.equal(agix.security.label, "Fund NAV");
   assert.match(sftby.navNote.body, /¥58\.3T/);
   assert.match(sftby.navNote.body, /do not double-count/);
+});
+
+test("defaults are 1.0x last primary; ?anth=1000 still parses", () => {
+  assert.equal(DEFAULT_ANTH_VAL, LAST_PRIMARY_ROUNDS.anthropic.postMoney);
+  assert.equal(DEFAULT_OAI_VAL, LAST_PRIMARY_ROUNDS.openai.postMoney);
+  assert.equal(fmtLastRoundMultiple(DEFAULT_ANTH_VAL, LAST_PRIMARY_ROUNDS.anthropic.postMoney), "1.0x");
+  assert.equal(fmtLastRoundMultiple(DEFAULT_OAI_VAL, LAST_PRIMARY_ROUNDS.openai.postMoney), "1.0x");
+  const parsed = parseScenarioSearch("?anth=1000&oai=1250");
+  assert.equal(parsed.anthB, 1000);
+  assert.equal(parsed.oaiB, 1250);
+});
+
+test("MSFT has no Anthropic percentage; NVDA OpenAI is round-implied $30B/$852B", () => {
+  const msft = WRAPPERS.find((w) => w.ticker === "MSFT");
+  const nvda = WRAPPERS.find((w) => w.ticker === "NVDA");
+  assert.equal(msft.anthropic.kind, "commitment");
+  assert.equal(claimPct(msft.anthropic), 0);
+  assert.equal(claimPct(msft.openai), 0.27);
+  assert.equal(msft.anthropic.basis, "commitment");
+  assert.equal(msft.openai.basis, "disclosed");
+  assert.equal(nvda.openai.kind, "round-implied");
+  assert.equal(nvda.anthropic.kind, "commitment");
+  assert.equal(claimPct(nvda.anthropic), 0);
+  assert.ok(Math.abs(claimPct(nvda.openai) - 30e9 / 852e9) < 1e-15);
+});
+
+test("AMZN Anthropic is $190.4B/$965B; OpenAI $50B/$852B; SKM ADS-equiv from 20-F", () => {
+  const amzn = WRAPPERS.find((w) => w.ticker === "AMZN");
+  const skm = WRAPPERS.find((w) => w.ticker === "SKM");
+  const goog = WRAPPERS.find((w) => w.ticker === "GOOG");
+  assert.equal(amzn.anthropic.fairValue, 190_400_000_000);
+  assert.ok(Math.abs(claimPct(amzn.anthropic) - 190.4e9 / 965e9) < 1e-12);
+  assert.ok(Math.abs(claimPct(amzn.openai) - 50e9 / 852e9) < 1e-12);
+  assert.equal(skm.sharesOutstanding, 383_368_095);
+  assert.equal(skm.sharesAsOf, "2025-12-31");
+  assert.equal(skm.anthropic.basis, "estimate");
+  assert.equal(goog.sharesOutstanding, 12_230_000_000);
+  assert.equal(goog.anthropic.displayAsMax, true);
 });

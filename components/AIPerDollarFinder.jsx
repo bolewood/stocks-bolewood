@@ -26,6 +26,13 @@ import {
   valToBillions,
 } from "../lib/aiWrappers.mjs";
 import {
+  DENOM_KIND,
+  basisMeta,
+  fmtExposurePct,
+  fmtUsdPrecise,
+  weakestEvidence,
+} from "../lib/aiExposure.mjs";
+import {
   BASIS_ESTIMATED,
   BASIS_FILED,
   DEPLOY_CASH,
@@ -87,12 +94,6 @@ const CONF_COLOR = {
   low: "#b91c1c",
 };
 
-const CONF_LABEL = {
-  high: "HIGH",
-  medium: "MED",
-  low: "LOW",
-};
-
 const STALE_COLOR = {
   amber: "#b45309",
   red: "#b91c1c",
@@ -100,21 +101,16 @@ const STALE_COLOR = {
 
 const COLUMNS = [
   { key: "ticker", label: "Ticker", sort: "ticker" },
-  { key: "security", label: "Security", sort: "security" },
-  { key: "price", label: "Price", sort: "price" },
-  { key: "shares", label: "Shares", sort: "shares" },
-  { key: "marketCap", label: "Mkt cap", sort: "marketCap" },
-  { key: "anthPct", label: "Anth. stake", sort: "anthPct" },
+  { key: "basis", label: "Basis", sort: "basis" },
+  { key: "wrapperValue", label: "Wrapper value", sort: "wrapperValue" },
   { key: "anthPer100", label: "Anth. / $100", sort: "anthPer100" },
-  { key: "oaiPct", label: "OAI stake", sort: "oaiPct" },
   { key: "oaiPer100", label: "OAI / $100", sort: "oaiPer100" },
   { key: "combinedPer100", label: "Combined / $100", sort: "combinedPer100" },
-  { key: "premium", label: "Prem/NAV", sort: "premium" },
-  { key: "confidence", label: "Conf", sort: "confidence" },
+  { key: "evidence", label: "Evidence", sort: "evidence" },
+  { key: "asOf", label: "As of", sort: "asOf" },
 ];
 
-const GRID =
-  "1.45fr 1.05fr 0.7fr 0.85fr 0.9fr 0.75fr 0.95fr 0.75fr 0.95fr 1.15fr 0.85fr 0.7fr";
+const GRID = "1.5fr 1.35fr 1.05fr 1fr 1fr 1.15fr 0.9fr 1.1fr";
 
 export default function AIPerDollarFinder() {
   const [anthB, setAnthB] = useState(valToBillions(DEFAULT_ANTH_VAL));
@@ -130,6 +126,8 @@ export default function AIPerDollarFinder() {
   const [basis, setBasis] = useState(BASIS_ESTIMATED);
   const [deploy, setDeploy] = useState(DEPLOY_RANGE);
   const [historyRows, setHistoryRows] = useState(historySnapshot.rows);
+  const [expanded, setExpanded] = useState({});
+  const [priceAsOf, setPriceAsOf] = useState(null);
   const skipNextWrite = useRef(true);
 
   const anthVal = billionsToVal(anthB);
@@ -190,6 +188,7 @@ export default function AIPerDollarFinder() {
       .then((data) => {
         if (data.prices) setPrices({ ...FALLBACK_PRICES, ...data.prices });
         setPriceSource(data.source || "fallback");
+        if (data.asOf) setPriceAsOf(data.asOf);
       })
       .catch(() => setPriceSource("fallback"));
 
@@ -272,10 +271,14 @@ export default function AIPerDollarFinder() {
     return [...filtered].sort((a, b) => {
       let av;
       let bv;
-      if (sortKey === "ticker" || sortKey === "type") {
-        av = a.wrapper[sortKey];
-        bv = b.wrapper[sortKey];
-        return av.localeCompare(bv) * dir;
+      if (sortKey === "ticker" || sortKey === "basis" || sortKey === "evidence") {
+        av = a.wrapper.ticker;
+        bv = b.wrapper.ticker;
+        if (sortKey === "evidence") {
+          av = weakestEvidence(a.wrapper) || "";
+          bv = weakestEvidence(b.wrapper) || "";
+        }
+        return String(av).localeCompare(String(bv)) * dir;
       }
       if (sortKey === "security") {
         av = a.wrapper.security?.label || "";
@@ -287,10 +290,15 @@ export default function AIPerDollarFinder() {
         bv = confRank[b.confidence] || 0;
         return (av - bv) * dir;
       }
-      if (sortKey === "premium") {
-        av = a.premium ?? -Infinity;
-        bv = b.premium ?? -Infinity;
+      if (sortKey === "wrapperValue") {
+        av = a.wrapperValue ?? a.marketCap ?? 0;
+        bv = b.wrapperValue ?? b.marketCap ?? 0;
         return (av - bv) * dir;
+      }
+      if (sortKey === "asOf") {
+        av = a.sharesAsOf || "";
+        bv = b.sharesAsOf || "";
+        return av.localeCompare(bv) * dir;
       }
       av = a[sortKey] ?? 0;
       bv = b[sortKey] ?? 0;
@@ -392,9 +400,11 @@ export default function AIPerDollarFinder() {
         />
       </div>
       <p style={styles.caption}>
-        Defaults are unpaired (Anthropic $1.00T near Series H; OpenAI $1.25T).
-        Dilution haircuts every wrapper&apos;s claim the same way (primary
-        issuance at IPO). Default 0% is gross look-through.
+        Defaults are 1.0× last primary round (Anthropic Series H $0.965T,
+        OpenAI $0.852T). Assumes pro rata dilution of existing holders. Does
+        not model participation rights, anti-dilution provisions, ownership
+        caps, or security-specific conversion terms. Default 0% is gross
+        look-through.
       </p>
 
       <div style={styles.basisBlock}>
@@ -498,110 +508,159 @@ export default function AIPerDollarFinder() {
             </button>
           ))}
         </div>
-        {sorted.map((row) => (
-          <div key={row.ticker} style={styles.tr} className="vcx-row">
-            <div style={styles.tdTicker} data-label="Ticker">
-              <div style={styles.ticker}>
-                {row.ticker}
-                {row.affected && basis === BASIS_ESTIMATED ? (
-                  <span style={styles.estPill}>EST</span>
-                ) : null}
-              </div>
-              <div style={styles.name}>{row.wrapper.name}</div>
-              {row.wrapper.navNote ? (
-                <details style={styles.navDetails}>
-                  <summary style={styles.navSummary}>
-                    {row.wrapper.navNote.summary}
-                  </summary>
-                  <div style={styles.navBody}>{row.wrapper.navNote.body}</div>
-                </details>
-              ) : null}
-            </div>
-            <div
-              style={styles.td}
-              data-label="Security"
-              title={row.wrapper.security?.footnote}
-            >
-              {row.wrapper.security?.label || "—"}
-              {row.wrapper.security?.linear === false ? (
-                <sup style={styles.sup}>†</sup>
-              ) : null}
-            </div>
-            <div style={styles.td} data-label="Price">
-              ${row.price.toFixed(2)}
-            </div>
-            <div style={styles.td} data-label="Shares">
-              {fmtShares(row.shares)}
-              <div style={styles.asOf}>
-                <StaleDot asOf={row.sharesAsOf} />
-                {row.sharesAsOf}
-              </div>
-            </div>
-            <div style={styles.td} data-label="Mkt cap">
-              {fmt$(row.marketCap)}
-            </div>
-            <div style={styles.td} data-label="Anth. stake">
-              {fmtPct(row.anthPct)}
-            </div>
-            <div
-              style={{ ...styles.td, ...styles.tdAccent }}
-              data-label="Anth. / $100"
-            >
-              {fmtPer100Cell(row.anthPer100, row.anthPer100High, row.deployRange)}
-            </div>
-            <div style={styles.td} data-label="OAI stake">
-              {fmtPct(row.oaiPct)}
-            </div>
-            <div
-              style={{ ...styles.td, ...styles.tdOai }}
-              data-label="OAI / $100"
-            >
-              {fmtPer100Cell(row.oaiPer100, row.oaiPer100High, row.deployRange)}
-            </div>
-            <div
-              style={{ ...styles.td, ...styles.tdCombined }}
-              data-label="Combined / $100"
-            >
-              {fmtPer100Cell(
-                row.combinedPer100,
-                row.combinedPer100High,
-                row.deployRange
-              )}
-            </div>
-            <div style={styles.td} data-label="Prem/NAV">
-              {fmtPrem(row.premium)}
-            </div>
-            <div style={styles.td} data-label="Conf">
-              <span
-                style={{
-                  ...styles.conf,
-                  color: CONF_COLOR[row.confidence],
-                }}
+        {sorted.map((row) => {
+          const isOpen = !!expanded[row.ticker];
+          const anthBasis = basisMeta(row.wrapper.anthropic);
+          const oaiBasis = basisMeta(row.wrapper.openai);
+          const evidence = weakestEvidence(row.wrapper);
+          const denom = DENOM_KIND[row.denomKind] || DENOM_KIND.marketCap;
+          const holdingsAsOf = [
+            row.wrapper.anthropic?.asOf,
+            row.wrapper.openai?.asOf,
+          ]
+            .filter(Boolean)
+            .sort()
+            .slice(-1)[0];
+          const markAsOf = [
+            row.wrapper.anthropic?.markAsOf,
+            row.wrapper.openai?.markAsOf,
+          ]
+            .filter(Boolean)
+            .sort()
+            .slice(-1)[0];
+          const staleDenom =
+            row.denomKind !== "netAssets" &&
+            (stalenessLevel(row.sharesAsOf) === "amber" ||
+              stalenessLevel(row.sharesAsOf) === "red");
+          return (
+            <div key={row.ticker}>
+              <div
+                style={{ ...styles.tr, cursor: "pointer" }}
+                className="vcx-row"
+                onClick={() =>
+                  setExpanded((prev) => ({
+                    ...prev,
+                    [row.ticker]: !prev[row.ticker],
+                  }))
+                }
               >
-                {CONF_LABEL[row.confidence] || row.confidence}
-              </span>
+                <div style={styles.tdTicker} data-label="Ticker">
+                  <div style={styles.ticker}>
+                    <span style={styles.chevron}>{isOpen ? "▾" : "▸"}</span>
+                    {row.ticker}
+                    {row.affected && basis === BASIS_ESTIMATED ? (
+                      <span style={styles.estPill}>EST</span>
+                    ) : null}
+                    {row.snapshot ? (
+                      <span style={styles.snapPill}>APR 30 SNAPSHOT</span>
+                    ) : null}
+                  </div>
+                  <div style={styles.name}>{row.wrapper.name}</div>
+                </div>
+                <div style={styles.td} data-label="Basis">
+                  <BasisPills anth={anthBasis} oai={oaiBasis} />
+                </div>
+                <div
+                  style={styles.td}
+                  data-label="Wrapper value"
+                  title={denom.label}
+                >
+                  {fmt$(row.wrapperValue || row.marketCap)}
+                  <div style={styles.asOf}>{denom.short}</div>
+                  {staleDenom ? (
+                    <div style={styles.staleDenom}>Stale denominator</div>
+                  ) : null}
+                </div>
+                <div
+                  style={{ ...styles.td, ...styles.tdAccent }}
+                  data-label="Anth. / $100"
+                >
+                  {row.wrapper.anthropic?.kind === "commitment"
+                    ? "—"
+                    : `${row.wrapper.anthropic?.displayAsMax ? "≤" : ""}${fmtPer100Cell(
+                        row.anthPer100,
+                        row.anthPer100High,
+                        row.deployRange
+                      )}`}
+                </div>
+                <div
+                  style={{ ...styles.td, ...styles.tdOai }}
+                  data-label="OAI / $100"
+                >
+                  {row.wrapper.openai?.kind === "commitment"
+                    ? "—"
+                    : fmtPer100Cell(
+                        row.oaiPer100,
+                        row.oaiPer100High,
+                        row.deployRange
+                      )}
+                </div>
+                <div
+                  style={{ ...styles.td, ...styles.tdCombined }}
+                  data-label="Combined / $100"
+                >
+                  {fmtPer100Cell(
+                    row.combinedPer100,
+                    row.combinedPer100High,
+                    row.deployRange
+                  )}
+                </div>
+                <div style={styles.td} data-label="Evidence">
+                  <span style={styles.evidence}>{evidence || "—"}</span>
+                </div>
+                <div style={styles.td} data-label="As of">
+                  <div style={styles.asOf}>
+                    <StaleDot asOf={row.sharesAsOf} />
+                    {row.sharesAsOf}
+                  </div>
+                </div>
+              </div>
+              {isOpen ? (
+                <RowDetail
+                  row={row}
+                  anthVal={anthVal}
+                  oaiVal={oaiVal}
+                  dilution={dilution}
+                  priceAsOf={priceAsOf}
+                  holdingsAsOf={holdingsAsOf}
+                  markAsOf={markAsOf}
+                  denom={denom}
+                />
+              ) : null}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <p style={styles.legend}>
-        As-of staleness (from today):{" "}
+        Click a row for the source arithmetic. As-of staleness:{" "}
         <span style={{ color: STALE_COLOR.amber }}>●</span> amber &gt;90 days
         {" · "}
         <span style={{ color: STALE_COLOR.red }}>●</span> red &gt;180 days.
+        Evidence is per-leg in the expanded panel.
+      </p>
+      <p style={styles.disclaimer}>
+        Gross scenario estimates assembled from public filings and issuer
+        disclosures. Figures may combine different source dates, security
+        classes and valuation methodologies. They are not NAV, liquidation
+        value, expected proceeds or price targets, and they exclude taxes,
+        fees, carry, liabilities, preferences, transfer restrictions, lockups
+        and future financing. Review each row&apos;s source and calculation
+        before relying on it.
       </p>
       <p style={styles.caption}>
-        <sup style={styles.sup}>†</sup> Convertibles and capped stakes do not
-        scale linearly with IPO valuation, so those rows are an approximation.
+        <sup style={styles.sup}>†</sup> Convertibles, preferred, capped
+        stakes and commitments do not scale linearly with IPO valuation.
       </p>
 
       <section style={styles.notes}>
         <h2 style={styles.notesTitle}>Sources & footnotes</h2>
         <p style={styles.caption}>
-          Stake % for corporates is ownership of the private company. For funds
-          it is implied = fair value ÷ the round used to mark that FV.
-          DXYZ OpenAI PPUs are excluded (not equity).
+          Implied exposure is not always ownership. Disclosed means an issuer
+          or investor stated a percentage. Filed FV-equiv is fair value ÷ the
+          round that marked it. Round-implied is dollars invested ÷
+          post-money. Commitment has no percentage. DXYZ OpenAI PPUs are
+          excluded (not equity).
         </p>
         {WRAPPERS.map((w) => (
           <div key={w.ticker} style={styles.noteBlock}>
@@ -621,12 +680,155 @@ export default function AIPerDollarFinder() {
               {w.openai?.kind === "fund"
                 ? ` OAI FV ${fmt$(w.openai.fairValue)} at ${fmt$(w.openai.roundVal)} (${w.openai.asOf}).`
                 : ""}
-              {` Claim ${fmtPct(claimPct(w.anthropic))} Anthropic / ${fmtPct(claimPct(w.openai))} OpenAI.`}
+              {` Implied exposure ${fmtExposurePct(claimPct(w.anthropic), { max: !!w.anthropic?.displayAsMax })} Anthropic / ${fmtExposurePct(claimPct(w.openai))} OpenAI.`}
             </div>
           </div>
         ))}
       </section>
     </main>
+  );
+}
+
+function BasisPills({ anth, oai }) {
+  return (
+    <div>
+      {anth ? (
+        <div style={styles.basisLine}>
+          <span style={styles.basisTag}>Anth</span> {anth.label}
+        </div>
+      ) : null}
+      {oai ? (
+        <div style={styles.basisLine}>
+          <span style={styles.basisTag}>OAI</span> {oai.label}
+        </div>
+      ) : null}
+      {!anth && !oai ? "—" : null}
+    </div>
+  );
+}
+
+function LegDetail({ name, leg, pct, per100, ipoVal, wrapperValue, dilution }) {
+  if (!leg) {
+    return (
+      <div style={styles.legBlock}>
+        <div style={styles.legTitle}>{name}</div>
+        <div>None disclosed.</div>
+      </div>
+    );
+  }
+  const meta = basisMeta(leg);
+  const fv = leg.fairValue || leg.investmentUsd;
+  const round = leg.roundVal;
+  const showPct = leg.kind !== "commitment" && pct > 0;
+  const result =
+    showPct && wrapperValue > 0
+      ? (pct * (1 - dilution) * ipoVal * 100) / wrapperValue
+      : 0;
+  return (
+    <div style={styles.legBlock}>
+      <div style={styles.legTitle}>{name}</div>
+      <div>Basis: {meta?.label || "—"}</div>
+      {leg.kind === "commitment" ? (
+        <div>
+          Commitment only — no ownership percentage, no per-$100.
+          {leg.investmentUsd
+            ? ` Amount referenced: ${fmtUsdPrecise(leg.investmentUsd)}.`
+            : ""}
+        </div>
+      ) : null}
+      {fv > 0 && round > 0 ? (
+        <div>
+          {leg.kind === "round-implied" ? "Investment" : "Filed / carrying value"}:{" "}
+          {fmtUsdPrecise(fv)} as of {leg.asOf || "—"}. Source mark:{" "}
+          {fmtUsdPrecise(round)}
+          {leg.markAsOf ? ` (${leg.markAsOf})` : ""}. Implied exposure:{" "}
+          {fmtExposurePct(pct, { max: !!leg.displayAsMax })}.
+        </div>
+      ) : showPct ? (
+        <div>
+          Implied exposure: {fmtExposurePct(pct, { max: !!leg.displayAsMax })}
+          {leg.capPct ? ` (hard cap ${fmtExposurePct(leg.capPct)})` : ""}.
+        </div>
+      ) : null}
+      {showPct ? (
+        <div>
+          Scenario value: {fmtUsdPrecise(ipoVal)}. Denominator:{" "}
+          {fmtUsdPrecise(wrapperValue)}. Calculation:{" "}
+          {fmtExposurePct(pct, { max: !!leg.displayAsMax })} × {fmtUsdPrecise(ipoVal)}{" "}
+          ÷ {fmtUsdPrecise(wrapperValue)} × $100
+          {dilution > 0 ? ` × (1 − ${Math.round(dilution * 100)}%)` : ""}. Result:{" "}
+          {fmtPer100(result)}.
+        </div>
+      ) : null}
+      {leg.source ? <div>Source: {leg.source}</div> : null}
+    </div>
+  );
+}
+
+function RowDetail({
+  row,
+  anthVal,
+  oaiVal,
+  dilution,
+  priceAsOf,
+  holdingsAsOf,
+  markAsOf,
+  denom,
+}) {
+  return (
+    <div style={styles.detail} onClick={(e) => e.stopPropagation()}>
+      <div style={styles.asOfGrid}>
+        <div>
+          <StaleDot asOf={null} />
+          Price: {priceAsOf ? String(priceAsOf).slice(0, 10) : "live"} · $
+          {row.price.toFixed(2)}
+        </div>
+        <div>
+          <StaleDot asOf={row.sharesAsOf} />
+          Share count: {row.denomKind === "netAssets" ? "n/a (TNA)" : fmtShares(row.shares)}{" "}
+          ({row.sharesAsOf || "—"})
+        </div>
+        <div>
+          <StaleDot asOf={holdingsAsOf} />
+          Holdings: {holdingsAsOf || "—"}
+        </div>
+        <div>
+          <StaleDot asOf={markAsOf} />
+          Source mark: {markAsOf || "—"}
+        </div>
+      </div>
+      <div style={styles.asOf}>
+        Denominator: {denom.label} {fmtUsdPrecise(row.wrapperValue || row.marketCap)}
+        {row.premium != null ? ` · Prem/NAV ${fmtPrem(row.premium)}` : ""}
+        {row.wrapper.snapshotNote ? ` · ${row.wrapper.snapshotNote}` : ""}
+      </div>
+      <LegDetail
+        name="Anthropic"
+        leg={row.wrapper.anthropic}
+        pct={row.anthPct}
+        per100={row.anthPer100}
+        ipoVal={anthVal}
+        wrapperValue={row.wrapperValue || row.marketCap}
+        dilution={dilution}
+      />
+      <LegDetail
+        name="OpenAI"
+        leg={row.wrapper.openai}
+        pct={row.oaiPct}
+        per100={row.oaiPer100}
+        ipoVal={oaiVal}
+        wrapperValue={row.wrapperValue || row.marketCap}
+        dilution={dilution}
+      />
+      {row.wrapper.security ? (
+        <div style={styles.asOf}>
+          Security: {row.wrapper.security.label}. {row.wrapper.security.footnote}
+        </div>
+      ) : null}
+      {row.wrapper.navNote ? (
+        <div style={styles.asOf}>{row.wrapper.navNote.body}</div>
+      ) : null}
+    </div>
   );
 }
 
@@ -842,6 +1044,79 @@ const styles = {
     padding: "1px 4px",
     fontWeight: 700,
     verticalAlign: "middle",
+  },
+  snapPill: {
+    marginLeft: "6px",
+    fontSize: "8px",
+    letterSpacing: "0.06em",
+    color: "#44403c",
+    background: "#e7e5e4",
+    padding: "1px 4px",
+    fontWeight: 700,
+    verticalAlign: "middle",
+  },
+  chevron: {
+    display: "inline-block",
+    width: "12px",
+    color: "#78716c",
+    fontSize: "11px",
+  },
+  basisLine: {
+    fontSize: "10px",
+    lineHeight: 1.45,
+  },
+  basisTag: {
+    fontSize: "8px",
+    letterSpacing: "0.08em",
+    color: "#78716c",
+    marginRight: "4px",
+  },
+  evidence: {
+    textTransform: "uppercase",
+    fontSize: "10px",
+    letterSpacing: "0.06em",
+    fontWeight: 600,
+    whiteSpace: "nowrap",
+  },
+  staleDenom: {
+    fontSize: "9px",
+    color: "#b45309",
+    letterSpacing: "0.04em",
+    marginTop: "2px",
+  },
+  disclaimer: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: "11px",
+    color: "#44403c",
+    lineHeight: 1.65,
+    margin: "12px 0 16px",
+    maxWidth: "820px",
+  },
+  detail: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: "11px",
+    color: "#44403c",
+    lineHeight: 1.6,
+    padding: "12px 8px 16px 20px",
+    borderBottom: "1px solid #e7e5e4",
+    background: "#fafaf9",
+  },
+  asOfGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: "6px 16px",
+    marginBottom: "10px",
+  },
+  legBlock: {
+    margin: "10px 0",
+  },
+  legTitle: {
+    fontWeight: 700,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+    fontSize: "10px",
+    color: "#1c1917",
+    marginBottom: "4px",
   },
   chip: {
     fontFamily: "var(--font-mono), monospace",
