@@ -42,6 +42,16 @@ To regenerate the README disclosure section from `data/disclosure.json`:
 npm run sync:disclosure
 ```
 
+## Data and reference calculator
+
+Curated Anthropic/OpenAI wrapper inputs live under [`data/`](data/), licensed as described in [`data/LICENSE-DATA`](data/LICENSE-DATA). Application and reference code are MIT ([`LICENSE`](LICENSE)).
+
+```bash
+npm run reference
+```
+
+reproduces [`reference/expected-results.json`](reference/expected-results.json) from `data/` with no app code. See [`data/METHODOLOGY.md`](data/METHODOLOGY.md) and [`CITATION.cff`](CITATION.cff).
+
 ## Project Docs
 
 - [CHANGELOG.md](CHANGELOG.md) — release history

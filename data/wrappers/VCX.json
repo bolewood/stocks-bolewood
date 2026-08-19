@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "1.0.0",
+  "methodologyVersion": "1.0.0",
+  "ticker": "VCX",
+  "yahooSymbol": "VCX",
+  "name": "Fundrise Innovation Fund",
+  "wrapperType": "closed-end-fund",
+  "denominatorType": "market-cap",
+  "confidence": "high",
+  "note": "Trades at a large premium to NAV. Denominator is market cap, not NAV.",
+  "shareCount": {
+    "value": 35797138,
+    "asOf": "2026-03-31",
+    "note": "Converted from a tender-offer fund to a listed CEF on 2026-03-19 (NYSE: VCX). Continuous offering did not continue post-listing — share count held stable."
+  },
+  "filedNavPerShare": 18.97,
+  "filedNetAssets": 678918000,
+  "listedOn": "2026-03-19",
+  "sharesNote": "35,797,138 common (N-CSR/A 2026-03-31). Converted from a tender-offer fund to a listed CEF on 2026-03-19 (NYSE: VCX). Continuous offering did not continue post-listing — share count held stable. ESTIMATED rolls Anthropic/OpenAI marks from the Feb 2026 rounds used in the 3/31 filing to last known primary post-money; other holdings stay at 3/31.",
+  "security": {
+    "label": "Fund NAV",
+    "linear": true,
+    "footnote": "Look-through from filed fair value ÷ the round used to mark that FV."
+  },
+  "sources": [
+    {
+      "fields": ["shareCount", "filedNavPerShare", "filedNetAssets"],
+      "sourceClass": "primary",
+      "issuer": "Fundrise Innovation Fund",
+      "filingType": "N-CSR/A",
+      "documentDate": "2026-03-31",
+      "asOf": "2026-03-31",
+      "note": "Net assets $678,918k, NAV $18.97, 35,797,138 shares."
+    }
+  ],
+  "anthropic": {
+    "basis": "filed-fv-equiv",
+    "holdingSecurity": "fund-interest",
+    "reportedFairValue": 112418000,
+    "fairValueAsOf": "2026-03-31",
+    "measurementCompanyMark": "anthropic-series-g",
+    "measurementMarkAsOf": "2026-02-12",
+    "confidence": "high",
+    "sources": [
+      {
+        "fields": ["reportedFairValue"],
+        "sourceClass": "primary",
+        "issuer": "Fundrise Innovation Fund",
+        "filingType": "N-CSR/A",
+        "documentDate": "2026-03-31",
+        "asOf": "2026-03-31",
+        "note": "Anthropic, PBC $112,418k — 16.5% of net assets."
+      },
+      {
+        "fields": ["measurementCompanyMark"],
+        "sourceClass": "primary",
+        "issuer": "Fundrise Innovation Fund",
+        "filingType": "N-CSR/A",
+        "documentDate": "2026-03-31",
+        "asOf": "2026-02-12"
+      }
+    ]
+  },
+  "openai": {
+    "basis": "filed-fv-equiv",
+    "holdingSecurity": "fund-interest",
+    "reportedFairValue": 84163000,
+    "fairValueAsOf": "2026-03-31",
+    "measurementCompanyMark": "openai-feb-2026",
+    "measurementMarkAsOf": "2026-02",
+    "confidence": "high",
+    "sources": [
+      {
+        "fields": ["reportedFairValue"],
+        "sourceClass": "primary",
+        "issuer": "Fundrise Innovation Fund",
+        "filingType": "N-CSR/A",
+        "documentDate": "2026-03-31",
+        "asOf": "2026-03-31",
+        "note": "OpenAI Group PBC $84,163k — 12.4% of net assets."
+      },
+      {
+        "fields": ["measurementCompanyMark"],
+        "sourceClass": "secondary",
+        "note": "Feb 2026 ~$850B fund-mark print used as the measurement company valuation."
+      }
+    ]
+  }
+}

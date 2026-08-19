@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0.0",
+  "methodologyVersion": "1.0.0",
+  "asOf": "2026-08-19",
+  "title": "Public wrappers of Anthropic and OpenAI",
+  "homepage": "https://stocks.bolewood.com/ai",
+  "wrapperOrder": [
+    "GOOG",
+    "AMZN",
+    "MSFT",
+    "SFTBY",
+    "NVDA",
+    "SKM",
+    "ZM",
+    "AGIX",
+    "DXYZ",
+    "ARKVX",
+    "VCX"
+  ]
+}

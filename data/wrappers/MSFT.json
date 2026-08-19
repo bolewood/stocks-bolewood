@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "1.0.0",
+  "methodologyVersion": "1.0.0",
+  "ticker": "MSFT",
+  "yahooSymbol": "MSFT",
+  "name": "Microsoft Corporation",
+  "wrapperType": "operating-company",
+  "denominatorType": "market-cap",
+  "confidence": "high",
+  "note": "OpenAI 27% is the only Big Tech percentage in an SEC filing.",
+  "shareCount": {
+    "value": 7428434704,
+    "asOf": "2026-04-23"
+  },
+  "security": {
+    "label": "Equity",
+    "linear": true,
+    "footnote": "27%, only Big Tech % in an SEC filing (MSFT 10-Q as of 2026-03-31)."
+  },
+  "sources": [
+    {
+      "fields": ["shareCount"],
+      "sourceClass": "primary",
+      "issuer": "Microsoft Corporation",
+      "filingType": "10-Q",
+      "documentDate": "2026-03-31",
+      "asOf": "2026-04-23"
+    }
+  ],
+  "anthropic": {
+    "basis": "commitment",
+    "holdingSecurity": "unknown",
+    "commitmentAsOf": "2025-11",
+    "status": "undisclosed-percentage",
+    "confidence": "low",
+    "sources": [
+      {
+        "fields": ["status"],
+        "sourceClass": "secondary",
+        "documentDate": "2025-11",
+        "note": "Capital committed to Anthropic; ownership percentage not disclosed. No primary issuer filing states a percentage."
+      }
+    ]
+  },
+  "openai": {
+    "basis": "disclosed",
+    "holdingSecurity": "common",
+    "ownershipPct": 0.27,
+    "ownershipAsOf": "2026-03-31",
+    "confidence": "high",
+    "sources": [
+      {
+        "fields": ["ownershipPct"],
+        "sourceClass": "primary",
+        "issuer": "Microsoft Corporation",
+        "filingType": "10-Q",
+        "documentDate": "2026-03-31",
+        "asOf": "2026-03-31",
+        "note": "~27% of OpenAI as-converted, equity method."
+      }
+    ]
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "1.0.0",
+  "methodologyVersion": "1.0.0",
+  "ticker": "DXYZ",
+  "yahooSymbol": "DXYZ",
+  "name": "Destiny Tech100",
+  "wrapperType": "closed-end-fund",
+  "denominatorType": "market-cap",
+  "confidence": "medium",
+  "note": "OpenAI PPUs excluded from the scaled numerator. Confidence is MEDIUM: ATM issuance is estimated, not filed.",
+  "sharesNote": "FILED: implied by $748.36M / $24.56 (N-PORT 2026-03-31). ESTIMATED: /dxyz ATM bridge (same computeAtmBridge). Active ATM.",
+  "security": {
+    "label": "Fund NAV",
+    "linear": true,
+    "footnote": "Look-through from filed fair value ÷ the round used to mark that FV."
+  },
+  "filedSnapshot": {
+    "asOf": "2026-03-31",
+    "navPerShare": 24.56,
+    "totalAssets": 753288630.8,
+    "liabilities": 4927658.5,
+    "netAssets": 748360972.3,
+    "portfolioValue": 742500000,
+    "filingType": "NPORT-P",
+    "accession": "0000894189-26-016628"
+  },
+  "sources": [
+    {
+      "fields": ["filedSnapshot"],
+      "sourceClass": "primary",
+      "issuer": "Destiny Tech100 Inc.",
+      "filingType": "NPORT-P",
+      "accession": "0000894189-26-016628",
+      "documentDate": "2026-03-31",
+      "asOf": "2026-03-31",
+      "note": "424B5 (May 26, 2026) restates the ~$742.5M portfolio at fair value in 36 companies as of March 31, 2026."
+    }
+  ],
+  "anthropic": {
+    "basis": "filed-fv-equiv",
+    "holdingSecurity": "spv-interest",
+    "reportedFairValue": 134392500,
+    "fairValueAsOf": "2026-03-31",
+    "measurementCompanyMark": "anthropic-series-g",
+    "measurementMarkAsOf": "2026-02-12",
+    "portfolioWeight": 0.181,
+    "confidence": "high",
+    "sources": [
+      {
+        "fields": ["reportedFairValue", "portfolioWeight"],
+        "sourceClass": "primary",
+        "issuer": "Destiny Tech100 Inc.",
+        "filingType": "NPORT-P",
+        "accession": "0000894189-26-016628",
+        "documentDate": "2026-03-31",
+        "asOf": "2026-03-31",
+        "note": "18.1% of $742.5M portfolio (Magnitude ANC III SPV)."
+      },
+      {
+        "fields": ["measurementCompanyMark"],
+        "sourceClass": "primary",
+        "issuer": "Destiny Tech100 Inc.",
+        "filingType": "NPORT-P",
+        "documentDate": "2026-03-31",
+        "asOf": "2026-02-12",
+        "note": "Marked at the Feb 2026 ~$380B round."
+      }
+    ]
+  },
+  "openai": {
+    "basis": "filed-fv-equiv",
+    "holdingSecurity": "spv-interest",
+    "reportedFairValue": 34897500,
+    "fairValueAsOf": "2026-03-31",
+    "measurementCompanyMark": "openai-feb-2026",
+    "measurementMarkAsOf": "2026-02",
+    "portfolioWeight": 0.047,
+    "confidence": "low",
+    "exclusions": [
+      {
+        "holding": "DXYZ OAI I PPUs",
+        "weight": 0.01,
+        "reason": "Not equity per the N-CSR. Excluded from IPO scaling."
+      }
+    ],
+    "sources": [
+      {
+        "fields": ["reportedFairValue", "portfolioWeight"],
+        "sourceClass": "primary",
+        "issuer": "Destiny Tech100 Inc.",
+        "filingType": "NPORT-P",
+        "accession": "0000894189-26-016628",
+        "documentDate": "2026-03-31",
+        "asOf": "2026-03-31",
+        "note": "4.7% Goanna Series C SPV only."
+      },
+      {
+        "fields": ["exclusions"],
+        "sourceClass": "primary",
+        "issuer": "Destiny Tech100 Inc.",
+        "filingType": "N-CSR",
+        "documentDate": "2026-03-31",
+        "note": "1.0% DXYZ OAI I PPUs are not equity and are excluded from IPO scaling."
+      }
+    ]
+  }
+}

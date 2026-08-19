@@ -623,7 +623,12 @@ export default function AIPerDollarFinder() {
                   <div style={styles.name}>{row.wrapper.name}</div>
                 </div>
                 <div style={styles.td} data-label="Basis">
-                  <BasisPills anth={anthBasis} oai={oaiBasis} />
+                  <BasisPills
+                    anth={anthBasis}
+                    oai={oaiBasis}
+                    anthLeg={row.wrapper.anthropic}
+                    oaiLeg={row.wrapper.openai}
+                  />
                 </div>
                 <div
                   style={styles.td}
@@ -755,17 +760,27 @@ export default function AIPerDollarFinder() {
   );
 }
 
-function BasisPills({ anth, oai }) {
+function BasisPills({ anth, oai, anthLeg, oaiLeg }) {
   return (
     <div>
       {anth ? (
         <div style={styles.basisLine}>
           <span style={styles.basisTag}>Anth</span> {anth.label}
+          {anthLeg?.secondaryOnly ? (
+            <span style={styles.secondaryPill} title="Derived from secondary sources only">
+              SECONDARY
+            </span>
+          ) : null}
         </div>
       ) : null}
       {oai ? (
         <div style={styles.basisLine}>
           <span style={styles.basisTag}>OAI</span> {oai.label}
+          {oaiLeg?.secondaryOnly ? (
+            <span style={styles.secondaryPill} title="Derived from secondary sources only">
+              SECONDARY
+            </span>
+          ) : null}
         </div>
       ) : null}
       {!anth && !oai ? "—" : null}
@@ -827,6 +842,16 @@ function LegDetail({ name, leg, pct, per100, ipoVal, wrapperValue, dilution }) {
         </div>
       ) : null}
       {leg.source ? <div>Source: {leg.source}</div> : null}
+      {leg.secondaryOnly ? (
+        <div>Source class: secondary. Not an issuer or filing disclosure.</div>
+      ) : null}
+      {Array.isArray(leg.exclusions) && leg.exclusions.length
+        ? leg.exclusions.map((ex) => (
+            <div key={ex.holding}>
+              Excluded: {ex.holding}. {ex.reason}
+            </div>
+          ))
+        : null}
     </div>
   );
 }
@@ -1146,6 +1171,16 @@ const styles = {
     color: "#1c1917",
     background: "#e7e5e4",
     border: "1px solid #a8a29e",
+    padding: "1px 4px",
+    fontWeight: 700,
+    verticalAlign: "middle",
+  },
+  secondaryPill: {
+    marginLeft: "6px",
+    fontSize: "8px",
+    letterSpacing: "0.06em",
+    color: "#9a3412",
+    background: "#ffedd5",
     padding: "1px 4px",
     fontWeight: 700,
     verticalAlign: "middle",

@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "1.0.0",
+  "methodologyVersion": "1.0.0",
+  "ticker": "AMZN",
+  "yahooSymbol": "AMZN",
+  "name": "Amazon.com Inc.",
+  "wrapperType": "operating-company",
+  "denominatorType": "market-cap",
+  "confidence": "medium",
+  "note": "Anthropic is filed carrying-value equivalent, not an ownership %. OpenAI is round-implied from the $50B Series C.",
+  "shareCount": {
+    "value": 10786313572,
+    "asOf": "2026-07-22",
+    "note": "10-Q cover."
+  },
+  "security": {
+    "label": "Conv + Pfd",
+    "linear": false,
+    "footnote": "Anthropic: $92.5B preferred + $97.9B convertible notes (AMZN 10-Q as of 2026-06-30). Conversion terms undisclosed."
+  },
+  "sources": [
+    {
+      "fields": ["shareCount"],
+      "sourceClass": "primary",
+      "issuer": "Amazon.com, Inc.",
+      "filingType": "10-Q",
+      "documentDate": "2026-06-30",
+      "asOf": "2026-07-22",
+      "note": "Cover-page shares outstanding."
+    }
+  ],
+  "anthropic": {
+    "basis": "filed-fv-equiv",
+    "holdingSecurity": "mixed",
+    "reportedFairValue": 190400000000,
+    "fairValueAsOf": "2026-06-30",
+    "measurementCompanyMark": "anthropic-series-h",
+    "measurementMarkAsOf": "2026-05-28",
+    "confidence": "medium",
+    "components": [
+      { "label": "nonvoting preferred", "amount": 92500000000 },
+      { "label": "convertible notes FV", "amount": 97900000000 }
+    ],
+    "sources": [
+      {
+        "fields": ["reportedFairValue", "components"],
+        "sourceClass": "primary",
+        "issuer": "Amazon.com, Inc.",
+        "filingType": "10-Q",
+        "documentDate": "2026-06-30",
+        "asOf": "2026-06-30",
+        "note": "Nonvoting preferred $92.5B + convertible notes FV $97.9B = $190.4B. $100B AWS is not equity. Conversion terms and any ownership cap are undisclosed."
+      },
+      {
+        "fields": ["measurementCompanyMark"],
+        "sourceClass": "primary",
+        "issuer": "Anthropic",
+        "documentDate": "2026-05-28",
+        "url": "https://www.anthropic.com/news/series-h",
+        "note": "Series H $965B post-money."
+      }
+    ]
+  },
+  "openai": {
+    "basis": "round-implied",
+    "holdingSecurity": "unknown",
+    "investmentAmount": 50000000000,
+    "investmentAsOf": "2026-06-30",
+    "roundPostMoneyValuation": "openai-mar-2026",
+    "confidence": "medium",
+    "sources": [
+      {
+        "fields": ["investmentAmount"],
+        "sourceClass": "primary",
+        "issuer": "Amazon.com, Inc.",
+        "filingType": "10-Q",
+        "documentDate": "2026-06-30",
+        "asOf": "2026-06-30",
+        "note": "$15.0B Series C in Q1 + $13.7B in Q2 = $28.7B on the 2026-06-30 balance sheet; subsequent event funded the remaining $21.3B, completing $50B. $100B AWS is not equity."
+      },
+      {
+        "fields": ["roundPostMoneyValuation"],
+        "sourceClass": "primary",
+        "issuer": "OpenAI",
+        "documentDate": "2026-03-31",
+        "url": "https://openai.com/index/accelerating-the-next-phase-ai/",
+        "note": "$852B post-money."
+      }
+    ]
+  }
+}
