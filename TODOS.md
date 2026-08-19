@@ -40,17 +40,7 @@
 
 ## VCX
 
-### Wire VCXNAVFinder to live prices
-
-**What:** VCXNAVFinder never fetches `/api/prices` — its $69.17 default (refreshed from $211 in v0.2.2.0) is a static snapshot that will drift as VCX trades.
-
-**Why:** The VCX page's premium math is computed off a hardcoded price, so it goes stale between manual refreshes instead of tracking the market.
-
-**Context:** Surfaced during the v0.2.2.0 ECHO-migration review when the stale API fallback ($211) was corrected to $69.17. The API side and the component default are now right; the component still needs the same live-fetch wiring the DXYZ and ECHO components already have.
-
-**Effort:** S
-**Priority:** P2
-**Depends on:** None
+~~### Wire VCXNAVFinder to live prices~~ **Done in v0.3.1.0.** VCX and BOT now fetch `/api/prices` on load (same Yahoo v8 chart path as DXYZ/ECHO/AI).
 
 ## Infrastructure
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
+import PriceBadge from "./PriceBadge";
 
 // VCX NAV Finder
 // Source: Fundrise Innovation Fund (f.k.a. Growth Tech Fund) Schedule of Investments, 12/31/2025
@@ -80,8 +81,6 @@ export default function VCXNAVFinder() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // Viewport meta is handled by Next.js layout viewport export
-
   // Track which preset scenario is active (null = custom/manual edits)
   const [activeScenario, setActiveScenario] = useState("mark");
 
@@ -90,7 +89,18 @@ export default function VCXNAVFinder() {
     SHARE_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: p.mark_pps_0331 }), {})
   );
   const [vcxShares, setVcxShares] = useState(VCX_SHARES_OUTSTANDING_M);
-  const [vcxPrice, setVcxPrice] = useState(69.17); // 2026-07-09 close (live wiring tracked in TODOS.md)
+  const [vcxPrice, setVcxPrice] = useState(40.0); // 2026-08-19; live-fetched on load
+  const [priceSource, setPriceSource] = useState("default");
+
+  useEffect(() => {
+    fetch("/api/prices")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.prices?.VCX) setVcxPrice(data.prices.VCX);
+        setPriceSource(data.source || "fallback");
+      })
+      .catch(() => setPriceSource("fallback"));
+  }, []);
 
   // MOIC overrides for SPV/SAFE positions (Box 2) and other holdings (Box 3).
   // 1.0x = held at 12/31 mark.
@@ -288,14 +298,20 @@ export default function VCXNAVFinder() {
         </div>
         <div style={styles.controlGroup}>
           <label style={styles.label}>VCX Market Price ($)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={vcxPrice}
-            onChange={(e) => setVcxPrice(parseFloat(e.target.value) || 0)}
-            style={styles.smallInput}
-            className="vcx-input vcx-small-input"
-          />
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <input
+              type="number"
+              step="0.01"
+              value={vcxPrice}
+              onChange={(e) => {
+                setVcxPrice(parseFloat(e.target.value) || 0);
+                setPriceSource("manual");
+              }}
+              style={styles.smallInput}
+              className="vcx-input vcx-small-input"
+            />
+            <PriceBadge source={priceSource} />
+          </div>
         </div>
         <div style={styles.controlGroup}>
           {[

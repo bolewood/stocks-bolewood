@@ -3,6 +3,12 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.3.1.0] - 2026-08-19
+
+### Changed
+- VCX and BOT now fetch live Yahoo v8 prices from `/api/prices` (they had been sitting on dated hardcoded quotes). DXYZ, ECHO, and `/ai` already did; `/api/prices` now shares `lib/yahooQuote.mjs` with `/api/ai-prices`.
+- Site chrome is consistent: Header and Footer on every calculator page (DXYZ was missing both; BOT was missing Footer), and Footer links match Header (Home, VCX, DXYZ, BOT, ECHO, AI Per $, About).
+
 ## [0.3.0.0] - 2026-08-19
 
 ### Added

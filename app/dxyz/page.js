@@ -1,4 +1,6 @@
 import DXYZNAVFinder from "../../components/DXYZNAVFinder";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 export const metadata = {
   title: "DXYZ NAV Finder | Destiny Tech100 Calculator",
@@ -12,8 +14,10 @@ export const metadata = {
 
 export default function DXYZPage() {
   return (
-    <main>
+    <>
+      <Header />
       <DXYZNAVFinder />
-    </main>
+      <Footer />
+    </>
   );
 }

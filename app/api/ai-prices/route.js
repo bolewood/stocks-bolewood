@@ -3,26 +3,11 @@ import {
   FALLBACK_PRICES,
   WRAPPER_TICKERS,
 } from "../../../lib/aiWrappers.mjs";
-import { chartUrl, parseChartPrice } from "../../../lib/yahooQuote.mjs";
+import { fetchChartPrice } from "../../../lib/yahooQuote.mjs";
 
 let cachedPrices = null;
 let cacheTimestamp = 0;
 const CACHE_TTL_MS = 60_000;
-
-const YAHOO_HEADERS = {
-  "User-Agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-};
-
-async function fetchTickerPrice(ticker) {
-  const response = await fetch(chartUrl(ticker), {
-    headers: YAHOO_HEADERS,
-    signal: AbortSignal.timeout(5000),
-  });
-  if (!response.ok) return null;
-  const payload = await response.json();
-  return parseChartPrice(payload, ticker);
-}
 
 export async function GET() {
   const now = Date.now();
@@ -41,7 +26,7 @@ export async function GET() {
   await Promise.all(
     WRAPPER_TICKERS.map(async (ticker) => {
       try {
-        const parsed = await fetchTickerPrice(ticker);
+        const parsed = await fetchChartPrice(ticker);
         if (!parsed) return;
         prices[ticker] = parsed.price;
         liveCount++;

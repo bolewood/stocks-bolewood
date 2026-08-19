@@ -1,23 +1,24 @@
 import { NextResponse } from "next/server";
+import { fetchChartPrice } from "../../../lib/yahooQuote.mjs";
 
 // Fallback prices used when the upstream feed is unavailable
 const FALLBACK_PRICES = {
-  ECHO: 95.88, // 2026-07-09; ticker changed from SATS on 6/24/26
-  SPCX: 148.53, // 2026-07-09
-  DXYZ: 27.60, // 2026-07-09 close
-  VCX: 69.17, // 2026-07-09 close
-  BOT: 15.00,
+  ECHO: 88.58, // 2026-08-19
+  SPCX: 138.62, // 2026-08-19
+  DXYZ: 32.97, // 2026-08-19
+  VCX: 40.0, // 2026-08-19
+  BOT: 28.04, // 2026-08-19
 };
 
-// Cache: store last successful fetch in-memory across requests
+const TICKERS = ["ECHO", "SPCX", "DXYZ", "VCX", "BOT"];
+
 let cachedPrices = null;
 let cacheTimestamp = 0;
-const CACHE_TTL_MS = 60_000; // 60 seconds
+const CACHE_TTL_MS = 60_000;
 
 export async function GET() {
   const now = Date.now();
 
-  // Serve from cache if fresh
   if (cachedPrices && now - cacheTimestamp < CACHE_TTL_MS) {
     return NextResponse.json({
       prices: cachedPrices,
@@ -26,40 +27,17 @@ export async function GET() {
     });
   }
 
-  const tickers = ["ECHO", "SPCX", "DXYZ", "VCX", "BOT"];
   const prices = { ...FALLBACK_PRICES };
   let liveCount = 0;
 
   await Promise.all(
-    tickers.map(async (ticker) => {
+    TICKERS.map(async (ticker) => {
       try {
-        const response = await fetch(
-          `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`,
-          {
-            headers: {
-              "User-Agent":
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-            },
-            signal: AbortSignal.timeout(5000), // 5s timeout per ticker
-          }
-        );
-
-        if (!response.ok) return;
-
-        const data = await response.json();
-        const meta = data?.chart?.result?.[0]?.meta;
-        const price = meta?.regularMarketPrice;
-
-        // Recycled-ticker guard: ECHO previously belonged to another issuer;
-        // only accept a quote when the upstream confirms the symbol we asked for.
-        if (meta?.symbol !== ticker) return;
-
-        if (typeof price === "number" && price > 0) {
-          prices[ticker] = price;
-          liveCount++;
-        }
+        const parsed = await fetchChartPrice(ticker);
+        if (!parsed) return;
+        prices[ticker] = parsed.price;
+        liveCount++;
       } catch {
-        // Silently fall back — logged server-side only
         console.warn(`Price fetch failed for ${ticker}`);
       }
     })
@@ -69,9 +47,9 @@ export async function GET() {
   // Remove once cached bundles from before 2026-07-10 have aged out.
   prices.SATS = prices.ECHO;
 
-  const source = liveCount === tickers.length ? "live" : liveCount > 0 ? "partial" : "fallback";
+  const source =
+    liveCount === TICKERS.length ? "live" : liveCount > 0 ? "partial" : "fallback";
 
-  // Update cache only if we got at least one live price
   if (liveCount > 0) {
     cachedPrices = { ...prices };
     cacheTimestamp = now;

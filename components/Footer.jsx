@@ -18,11 +18,19 @@ export default function Footer() {
             </Link>
             <span style={styles.sep}>·</span>
             <Link href="/vcx" style={styles.link}>
-              VCX NAV Finder
+              VCX
+            </Link>
+            <span style={styles.sep}>·</span>
+            <Link href="/dxyz" style={styles.link}>
+              DXYZ
+            </Link>
+            <span style={styles.sep}>·</span>
+            <Link href="/bot" style={styles.link}>
+              BOT
             </Link>
             <span style={styles.sep}>·</span>
             <Link href="/echo" style={styles.link}>
-              ECHO SOTP Finder
+              ECHO
             </Link>
             <span style={styles.sep}>·</span>
             <Link href="/ai" style={styles.link}>
@@ -83,6 +91,7 @@ const styles = {
     display: "flex",
     gap: "6px",
     alignItems: "center",
+    flexWrap: "wrap",
   },
   link: {
     fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
