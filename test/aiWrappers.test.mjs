@@ -5,12 +5,19 @@ import { impliedMarch31Shares, FILED } from "../lib/dxyzAtm.mjs";
 import {
   ANTHROPIC_ROUND_FEB_2026,
   OPENAI_ROUND_FEB_2026,
+  LAST_PRIMARY_ROUNDS,
   WRAPPERS,
   lookThroughPer100,
   fundClaimPct,
   marketCapUsd,
   rowMetrics,
   chipMatching,
+  chipMultipleLine,
+  fmtLastRoundMultiple,
+  parseScenarioSearch,
+  serializeScenarioSearch,
+  stalenessLevel,
+  daysSinceAsOf,
   SCENARIO_CHIPS,
   DEFAULT_ANTH_VAL,
   DEFAULT_OAI_VAL,
@@ -194,4 +201,74 @@ test("chartUrl is the v8 chart path used by /api/prices and /api/ai-prices", () 
     chartUrl("VCX"),
     "https://query1.finance.yahoo.com/v8/finance/chart/VCX?interval=1d&range=1d"
   );
+});
+
+test("OpenAI last primary is below Anthropic Series H", () => {
+  assert.equal(LAST_PRIMARY_ROUNDS.anthropic.postMoney, 965_000_000_000);
+  assert.equal(LAST_PRIMARY_ROUNDS.openai.postMoney, 852_000_000_000);
+  assert.ok(
+    LAST_PRIMARY_ROUNDS.openai.postMoney < LAST_PRIMARY_ROUNDS.anthropic.postMoney
+  );
+  assert.equal(LAST_PRIMARY_ROUNDS.asOf, "2026-08-19");
+});
+
+test("Base chip multiples are vs last primary rounds", () => {
+  const base = SCENARIO_CHIPS.base;
+  assert.equal(
+    fmtLastRoundMultiple(base.anthVal, LAST_PRIMARY_ROUNDS.anthropic.postMoney),
+    "0.67x"
+  );
+  assert.equal(
+    fmtLastRoundMultiple(base.oaiVal, LAST_PRIMARY_ROUNDS.openai.postMoney),
+    "1.5x"
+  );
+  assert.equal(chipMultipleLine(base), "0.67x / 1.5x last round");
+});
+
+test("staleness: SKM 2026-01-25 is red and NVDA 2026-02-20 is amber on 2026-08-19", () => {
+  const today = new Date(2026, 7, 19); // local Aug 19, 2026
+  assert.equal(daysSinceAsOf("2026-01-25", today), 206);
+  assert.equal(stalenessLevel("2026-01-25", today), "red");
+  assert.equal(daysSinceAsOf("2026-02-20", today), 180);
+  assert.equal(stalenessLevel("2026-02-20", today), "amber");
+  assert.equal(stalenessLevel("2026-06-30", today), "ok");
+  const nvda = WRAPPERS.find((w) => w.ticker === "NVDA");
+  assert.equal(nvda.sharesAsOf, "2026-02-20");
+  assert.equal(stalenessLevel(nvda.sharesAsOf, today), "amber");
+});
+
+test("scenario query params clamp and round-trip", () => {
+  const parsed = parseScenarioSearch("?anth=1000&oai=1250&dil=0&sort=combined");
+  assert.equal(parsed.anthB, 1000);
+  assert.equal(parsed.oaiB, 1250);
+  assert.equal(parsed.dilutionPct, 0);
+  assert.equal(parsed.sortKey, "combinedPer100");
+  assert.equal(
+    serializeScenarioSearch(parsed),
+    "anth=1000&oai=1250&dil=0&sort=combined"
+  );
+
+  const clamped = parseScenarioSearch("?anth=50&oai=99999&dil=-3&sort=nope");
+  assert.equal(clamped.anthB, 400);
+  assert.equal(clamped.oaiB, 4000);
+  assert.equal(clamped.dilutionPct, 0);
+  assert.equal(clamped.sortKey, "combinedPer100");
+});
+
+test("AMZN and GOOG are non-linear; funds are Fund NAV; SFTBY has navNote", () => {
+  const amzn = WRAPPERS.find((w) => w.ticker === "AMZN");
+  const goog = WRAPPERS.find((w) => w.ticker === "GOOG");
+  const msft = WRAPPERS.find((w) => w.ticker === "MSFT");
+  const nvda = WRAPPERS.find((w) => w.ticker === "NVDA");
+  const sftby = WRAPPERS.find((w) => w.ticker === "SFTBY");
+  const agix = WRAPPERS.find((w) => w.ticker === "AGIX");
+  assert.equal(amzn.security.label, "Conv + Pfd");
+  assert.equal(amzn.security.linear, false);
+  assert.equal(goog.security.label, "Common (15% cap)");
+  assert.equal(goog.security.linear, false);
+  assert.equal(msft.security.label, "Equity");
+  assert.equal(nvda.security.label, "Undisclosed");
+  assert.equal(agix.security.label, "Fund NAV");
+  assert.match(sftby.navNote.body, /¥58\.3T/);
+  assert.match(sftby.navNote.body, /don't double-count/);
 });

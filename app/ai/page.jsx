@@ -9,14 +9,16 @@ export const metadata = {
   openGraph: {
     title: "Anthropic & OpenAI Per $",
     description:
-      "Look-through calculator for public Anthropic and OpenAI wrappers. Not per share.",
-    images: ["/og-default.png"],
+      "Look-through calculator for public Anthropic and OpenAI wrappers. Dollars of underlying per $100 of wrapper market cap. Not per share.",
+    images: [{ url: "/og-ai.png", width: 1200, height: 630 }],
     url: "https://stocks.bolewood.com/ai",
   },
   twitter: {
     card: "summary_large_image",
     title: "Anthropic & OpenAI Per $",
-    images: ["/og-default.png"],
+    description:
+      "Look-through calculator for public Anthropic and OpenAI wrappers. Dollars of underlying per $100 of wrapper market cap. Not per share.",
+    images: ["/og-ai.png"],
   },
 };
 
