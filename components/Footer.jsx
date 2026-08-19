@@ -25,6 +25,10 @@ export default function Footer() {
               ECHO SOTP Finder
             </Link>
             <span style={styles.sep}>·</span>
+            <Link href="/ai" style={styles.link}>
+              AI Per $
+            </Link>
+            <span style={styles.sep}>·</span>
             <Link href="/about" style={styles.link}>
               About
             </Link>

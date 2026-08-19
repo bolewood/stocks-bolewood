@@ -12,6 +12,7 @@ export default function Header() {
     { href: "/dxyz", label: "DXYZ" },
     { href: "/bot", label: "BOT" },
     { href: "/echo", label: "ECHO" },
+    { href: "/ai", label: "AI Per $" },
     { href: "/about", label: "About" },
   ];
 

@@ -35,6 +35,14 @@ const tools = [
       "Sum-of-the-parts & SpaceX proxy calculator for EchoStar Corp (NASDAQ: ECHO, formerly SATS). Visualize the SpaceX re-rate upside against spectrum tax liabilities and the DISH DBS Chapter 11 restructuring.",
     tag: "NASDAQ: ECHO",
   },
+  {
+    slug: "/ai",
+    name: "Anthropic & OpenAI Per $",
+    status: "live",
+    description:
+      "Look-through table for public wrappers of Anthropic and OpenAI. Set an IPO valuation and see dollars of underlying per $100 invested — not per share.",
+    tag: "11 WRAPPERS",
+  },
 ];
 
 export default function HomePage() {

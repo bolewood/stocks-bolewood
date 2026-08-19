@@ -3,6 +3,12 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.3.0.0] - 2026-08-19
+
+### Added
+- **Anthropic & OpenAI Per $** calculator at `/ai` — look-through table for 11 public wrappers (GOOG, AMZN, MSFT, SFTBY, NVDA, SKM, ZM, AGIX, DXYZ, ARKVX, VCX). Live Yahoo v8 prices; curated share counts; dollars of underlying per $100 of wrapper market cap at a user-set IPO valuation and optional dilution. Not per share.
+- `/api/ai-prices` route (price-only, 60s cache, recycled-ticker guard) and `lib/aiWrappers.mjs` ownership/FV table with unit tests pinning the Aug 7 AMZN and DXYZ examples.
+
 ## [0.2.2.0] - 2026-07-10
 
 ### Changed
