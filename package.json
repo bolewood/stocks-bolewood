@@ -1,13 +1,14 @@
 {
   "name": "stocks-bolewood",
-  "version": "0.5.0.0",
+  "version": "0.6.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test"
+    "test": "node --test",
+    "sync:disclosure": "node scripts/sync-readme-disclosure.mjs"
   },
   "dependencies": {
     "next": "16.2.6",

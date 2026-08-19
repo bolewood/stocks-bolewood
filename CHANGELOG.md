@@ -3,6 +3,15 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.6.0.0] - 2026-08-19
+
+### Added
+- Position disclosure from `data/disclosure.json`: above-fold text on `/ai`, a `HELD` pill on DXYZ, SKM, ZM, AMZN, GOOG and NVDA, and a generated README section. Tests fail if the README section is stale.
+- Quote-feed states `LIVE` / `CACHED` / `STALE` / `UNAVAILABLE` with explicit 15-minute and 18-hour thresholds. The chip shows `quoteAsOf` as an absolute Eastern date-time; page state is the worst material row.
+
+### Changed
+- `/ai` headline is **Pre-IPO Anthropic and OpenAI per $100**. `<title>` and `og:title` are `Pre-IPO Anthropic & OpenAI per $100 | stocks.bolewood.com`. Subtitle is estimated exposure per $100 of wrapper value, not market cap.
+
 ## [0.5.0.0] - 2026-08-19
 
 ### Fixed

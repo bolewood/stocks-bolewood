@@ -12,6 +12,7 @@ import {
   SLIDER_T_MAX,
   SLIDER_T_MIN,
   WRAPPERS,
+  WRAPPER_TICKERS,
   billionsFromLogPos,
   billionsToVal,
   claimPct,
@@ -43,6 +44,18 @@ import {
   resolveFund,
 } from "../lib/aiFundBasis.mjs";
 import { FILED, completedTradingRows } from "../lib/dxyzAtm.mjs";
+import {
+  disclosureBannerText,
+  isHeldTicker,
+} from "../lib/disclosure.mjs";
+import {
+  formatQuoteEt,
+  oldestQuoteAsOf,
+  pagePriceState,
+  priceChipLabel,
+  priceChipTitle,
+} from "../lib/priceState.mjs";
+import disclosure from "../data/disclosure.json";
 import historySnapshot from "../app/api/dxyz-history/snapshot.json";
 
 const fmt$ = (n) =>
@@ -117,7 +130,6 @@ export default function AIPerDollarFinder() {
   const [oaiB, setOaiB] = useState(valToBillions(DEFAULT_OAI_VAL));
   const [dilutionPct, setDilutionPct] = useState(DEFAULT_DILUTION * 100);
   const [prices, setPrices] = useState(FALLBACK_PRICES);
-  const [priceSource, setPriceSource] = useState("default");
   const [sortKey, setSortKey] = useState("combinedPer100");
   const [sortDir, setSortDir] = useState("desc");
   const [minCombined, setMinCombined] = useState(0);
@@ -127,7 +139,13 @@ export default function AIPerDollarFinder() {
   const [deploy, setDeploy] = useState(DEPLOY_RANGE);
   const [historyRows, setHistoryRows] = useState(historySnapshot.rows);
   const [expanded, setExpanded] = useState({});
-  const [priceAsOf, setPriceAsOf] = useState(null);
+  const [quotes, setQuotes] = useState({});
+  const [priceFeed, setPriceFeed] = useState({
+    source: "unavailable",
+    fetchedAt: null,
+    cacheWrittenAt: null,
+  });
+  const [priceLoaded, setPriceLoaded] = useState(false);
   const skipNextWrite = useRef(true);
 
   const anthVal = billionsToVal(anthB);
@@ -187,10 +205,22 @@ export default function AIPerDollarFinder() {
       .then((res) => res.json())
       .then((data) => {
         if (data.prices) setPrices({ ...FALLBACK_PRICES, ...data.prices });
-        setPriceSource(data.source || "fallback");
-        if (data.asOf) setPriceAsOf(data.asOf);
+        if (data.quotes) setQuotes(data.quotes);
+        setPriceFeed({
+          source: data.source || "unavailable",
+          fetchedAt: data.fetchedAt || null,
+          cacheWrittenAt: data.cacheWrittenAt || null,
+        });
+        setPriceLoaded(true);
       })
-      .catch(() => setPriceSource("fallback"));
+      .catch(() => {
+        setPriceFeed({
+          source: "unavailable",
+          fetchedAt: null,
+          cacheWrittenAt: null,
+        });
+        setPriceLoaded(true);
+      });
 
     const nyParts = new Intl.DateTimeFormat("en-CA", {
       timeZone: "America/New_York",
@@ -315,16 +345,20 @@ export default function AIPerDollarFinder() {
     }
   };
 
-  const sourceLabel =
-    priceSource === "live"
-      ? "LIVE"
-      : priceSource === "cache"
-        ? "CACHE"
-        : priceSource === "partial"
-          ? "PARTIAL"
-          : priceSource === "fallback"
-            ? "FALLBACK"
-            : "DEFAULT";
+  const quoteState = pagePriceState(quotes, WRAPPER_TICKERS);
+  const quoteAsOf = oldestQuoteAsOf(quotes, WRAPPER_TICKERS);
+  const chipLabel = priceChipLabel(quoteState, quoteAsOf);
+  const chipTitle = [
+    priceChipTitle(quoteState, quoteAsOf),
+    priceFeed.fetchedAt
+      ? `fetched ${formatQuoteEt(priceFeed.fetchedAt)}`
+      : null,
+    priceFeed.cacheWrittenAt
+      ? `cached ${formatQuoteEt(priceFeed.cacheWrittenAt)}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <main style={styles.main} className="vcx-container">
@@ -332,16 +366,36 @@ export default function AIPerDollarFinder() {
         BOLEWOOD GROUP · LOOK-THROUGH
       </div>
       <h1 style={styles.title} className="vcx-title">
-        Per $100
+        Pre-IPO Anthropic and OpenAI per $100
       </h1>
       <p style={styles.subtitle} className="vcx-subtitle">
-        Dollars of underlying Anthropic and OpenAI per $100 of wrapper market
-        cap. Live prices; curated share counts. Not per share.
+        Estimated Anthropic and OpenAI exposure per $100 of wrapper value.
+        Market value for listed securities; total net assets for unlisted
+        funds. Live prices; curated denominator inputs. Not per share.
       </p>
+      <p style={styles.disclosure}>{disclosureBannerText(disclosure)}</p>
 
       <div style={styles.badgeRow}>
-        <span style={styles.badge}>{sourceLabel} PRICES</span>
-        <span style={styles.badgeMuted}>SHARES CURATED · SEE AS-OF</span>
+        {priceLoaded ? (
+          <span
+            style={{
+              ...styles.badge,
+              ...(quoteState === "live"
+                ? styles.badgeLive
+                : quoteState === "stale"
+                  ? styles.badgeStale
+                  : quoteState === "unavailable"
+                    ? styles.badgeUnavailable
+                    : null),
+            }}
+            title={chipTitle}
+          >
+            {chipLabel}
+          </span>
+        ) : (
+          <span style={styles.badgeMuted}>PRICES…</span>
+        )}
+        <span style={styles.badgeMuted}>SEE AS-OF · EXPAND A ROW</span>
       </div>
 
       <div style={styles.sliderToolbar}>
@@ -548,6 +602,17 @@ export default function AIPerDollarFinder() {
                   <div style={styles.ticker}>
                     <span style={styles.chevron}>{isOpen ? "▾" : "▸"}</span>
                     {row.ticker}
+                    {isHeldTicker(row.ticker, disclosure) ? (
+                      <>
+                        <span style={styles.heldSep}>·</span>
+                        <span
+                          style={styles.heldPill}
+                          title={disclosureBannerText(disclosure)}
+                        >
+                          HELD
+                        </span>
+                      </>
+                    ) : null}
                     {row.affected && basis === BASIS_ESTIMATED ? (
                       <span style={styles.estPill}>EST</span>
                     ) : null}
@@ -621,7 +686,8 @@ export default function AIPerDollarFinder() {
                   anthVal={anthVal}
                   oaiVal={oaiVal}
                   dilution={dilution}
-                  priceAsOf={priceAsOf}
+                  quoteAsOf={quotes[row.wrapper.yahooSymbol]?.quoteAsOf}
+                  quoteState={quotes[row.wrapper.yahooSymbol]?.state}
                   holdingsAsOf={holdingsAsOf}
                   markAsOf={markAsOf}
                   denom={denom}
@@ -770,17 +836,20 @@ function RowDetail({
   anthVal,
   oaiVal,
   dilution,
-  priceAsOf,
+  quoteAsOf,
+  quoteState,
   holdingsAsOf,
   markAsOf,
   denom,
 }) {
+  const priceStruck = formatQuoteEt(quoteAsOf);
   return (
     <div style={styles.detail} onClick={(e) => e.stopPropagation()}>
       <div style={styles.asOfGrid}>
         <div>
           <StaleDot asOf={null} />
-          Price: {priceAsOf ? String(priceAsOf).slice(0, 10) : "live"} · $
+          Price: {priceStruck || "unavailable"}
+          {quoteState ? ` · ${String(quoteState).toUpperCase()}` : ""} · $
           {row.price.toFixed(2)}
         </div>
         <div>
@@ -954,7 +1023,15 @@ const styles = {
     lineHeight: 1.5,
     color: "#44403c",
     maxWidth: "640px",
-    marginBottom: "20px",
+    marginBottom: "12px",
+  },
+  disclosure: {
+    fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
+    fontSize: "12px",
+    lineHeight: 1.55,
+    color: "#44403c",
+    maxWidth: "720px",
+    margin: "0 0 16px",
   },
   badgeRow: {
     display: "flex",
@@ -970,6 +1047,18 @@ const styles = {
     color: "#78350f",
     padding: "4px 8px",
     fontWeight: 600,
+  },
+  badgeLive: {
+    background: "#dcfce7",
+    color: "#166534",
+  },
+  badgeStale: {
+    background: "#ffedd5",
+    color: "#9a3412",
+  },
+  badgeUnavailable: {
+    background: "#e7e5e4",
+    color: "#44403c",
   },
   badgeMuted: {
     fontFamily: "var(--font-mono), monospace",
@@ -1041,6 +1130,22 @@ const styles = {
     color: "#78350f",
     background: "#fef3c7",
     border: "1px solid #d97706",
+    padding: "1px 4px",
+    fontWeight: 700,
+    verticalAlign: "middle",
+  },
+  heldSep: {
+    marginLeft: "6px",
+    color: "#78716c",
+    fontWeight: 500,
+  },
+  heldPill: {
+    marginLeft: "4px",
+    fontSize: "9px",
+    letterSpacing: "0.08em",
+    color: "#1c1917",
+    background: "#e7e5e4",
+    border: "1px solid #a8a29e",
     padding: "1px 4px",
     fontWeight: 700,
     verticalAlign: "middle",

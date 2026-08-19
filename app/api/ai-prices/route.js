@@ -4,23 +4,62 @@ import {
   WRAPPER_TICKERS,
 } from "../../../lib/aiWrappers.mjs";
 import { fetchChartPrice } from "../../../lib/yahooQuote.mjs";
+import {
+  classifyQuote,
+  worstPriceState,
+} from "../../../lib/priceState.mjs";
 
-let cachedPrices = null;
-let cacheTimestamp = 0;
+let cache = null;
 const CACHE_TTL_MS = 60_000;
+
+function fallbackQuotes() {
+  const quotes = {};
+  for (const ticker of WRAPPER_TICKERS) {
+    quotes[ticker] = {
+      price: FALLBACK_PRICES[ticker],
+      quoteAsOf: null,
+      isFallback: true,
+      state: "unavailable",
+    };
+  }
+  return quotes;
+}
 
 export async function GET() {
   const now = Date.now();
+  const servedFromCache = !!(cache && now - cache.cacheWrittenAt < CACHE_TTL_MS);
 
-  if (cachedPrices && now - cacheTimestamp < CACHE_TTL_MS) {
+  if (servedFromCache) {
+    const quotes = {};
+    for (const ticker of WRAPPER_TICKERS) {
+      const q = cache.quotes[ticker];
+      quotes[ticker] = {
+        ...q,
+        state: classifyQuote(
+          {
+            quoteAsOf: q.quoteAsOf,
+            servedFromCache: true,
+            isFallback: q.isFallback,
+          },
+          now
+        ),
+      };
+    }
+    const states = WRAPPER_TICKERS.map((t) => quotes[t].state);
     return NextResponse.json({
-      prices: cachedPrices,
-      source: "cache",
-      asOf: new Date(cacheTimestamp).toISOString(),
+      prices: Object.fromEntries(
+        WRAPPER_TICKERS.map((t) => [t, quotes[t].price])
+      ),
+      quotes,
+      source: worstPriceState(states),
+      fetchedAt: cache.fetchedAt,
+      cacheWrittenAt: cache.cacheWrittenAt,
+      asOf: cache.fetchedAt,
     });
   }
 
-  const prices = { ...FALLBACK_PRICES };
+  const fetchedAt = now;
+  const quotes = fallbackQuotes();
   let liveCount = 0;
 
   await Promise.all(
@@ -28,7 +67,19 @@ export async function GET() {
       try {
         const parsed = await fetchChartPrice(ticker);
         if (!parsed) return;
-        prices[ticker] = parsed.price;
+        quotes[ticker] = {
+          price: parsed.price,
+          quoteAsOf: parsed.quoteAsOf,
+          isFallback: false,
+          state: classifyQuote(
+            {
+              quoteAsOf: parsed.quoteAsOf,
+              servedFromCache: false,
+              isFallback: false,
+            },
+            now
+          ),
+        };
         liveCount++;
       } catch {
         console.warn(`AI wrapper price fetch failed for ${ticker}`);
@@ -36,21 +87,22 @@ export async function GET() {
     })
   );
 
-  const source =
-    liveCount === WRAPPER_TICKERS.length
-      ? "live"
-      : liveCount > 0
-        ? "partial"
-        : "fallback";
+  const states = WRAPPER_TICKERS.map((t) => quotes[t].state);
+  const source = worstPriceState(states);
+  const cacheWrittenAt = liveCount > 0 ? now : cache?.cacheWrittenAt || null;
 
   if (liveCount > 0) {
-    cachedPrices = { ...prices };
-    cacheTimestamp = now;
+    cache = { quotes: { ...quotes }, fetchedAt, cacheWrittenAt };
   }
 
   return NextResponse.json({
-    prices,
+    prices: Object.fromEntries(
+      WRAPPER_TICKERS.map((t) => [t, quotes[t].price])
+    ),
+    quotes,
     source,
-    asOf: new Date(now).toISOString(),
+    fetchedAt,
+    cacheWrittenAt,
+    asOf: fetchedAt,
   });
 }

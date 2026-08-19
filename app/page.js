@@ -37,10 +37,10 @@ const tools = [
   },
   {
     slug: "/ai",
-    name: "Anthropic & OpenAI Per $100",
+    name: "Pre-IPO Anthropic and OpenAI per $100",
     status: "live",
     description:
-      "Look-through table for public wrappers of Anthropic and OpenAI. Set an IPO valuation and see dollars of underlying per $100 invested — not per share.",
+      "Estimated Anthropic and OpenAI exposure per $100 of wrapper value. Set an IPO valuation — not per share.",
     tag: "11 WRAPPERS",
   },
 ];

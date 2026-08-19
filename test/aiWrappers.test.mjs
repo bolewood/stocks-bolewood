@@ -200,7 +200,45 @@ test("parseChartPrice requires matching symbol and a positive price", () => {
       },
       "AMZN"
     ),
-    { ticker: "AMZN", price: 264.655 }
+    { ticker: "AMZN", price: 264.655, quoteAsOf: null }
+  );
+  assert.deepEqual(
+    parseChartPrice(
+      {
+        chart: {
+          result: [
+            {
+              meta: {
+                symbol: "AMZN",
+                regularMarketPrice: 264.655,
+                regularMarketTime: 1_787_173_920,
+              },
+            },
+          ],
+        },
+      },
+      "AMZN"
+    ),
+    { ticker: "AMZN", price: 264.655, quoteAsOf: 1_787_173_920_000 }
+  );
+  assert.equal(
+    parseChartPrice(
+      {
+        chart: {
+          result: [
+            {
+              meta: {
+                symbol: "AMZN",
+                regularMarketPrice: 264.655,
+                regularMarketTime: 1_787_173_920_000,
+              },
+            },
+          ],
+        },
+      },
+      "AMZN"
+    ).quoteAsOf,
+    1_787_173_920_000
   );
 });
 

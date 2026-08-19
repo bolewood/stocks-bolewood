@@ -1,4 +1,12 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# stocks.bolewood.com
+
+Analytical tools for public market research, live at [stocks.bolewood.com](https://stocks.bolewood.com).
+
+<!-- BEGIN GENERATED DISCLOSURE -->
+## Author positions
+
+**Disclosure:** As of August 19, 2026, the author holds long positions in DXYZ, SKM, ZM, AMZN, GOOG and NVDA. The DXYZ exposure includes options. Positions are subject to change without notice.
+<!-- END GENERATED DISCLOSURE -->
 
 ## Getting Started
 
@@ -27,6 +35,12 @@ npm test
 ```
 
 Runs the unit tests (`test/*.test.mjs`) with Node's built-in test runner (`node --test`). No dev server needed.
+
+To regenerate the README disclosure section from `data/disclosure.json`:
+
+```bash
+npm run sync:disclosure
+```
 
 ## Project Docs
 
