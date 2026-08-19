@@ -7,18 +7,22 @@ import {
   DEFAULT_OAI_VAL,
   FALLBACK_PRICES,
   LAST_PRIMARY_ROUNDS,
-  SCENARIO_CHIPS,
+  LOG_SLIDER_STEPS,
   SLIDER_BOUNDS,
+  SLIDER_T_MAX,
+  SLIDER_T_MIN,
   WRAPPERS,
+  billionsFromLogPos,
   billionsToVal,
-  chipMatching,
-  chipMultipleLine,
   claimPct,
   fmtLastRoundMultiple,
-  fmtTrillions,
+  fmtSliderTrillions,
+  lastRoundTickPct,
+  logPosFromBillions,
   parseScenarioSearch,
   serializeScenarioSearch,
   stalenessLevel,
+  trillionsToBillions,
   valToBillions,
 } from "../lib/aiWrappers.mjs";
 import {
@@ -83,6 +87,12 @@ const CONF_COLOR = {
   low: "#b91c1c",
 };
 
+const CONF_LABEL = {
+  high: "HIGH",
+  medium: "MED",
+  low: "LOW",
+};
+
 const STALE_COLOR = {
   amber: "#b45309",
   red: "#b91c1c",
@@ -90,7 +100,6 @@ const STALE_COLOR = {
 
 const COLUMNS = [
   { key: "ticker", label: "Ticker", sort: "ticker" },
-  { key: "type", label: "Type", sort: "type" },
   { key: "security", label: "Security", sort: "security" },
   { key: "price", label: "Price", sort: "price" },
   { key: "shares", label: "Shares", sort: "shares" },
@@ -101,11 +110,11 @@ const COLUMNS = [
   { key: "oaiPer100", label: "OAI / $100", sort: "oaiPer100" },
   { key: "combinedPer100", label: "Combined / $100", sort: "combinedPer100" },
   { key: "premium", label: "Prem/NAV", sort: "premium" },
-  { key: "confidence", label: "Conf.", sort: "confidence" },
+  { key: "confidence", label: "Conf", sort: "confidence" },
 ];
 
 const GRID =
-  "1.5fr 0.7fr 1fr 0.7fr 0.8fr 0.8fr 0.7fr 0.8fr 0.9fr 0.8fr 0.9fr 1fr 0.7fr 0.55fr";
+  "1.45fr 1.05fr 0.7fr 0.85fr 0.9fr 0.75fr 0.95fr 0.75fr 0.95fr 1.15fr 0.85fr 0.7fr";
 
 export default function AIPerDollarFinder() {
   const [anthB, setAnthB] = useState(valToBillions(DEFAULT_ANTH_VAL));
@@ -126,7 +135,6 @@ export default function AIPerDollarFinder() {
   const anthVal = billionsToVal(anthB);
   const oaiVal = billionsToVal(oaiB);
   const dilution = dilutionPct / 100;
-  const activeChip = chipMatching(anthVal, oaiVal);
   const anthMultiple = fmtLastRoundMultiple(
     anthVal,
     LAST_PRIMARY_ROUNDS.anthropic.postMoney
@@ -135,6 +143,8 @@ export default function AIPerDollarFinder() {
     oaiVal,
     LAST_PRIMARY_ROUNDS.openai.postMoney
   );
+  const anthTickPct = lastRoundTickPct(LAST_PRIMARY_ROUNDS.anthropic.postMoney);
+  const oaiTickPct = lastRoundTickPct(LAST_PRIMARY_ROUNDS.openai.postMoney);
 
   useEffect(() => {
     if (!window.location.search) return;
@@ -209,12 +219,6 @@ export default function AIPerDollarFinder() {
       })
       .catch(() => {});
   }, []);
-
-  const applyChip = (key) => {
-    const chip = SCENARIO_CHIPS[key];
-    setAnthB(valToBillions(chip.anthVal));
-    setOaiB(valToBillions(chip.oaiVal));
-  };
 
   const copyScenarioLink = async () => {
     const qs = serializeScenarioSearch({
@@ -320,7 +324,7 @@ export default function AIPerDollarFinder() {
         BOLEWOOD GROUP · LOOK-THROUGH
       </div>
       <h1 style={styles.title} className="vcx-title">
-        Anthropic & OpenAI Per $
+        Per $100
       </h1>
       <p style={styles.subtitle} className="vcx-subtitle">
         Dollars of underlying Anthropic and OpenAI per $100 of wrapper market
@@ -332,29 +336,12 @@ export default function AIPerDollarFinder() {
         <span style={styles.badgeMuted}>SHARES CURATED · SEE AS-OF</span>
       </div>
 
-      <div style={styles.chipToolbar}>
-        <div style={styles.chipRow} className="ai-chip-row">
-          {Object.entries(SCENARIO_CHIPS).map(([key, chip]) => (
-            <button
-              key={key}
-              type="button"
-              className="preset-btn vcx-preset-btn"
-              onClick={() => applyChip(key)}
-              style={{
-                ...styles.chip,
-                ...(activeChip === key ? styles.chipActive : {}),
-              }}
-            >
-              {chip.label}
-              <span style={styles.chipMeta}>
-                {fmtTrillions(chip.anthVal)} / {fmtTrillions(chip.oaiVal)}
-              </span>
-              <span style={styles.chipMeta}>
-                {chipMultipleLine(chip)}
-              </span>
-            </button>
-          ))}
-        </div>
+      <div style={styles.sliderToolbar}>
+        <p style={styles.anchorNote}>
+          Last primary: Anthropic Series H $965B (2026-05-28) / OpenAI $852B
+          (2026-03-31), verified {LAST_PRIMARY_ROUNDS.asOf}. Tick marks the
+          round. Sliders are log-scaled $0.5T–$5.0T.
+        </p>
         <button
           type="button"
           onClick={copyScenarioLink}
@@ -363,31 +350,37 @@ export default function AIPerDollarFinder() {
           {copied ? "Copied" : "Copy link to this scenario"}
         </button>
       </div>
-      <p style={styles.caption}>
-        Defaults are unpaired (Anthropic $1.0T near Series H; OpenAI $1.25T
-        sheet Base). Chips apply both names together. Multiples vs last
-        primary: Anthropic Series H $965B (2026-05-28) / OpenAI $852B
-        (2026-03-31), verified {LAST_PRIMARY_ROUNDS.asOf}.
-      </p>
 
       <div style={styles.controls} className="vcx-controls ai-controls">
         <Slider
-          label="Anthropic IPO valuation ($B)"
+          label="Anthropic IPO valuation"
+          unit="T"
+          scale="log"
           min={SLIDER_BOUNDS.anth.min}
           max={SLIDER_BOUNDS.anth.max}
-          step={SLIDER_BOUNDS.anth.step}
           value={anthB}
           onChange={setAnthB}
           hint={`${anthMultiple} last round`}
+          tickPct={anthTickPct}
+          tickLabel={`Series H $965B (${fmtSliderTrillions(valToBillions(LAST_PRIMARY_ROUNDS.anthropic.postMoney))}T)`}
+          onTick={() =>
+            setAnthB(valToBillions(LAST_PRIMARY_ROUNDS.anthropic.postMoney))
+          }
         />
         <Slider
-          label="OpenAI IPO valuation ($B)"
+          label="OpenAI IPO valuation"
+          unit="T"
+          scale="log"
           min={SLIDER_BOUNDS.oai.min}
           max={SLIDER_BOUNDS.oai.max}
-          step={SLIDER_BOUNDS.oai.step}
           value={oaiB}
           onChange={setOaiB}
           hint={`${oaiMultiple} last round`}
+          tickPct={oaiTickPct}
+          tickLabel={`Mar 2026 primary $852B (${fmtSliderTrillions(valToBillions(LAST_PRIMARY_ROUNDS.openai.postMoney))}T)`}
+          onTick={() =>
+            setOaiB(valToBillions(LAST_PRIMARY_ROUNDS.openai.postMoney))
+          }
         />
         <Slider
           label="IPO dilution (%)"
@@ -399,33 +392,37 @@ export default function AIPerDollarFinder() {
         />
       </div>
       <p style={styles.caption}>
+        Defaults are unpaired (Anthropic $1.00T near Series H; OpenAI $1.25T).
         Dilution haircuts every wrapper&apos;s claim the same way (primary
         issuance at IPO). Default 0% is gross look-through.
       </p>
 
-      <div style={styles.basisRow}>
-        {[
-          { key: BASIS_FILED, label: "Filed Only" },
-          { key: BASIS_ESTIMATED, label: "Estimated" },
-        ].map(({ key, label }) => (
-          <button
-            key={key}
-            type="button"
-            className="preset-btn vcx-preset-btn"
-            onClick={() => setBasis(key)}
-            style={{
-              ...styles.chip,
-              ...(basis === key ? styles.chipActive : {}),
-            }}
-          >
-            {label}
-          </button>
-        ))}
+      <div style={styles.basisBlock}>
+        <div style={styles.basisKicker}>Share counts, net assets & marks</div>
+        <div style={styles.basisRow}>
+          {[
+            { key: BASIS_FILED, label: "Filed Only" },
+            { key: BASIS_ESTIMATED, label: "Estimated" },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              className="preset-btn vcx-preset-btn"
+              onClick={() => setBasis(key)}
+              style={{
+                ...styles.chip,
+                ...(basis === key ? styles.chipActive : {}),
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
       {basis === BASIS_ESTIMATED ? (
         <div style={styles.estBanner}>
-          ⚠ Estimated, not company reported — fund shares, net assets, and
-          stakes are rolled forward together. Strategic rows do not move.
+          ⚠ Estimated, not company reported — fund share counts, net assets
+          & marks are rolled forward together. Strategic rows do not move.
           DXYZ last filed NAV is ${FILED.navPerShare.toFixed(2)} as of{" "}
           {FILED.asOf}.
         </div>
@@ -520,9 +517,6 @@ export default function AIPerDollarFinder() {
                 </details>
               ) : null}
             </div>
-            <div style={styles.td} data-label="Type">
-              {row.wrapper.type}
-            </div>
             <div
               style={styles.td}
               data-label="Security"
@@ -577,14 +571,14 @@ export default function AIPerDollarFinder() {
             <div style={styles.td} data-label="Prem/NAV">
               {fmtPrem(row.premium)}
             </div>
-            <div style={styles.td} data-label="Conf.">
+            <div style={styles.td} data-label="Conf">
               <span
                 style={{
                   ...styles.conf,
                   color: CONF_COLOR[row.confidence],
                 }}
               >
-                {row.confidence}
+                {CONF_LABEL[row.confidence] || row.confidence}
               </span>
             </div>
           </div>
@@ -606,7 +600,7 @@ export default function AIPerDollarFinder() {
         <h2 style={styles.notesTitle}>Sources & footnotes</h2>
         <p style={styles.caption}>
           Stake % for corporates is ownership of the private company. For funds
-          it is implied = filed fair value ÷ the round used to mark that FV.
+          it is implied = fair value ÷ the round used to mark that FV.
           DXYZ OpenAI PPUs are excluded (not equity).
         </p>
         {WRAPPERS.map((w) => (
@@ -653,32 +647,81 @@ function StaleDot({ asOf }) {
   );
 }
 
-function Slider({ label, min, max, step, value, onChange, hint }) {
+function Slider({
+  label,
+  min,
+  max,
+  step,
+  value,
+  onChange,
+  hint,
+  scale = "linear",
+  unit,
+  tickPct,
+  tickLabel,
+  onTick,
+}) {
+  const isT = unit === "T";
+  const isLog = scale === "log";
+  const numberMin = isT ? SLIDER_T_MIN : min;
+  const numberMax = isT ? SLIDER_T_MAX : max;
+  const numberStep = isT ? 0.001 : step;
+  const numberValue = isT ? Number(fmtSliderTrillions(value)) : value;
+  const rangeMin = isLog ? 0 : min;
+  const rangeMax = isLog ? LOG_SLIDER_STEPS : max;
+  const rangeStep = isLog ? 1 : step;
+  const rangeValue = isLog ? logPosFromBillions(value) : value;
+
   return (
     <div style={styles.controlGroup}>
       <label style={styles.label}>{label}</label>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <input
           type="number"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value) || 0)}
+          min={numberMin}
+          max={numberMax}
+          step={numberStep}
+          value={numberValue}
+          onChange={(e) => {
+            const n = Number(e.target.value);
+            if (!Number.isFinite(n)) return;
+            if (isT) {
+              const b = trillionsToBillions(n);
+              onChange(Math.min(max, Math.max(min, b)));
+            } else {
+              onChange(n);
+            }
+          }}
           style={styles.smallInput}
           className="vcx-input vcx-small-input"
         />
+        {isT ? <span style={styles.unit}>T</span> : null}
       </div>
       {hint ? <div style={styles.hint}>{hint}</div> : null}
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        style={{ width: "100%", marginTop: "8px", accentColor: "#d97706" }}
-      />
+      <div style={styles.sliderTrack} className="ai-slider-track">
+        <input
+          type="range"
+          min={rangeMin}
+          max={rangeMax}
+          step={rangeStep}
+          value={rangeValue}
+          onChange={(e) => {
+            const n = Number(e.target.value);
+            onChange(isLog ? billionsFromLogPos(n) : n);
+          }}
+          style={styles.rangeInput}
+        />
+        {tickPct != null && onTick ? (
+          <button
+            type="button"
+            className="ai-slider-tick"
+            style={{ ...styles.sliderTick, left: `${tickPct}%` }}
+            title={tickLabel}
+            aria-label={tickLabel}
+            onClick={onTick}
+          />
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -735,10 +778,32 @@ const styles = {
     padding: "4px 8px",
     fontWeight: 600,
   },
-  chipToolbar: {
+  sliderToolbar: {
     display: "flex",
-    flexDirection: "column",
-    gap: "10px",
+    flexWrap: "wrap",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: "12px",
+    marginBottom: "16px",
+  },
+  anchorNote: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: "11px",
+    color: "#44403c",
+    lineHeight: 1.6,
+    margin: 0,
+    flex: "1 1 280px",
+    maxWidth: "640px",
+  },
+  basisBlock: {
+    marginBottom: "10px",
+  },
+  basisKicker: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: "11px",
+    color: "#44403c",
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
     marginBottom: "8px",
   },
   basisRow: {
@@ -778,11 +843,6 @@ const styles = {
     fontWeight: 700,
     verticalAlign: "middle",
   },
-  chipRow: {
-    display: "grid",
-    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: "8px",
-  },
   chip: {
     fontFamily: "var(--font-mono), monospace",
     fontSize: "12px",
@@ -798,11 +858,6 @@ const styles = {
     color: "#fef3c7",
     borderColor: "#1c1917",
   },
-  chipMeta: {
-    display: "block",
-    fontSize: "10px",
-    marginTop: "4px",
-  },
   copyBtn: {
     alignSelf: "flex-start",
     fontFamily: "var(--font-mono), monospace",
@@ -813,6 +868,7 @@ const styles = {
     background: "#fff",
     color: "#44403c",
     cursor: "pointer",
+    whiteSpace: "nowrap",
   },
   caption: {
     fontFamily: "var(--font-mono), monospace",
@@ -852,6 +908,35 @@ const styles = {
     color: "#44403c",
     marginTop: "6px",
   },
+  unit: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: "12px",
+    color: "#44403c",
+    letterSpacing: "0.04em",
+  },
+  sliderTrack: {
+    position: "relative",
+    marginTop: "10px",
+  },
+  rangeInput: {
+    width: "100%",
+    margin: 0,
+    accentColor: "#d97706",
+  },
+  sliderTick: {
+    position: "absolute",
+    top: "50%",
+    width: "10px",
+    height: "16px",
+    marginTop: "-8px",
+    padding: 0,
+    border: "none",
+    borderLeft: "2px solid #1c1917",
+    background: "transparent",
+    transform: "translateX(-50%)",
+    cursor: "pointer",
+    zIndex: 2,
+  },
   smallInput: {
     width: "100%",
     maxWidth: "140px",
@@ -888,7 +973,7 @@ const styles = {
     gap: "4px",
     padding: "10px 0",
     borderBottom: "1px solid #e7e5e4",
-    minWidth: "1180px",
+    minWidth: "1020px",
   },
   th: {
     fontFamily: "var(--font-mono), monospace",
@@ -912,7 +997,7 @@ const styles = {
     padding: "12px 0",
     borderBottom: "1px solid #f5f5f4",
     alignItems: "baseline",
-    minWidth: "1180px",
+    minWidth: "1020px",
   },
   td: {
     fontFamily: "var(--font-mono), monospace",
@@ -957,6 +1042,7 @@ const styles = {
     fontSize: "10px",
     letterSpacing: "0.08em",
     fontWeight: 600,
+    whiteSpace: "nowrap",
   },
   sup: {
     fontSize: "10px",

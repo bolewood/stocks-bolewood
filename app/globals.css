@@ -216,10 +216,7 @@ a {
     justify-content: space-between !important;
   }
 
-  /* AI Per $ chip row / sliders */
-  .ai-chip-row {
-    grid-template-columns: 1fr 1fr !important;
-  }
+  /* AI Per $100 sliders */
   .ai-controls {
     grid-template-columns: 1fr !important;
   }

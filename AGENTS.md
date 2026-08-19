@@ -18,4 +18,4 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # Pages
 
 - `/sats` permanently redirects (308) to `/echo` (`next.config.mjs` `redirects()`, covered by `test/redirects.test.mjs`).
-- `/ai` — Anthropic & OpenAI Per $ look-through calculator (`components/AIPerDollarFinder.jsx`). Live prices from `/api/ai-prices`; curated shares and stakes in `lib/aiWrappers.mjs`. Fund FILED/ESTIMATED basis in `lib/aiFundBasis.mjs` (DXYZ shares from `computeAtmBridge`).
+- `/ai` — **Per $100** look-through calculator (`components/AIPerDollarFinder.jsx`). Live prices from `/api/ai-prices`; curated shares and stakes in `lib/aiWrappers.mjs`. Fund FILED/ESTIMATED basis in `lib/aiFundBasis.mjs` (DXYZ shares from `computeAtmBridge`). Implied fund stake % is FV ÷ the round that marked it, so a mark roll does not change ownership.

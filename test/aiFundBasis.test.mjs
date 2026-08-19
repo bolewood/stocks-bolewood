@@ -99,13 +99,68 @@ test("FILED/ESTIMATED leaves strategic shares untouched", () => {
   assert.equal(b.affected, false);
 });
 
-test("VCX ESTIMATED keeps shares and rolls Anthropic marks to Series H", () => {
+test("VCX ESTIMATED keeps shares, rolls marks, and holds stake %", () => {
   const w = WRAPPERS.find((x) => x.ticker === "VCX");
   const filed = resolveFund(w, { basis: BASIS_FILED, deploy: DEPLOY_CASH });
   const est = resolveFund(w, { basis: BASIS_ESTIMATED, deploy: DEPLOY_CASH });
   assert.equal(est.shares, filed.shares);
   assert.ok(est.anthFv > filed.anthFv);
   assert.ok(Math.abs(est.anthFv / filed.anthFv - 965 / 380) < 1e-9);
+  assert.ok(est.netAssets > filed.netAssets);
+  assert.ok(est.nav > filed.nav);
+
+  const filedM = fundRowMetrics(w, FALLBACK_PRICES.VCX, {
+    anthVal: DEFAULT_ANTH_VAL,
+    oaiVal: DEFAULT_OAI_VAL,
+    dilution: 0,
+    resolved: filed,
+  });
+  const estM = fundRowMetrics(w, FALLBACK_PRICES.VCX, {
+    anthVal: DEFAULT_ANTH_VAL,
+    oaiVal: DEFAULT_OAI_VAL,
+    dilution: 0,
+    resolved: est,
+  });
+  assert.equal(filedM.anthPct, estM.anthPct);
+  assert.equal(filedM.oaiPct, estM.oaiPct);
+  assert.ok(Math.abs(filedM.anthPct - 112_418_000 / 380_000_000_000) < 1e-15);
+  assert.ok(Math.abs(estM.combinedPer100 - filedM.combinedPer100) < 1e-9);
+  assert.ok(estM.combinedPer100 < 35, estM.combinedPer100);
+  assert.ok(estM.combinedPer100 > 25, estM.combinedPer100);
+  assert.ok(estM.premium < filedM.premium);
+  assert.ok(filedM.premium > 1.0); // ~+110% at fallback $39.78 / $18.97
+  assert.ok(estM.premium > 0.5); // ~+67% at restated ~$23.80 NAV
+});
+
+test("fund stake % is identical across filed and estimated (cash)", () => {
+  const rows = snapshot.rows;
+  const bridge = dxyzBridgeFromRows(rows, { mode: BASIS_ESTIMATED });
+  for (const w of WRAPPERS.filter((x) => x.type === "Fund")) {
+    const filed = resolveFund(w, {
+      basis: BASIS_FILED,
+      deploy: DEPLOY_CASH,
+      dxyzBridge: bridge,
+    });
+    const est = resolveFund(w, {
+      basis: BASIS_ESTIMATED,
+      deploy: DEPLOY_CASH,
+      dxyzBridge: bridge,
+    });
+    const filedM = fundRowMetrics(w, FALLBACK_PRICES[w.yahooSymbol], {
+      anthVal: DEFAULT_ANTH_VAL,
+      oaiVal: DEFAULT_OAI_VAL,
+      dilution: 0,
+      resolved: filed,
+    });
+    const estM = fundRowMetrics(w, FALLBACK_PRICES[w.yahooSymbol], {
+      anthVal: DEFAULT_ANTH_VAL,
+      oaiVal: DEFAULT_OAI_VAL,
+      dilution: 0,
+      resolved: est,
+    });
+    assert.equal(filedM.anthPct, estM.anthPct, `${w.ticker} anthPct`);
+    assert.equal(filedM.oaiPct, estM.oaiPct, `${w.ticker} oaiPct`);
+  }
 });
 
 test("no HIGH confidence when as-of is >90 days old", () => {
