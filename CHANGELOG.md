@@ -3,6 +3,14 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.4.1.0] - 2026-08-19
+
+### Fixed
+- VCX ESTIMATED no longer inflates Anthropic stake % (0.03% → 0.08%). Rolling the mark to Series H now rolls the marking round too, so ownership is invariant across bases. Only PREM/NAV moves.
+
+### Changed
+- `/ai` headline is **Per $100**; `<title>` / `og:title` stay `Anthropic & OpenAI Per $100`. Dropped the TYPE column so CONF (HIGH/MED/LOW) stays visible. Removed Bear/Base/Bull/Ultra chips. IPO sliders are log-scaled $0.5T–$5.0T in trillions, with a last-primary tick. Basis toggle is labeled "Share counts, net assets & marks".
+
 ## [0.4.0.0] - 2026-08-19
 
 ### Added

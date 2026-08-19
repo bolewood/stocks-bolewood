@@ -21,6 +21,10 @@ import {
   SCENARIO_CHIPS,
   DEFAULT_ANTH_VAL,
   DEFAULT_OAI_VAL,
+  billionsFromLogPos,
+  lastRoundTickPct,
+  logPosFromBillions,
+  fmtSliderTrillions,
 } from "../lib/aiWrappers.mjs";
 import { parseChartPrice, chartUrl } from "../lib/yahooQuote.mjs";
 
@@ -249,10 +253,24 @@ test("scenario query params clamp and round-trip", () => {
   );
 
   const clamped = parseScenarioSearch("?anth=50&oai=99999&dil=-3&sort=nope");
-  assert.equal(clamped.anthB, 400);
-  assert.equal(clamped.oaiB, 4000);
+  assert.equal(clamped.anthB, 500);
+  assert.equal(clamped.oaiB, 5000);
   assert.equal(clamped.dilutionPct, 0);
   assert.equal(clamped.sortKey, "combinedPer100");
+});
+
+test("IPO sliders are log-mapped $0.5T–$5.0T; display is trillions", () => {
+  assert.equal(billionsFromLogPos(0), 500);
+  assert.equal(billionsFromLogPos(1000), 5000);
+  assert.equal(fmtSliderTrillions(1000), "1.00");
+  assert.equal(fmtSliderTrillions(1250), "1.25");
+  assert.equal(fmtSliderTrillions(965), "0.965");
+  const anthTick = lastRoundTickPct(LAST_PRIMARY_ROUNDS.anthropic.postMoney);
+  const oaiTick = lastRoundTickPct(LAST_PRIMARY_ROUNDS.openai.postMoney);
+  assert.ok(anthTick > 20 && anthTick < 40, anthTick);
+  assert.ok(oaiTick > 15 && oaiTick < 35, oaiTick);
+  assert.equal(logPosFromBillions(500), 0);
+  assert.equal(logPosFromBillions(5000), 1000);
 });
 
 test("AMZN and GOOG are non-linear; funds are Fund NAV; SFTBY has navNote", () => {
