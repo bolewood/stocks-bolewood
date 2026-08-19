@@ -3,6 +3,14 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.3.2.0] - 2026-08-19
+
+### Added
+- `/ai` preset chips and sliders show multiples vs last primary round (Anthropic Series H $965B, 2026-05-28; OpenAI $852B, 2026-03-31), from a single `LAST_PRIMARY_ROUNDS` config. Security column, as-of staleness dots, shareable `?anth=&oai=&dil=&sort=` URLs, copy-link, SFTBY expandable NAV note, and a dedicated OG image.
+
+### Changed
+- `/ai` meta text (chips, captions, as-of dates) raised to WCAG AA contrast against the cream background.
+
 ## [0.3.1.0] - 2026-08-19
 
 ### Changed

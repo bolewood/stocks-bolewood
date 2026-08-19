@@ -1,16 +1,26 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   DEFAULT_ANTH_VAL,
   DEFAULT_DILUTION,
   DEFAULT_OAI_VAL,
   FALLBACK_PRICES,
+  LAST_PRIMARY_ROUNDS,
   SCENARIO_CHIPS,
+  SLIDER_BOUNDS,
   WRAPPERS,
+  billionsToVal,
   chipMatching,
+  chipMultipleLine,
   claimPct,
+  fmtLastRoundMultiple,
+  fmtTrillions,
+  parseScenarioSearch,
   rowMetrics,
+  serializeScenarioSearch,
+  stalenessLevel,
+  valToBillions,
 } from "../lib/aiWrappers.mjs";
 
 const fmt$ = (n) =>
@@ -50,17 +60,15 @@ const CONF_COLOR = {
   low: "#b91c1c",
 };
 
-function valToBillions(v) {
-  return Math.round(v / 1e9);
-}
-
-function billionsToVal(b) {
-  return b * 1e9;
-}
+const STALE_COLOR = {
+  amber: "#b45309",
+  red: "#b91c1c",
+};
 
 const COLUMNS = [
   { key: "ticker", label: "Ticker", sort: "ticker" },
   { key: "type", label: "Type", sort: "type" },
+  { key: "security", label: "Security", sort: "security" },
   { key: "price", label: "Price", sort: "price" },
   { key: "shares", label: "Shares", sort: "shares" },
   { key: "marketCap", label: "Mkt cap", sort: "marketCap" },
@@ -72,6 +80,9 @@ const COLUMNS = [
   { key: "confidence", label: "Conf.", sort: "confidence" },
 ];
 
+const GRID =
+  "1.5fr 0.7fr 1fr 0.7fr 0.8fr 0.8fr 0.8fr 0.9fr 0.8fr 0.9fr 1fr 0.6fr";
+
 export default function AIPerDollarFinder() {
   const [anthB, setAnthB] = useState(valToBillions(DEFAULT_ANTH_VAL));
   const [oaiB, setOaiB] = useState(valToBillions(DEFAULT_OAI_VAL));
@@ -82,11 +93,49 @@ export default function AIPerDollarFinder() {
   const [sortDir, setSortDir] = useState("desc");
   const [minCombined, setMinCombined] = useState(0);
   const [hideThin, setHideThin] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const skipNextWrite = useRef(true);
 
   const anthVal = billionsToVal(anthB);
   const oaiVal = billionsToVal(oaiB);
   const dilution = dilutionPct / 100;
   const activeChip = chipMatching(anthVal, oaiVal);
+  const anthMultiple = fmtLastRoundMultiple(
+    anthVal,
+    LAST_PRIMARY_ROUNDS.anthropic.postMoney
+  );
+  const oaiMultiple = fmtLastRoundMultiple(
+    oaiVal,
+    LAST_PRIMARY_ROUNDS.openai.postMoney
+  );
+
+  useEffect(() => {
+    if (!window.location.search) return;
+    const parsed = parseScenarioSearch(window.location.search);
+    setAnthB(parsed.anthB);
+    setOaiB(parsed.oaiB);
+    setDilutionPct(parsed.dilutionPct);
+    setSortKey(parsed.sortKey);
+  }, []);
+
+  useEffect(() => {
+    if (skipNextWrite.current) {
+      skipNextWrite.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      const qs = serializeScenarioSearch({
+        anthB,
+        oaiB,
+        dilutionPct,
+        sortKey,
+      });
+      const next = `${window.location.pathname}?${qs}`;
+      const cur = `${window.location.pathname}${window.location.search}`;
+      if (cur !== next) history.replaceState(null, "", next);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [anthB, oaiB, dilutionPct, sortKey]);
 
   useEffect(() => {
     fetch("/api/ai-prices")
@@ -102,6 +151,19 @@ export default function AIPerDollarFinder() {
     const chip = SCENARIO_CHIPS[key];
     setAnthB(valToBillions(chip.anthVal));
     setOaiB(valToBillions(chip.oaiVal));
+  };
+
+  const copyScenarioLink = async () => {
+    const qs = serializeScenarioSearch({ anthB, oaiB, dilutionPct, sortKey });
+    const url = `${window.location.origin}${window.location.pathname}?${qs}`;
+    history.replaceState(null, "", `${window.location.pathname}?${qs}`);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
   };
 
   const rows = useMemo(() => {
@@ -126,6 +188,11 @@ export default function AIPerDollarFinder() {
         bv = b.wrapper[sortKey];
         return av.localeCompare(bv) * dir;
       }
+      if (sortKey === "security") {
+        av = a.wrapper.security?.label || "";
+        bv = b.wrapper.security?.label || "";
+        return av.localeCompare(bv) * dir;
+      }
       if (sortKey === "confidence") {
         av = confRank[a.wrapper.confidence] || 0;
         bv = confRank[b.wrapper.confidence] || 0;
@@ -142,7 +209,7 @@ export default function AIPerDollarFinder() {
       setSortDir((d) => (d === "desc" ? "asc" : "desc"));
     } else {
       setSortKey(key);
-      setSortDir(key === "ticker" || key === "type" ? "asc" : "desc");
+      setSortDir(key === "ticker" || key === "type" || key === "security" ? "asc" : "desc");
     }
   };
 
@@ -175,53 +242,68 @@ export default function AIPerDollarFinder() {
         <span style={styles.badgeMuted}>SHARES CURATED · SEE AS-OF</span>
       </div>
 
-      <div style={styles.chipRow} className="ai-chip-row">
-        {Object.entries(SCENARIO_CHIPS).map(([key, chip]) => (
-          <button
-            key={key}
-            type="button"
-            className="preset-btn vcx-preset-btn"
-            onClick={() => applyChip(key)}
-            style={{
-              ...styles.chip,
-              ...(activeChip === key ? styles.chipActive : {}),
-            }}
-          >
-            {chip.label}
-            <span style={styles.chipMeta}>
-              ${(chip.anthVal / 1e12).toFixed(2)}T / $
-              {(chip.oaiVal / 1e12).toFixed(2)}T
-            </span>
-          </button>
-        ))}
+      <div style={styles.chipToolbar}>
+        <div style={styles.chipRow} className="ai-chip-row">
+          {Object.entries(SCENARIO_CHIPS).map(([key, chip]) => (
+            <button
+              key={key}
+              type="button"
+              className="preset-btn vcx-preset-btn"
+              onClick={() => applyChip(key)}
+              style={{
+                ...styles.chip,
+                ...(activeChip === key ? styles.chipActive : {}),
+              }}
+            >
+              {chip.label}
+              <span style={styles.chipMeta}>
+                {fmtTrillions(chip.anthVal)} / {fmtTrillions(chip.oaiVal)}
+              </span>
+              <span style={styles.chipMeta}>
+                {chipMultipleLine(chip)}
+              </span>
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={copyScenarioLink}
+          style={styles.copyBtn}
+        >
+          {copied ? "Copied" : "Copy link to this scenario"}
+        </button>
       </div>
       <p style={styles.caption}>
         Defaults are unpaired (Anthropic $1.0T near Series H; OpenAI $1.25T
-        sheet Base). Chips apply both names together.
+        sheet Base). Chips apply both names together. Multiples vs last
+        primary: Anthropic Series H $965B (2026-05-28) / OpenAI $852B
+        (2026-03-31), verified {LAST_PRIMARY_ROUNDS.asOf}.
       </p>
 
       <div style={styles.controls} className="vcx-controls ai-controls">
         <Slider
           label="Anthropic IPO valuation ($B)"
-          min={400}
-          max={2500}
-          step={25}
+          min={SLIDER_BOUNDS.anth.min}
+          max={SLIDER_BOUNDS.anth.max}
+          step={SLIDER_BOUNDS.anth.step}
           value={anthB}
           onChange={setAnthB}
+          hint={`${anthMultiple} last round`}
         />
         <Slider
           label="OpenAI IPO valuation ($B)"
-          min={500}
-          max={4000}
-          step={25}
+          min={SLIDER_BOUNDS.oai.min}
+          max={SLIDER_BOUNDS.oai.max}
+          step={SLIDER_BOUNDS.oai.step}
           value={oaiB}
           onChange={setOaiB}
+          hint={`${oaiMultiple} last round`}
         />
         <Slider
           label="IPO dilution (%)"
-          min={0}
-          max={30}
-          step={1}
+          min={SLIDER_BOUNDS.dil.min}
+          max={SLIDER_BOUNDS.dil.max}
+          step={SLIDER_BOUNDS.dil.step}
           value={dilutionPct}
           onChange={setDilutionPct}
         />
@@ -272,16 +354,37 @@ export default function AIPerDollarFinder() {
             <div style={styles.tdTicker} data-label="Ticker">
               <div style={styles.ticker}>{row.ticker}</div>
               <div style={styles.name}>{row.wrapper.name}</div>
+              {row.wrapper.navNote ? (
+                <details style={styles.navDetails}>
+                  <summary style={styles.navSummary}>
+                    {row.wrapper.navNote.summary}
+                  </summary>
+                  <div style={styles.navBody}>{row.wrapper.navNote.body}</div>
+                </details>
+              ) : null}
             </div>
             <div style={styles.td} data-label="Type">
               {row.wrapper.type}
+            </div>
+            <div
+              style={styles.td}
+              data-label="Security"
+              title={row.wrapper.security?.footnote}
+            >
+              {row.wrapper.security?.label || "—"}
+              {row.wrapper.security?.linear === false ? (
+                <sup style={styles.sup}>†</sup>
+              ) : null}
             </div>
             <div style={styles.td} data-label="Price">
               ${row.price.toFixed(2)}
             </div>
             <div style={styles.td} data-label="Shares">
               {fmtShares(row.shares)}
-              <div style={styles.asOf}>{row.wrapper.sharesAsOf}</div>
+              <div style={styles.asOf}>
+                <StaleDot asOf={row.wrapper.sharesAsOf} />
+                {row.wrapper.sharesAsOf}
+              </div>
             </div>
             <div style={styles.td} data-label="Mkt cap">
               {fmt$(row.marketCap)}
@@ -324,6 +427,17 @@ export default function AIPerDollarFinder() {
         ))}
       </div>
 
+      <p style={styles.legend}>
+        As-of staleness (from today):{" "}
+        <span style={{ color: STALE_COLOR.amber }}>●</span> amber &gt;90 days
+        {" · "}
+        <span style={{ color: STALE_COLOR.red }}>●</span> red &gt;180 days.
+      </p>
+      <p style={styles.caption}>
+        <sup style={styles.sup}>†</sup> Convertibles and capped stakes do not
+        scale linearly with IPO valuation, so those rows are an approximation.
+      </p>
+
       <section style={styles.notes}>
         <h2 style={styles.notesTitle}>Sources & footnotes</h2>
         <p style={styles.caption}>
@@ -337,8 +451,10 @@ export default function AIPerDollarFinder() {
               {w.ticker} · {w.name}
             </div>
             <div style={styles.noteBody}>
-              {w.note}
+              {w.security ? ` Security: ${w.security.label}. ${w.security.footnote}` : ""}
+              {w.note ? ` ${w.note}` : ""}
               {w.sharesNote ? ` ${w.sharesNote}` : ""}
+              {w.navNote ? ` ${w.navNote.body}` : ""}
               {w.anthropic ? ` Anthropic: ${w.anthropic.source}` : ""}
               {w.openai ? ` OpenAI: ${w.openai.source}` : ""}
               {w.anthropic?.kind === "fund"
@@ -356,7 +472,24 @@ export default function AIPerDollarFinder() {
   );
 }
 
-function Slider({ label, min, max, step, value, onChange }) {
+function StaleDot({ asOf }) {
+  const level = stalenessLevel(asOf);
+  if (level !== "amber" && level !== "red") return null;
+  return (
+    <span
+      aria-label={level === "red" ? "as-of older than 180 days" : "as-of older than 90 days"}
+      style={{
+        color: STALE_COLOR[level],
+        marginRight: "4px",
+        fontSize: "9px",
+      }}
+    >
+      ●
+    </span>
+  );
+}
+
+function Slider({ label, min, max, step, value, onChange, hint }) {
   return (
     <div style={styles.controlGroup}>
       <label style={styles.label}>{label}</label>
@@ -372,6 +505,7 @@ function Slider({ label, min, max, step, value, onChange }) {
           className="vcx-input vcx-small-input"
         />
       </div>
+      {hint ? <div style={styles.hint}>{hint}</div> : null}
       <input
         type="range"
         min={min}
@@ -395,7 +529,7 @@ const styles = {
     fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
     fontSize: "11px",
     letterSpacing: "0.18em",
-    color: "#78716c",
+    color: "#44403c",
     marginBottom: "16px",
     fontWeight: 500,
   },
@@ -409,7 +543,7 @@ const styles = {
   subtitle: {
     fontSize: "16px",
     lineHeight: 1.5,
-    color: "#57534e",
+    color: "#44403c",
     maxWidth: "640px",
     marginBottom: "20px",
   },
@@ -424,7 +558,7 @@ const styles = {
     fontSize: "10px",
     letterSpacing: "0.12em",
     background: "#fef3c7",
-    color: "#92400e",
+    color: "#78350f",
     padding: "4px 8px",
     fontWeight: 600,
   },
@@ -432,16 +566,21 @@ const styles = {
     fontFamily: "var(--font-mono), monospace",
     fontSize: "10px",
     letterSpacing: "0.12em",
-    background: "#f5f5f4",
-    color: "#78716c",
+    background: "#e7e5e4",
+    color: "#44403c",
     padding: "4px 8px",
     fontWeight: 600,
+  },
+  chipToolbar: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+    marginBottom: "8px",
   },
   chipRow: {
     display: "grid",
     gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
     gap: "8px",
-    marginBottom: "8px",
   },
   chip: {
     fontFamily: "var(--font-mono), monospace",
@@ -461,15 +600,32 @@ const styles = {
   chipMeta: {
     display: "block",
     fontSize: "10px",
-    opacity: 0.7,
     marginTop: "4px",
+  },
+  copyBtn: {
+    alignSelf: "flex-start",
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: "11px",
+    letterSpacing: "0.04em",
+    padding: "8px 12px",
+    border: "1px solid #e7e5e4",
+    background: "#fff",
+    color: "#44403c",
+    cursor: "pointer",
   },
   caption: {
     fontFamily: "var(--font-mono), monospace",
     fontSize: "11px",
-    color: "#78716c",
+    color: "#44403c",
     lineHeight: 1.6,
     marginBottom: "20px",
+  },
+  legend: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: "11px",
+    color: "#44403c",
+    lineHeight: 1.6,
+    margin: "12px 0 8px",
   },
   controls: {
     display: "grid",
@@ -485,9 +641,15 @@ const styles = {
     fontSize: "11px",
     letterSpacing: "0.08em",
     textTransform: "uppercase",
-    color: "#78716c",
+    color: "#44403c",
     display: "block",
     marginBottom: "8px",
+  },
+  hint: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: "11px",
+    color: "#44403c",
+    marginTop: "6px",
   },
   smallInput: {
     width: "100%",
@@ -502,7 +664,7 @@ const styles = {
   filter: {
     fontFamily: "var(--font-mono), monospace",
     fontSize: "12px",
-    color: "#57534e",
+    color: "#44403c",
     display: "flex",
     alignItems: "center",
     gap: "8px",
@@ -521,18 +683,18 @@ const styles = {
   },
   headerRow: {
     display: "grid",
-    gridTemplateColumns: "1.4fr 0.7fr 0.7fr 0.8fr 0.8fr 0.8fr 0.9fr 0.8fr 0.9fr 1fr 0.6fr",
+    gridTemplateColumns: GRID,
     gap: "4px",
     padding: "10px 0",
     borderBottom: "1px solid #e7e5e4",
-    minWidth: "1080px",
+    minWidth: "1180px",
   },
   th: {
     fontFamily: "var(--font-mono), monospace",
     fontSize: "10px",
     letterSpacing: "0.06em",
     textTransform: "uppercase",
-    color: "#78716c",
+    color: "#44403c",
     background: "none",
     border: "none",
     padding: 0,
@@ -540,16 +702,16 @@ const styles = {
     cursor: "pointer",
   },
   thActive: {
-    color: "#d97706",
+    color: "#b45309",
   },
   tr: {
     display: "grid",
-    gridTemplateColumns: "1.4fr 0.7fr 0.7fr 0.8fr 0.8fr 0.8fr 0.9fr 0.8fr 0.9fr 1fr 0.6fr",
+    gridTemplateColumns: GRID,
     gap: "4px",
     padding: "12px 0",
     borderBottom: "1px solid #f5f5f4",
     alignItems: "baseline",
-    minWidth: "1080px",
+    minWidth: "1180px",
   },
   td: {
     fontFamily: "var(--font-mono), monospace",
@@ -567,13 +729,16 @@ const styles = {
   },
   name: {
     fontSize: "11px",
-    color: "#78716c",
+    color: "#44403c",
     fontFamily: "var(--font-fraunces), Georgia, serif",
   },
   asOf: {
-    fontSize: "9px",
-    color: "#a8a29e",
+    fontSize: "10px",
+    color: "#57534e",
     letterSpacing: "0.04em",
+    display: "flex",
+    alignItems: "center",
+    marginTop: "2px",
   },
   tdAccent: {
     color: "#1d4ed8",
@@ -591,6 +756,30 @@ const styles = {
     fontSize: "10px",
     letterSpacing: "0.08em",
     fontWeight: 600,
+  },
+  sup: {
+    fontSize: "10px",
+    color: "#b45309",
+    marginLeft: "2px",
+    fontWeight: 600,
+  },
+  navDetails: {
+    marginTop: "6px",
+  },
+  navSummary: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: "10px",
+    color: "#44403c",
+    cursor: "pointer",
+    letterSpacing: "0.04em",
+  },
+  navBody: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: "10px",
+    color: "#44403c",
+    lineHeight: 1.55,
+    marginTop: "6px",
+    maxWidth: "280px",
   },
   notes: {
     marginTop: "48px",
@@ -614,7 +803,7 @@ const styles = {
   noteBody: {
     fontFamily: "var(--font-mono), monospace",
     fontSize: "11px",
-    color: "#57534e",
+    color: "#44403c",
     lineHeight: 1.6,
   },
 };

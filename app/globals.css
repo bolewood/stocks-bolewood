@@ -60,6 +60,9 @@ a {
   background: #1c1917 !important;
   color: #fef3c7 !important;
 }
+.preset-btn:hover span {
+  color: inherit !important;
+}
 
 /* ── MOBILE LAYOUT ────────────────────────────────────────── */
 @media (max-width: 720px) {
@@ -110,7 +113,7 @@ a {
     font-size: 10px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #78716c;
+    color: #44403c;
     font-weight: 500;
     flex-shrink: 0;
   }
