@@ -87,6 +87,7 @@ a {
     display: block !important;
     padding: 14px 14px !important;
     border-bottom: 1px solid #e7e5e4;
+    min-width: 0 !important;
   }
   .vcx-row > div {
     flex: none !important;
@@ -212,7 +213,15 @@ a {
     justify-content: space-between !important;
   }
 
-  /* Site header mobile: tighter padding + wrap so six links fit 390px */
+  /* AI Per $ chip row / sliders */
+  .ai-chip-row {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .ai-controls {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Site header mobile: tighter padding + wrap so nav links fit 390px */
   .site-header-inner {
     padding: 12px 16px !important;
     flex-wrap: wrap !important;
