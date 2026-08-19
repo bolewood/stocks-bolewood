@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "1.0.0",
+  "methodologyVersion": "1.0.0",
+  "ticker": "SFTBY",
+  "yahooSymbol": "SFTBY",
+  "name": "SoftBank Group ADR",
+  "wrapperType": "adr",
+  "denominatorType": "adr-equivalent-market-cap",
+  "confidence": "high",
+  "note": "No Anthropic. OpenAI is Vision Fund 2 preferred.",
+  "shareCount": {
+    "value": 5698923701,
+    "asOf": "2026-03-31",
+    "unit": "ordinary",
+    "note": "Issued 5,711,848,120 − treasury 12,924,419."
+  },
+  "adrRatio": {
+    "ordinary": 1,
+    "ads": 2,
+    "asOf": "2026-03-31",
+    "note": "Citi ORD:DR is 1:2 — each SFTBY ADR is ½ of one 9984.T share."
+  },
+  "sharesNote": "Issuer-equivalent ADR shares (2× Tokyo common). Citi ORD:DR is 1:2 — each SFTBY ADR is ½ of one 9984.T share. Tokyo common 5,698,923,701 (issued 5,711,848,120 − treasury 12,924,419) as of 2026-03-31. OTC ADR prints ~½ the USD-converted 9984.T price, so 2× common × ADR quote ≈ full-issuer cap.",
+  "security": {
+    "label": "VF2 Pfd",
+    "linear": true,
+    "footnote": "OpenAI is Vision Fund 2 preferred; SoftBank ~13% at $64.6B (2026-02-27 release)."
+  },
+  "navNote": {
+    "summary": "NAV discount",
+    "body": "NAV ¥58.3T vs market cap ¥31.46T ≈ 46% discount (pro forma 2026-08-05). Arm is ~60% of holdings (¥49.91T / ¥83.11T, SBG Q1 FY2026 data sheet 2026-06-30); Vision Funds (SVF1+SVF2+LatAm) ~28.8%; SoftBank Corp. ¥2.79T; T-Mobile adjusted to ~0 after asset-backed finance. LTV 13% against a 25% policy cap, plus a recent $40B bridge loan and $10B margin loan secured by the OpenAI stake. The high per-$100 reflects the NAV discount, not OpenAI concentration. SBG's OpenAI exposure sits partly inside SVF2 — do not double-count it against the Vision Fund line."
+  },
+  "sources": [
+    {
+      "fields": ["shareCount"],
+      "sourceClass": "primary",
+      "issuer": "SoftBank Group Corp.",
+      "documentDate": "2026-03-31",
+      "asOf": "2026-03-31",
+      "note": "Tokyo common outstanding net of treasury."
+    },
+    {
+      "fields": ["adrRatio"],
+      "sourceClass": "primary",
+      "issuer": "Citibank, N.A.",
+      "documentDate": "2026-03-31",
+      "note": "ORD:DR 1:2."
+    }
+  ],
+  "anthropic": null,
+  "openai": {
+    "basis": "pro-forma",
+    "holdingSecurity": "preferred",
+    "ownershipPct": 0.13,
+    "ownershipAsOf": "2026-02-27",
+    "confidence": "high",
+    "sources": [
+      {
+        "fields": ["ownershipPct"],
+        "sourceClass": "primary",
+        "issuer": "SoftBank Group Corp.",
+        "documentDate": "2026-02-27",
+        "asOf": "2026-02-27",
+        "note": "~13% upon completion of the investment program ($64.6B by 2026-10-01), not current funded ownership. ~$55B in as of Aug 2026; last $10B tranche due 2026-10-01."
+      }
+    ]
+  }
+}

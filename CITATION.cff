@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+title: "Public wrappers of Anthropic and OpenAI"
+message: "If you use this dataset, please cite it as below. Attribution is requested."
+type: dataset
+authors:
+  - family-names: Showalter
+    given-names: Anthony
+    affiliation: Bolewood Group
+repository-code: "https://github.com/bolewood/stocks-bolewood"
+url: "https://stocks.bolewood.com/ai"
+date-released: "2026-08-19"
+version: "1.0.0"
+identifiers: []
+license: "CC-BY-4.0"
+keywords:
+  - Anthropic
+  - OpenAI
+  - look-through
+  - closed-end funds

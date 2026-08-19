@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "1.0.0",
+  "methodologyVersion": "1.0.0",
+  "ticker": "AGIX",
+  "yahooSymbol": "AGIX",
+  "name": "KraneShares Public-Private AI ETF",
+  "wrapperType": "etf",
+  "denominatorType": "market-cap",
+  "confidence": "high",
+  "note": "Not the SingularityNET token. No OpenAI in disclosed holdings. Public-Private AI ETF: Anthropic is a small NAV sleeve (~1.9–2.8%), which is why look-through is a few dollars per $100.",
+  "shareCount": {
+    "value": 14400002,
+    "asOf": "2026-08-18",
+    "note": "ETF share count drifts with creations/redemptions."
+  },
+  "sharesNote": "ETF share count drifts with creations/redemptions.",
+  "security": {
+    "label": "Fund NAV",
+    "linear": true,
+    "footnote": "Look-through from filed fair value ÷ the round used to mark that FV."
+  },
+  "sources": [
+    {
+      "fields": ["shareCount"],
+      "sourceClass": "primary",
+      "issuer": "KraneShares",
+      "documentDate": "2026-08-18",
+      "asOf": "2026-08-18"
+    }
+  ],
+  "anthropic": {
+    "basis": "filed-fv-equiv",
+    "holdingSecurity": "fund-interest",
+    "reportedFairValue": 12926025,
+    "fairValueAsOf": "2026-08-18",
+    "measurementCompanyMark": "anthropic-series-h",
+    "measurementMarkAsOf": "2026-05-28",
+    "confidence": "high",
+    "sources": [
+      {
+        "fields": ["reportedFairValue"],
+        "sourceClass": "primary",
+        "issuer": "KraneShares",
+        "documentDate": "2026-08-18",
+        "asOf": "2026-08-18",
+        "note": "Holdings page: Anthropic PBC $12,926,025 (1.92% of NAV). NAV weight has printed ~1.9–2.8% (Mar 31 report 2.7%; Jul 31 blog 2.82%)."
+      },
+      {
+        "fields": ["measurementCompanyMark"],
+        "sourceClass": "primary",
+        "issuer": "Anthropic",
+        "documentDate": "2026-05-28",
+        "url": "https://www.anthropic.com/news/series-h"
+      }
+    ]
+  },
+  "openai": null
+}

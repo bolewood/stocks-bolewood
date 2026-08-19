@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.0.0",
+  "methodologyVersion": "1.0.0",
+  "ticker": "NVDA",
+  "yahooSymbol": "NVDA",
+  "name": "NVIDIA Corporation",
+  "wrapperType": "operating-company",
+  "denominatorType": "market-cap",
+  "confidence": "low",
+  "note": "Neither figure is an NVDA-disclosed ownership percentage.",
+  "shareCount": {
+    "value": 24300000000,
+    "asOf": "2026-02-20"
+  },
+  "security": {
+    "label": "Undisclosed",
+    "linear": true,
+    "footnote": "OpenAI is round-implied from OpenAI's $30B announcement. Anthropic is a commitment with no ownership %."
+  },
+  "sources": [
+    {
+      "fields": ["shareCount"],
+      "sourceClass": "primary",
+      "issuer": "NVIDIA Corporation",
+      "filingType": "10-K",
+      "documentDate": "2026-02-20",
+      "asOf": "2026-02-20"
+    }
+  ],
+  "anthropic": {
+    "basis": "commitment",
+    "holdingSecurity": "unknown",
+    "commitmentAmount": 10000000000,
+    "commitmentAsOf": "2025-11",
+    "status": "up-to",
+    "confidence": "low",
+    "sources": [
+      {
+        "fields": ["commitmentAmount", "status"],
+        "sourceClass": "secondary",
+        "documentDate": "2025-11",
+        "note": "Up to $10B Anthropic commitment (Huang / Nov 2025 announcement). Not an NVDA 10-K ownership %."
+      }
+    ]
+  },
+  "openai": {
+    "basis": "round-implied",
+    "holdingSecurity": "unknown",
+    "investmentAmount": 30000000000,
+    "investmentAsOf": "2026-02-27",
+    "roundPostMoneyValuation": "openai-mar-2026",
+    "confidence": "low",
+    "sources": [
+      {
+        "fields": ["investmentAmount"],
+        "sourceClass": "primary",
+        "issuer": "OpenAI",
+        "documentDate": "2026-02-27",
+        "asOf": "2026-02-27",
+        "note": "OpenAI round announcement: Nvidia invested $30B. Not an NVDA 10-K ownership %."
+      },
+      {
+        "fields": ["roundPostMoneyValuation"],
+        "sourceClass": "primary",
+        "issuer": "OpenAI",
+        "documentDate": "2026-03-31",
+        "url": "https://openai.com/index/accelerating-the-next-phase-ai/",
+        "note": "$852B post-money."
+      }
+    ]
+  }
+}

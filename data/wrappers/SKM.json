@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "1.0.0",
+  "methodologyVersion": "1.0.0",
+  "ticker": "SKM",
+  "yahooSymbol": "SKM",
+  "name": "SK Telecom Co.",
+  "wrapperType": "adr",
+  "denominatorType": "adr-equivalent-market-cap",
+  "confidence": "low",
+  "note": "Anthropic 0.30% (range 0.30–0.70%). No OpenAI.",
+  "shareCount": {
+    "value": 212982275,
+    "asOf": "2025-12-31",
+    "unit": "ordinary",
+    "note": "Net of 1,807,778 treasury. Seoul listing is 017670.KS."
+  },
+  "adrRatio": {
+    "ordinary": 5,
+    "ads": 9,
+    "asOf": "2025-12-31",
+    "note": "Each ADS (NYSE: SKM) represents 5/9 of one ordinary share (Citi; 20-F cover). ADS-equivalent = ordinary × 9/5."
+  },
+  "sharesNote": "ADS-equivalent so SKM USD price × shares ≈ SK Telecom cap. 212,982,275 ordinary outstanding (20-F / 6-K as of 2025-12-31, net of 1,807,778 treasury) ÷ (5/9) = 383,368,095 ADS. Seoul listing is 017670.KS.",
+  "security": {
+    "label": "Equity",
+    "linear": true,
+    "footnote": "Anthropic equity; % not issuer-disclosed (Aug 7 table / Hana ~0.30%)."
+  },
+  "sources": [
+    {
+      "fields": ["shareCount"],
+      "sourceClass": "primary",
+      "issuer": "SK Telecom Co., Ltd.",
+      "filingType": "20-F",
+      "documentDate": "2025-12-31",
+      "asOf": "2025-12-31",
+      "note": "Ordinary outstanding net of treasury. Confirmed in 6-K."
+    },
+    {
+      "fields": ["adrRatio"],
+      "sourceClass": "primary",
+      "issuer": "Citibank, N.A.",
+      "filingType": "20-F",
+      "documentDate": "2025-12-31",
+      "note": "ADS ratio 5/9 on the 20-F cover and Citi depositary."
+    }
+  ],
+  "anthropic": {
+    "basis": "estimate",
+    "holdingSecurity": "common",
+    "estimatedOwnershipPct": 0.003,
+    "estimateAsOf": "2026-06",
+    "pctLow": 0.003,
+    "pctHigh": 0.007,
+    "methodology": "Analyst estimate from the Aug 7 table / Hana, not issuer-disclosed. Undisclosed Series H follow-on (Jun 2026) may have changed the stake.",
+    "confidence": "low",
+    "sources": [
+      {
+        "fields": ["estimatedOwnershipPct", "pctLow", "pctHigh"],
+        "sourceClass": "secondary",
+        "documentDate": "2026-06",
+        "note": "Analyst estimate ~0.30% (range 0.30–0.70%). Not issuer-disclosed."
+      }
+    ]
+  },
+  "openai": null
+}

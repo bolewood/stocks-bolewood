@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "1.0.0",
+  "methodologyVersion": "1.0.0",
+  "asOf": "2026-08-19",
+  "lastPrimary": {
+    "anthropic": "anthropic-series-h",
+    "openai": "openai-mar-2026"
+  },
+  "companies": {
+    "anthropic": {
+      "name": "Anthropic",
+      "rounds": [
+        {
+          "id": "anthropic-series-g",
+          "name": "Series G",
+          "postMoney": 380000000000,
+          "closed": "2026-02-12",
+          "sources": [
+            {
+              "fields": ["postMoney", "closed"],
+              "sourceClass": "primary",
+              "issuer": "Zoom Communications, Inc.",
+              "filingType": "10-Q",
+              "documentDate": "2026-04-30",
+              "note": "ZM carrying value marked to the Feb 12, 2026 ~$380B round."
+            }
+          ]
+        },
+        {
+          "id": "anthropic-series-h",
+          "name": "Series H",
+          "postMoney": 965000000000,
+          "closed": "2026-05-28",
+          "sources": [
+            {
+              "fields": ["postMoney", "closed"],
+              "sourceClass": "primary",
+              "issuer": "Anthropic",
+              "documentDate": "2026-05-28",
+              "url": "https://www.anthropic.com/news/series-h",
+              "note": "Anthropic newsroom Series H close."
+            }
+          ]
+        }
+      ]
+    },
+    "openai": {
+      "name": "OpenAI",
+      "rounds": [
+        {
+          "id": "openai-feb-2026",
+          "name": "Feb 2026 mark",
+          "postMoney": 850000000000,
+          "sources": [
+            {
+              "fields": ["postMoney"],
+              "sourceClass": "secondary",
+              "note": "Fund fair-value marks around the Feb 2026 ~$850B print (Hiive ~$851B). Used only as the measurement mark for FVs dated to that print, not as a last-primary anchor."
+            }
+          ]
+        },
+        {
+          "id": "openai-mar-2026",
+          "name": "Mar 2026 primary",
+          "postMoney": 852000000000,
+          "closed": "2026-03-31",
+          "sources": [
+            {
+              "fields": ["postMoney", "closed"],
+              "sourceClass": "primary",
+              "issuer": "OpenAI",
+              "documentDate": "2026-03-31",
+              "url": "https://openai.com/index/accelerating-the-next-phase-ai/",
+              "note": "$852B post-money, $122B committed. OpenAI newsroom 2026-03-31."
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

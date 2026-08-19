@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "1.0.0",
+  "methodologyVersion": "1.0.0",
+  "ticker": "GOOG",
+  "yahooSymbol": "GOOG",
+  "name": "Alphabet Inc.",
+  "wrapperType": "operating-company",
+  "denominatorType": "market-cap",
+  "confidence": "medium",
+  "note": "14% as of Mar 2025; later rounds may have diluted unless Alphabet bought more.",
+  "shareCount": {
+    "value": 12230000000,
+    "asOf": "2026-06-30",
+    "note": "Class A 5,868M + B 835M + C 5,527M = 12,230M."
+  },
+  "sharesNote": "Class A 5,868M + B 835M + C 5,527M = 12,230M (10-Q 2026-06-30). GOOG price × all classes ≈ Alphabet market cap.",
+  "security": {
+    "label": "Common (15% cap)",
+    "linear": false,
+    "footnote": "~14%, contractually hard-capped at 15% (NYT / court docs, 2025-03-11)."
+  },
+  "sources": [
+    {
+      "fields": ["shareCount"],
+      "sourceClass": "primary",
+      "issuer": "Alphabet Inc.",
+      "filingType": "10-Q",
+      "documentDate": "2026-06-30",
+      "asOf": "2026-06-30",
+      "note": "Class A + B + C outstanding."
+    }
+  ],
+  "anthropic": {
+    "basis": "historical",
+    "holdingSecurity": "common",
+    "ownershipPct": 0.14,
+    "ownershipAsOf": "2025-03-11",
+    "displayAsMax": true,
+    "capPct": 0.15,
+    "confidence": "medium",
+    "sources": [
+      {
+        "fields": ["ownershipPct", "capPct"],
+        "sourceClass": "primary",
+        "documentDate": "2025-03-11",
+        "note": "Court documents: ~14%, contractually hard-capped at 15%, non-voting."
+      },
+      {
+        "fields": ["ownershipPct"],
+        "sourceClass": "secondary",
+        "documentDate": "2025-03-11",
+        "note": "NYT reporting on those court documents. 10-Q does not name Anthropic."
+      }
+    ]
+  },
+  "openai": null
+}

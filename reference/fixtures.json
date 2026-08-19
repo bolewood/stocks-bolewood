@@ -1,0 +1,20 @@
+{
+  "asOf": "2026-08-19",
+  "note": "Frozen prices for reproducibility only. Not live quotes and not part of the public data/ dataset — live market data stays a runtime input.",
+  "anthVal": 965000000000,
+  "oaiVal": 852000000000,
+  "dilution": 0,
+  "prices": {
+    "GOOG": 341.39,
+    "AMZN": 264.655,
+    "MSFT": 484.37,
+    "SFTBY": 16.54,
+    "NVDA": 219.6,
+    "SKM": 38.515,
+    "ZM": 108.16,
+    "AGIX": 44.5,
+    "DXYZ": 32.84,
+    "ARKVX": 57.43,
+    "VCX": 39.78
+  }
+}

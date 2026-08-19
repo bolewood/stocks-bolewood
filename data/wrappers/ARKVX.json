@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "1.0.0",
+  "methodologyVersion": "1.0.0",
+  "ticker": "ARKVX",
+  "yahooSymbol": "ARKVX",
+  "name": "ARK Venture Fund",
+  "wrapperType": "interval-fund",
+  "denominatorType": "total-net-assets",
+  "confidence": "medium",
+  "note": "Limited quarterly liquidity. Priced at NAV (~1.00×).",
+  "snapshotNote": "Snapshot as of 2026-04-30 — not live",
+  "shareCount": {
+    "value": 21613728,
+    "asOf": "2026-07-31",
+    "unit": "class-d",
+    "note": "Class D published SO. Current-assets proxy only (× live Class D NAV) for the cash end of the deploy range — not fund TNA."
+  },
+  "totalNetAssets": {
+    "value": 871119657,
+    "asOf": "2026-04-30",
+    "note": "NPORT-EX Net Assets–100.0%. NPORT-P XML netAssets $862,446,918.77 is a different line; do not mix."
+  },
+  "sharesNote": "Unlisted interval fund, multiple share classes. Denominator is NPORT-EX total net assets $871,119,657 as of 2026-04-30 (same schedule as the holdings). Class D SO 21,613,728 as of 2026-07-31 is a current-assets proxy only (× live Class D NAV) for the cash end of the deploy range — it is not fund TNA.",
+  "security": {
+    "label": "Fund NAV",
+    "linear": true,
+    "footnote": "Look-through from filed fair value ÷ the round used to mark that FV."
+  },
+  "sources": [
+    {
+      "fields": ["totalNetAssets"],
+      "sourceClass": "primary",
+      "issuer": "ARK Venture Fund",
+      "filingType": "NPORT-EX",
+      "documentDate": "2026-04-30",
+      "asOf": "2026-04-30",
+      "note": "Net Assets–100.0% $871,119,657. Same schedule as the holdings FVs."
+    },
+    {
+      "fields": ["shareCount"],
+      "sourceClass": "primary",
+      "issuer": "ARK Invest",
+      "documentDate": "2026-07-31",
+      "asOf": "2026-07-31",
+      "note": "Published Class D shares outstanding."
+    }
+  ],
+  "anthropic": {
+    "basis": "filed-fv-equiv",
+    "holdingSecurity": "preferred",
+    "reportedFairValue": 23083673,
+    "fairValueAsOf": "2026-04-30",
+    "measurementCompanyMark": "anthropic-series-g",
+    "measurementMarkAsOf": "2026-02-12",
+    "confidence": "medium",
+    "sources": [
+      {
+        "fields": ["reportedFairValue"],
+        "sourceClass": "primary",
+        "issuer": "ARK Venture Fund",
+        "filingType": "NPORT-EX",
+        "documentDate": "2026-04-30",
+        "asOf": "2026-04-30",
+        "note": "Anthropic, Inc. Series C-1 $23,083,673. Same schedule TNA $871,119,657."
+      },
+      {
+        "fields": ["measurementCompanyMark"],
+        "sourceClass": "primary",
+        "issuer": "ARK Venture Fund",
+        "filingType": "NPORT-EX",
+        "documentDate": "2026-04-30",
+        "asOf": "2026-02-12"
+      }
+    ]
+  },
+  "openai": {
+    "basis": "filed-fv-equiv",
+    "holdingSecurity": "mixed",
+    "reportedFairValue": 72512628,
+    "fairValueAsOf": "2026-04-30",
+    "measurementCompanyMark": "openai-mar-2026",
+    "measurementMarkAsOf": "2026-03-31",
+    "confidence": "medium",
+    "components": [
+      { "label": "OpenAI lot", "amount": 7321148 },
+      { "label": "OpenAI lot", "amount": 11205221 },
+      { "label": "OpenAI lot", "amount": 49999651 },
+      { "label": "SPV", "amount": 3986608 }
+    ],
+    "sources": [
+      {
+        "fields": ["reportedFairValue", "components"],
+        "sourceClass": "primary",
+        "issuer": "ARK Venture Fund",
+        "filingType": "NPORT-EX",
+        "documentDate": "2026-04-30",
+        "asOf": "2026-04-30",
+        "note": "OpenAI lots $7,321,148 + $11,205,221 + $49,999,651 + SPV $3,986,608 = $72,512,628."
+      },
+      {
+        "fields": ["measurementCompanyMark"],
+        "sourceClass": "primary",
+        "issuer": "OpenAI",
+        "documentDate": "2026-03-31",
+        "url": "https://openai.com/index/accelerating-the-next-phase-ai/"
+      }
+    ]
+  }
+}

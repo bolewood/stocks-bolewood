@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stocks.bolewood.com/data/schema/wrapper.schema.json",
+  "title": "AI wrapper record",
+  "description": "Discriminated union on basis. Canonical enforcement is data/schema/validate.mjs. No generic value field; impliedExposure is computed only.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "methodologyVersion",
+    "ticker",
+    "yahooSymbol",
+    "name",
+    "wrapperType",
+    "denominatorType",
+    "sources"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "methodologyVersion": { "const": "1.0.0" },
+    "wrapperType": {
+      "enum": [
+        "operating-company",
+        "closed-end-fund",
+        "interval-fund",
+        "holding-company",
+        "adr",
+        "etf",
+        "unknown"
+      ]
+    },
+    "denominatorType": {
+      "enum": [
+        "market-cap",
+        "adr-equivalent-market-cap",
+        "total-net-assets",
+        "unknown"
+      ]
+    },
+    "holdingSecurity": {
+      "enum": [
+        "common",
+        "preferred",
+        "convertible",
+        "spv-interest",
+        "fund-interest",
+        "mixed",
+        "unknown"
+      ]
+    }
+  }
+}

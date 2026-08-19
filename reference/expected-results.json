@@ -1,0 +1,142 @@
+{
+  "schemaVersion": "1.0.0",
+  "methodologyVersion": "1.0.0",
+  "asOf": "2026-08-19",
+  "anthVal": 965000000000,
+  "oaiVal": 852000000000,
+  "dilution": 0,
+  "rows": [
+    {
+      "ticker": "GOOG",
+      "price": 341.39,
+      "wrapperValue": 4175199700000,
+      "anthBasis": "historical",
+      "oaiBasis": null,
+      "anthPct": 0.14,
+      "oaiPct": null,
+      "anthPer100": 3.23577336912,
+      "oaiPer100": 0,
+      "combinedPer100": 3.23577336912
+    },
+    {
+      "ticker": "AMZN",
+      "price": 264.655,
+      "wrapperValue": 2854651818400,
+      "anthBasis": "filed-fv-equiv",
+      "oaiBasis": "round-implied",
+      "anthPct": 0.197305699482,
+      "oaiPct": 0.0586854460094,
+      "anthPer100": 6.6698151688,
+      "oaiPer100": 1.75152709265,
+      "combinedPer100": 8.42134226145
+    },
+    {
+      "ticker": "MSFT",
+      "price": 484.37,
+      "wrapperValue": 3598110917580,
+      "anthBasis": "commitment",
+      "oaiBasis": "disclosed",
+      "anthPct": null,
+      "oaiPct": 0.27,
+      "anthPer100": 0,
+      "oaiPer100": 6.39335488176,
+      "combinedPer100": 6.39335488176
+    },
+    {
+      "ticker": "SFTBY",
+      "price": 16.54,
+      "wrapperValue": 188520396029,
+      "anthBasis": null,
+      "oaiBasis": "pro-forma",
+      "anthPct": null,
+      "oaiPct": 0.13,
+      "anthPer100": 0,
+      "oaiPer100": 58.7522635922,
+      "combinedPer100": 58.7522635922
+    },
+    {
+      "ticker": "NVDA",
+      "price": 219.6,
+      "wrapperValue": 5336280000000,
+      "anthBasis": "commitment",
+      "oaiBasis": "round-implied",
+      "anthPct": null,
+      "oaiPct": 0.0352112676056,
+      "anthPer100": 0,
+      "oaiPer100": 0.562189390362,
+      "combinedPer100": 0.562189390362
+    },
+    {
+      "ticker": "SKM",
+      "price": 38.515,
+      "wrapperValue": 14765422178.9,
+      "anthBasis": "estimate",
+      "oaiBasis": null,
+      "anthPct": 0.003,
+      "oaiPct": null,
+      "anthPer100": 19.6066185235,
+      "oaiPer100": 0,
+      "combinedPer100": 19.6066185235
+    },
+    {
+      "ticker": "ZM",
+      "price": 108.16,
+      "wrapperValue": 32064538188.8,
+      "anthBasis": "carrying-value-equiv",
+      "oaiBasis": null,
+      "anthPct": 0.00333394736842,
+      "oaiPct": null,
+      "anthPer100": 10.0336988844,
+      "oaiPer100": 0,
+      "combinedPer100": 10.0336988844
+    },
+    {
+      "ticker": "AGIX",
+      "price": 44.5,
+      "wrapperValue": 640800089,
+      "anthBasis": "filed-fv-equiv",
+      "oaiBasis": null,
+      "anthPct": 0.0000133948445596,
+      "oaiPct": null,
+      "anthPer100": 2.01716966366,
+      "oaiPer100": 0,
+      "combinedPer100": 2.01716966366
+    },
+    {
+      "ticker": "DXYZ",
+      "price": 32.84,
+      "wrapperValue": 1000658563.94,
+      "anthBasis": "filed-fv-equiv",
+      "oaiBasis": "filed-fv-equiv",
+      "anthPct": 0.000353664473684,
+      "oaiPct": 0.0000410558823529,
+      "anthPer100": 34.1061606231,
+      "oaiPer100": 3.49565906147,
+      "combinedPer100": 37.6018196845
+    },
+    {
+      "ticker": "ARKVX",
+      "price": 57.43,
+      "wrapperValue": 871119657,
+      "anthBasis": "filed-fv-equiv",
+      "oaiBasis": "filed-fv-equiv",
+      "anthPct": 0.0000607465078947,
+      "oaiPct": 0.0000851087183099,
+      "anthPer100": 6.72931435393,
+      "oaiPer100": 8.32407206258,
+      "combinedPer100": 15.0533864165
+    },
+    {
+      "ticker": "VCX",
+      "price": 39.78,
+      "wrapperValue": 1424010149.64,
+      "anthBasis": "filed-fv-equiv",
+      "oaiBasis": "filed-fv-equiv",
+      "anthPct": 0.000295836842105,
+      "oaiPct": 0.0000990152941176,
+      "anthPer100": 20.0477891751,
+      "oaiPer100": 5.92418745116,
+      "combinedPer100": 25.9719766262
+    }
+  ]
+}

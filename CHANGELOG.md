@@ -3,6 +3,15 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.7.0.0] - 2026-08-19
+
+### Added
+- Public data layer under `data/`: one JSON file per wrapper, `marks.json`, discriminated-union schema, methodology, and a MIT reference calculator (`npm run reference`) that reproduces `reference/expected-results.json` from `data/` with no app code.
+- `SECONDARY` marker on estimate/commitment legs that have no primary source. DXYZ OpenAI row expansion states that OAI I PPUs are not equity and are excluded.
+
+### Changed
+- Production `/ai` wrapper records load only through `lib/loadAiData.mjs`. Ticker-specific financial inputs no longer live in `lib/aiWrappers.mjs`.
+
 ## [0.6.0.0] - 2026-08-19
 
 ### Added

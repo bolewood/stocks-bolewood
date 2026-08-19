@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "1.0.0",
+  "methodologyVersion": "1.0.0",
+  "ticker": "ZM",
+  "yahooSymbol": "ZM",
+  "name": "Zoom Communications",
+  "wrapperType": "operating-company",
+  "denominatorType": "market-cap",
+  "confidence": "medium",
+  "note": "OpenAI is a product/API partner, not equity.",
+  "shareCount": {
+    "value": 296454680,
+    "asOf": "2026-07"
+  },
+  "security": {
+    "label": "Preferred",
+    "linear": true,
+    "footnote": "Anthropic preferred; 10-Q carrying value $1,266.9M as of 2026-04-30."
+  },
+  "sources": [
+    {
+      "fields": ["shareCount"],
+      "sourceClass": "primary",
+      "issuer": "Zoom Communications, Inc.",
+      "filingType": "10-Q",
+      "asOf": "2026-07"
+    }
+  ],
+  "anthropic": {
+    "basis": "carrying-value-equiv",
+    "holdingSecurity": "preferred",
+    "reportedCarryingValue": 1266900000,
+    "carryingValueAsOf": "2026-04-30",
+    "measurementCompanyMark": "anthropic-series-g",
+    "measurementMarkAsOf": "2026-02-12",
+    "confidence": "medium",
+    "sources": [
+      {
+        "fields": ["reportedCarryingValue"],
+        "sourceClass": "primary",
+        "issuer": "Zoom Communications, Inc.",
+        "filingType": "10-Q",
+        "documentDate": "2026-04-30",
+        "asOf": "2026-04-30",
+        "note": "$1,266.9M carrying value after +$46M, Anthropic preferred. Not disclosed ownership."
+      },
+      {
+        "fields": ["measurementCompanyMark"],
+        "sourceClass": "primary",
+        "issuer": "Zoom Communications, Inc.",
+        "filingType": "10-Q",
+        "documentDate": "2026-04-30",
+        "asOf": "2026-02-12",
+        "note": "Marked to the Feb 12, 2026 round (~$380B)."
+      }
+    ]
+  },
+  "openai": null
+}
