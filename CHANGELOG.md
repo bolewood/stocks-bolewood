@@ -3,6 +3,11 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.8.3.0] - 2026-08-20
+
+### Changed
+- `/dxyz` SpaceX row uses post-split shares (177,992 N-CSR × 5-for-1 = 889,960; split effective May 4, 2026 per SpaceX 424B4) and the live Yahoo SPCX quote from `/api/prices`.
+
 ## [0.8.2.0] - 2026-08-20
 
 ### Fixed
