@@ -3,6 +3,11 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.8.2.0] - 2026-08-20
+
+### Fixed
+- Price routes no longer fan out one Yahoo chart call per visitor. `/api/ai-prices` and `/api/prices` send `Cache-Control` so Vercel can serve the JSON from the CDN, coalesce in-flight refreshes, keep last-good quotes when Yahoo 429s, and retry `query2` after `query1` fails.
+
 ## [0.8.1.0] - 2026-08-20
 
 ### Added

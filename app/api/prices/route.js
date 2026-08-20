@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { fetchChartPrice } from "../../../lib/yahooQuote.mjs";
+import {
+  PRICE_CDN_HEADERS,
+  YAHOO_FETCH_CONCURRENCY,
+  createLiveQuoteCache,
+  mapLimit,
+} from "../../../lib/liveQuoteCache.mjs";
 
-// Fallback prices used when the upstream feed is unavailable
 const FALLBACK_PRICES = {
   ECHO: 88.58, // 2026-08-19
   SPCX: 138.62, // 2026-08-19
@@ -12,52 +17,66 @@ const FALLBACK_PRICES = {
 
 const TICKERS = ["ECHO", "SPCX", "DXYZ", "VCX", "BOT"];
 
-let cachedPrices = null;
-let cacheTimestamp = 0;
-const CACHE_TTL_MS = 60_000;
+const cache = createLiveQuoteCache();
 
-export async function GET() {
-  const now = Date.now();
-
-  if (cachedPrices && now - cacheTimestamp < CACHE_TTL_MS) {
-    return NextResponse.json({
-      prices: cachedPrices,
-      source: "cache",
-      asOf: new Date(cacheTimestamp).toISOString(),
-    });
-  }
-
-  const prices = { ...FALLBACK_PRICES };
-  let liveCount = 0;
-
-  await Promise.all(
-    TICKERS.map(async (ticker) => {
-      try {
-        const parsed = await fetchChartPrice(ticker);
-        if (!parsed) return;
-        prices[ticker] = parsed.price;
-        liveCount++;
-      } catch {
-        console.warn(`Price fetch failed for ${ticker}`);
-      }
-    })
-  );
-
+function withAlias(prices) {
   // Transition alias: pre-migration client bundles still read prices.SATS.
   // Remove once cached bundles from before 2026-07-10 have aged out.
-  prices.SATS = prices.ECHO;
+  return { ...prices, SATS: prices.ECHO };
+}
+
+async function fetchLive(prev) {
+  const prices = { ...(prev?.prices || FALLBACK_PRICES) };
+  let liveCount = 0;
+
+  await mapLimit(TICKERS, YAHOO_FETCH_CONCURRENCY, async (ticker) => {
+    try {
+      const parsed = await fetchChartPrice(ticker);
+      if (!parsed) return;
+      prices[ticker] = parsed.price;
+      liveCount++;
+    } catch {
+      console.warn(`Price fetch failed for ${ticker}`);
+    }
+  });
 
   const source =
-    liveCount === TICKERS.length ? "live" : liveCount > 0 ? "partial" : "fallback";
+    liveCount === TICKERS.length
+      ? "live"
+      : liveCount > 0
+        ? "partial"
+        : prev
+          ? "cache"
+          : "fallback";
 
-  if (liveCount > 0) {
-    cachedPrices = { ...prices };
-    cacheTimestamp = now;
-  }
+  return {
+    ok: liveCount > 0,
+    payload: {
+      prices: withAlias(prices),
+      source,
+      asOf: new Date().toISOString(),
+    },
+  };
+}
 
-  return NextResponse.json({
-    prices,
-    source,
-    asOf: new Date(now).toISOString(),
-  });
+export async function GET() {
+  const { payload, servedFromCache, reason } = await cache.load(
+    Date.now(),
+    fetchLive
+  );
+  const source = servedFromCache
+    ? reason === "last-good" || reason === "backoff"
+      ? "cache"
+      : payload.source === "live"
+        ? "cache"
+        : payload.source
+    : payload.source;
+  return NextResponse.json(
+    {
+      prices: payload.prices,
+      source,
+      asOf: payload.asOf,
+    },
+    { headers: PRICE_CDN_HEADERS }
+  );
 }
