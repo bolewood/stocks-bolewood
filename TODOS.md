@@ -44,6 +44,16 @@
 
 ## Infrastructure
 
+### NYSE holiday calendar for CLOSE vs STALE
+
+**What:** Teach the quote chip a static NYSE holiday list so closed weekdays show CLOSE rather than STALE.
+
+**Why:** Roughly nine weekdays a year the cash session is closed and a last-session print currently reads STALE (the chip only knows weekends and 16:00 ET). Logged from the v6 README brief; not worth fixing in that ship.
+
+**Effort:** S
+**Priority:** P3
+**Depends on:** None
+
 ### Wire ARKVX share count to a live ARK issuer feed
 
 **What:** `/api/arkvx-shares` currently returns the curated 21,613,728 (2026-07-31) print. Point it at ARK's published shares-outstanding figure on a schedule.

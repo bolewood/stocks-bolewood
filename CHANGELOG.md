@@ -3,6 +3,17 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.8.0.0] - 2026-08-20
+
+### Added
+- Public README for the open data layer: generated DXYZ worked example and disclosure sentence from `data/` (`npm run sync:readme`). Tests fail if either region is stale, or if `disclosure.asOf` is older than 30 days.
+
+### Changed
+- Site and README render the same `disclosureSentence()` string; disclosure age sits beside it on `/ai`, not inside it.
+
+### Removed
+- Root `dxyz_holdings.csv`. Scratch EDGAR fetch scripts moved to `scripts/scratch/`.
+
 ## [0.7.1.0] - 2026-08-19
 
 ### Changed
