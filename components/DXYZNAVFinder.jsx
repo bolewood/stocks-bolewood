@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   FILED,
   OTHER_NET_ASSETS,
@@ -15,6 +15,13 @@ import {
   computeAtmBridge,
 } from "../lib/dxyzAtm.mjs";
 import historySnapshot from "../app/api/dxyz-history/snapshot.json";
+import {
+  SPCX_FILED_SHARES_TOTAL,
+  SPCX_POST_SPLIT_SHARES,
+  SPCX_SPLIT,
+  SPCX_SPLIT_ADJUSTED_MARK_PPS,
+  SPCX_YAHOO_SYMBOL,
+} from "../lib/dxyzSpcx.mjs";
 
 // DXYZ NAV Finder
 // Source: Destiny Tech100 SEC filings (N-CSR 12/31/2025, NPORT-P 3/31/2026,
@@ -36,9 +43,10 @@ const pctValueK = (pct) => Math.round(DXYZ_PORTFOLIO_VALUE_K * pct / 100);
 const SHARE_DENOMINATED = [
   {
     name: "SpaceX",
-    shares_k: 177.992, // DXYZ SpaceX I (135,135) + MWAM VC SpaceX-II (42,857)
-    mark_pps_1231: 517.27, // 12.4% of March 31, 2026 portfolio value / known shares
-    note: "DXYZ SpaceX I + MWAM VC SpaceX-II SPVs",
+    yahooSymbol: SPCX_YAHOO_SYMBOL,
+    shares_k: SPCX_POST_SPLIT_SHARES / 1000,
+    mark_pps_1231: Number(SPCX_SPLIT_ADJUSTED_MARK_PPS.toFixed(2)),
+    note: `DXYZ SpaceX I + MWAM VC SpaceX-II · ${(SPCX_FILED_SHARES_TOTAL / 1000).toFixed(3)}K N-CSR shares × ${SPCX_SPLIT.ratio}-for-1 split (${SPCX_SPLIT.effective})`,
   },
   {
     name: "Revolut",
@@ -153,7 +161,9 @@ export default function DXYZNAVFinder() {
   );
   const [dxyzShares, setDxyzShares] = useState(DXYZ_SHARES_OUTSTANDING_M);
   const [dxyzPrice, setDxyzPrice] = useState(32.97);
+  const [liveSpcx, setLiveSpcx] = useState(null);
   const [priceSource, setPriceSource] = useState("default");
+  const spcxFollowLive = useRef(true);
 
   // ── ATM Issuance Bridge state ──────────────────────────────────────────
   // Ships with the checked-in snapshot so first paint is deterministic AND
@@ -184,6 +194,7 @@ export default function DXYZNAVFinder() {
   );
 
   const updatePPS = (name, val) => {
+    if (name === "SpaceX") spcxFollowLive.current = false;
     setPpsOverrides((prev) => ({ ...prev, [name]: val }));
     setActiveScenario(null);
   };
@@ -208,9 +219,15 @@ export default function DXYZNAVFinder() {
     window.history.replaceState({}, "", url);
   };
 
+  const spaceXMarkPps = () => liveSpcx ?? Number(SPCX_SPLIT_ADJUSTED_MARK_PPS.toFixed(2));
+
   const resetToMark = () => {
+    spcxFollowLive.current = true;
     setPpsOverrides(
-      SHARE_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: p.mark_pps_1231 }), {})
+      SHARE_DENOMINATED.reduce((acc, p) => ({
+        ...acc,
+        [p.name]: p.yahooSymbol === SPCX_YAHOO_SYMBOL ? spaceXMarkPps() : p.mark_pps_1231,
+      }), {})
     );
     setDollarMOICs(DOLLAR_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
     setOtherMOICs(OTHER_HOLDINGS.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
@@ -219,8 +236,9 @@ export default function DXYZNAVFinder() {
   };
 
   const applyAggressive = () => {
+    spcxFollowLive.current = false;
     setPpsOverrides({
-      "SpaceX": 710,
+      "SpaceX": 142, // 710 pre-split / 5
       "Revolut": 2000,
       "Discord": 400,
       "Klarna": 45,
@@ -248,8 +266,9 @@ export default function DXYZNAVFinder() {
   };
 
   const applyDream = () => {
+    spcxFollowLive.current = false;
     setPpsOverrides({
-      "SpaceX": 1420,
+      "SpaceX": 284, // 1420 pre-split / 5
       "Revolut": 3000,
       "Discord": 800,
       "Klarna": 90,
@@ -289,6 +308,12 @@ export default function DXYZNAVFinder() {
       .then((res) => res.json())
       .then((data) => {
         if (data.prices?.DXYZ) setDxyzPrice(data.prices.DXYZ);
+        if (data.prices?.SPCX) {
+          setLiveSpcx(data.prices.SPCX);
+          if (spcxFollowLive.current) {
+            setPpsOverrides((prev) => ({ ...prev, SpaceX: data.prices.SPCX }));
+          }
+        }
         setPriceSource(data.source || "fallback");
       })
       .catch(() => setPriceSource("fallback"));
@@ -752,7 +777,7 @@ export default function DXYZNAVFinder() {
           <h3 style={{ ...styles.sectionTitle, fontSize: "16px", margin: 0 }}>Note on Holding Data</h3>
         </div>
         <div style={styles.issuanceMeta}>
-          Because Destiny Tech100 acquires many of its largest stakes (e.g. Anthropic, OpenAI) through Special Purpose Vehicles (SPVs), exact per-share counts are not fully available in public EDGAR filings. The baseline reconciles to DXYZ&apos;s March 31, 2026 NPORT-P: $742.5M portfolio value plus $5.9M other net assets equals $748.36M filed net assets, which at the filed $24.56 NAV per share implies ~30.47M shares outstanding. Share-denominated holdings use December 31, 2025 counts where available and March 31, 2026 portfolio weights for the baseline marks. Issuance after March 31 is modeled separately in the ATM Issuance Bridge above and never restates these filed figures.
+          Because Destiny Tech100 acquires many of its largest stakes (e.g. Anthropic, OpenAI) through Special Purpose Vehicles (SPVs), exact per-share counts are not fully available in public EDGAR filings. The baseline reconciles to DXYZ&apos;s March 31, 2026 NPORT-P: $742.5M portfolio value plus $5.9M other net assets equals $748.36M filed net assets, which at the filed $24.56 NAV per share implies ~30.47M shares outstanding. Share-denominated holdings use December 31, 2025 counts where available and March 31, 2026 portfolio weights for the baseline marks. SpaceX (SPCX) is the exception: the N-CSR share count is scaled by SpaceX&apos;s 5-for-1 split (effective May 4, 2026, after the N-PORT and before the IPO) and the row is marked to the live Yahoo SPCX quote from the shared price API. Issuance after March 31 is modeled separately in the ATM Issuance Bridge above and never restates these filed figures.
         </div>
       </div>
 
@@ -778,7 +803,12 @@ export default function DXYZNAVFinder() {
             return (
               <div key={r.name} style={styles.tr} className="vcx-row">
                 <div style={{ ...styles.td, flex: "2.2" }}>
-                  <div style={styles.companyName}>{r.name}</div>
+                  <div style={styles.companyName}>
+                    {r.name}
+                    {r.yahooSymbol ? (
+                      <span style={styles.tickerTag}> {r.yahooSymbol}</span>
+                    ) : null}
+                  </div>
                   <div style={styles.companyNote}>{r.note}</div>
                 </div>
                 <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Shares (K)">
@@ -798,6 +828,11 @@ export default function DXYZNAVFinder() {
                       {delta > 0 ? "▲" : "▼"} {Math.abs(delta).toFixed(0)}% vs mark
                     </div>
                   )}
+                  {r.yahooSymbol === SPCX_YAHOO_SYMBOL &&
+                  liveSpcx != null &&
+                  Math.abs(Number(ppsOverrides[r.name]) - liveSpcx) < 0.005 ? (
+                    <div style={{ ...styles.delta, color: "#15803d" }}>● LIVE {r.yahooSymbol}</div>
+                  ) : null}
                 </div>
                 <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 500 }} data-label="Position Value">
                   {fmt$(r.positionValue)}
@@ -1001,6 +1036,7 @@ export default function DXYZNAVFinder() {
       <div style={styles.footer}>
         <div><strong>Changelog:</strong></div>
         <div style={{ marginBottom: "16px" }}>
+          • <strong>August 20, 2026</strong> — SpaceX Box 1 now uses post-split shares (177,992 N-CSR × 5-for-1 = 889,960) and the live Yahoo SPCX quote from the shared <code>/api/prices</code> cache. Split effective May 4, 2026 per SpaceX 424B4, after the March 31 N-PORT and before the June IPO.<br />
           • <strong>July 9, 2026 (calibration refinement)</strong> — Capped the inferred Apr 1–May 21 issuance proceeds at the original $1B ATM program&apos;s filed remainder (~$429M gross: $1B less $327.1M of 2025 sales per the N-CSR and $244.2M of Q1 sales per the 424B3), deriving a ~$39 effective average price instead of the $46.23 close-VWAP — the new $1B prospectus is dated May 26, so the old shelf was the only capacity available. Commission default recalibrated to 1.0% from the audited 2025 gross-vs-net (~0.95% effective). Sensitivity high bound raised to 16.4%, the filed Aug–Sep 2025 issuance pace. Added the next filed NAV checkpoint (June 30 N-PORT, due ~Aug 29).<br />
           • <strong>July 9, 2026</strong> — Added the ATM Issuance Bridge. Reconciled the March 31 baseline to filed net assets ($742.5M portfolio + $5.9M other net assets = $748.36M per the NPORT-P), correcting implied shares outstanding from 30.23M to ~30.47M. Added Filed Only / Calibrated Estimate / Custom modes that estimate post-March ATM share issuance: Apr 1–May 21 shares (~10.90M) inferred from the May 26 424B5 share count, post-May-26 issuance modeled daily from Yahoo price/volume history at a calibrated ~8.3% volume-participation rate, capped at $1B gross capacity, with no issuance on days at or below rolling NAV. Commission, participation, capacity, premium threshold, expense drag, and as-of date are adjustable. Every figure is labeled Filed, Inferred, or Estimated.<br />
           • <strong>June 15, 2026</strong> — Updated the baseline NAV math to reconcile with DXYZ&apos;s March 31, 2026 SEC disclosures: $24.56 NAV per share, approximately $742.5M of portfolio value, March 31 portfolio weights, and an implied 30.23M share count. Added real-time DXYZ market price fetching from Yahoo Finance via the shared price API.<br />
@@ -1010,6 +1046,7 @@ export default function DXYZNAVFinder() {
         <div>• <strong>Baseline NAV & Net Assets:</strong> $24.56 per share; $753.29M total assets, $4.93M liabilities, $748.36M net assets as of March 31, 2026, per the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000089418926016628/xslFormNPORT-P_X01/primary_doc.xml" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>March 31, 2026 NPORT-P</a> and <a href="https://www.sec.gov/Archives/edgar/data/1843974/000157587226000359/dxyz102_424b5.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>May 26, 2026 424B5</a>.</div>
         <div>• <strong>Portfolio Value:</strong> Approximately $742.5M as of March 31, 2026, per the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000157587226000288/dxyz100_424b3.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>May 12, 2026 424B3 portfolio supplement</a>.</div>
         <div>• <strong>Share Counts:</strong> Extracted from the December 31, 2025 Schedule of Investments within the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000121390026025304/ea0276106-01_ncsr.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSR filed March 10, 2026</a> where available. For holdings where March 31 only discloses portfolio percentages, baseline value is inferred from the filed $742.5M portfolio value.</div>
+        <div>• <strong>SpaceX (SPCX):</strong> Filed 177,992 shares (DXYZ SpaceX I 135,135 + MWAM VC SpaceX-II 42,857) from the N-CSR. Multiplied by 5 for SpaceX&apos;s five-for-one split of Class A, B, and C common stock, effective May 4, 2026 (SpaceX <a href="https://www.sec.gov/Archives/edgar/data/1181412/000162828026042639/spaceexplorationtechnologi.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>424B4</a>; also the <a href="https://www.sec.gov/Archives/edgar/data/1181412/000162828026052535/spcx-20260630.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>10-Q for the quarter ended June 30, 2026</a>). The split sits after DXYZ&apos;s March 31 N-PORT and before the June IPO. The row is marked to the live Yahoo SPCX quote via <code>/api/prices</code> (same cache as the DXYZ market price). The Snowpoint SpaceX SPV in Box 2 has no disclosed share count and stays on MOIC.</div>
         <div>• <strong>Outstanding Shares:</strong> Defaults to ~30.47M, implied by $748.36M filed net assets divided by the filed $24.56 NAV per share (inferred — the NPORT-P does not state a share count directly).</div>
         <div>• <strong>Prior ATM Program:</strong> Original $1B shelf (File 333-278734) effective July 15, 2025; Jefferies Sales Agreement dated August 8, 2025. Sold {PRIOR_ATM.sold2025.shares.toLocaleString("en-US")} shares at ${PRIOR_ATM.sold2025.wavgPrice} weighted average through December 31, 2025 (${(PRIOR_ATM.sold2025.netProceeds / 1e6).toFixed(1)}M net; ~0.95% effective commission) per the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000121390026025304/ea0276106-01_ncsr.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSR</a>, plus Q1 2026 sales of {Q1_ATM.shares.toLocaleString("en-US")} shares at ${Q1_ATM.wavgPrice} weighted average (~{fmt$(Q1_ATM.netProceeds)} net; already reflected in the March 31 baseline) per the 424B3 — leaving ~{fmt$(priorShelfRemainingApr1())} of gross capacity entering April, which caps the inferred Apr–May proceeds. New $1B gross-capacity program through Jefferies (commission up to 3.0% of gross sales price) per the 424B5, which discloses up to 57,591,678 shares outstanding <em>after</em> a full offering at the assumed $61.66 price — implying ~41.37M pre-offering shares and thus ~10.90M shares issued April 1–May 21 under the prior program (inferred).</div>
         <div>• <strong>Post-May-26 Issuance (estimated):</strong> Modeled daily as a fixed share of Yahoo Finance trading volume (calibrated ~8.3%), issuing only on days above rolling pro forma NAV, until gross capacity is exhausted. Estimated, not company reported.</div>
@@ -1259,6 +1296,13 @@ const styles = {
     fontWeight: 600,
     fontSize: "15px",
     marginBottom: "4px",
+  },
+  tickerTag: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: "11px",
+    fontWeight: 600,
+    letterSpacing: "0.06em",
+    color: "#78716c",
   },
   companyNote: {
     fontSize: "12px",
