@@ -45,7 +45,8 @@ import {
 } from "../lib/aiFundBasis.mjs";
 import { FILED, completedTradingRows } from "../lib/dxyzAtm.mjs";
 import {
-  disclosureBannerText,
+  disclosureAgeLabel,
+  disclosureSentence,
   isHeldTicker,
 } from "../lib/disclosure.mjs";
 import {
@@ -373,7 +374,15 @@ export default function AIPerDollarFinder() {
         Market value for listed securities; total net assets for unlisted
         funds. Live prices; curated denominator inputs. Not per share.
       </p>
-      <p style={styles.disclosure}>{disclosureBannerText(disclosure)}</p>
+      <p style={styles.disclosure}>
+        {disclosureSentence(disclosure)}
+        {disclosureAgeLabel(disclosure.asOf) ? (
+          <span style={styles.disclosureAge}>
+            {" "}
+            ({disclosureAgeLabel(disclosure.asOf)})
+          </span>
+        ) : null}
+      </p>
 
       <div style={styles.badgeRow}>
         {priceLoaded ? (
@@ -609,7 +618,7 @@ export default function AIPerDollarFinder() {
                         <span style={styles.heldSep}>·</span>
                         <span
                           style={styles.heldPill}
-                          title={disclosureBannerText(disclosure)}
+                          title={disclosureSentence(disclosure)}
                         >
                           HELD
                         </span>
@@ -1059,6 +1068,9 @@ const styles = {
     color: "#44403c",
     maxWidth: "720px",
     margin: "0 0 16px",
+  },
+  disclosureAge: {
+    color: "#78716c",
   },
   badgeRow: {
     display: "flex",
