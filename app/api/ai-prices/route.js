@@ -8,9 +8,14 @@ import {
   classifyQuote,
   worstPriceState,
 } from "../../../lib/priceState.mjs";
+import {
+  PRICE_CDN_HEADERS,
+  YAHOO_FETCH_CONCURRENCY,
+  createLiveQuoteCache,
+  mapLimit,
+} from "../../../lib/liveQuoteCache.mjs";
 
-let cache = null;
-const CACHE_TTL_MS = 60_000;
+const cache = createLiveQuoteCache();
 
 function fallbackQuotes() {
   const quotes = {};
@@ -19,90 +24,74 @@ function fallbackQuotes() {
       price: FALLBACK_PRICES[ticker],
       quoteAsOf: null,
       isFallback: true,
-      state: "unavailable",
     };
   }
   return quotes;
 }
 
-export async function GET() {
-  const now = Date.now();
-  const servedFromCache = !!(cache && now - cache.cacheWrittenAt < CACHE_TTL_MS);
-
-  if (servedFromCache) {
-    const quotes = {};
-    for (const ticker of WRAPPER_TICKERS) {
-      const q = cache.quotes[ticker];
-      quotes[ticker] = {
-        ...q,
-        state: classifyQuote(
-          {
-            quoteAsOf: q.quoteAsOf,
-            servedFromCache: true,
-            isFallback: q.isFallback,
-          },
-          now
-        ),
-      };
-    }
-    const states = WRAPPER_TICKERS.map((t) => quotes[t].state);
-    return NextResponse.json({
-      prices: Object.fromEntries(
-        WRAPPER_TICKERS.map((t) => [t, quotes[t].price])
+function jsonBody(payload, servedFromCache, now) {
+  const quotes = {};
+  for (const ticker of WRAPPER_TICKERS) {
+    const q = payload.quotes[ticker] || fallbackQuotes()[ticker];
+    quotes[ticker] = {
+      ...q,
+      state: classifyQuote(
+        {
+          quoteAsOf: q.quoteAsOf,
+          servedFromCache,
+          isFallback: q.isFallback,
+        },
+        now
       ),
-      quotes,
-      source: worstPriceState(states),
-      fetchedAt: cache.fetchedAt,
-      cacheWrittenAt: cache.cacheWrittenAt,
-      asOf: cache.fetchedAt,
-    });
+    };
   }
-
-  const fetchedAt = now;
-  const quotes = fallbackQuotes();
-  let liveCount = 0;
-
-  await Promise.all(
-    WRAPPER_TICKERS.map(async (ticker) => {
-      try {
-        const parsed = await fetchChartPrice(ticker);
-        if (!parsed) return;
-        quotes[ticker] = {
-          price: parsed.price,
-          quoteAsOf: parsed.quoteAsOf,
-          isFallback: false,
-          state: classifyQuote(
-            {
-              quoteAsOf: parsed.quoteAsOf,
-              servedFromCache: false,
-              isFallback: false,
-            },
-            now
-          ),
-        };
-        liveCount++;
-      } catch {
-        console.warn(`AI wrapper price fetch failed for ${ticker}`);
-      }
-    })
-  );
-
   const states = WRAPPER_TICKERS.map((t) => quotes[t].state);
-  const source = worstPriceState(states);
-  const cacheWrittenAt = liveCount > 0 ? now : cache?.cacheWrittenAt || null;
-
-  if (liveCount > 0) {
-    cache = { quotes: { ...quotes }, fetchedAt, cacheWrittenAt };
-  }
-
-  return NextResponse.json({
+  return {
     prices: Object.fromEntries(
       WRAPPER_TICKERS.map((t) => [t, quotes[t].price])
     ),
     quotes,
-    source,
-    fetchedAt,
-    cacheWrittenAt,
-    asOf: fetchedAt,
+    source: worstPriceState(states),
+    fetchedAt: payload.fetchedAt,
+    cacheWrittenAt: payload.cacheWrittenAt,
+    asOf: payload.fetchedAt,
+  };
+}
+
+async function fetchLive(prev) {
+  const now = Date.now();
+  const quotes = { ...(prev?.quotes || fallbackQuotes()) };
+  let liveCount = 0;
+
+  await mapLimit(WRAPPER_TICKERS, YAHOO_FETCH_CONCURRENCY, async (ticker) => {
+    try {
+      const parsed = await fetchChartPrice(ticker);
+      if (!parsed) return;
+      quotes[ticker] = {
+        price: parsed.price,
+        quoteAsOf: parsed.quoteAsOf,
+        isFallback: false,
+      };
+      liveCount++;
+    } catch {
+      console.warn(`AI wrapper price fetch failed for ${ticker}`);
+    }
+  });
+
+  return {
+    ok: liveCount > 0,
+    payload: {
+      quotes,
+      fetchedAt: now,
+      cacheWrittenAt: liveCount > 0 ? now : prev?.cacheWrittenAt || null,
+    },
+  };
+}
+
+export async function GET() {
+  const now = Date.now();
+  const { payload, servedFromCache } = await cache.load(now, fetchLive);
+  return NextResponse.json(jsonBody(payload, servedFromCache, now), {
+    headers: PRICE_CDN_HEADERS,
   });
 }
