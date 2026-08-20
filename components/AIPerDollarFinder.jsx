@@ -735,6 +735,8 @@ export default function AIPerDollarFinder() {
         stakes and commitments do not scale linearly with IPO valuation.
       </p>
 
+      <OpenDataCallout />
+
       <section style={styles.notes}>
         <h2 style={styles.notesTitle}>Sources & footnotes</h2>
         <p style={styles.caption}>
@@ -934,6 +936,62 @@ function RowDetail({
         <div style={styles.asOf}>{row.wrapper.navNote.body}</div>
       ) : null}
     </div>
+  );
+}
+
+const DATA_REPO_URL = "https://github.com/bolewood/stocks-bolewood";
+
+export const OPEN_DATA_AUDIT_PROMPT = `Check https://github.com/bolewood/stocks-bolewood: read data/METHODOLOGY.md and data/wrappers/, then run npm run reference.
+Confirm every published Anthropic/OpenAI percentage is derived (not stored), each record has a basis, source and as-of date, and stocks.bolewood.com/ai matches reference/expected-results.json at the same inputs. Report any unpublished stake, mixed Filed/Estimated inputs, or unreproducible figure.`;
+
+function OpenDataCallout() {
+  const [copied, setCopied] = useState(false);
+  const copyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(OPEN_DATA_AUDIT_PROMPT);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  };
+  return (
+    <section style={styles.openData} aria-labelledby="open-data-heading">
+      <h2 id="open-data-heading" style={styles.openDataTitle}>
+        Underlying Open Source Data
+      </h2>
+      <p style={styles.openDataBody}>
+        Every figure on this page is typed by the kind of evidence behind it,
+        carries its own as-of date, and cites a source. Ownership percentages
+        are derived from filings — never stored as a hand-authored stake. Where
+        no primary source supports a percentage, none is published. The
+        calculator is one consumer of a public dataset; you can reproduce every
+        published figure without running the site.
+      </p>
+      <p style={styles.openDataBody}>
+        Schema, methodology and a standalone calculator live in{" "}
+        <a
+          href={DATA_REPO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={styles.openDataLink}
+        >
+          github.com/bolewood/stocks-bolewood
+        </a>
+        . Cite a dated tag rather than{" "}
+        <span style={styles.openDataMono}>main</span>, so the numbers behind a
+        reference do not move.
+      </p>
+      <p style={styles.openDataKicker}>
+        Two-line prompt — paste into an LLM to audit the dataset:
+      </p>
+      <div style={styles.promptRow}>
+        <pre style={styles.prompt}>{OPEN_DATA_AUDIT_PROMPT}</pre>
+        <button type="button" onClick={copyPrompt} style={styles.copyBtn}>
+          {copied ? "Copied" : "Copy prompt"}
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -1500,6 +1558,63 @@ const styles = {
     lineHeight: 1.55,
     marginTop: "6px",
     maxWidth: "280px",
+  },
+  openData: {
+    marginTop: "36px",
+    padding: "22px 24px 24px",
+    background: "#fde68a",
+    border: "2px solid #f59e0b",
+    maxWidth: "820px",
+  },
+  openDataTitle: {
+    fontSize: "22px",
+    lineHeight: 1.2,
+    fontWeight: 600,
+    color: "#1c1917",
+    marginBottom: "10px",
+  },
+  openDataBody: {
+    fontSize: "15px",
+    lineHeight: 1.55,
+    color: "#1c1917",
+    marginBottom: "10px",
+  },
+  openDataKicker: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: "11px",
+    letterSpacing: "0.04em",
+    color: "#78350f",
+    margin: "14px 0 8px",
+    fontWeight: 600,
+  },
+  openDataLink: {
+    color: "#9a3412",
+    textDecoration: "underline",
+    textUnderlineOffset: "2px",
+    fontWeight: 600,
+  },
+  openDataMono: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: "13px",
+  },
+  promptRow: {
+    display: "flex",
+    gap: "10px",
+    alignItems: "flex-start",
+    flexWrap: "wrap",
+  },
+  prompt: {
+    flex: "1 1 280px",
+    margin: 0,
+    padding: "12px 14px",
+    background: "#fffbeb",
+    border: "1px solid #d97706",
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: "12px",
+    lineHeight: 1.5,
+    color: "#1c1917",
+    whiteSpace: "pre-wrap",
+    overflowWrap: "anywhere",
   },
   notes: {
     marginTop: "48px",

@@ -3,6 +3,11 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.8.1.0] - 2026-08-20
+
+### Added
+- `/ai` call-out above Sources & footnotes for the public dataset: GitHub link and a two-line LLM audit prompt.
+
 ## [0.8.0.0] - 2026-08-20
 
 ### Added

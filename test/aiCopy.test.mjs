@@ -35,3 +35,21 @@ test("subtitle says estimated exposure of wrapper value, not market cap", () => 
   assert.doesNotMatch(page, /wrapper market cap/);
   assert.doesNotMatch(page, /curated share counts/);
 });
+
+test("open-data callout sits above Sources & footnotes with a two-line audit prompt", () => {
+  const calloutAt = finder.indexOf("<OpenDataCallout />");
+  const sourcesAt = finder.indexOf("Sources & footnotes");
+  assert.ok(calloutAt >= 0 && sourcesAt > calloutAt);
+  assert.match(finder, /Underlying Open Source Data/);
+  assert.match(finder, /github\.com\/bolewood\/stocks-bolewood/);
+  const promptMatch = finder.match(
+    /export const OPEN_DATA_AUDIT_PROMPT = `([^`]+)`/
+  );
+  assert.ok(promptMatch, "OPEN_DATA_AUDIT_PROMPT is a template literal");
+  const lines = promptMatch[1].split("\n");
+  assert.equal(lines.length, 2);
+  assert.match(lines[0], /github\.com\/bolewood\/stocks-bolewood/);
+  assert.match(lines[0], /npm run reference/);
+  assert.match(lines[1], /derived \(not stored\)/);
+  assert.match(lines[1], /expected-results\.json/);
+});
