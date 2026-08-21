@@ -7,6 +7,8 @@ import {
   mapLimit,
 } from "../../../lib/liveQuoteCache.mjs";
 
+export const dynamic = "force-dynamic";
+
 const FALLBACK_PRICES = {
   ECHO: 88.58, // 2026-08-19
   SPCX: 138.62, // 2026-08-19

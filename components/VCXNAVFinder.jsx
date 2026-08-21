@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import PriceBadge from "./PriceBadge";
+import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 
 // VCX NAV Finder
 // Source: Fundrise Innovation Fund (f.k.a. Growth Tech Fund) Schedule of Investments, 12/31/2025
@@ -93,13 +94,13 @@ export default function VCXNAVFinder() {
   const [priceSource, setPriceSource] = useState("default");
 
   useEffect(() => {
-    fetch("/api/prices")
-      .then((res) => res.json())
-      .then((data) => {
+    return startJsonPoll("/api/prices", {
+      onData: (data) => {
         if (data.prices?.VCX) setVcxPrice(data.prices.VCX);
         setPriceSource(data.source || "fallback");
-      })
-      .catch(() => setPriceSource("fallback"));
+      },
+      onError: () => setPriceSource("fallback"),
+    });
   }, []);
 
   // MOIC overrides for SPV/SAFE positions (Box 2) and other holdings (Box 3).

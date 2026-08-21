@@ -22,6 +22,7 @@ import {
   SPCX_SPLIT_ADJUSTED_MARK_PPS,
   SPCX_YAHOO_SYMBOL,
 } from "../lib/dxyzSpcx.mjs";
+import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 
 // DXYZ NAV Finder
 // Source: Destiny Tech100 SEC filings (N-CSR 12/31/2025, NPORT-P 3/31/2026,
@@ -303,10 +304,11 @@ export default function DXYZNAVFinder() {
     } else if (scenario === "dream") {
       applyDream();
     }
+  }, []);
 
-    fetch("/api/prices")
-      .then((res) => res.json())
-      .then((data) => {
+  useEffect(() => {
+    return startJsonPoll("/api/prices", {
+      onData: (data) => {
         if (data.prices?.DXYZ) setDxyzPrice(data.prices.DXYZ);
         if (data.prices?.SPCX) {
           setLiveSpcx(data.prices.SPCX);
@@ -315,9 +317,12 @@ export default function DXYZNAVFinder() {
           }
         }
         setPriceSource(data.source || "fallback");
-      })
-      .catch(() => setPriceSource("fallback"));
+      },
+      onError: () => setPriceSource("fallback"),
+    });
+  }, []);
 
+  useEffect(() => {
     // Client-side only: drop the in-progress session from the baked-in
     // snapshot (the route applies the same filter to what it serves).
     // Post-close, today's completed bar is kept.
@@ -336,7 +341,7 @@ export default function DXYZNAVFinder() {
       )
     );
 
-    fetch("/api/dxyz-history")
+    fetch("/api/dxyz-history", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data.rows) && data.rows.length > 0) {

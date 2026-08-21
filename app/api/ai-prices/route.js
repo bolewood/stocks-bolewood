@@ -15,6 +15,8 @@ import {
   mapLimit,
 } from "../../../lib/liveQuoteCache.mjs";
 
+export const dynamic = "force-dynamic";
+
 const cache = createLiveQuoteCache();
 
 function fallbackQuotes() {

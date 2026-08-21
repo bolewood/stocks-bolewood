@@ -8,6 +8,8 @@ import {
   isCashSessionOpen,
   lastCompletedSession,
   oldestQuoteAsOf,
+  newestQuoteAsOf,
+  chipQuoteAsOf,
   pagePriceState,
   priceChipLabel,
   worstPriceState,
@@ -36,7 +38,7 @@ test("price thresholds are explicit: live < 15m; RTH 9:30–16:00 ET", () => {
   assert.equal(PRICE_THRESHOLDS.rthCloseMinutes, 16 * 60);
 });
 
-test("while the cash session is open: LIVE, CACHED, STALE, UNAVAILABLE", () => {
+test("while the cash session is open: LIVE, CACHED, UNAVAILABLE; same-day lag is CACHED", () => {
   assert.equal(
     classifyQuote(
       { quoteAsOf: rthNow - 60_000, servedFromCache: false, isFallback: false },
@@ -60,7 +62,7 @@ test("while the cash session is open: LIVE, CACHED, STALE, UNAVAILABLE", () => {
       },
       rthNow
     ),
-    "stale"
+    "cached"
   );
   assert.equal(
     classifyQuote(
@@ -71,7 +73,7 @@ test("while the cash session is open: LIVE, CACHED, STALE, UNAVAILABLE", () => {
       },
       rthNow
     ),
-    "stale"
+    "cached"
   );
   assert.equal(
     classifyQuote({ quoteAsOf: null, servedFromCache: false }, rthNow),
@@ -105,7 +107,15 @@ test("after the close and on the weekend the last session print is CLOSE, not ST
   assert.doesNotMatch(label, /STALE/);
 });
 
-test("STALE is reserved for a lagging quote while the market is open", () => {
+test("STALE is a prior-day print while the cash session is open", () => {
+  const fridayRth = etCivilToUtc(2026, 8, 21, 11, 20);
+  assert.equal(
+    classifyQuote(
+      { quoteAsOf: closeBell, servedFromCache: false, isFallback: false },
+      fridayRth
+    ),
+    "stale"
+  );
   assert.equal(
     classifyQuote(
       { quoteAsOf: fridayClose, servedFromCache: false, isFallback: false },
@@ -130,7 +140,7 @@ test("page-level state is the worst material row and cannot be LIVE if any row i
   const tickers = ["AMZN", "GOOG", "DXYZ"];
   const live = { quoteAsOf: rthNow - 30_000, isFallback: false, state: "live" };
   const stale = {
-    quoteAsOf: rthNow - 2 * 60 * 60 * 1000,
+    quoteAsOf: etCivilToUtc(2026, 8, 18, 16, 0),
     isFallback: false,
     state: "stale",
   };
@@ -179,13 +189,16 @@ test("price chip shows an absolute dated quoteAsOf, not a bare clock", () => {
 test("oldestQuoteAsOf is the earliest struck time among material rows", () => {
   const a = rthNow - 10_000;
   const b = rthNow - 120_000;
-  assert.equal(
-    oldestQuoteAsOf(
-      { AMZN: { quoteAsOf: a }, GOOG: { quoteAsOf: b }, DXYZ: { quoteAsOf: null } },
-      ["AMZN", "GOOG", "DXYZ"]
-    ),
-    b
-  );
+  const quotes = {
+    AMZN: { quoteAsOf: a },
+    GOOG: { quoteAsOf: b },
+    DXYZ: { quoteAsOf: null },
+  };
+  const tickers = ["AMZN", "GOOG", "DXYZ"];
+  assert.equal(oldestQuoteAsOf(quotes, tickers), b);
+  assert.equal(newestQuoteAsOf(quotes, tickers), a);
+  assert.equal(chipQuoteAsOf("cached", quotes, tickers), a);
+  assert.equal(chipQuoteAsOf("stale", quotes, tickers), b);
 });
 
 test("last completed session on Wednesday evening is Wednesday 9:30–16:00 ET", () => {

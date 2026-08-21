@@ -53,3 +53,7 @@ test("open-data callout sits above Sources & footnotes with a two-line audit pro
   assert.match(lines[1], /derived \(not stored\)/);
   assert.match(lines[1], /expected-results\.json/);
 });
+
+test("/ai polls Yahoo-backed prices with cache: no-store", () => {
+  assert.match(finder, /startJsonPoll\("\/api\/ai-prices"/);
+});
