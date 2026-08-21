@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import PriceBadge from "./PriceBadge";
+import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 
 // BOT NAV Finder
 // Source: RoboStrategy, Inc. N-CSRS (Semi-Annual Report for period ending Feb 28, 2026)
@@ -109,13 +110,13 @@ export default function BOTNAVFinder() {
   );
 
   useEffect(() => {
-    fetch("/api/prices")
-      .then((res) => res.json())
-      .then((data) => {
+    return startJsonPoll("/api/prices", {
+      onData: (data) => {
         if (data.prices?.BOT) setBotPrice(data.prices.BOT);
         setPriceSource(data.source || "fallback");
-      })
-      .catch(() => setPriceSource("fallback"));
+      },
+      onError: () => setPriceSource("fallback"),
+    });
   }, []);
 
   const updatePPS = (name, val) => {

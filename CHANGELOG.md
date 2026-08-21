@@ -3,6 +3,11 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.8.4.0] - 2026-08-21
+
+### Fixed
+- `/ai` price chip no longer sticks on a prior session's close. Next was overwriting `Cache-Control` to bare `public`, so browsers kept Wednesday's JSON; clients now fetch `no-store` and poll every 60s (and on tab focus). The CDN TTL lives on `CDN-Cache-Control`. STALE is a prior-ET-day print while the tape is open — same-day delayed quotes (OTC, interval NAV) stay CACHED.
+
 ## [0.8.3.0] - 2026-08-20
 
 ### Changed

@@ -92,9 +92,10 @@ test("failed fetch without last-good returns the fallback payload", async () => 
   assert.equal(result.payload.n, "fallback");
 });
 
-test("price routes send a CDN cache header so Vercel absorbs traffic", () => {
-  assert.match(PRICE_CDN_HEADERS["Cache-Control"], /s-maxage=60/);
-  assert.match(PRICE_CDN_HEADERS["Cache-Control"], /stale-while-revalidate/);
+test("price routes tell browsers not to cache; Vercel edge still has a 60s CDN TTL", () => {
+  assert.match(PRICE_CDN_HEADERS["Cache-Control"], /no-store/);
+  assert.match(PRICE_CDN_HEADERS["CDN-Cache-Control"], /s-maxage=60/);
+  assert.match(PRICE_CDN_HEADERS["Vercel-CDN-Cache-Control"], /s-maxage=60/);
 });
 
 test("fetchChartPrice falls back to query2 after query1 429", async () => {

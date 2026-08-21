@@ -51,11 +51,12 @@ import {
 } from "../lib/disclosure.mjs";
 import {
   formatQuoteEt,
-  oldestQuoteAsOf,
+  chipQuoteAsOf,
   pagePriceState,
   priceChipLabel,
   priceChipTitle,
 } from "../lib/priceState.mjs";
+import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 import disclosure from "../data/disclosure.json";
 import historySnapshot from "../app/api/dxyz-history/snapshot.json";
 
@@ -202,9 +203,8 @@ export default function AIPerDollarFinder() {
   }, [anthB, oaiB, dilutionPct, sortKey, basis, deploy]);
 
   useEffect(() => {
-    fetch("/api/ai-prices")
-      .then((res) => res.json())
-      .then((data) => {
+    return startJsonPoll("/api/ai-prices", {
+      onData: (data) => {
         if (data.prices) setPrices({ ...FALLBACK_PRICES, ...data.prices });
         if (data.quotes) setQuotes(data.quotes);
         setPriceFeed({
@@ -213,16 +213,23 @@ export default function AIPerDollarFinder() {
           cacheWrittenAt: data.cacheWrittenAt || null,
         });
         setPriceLoaded(true);
-      })
-      .catch(() => {
-        setPriceFeed({
-          source: "unavailable",
-          fetchedAt: null,
-          cacheWrittenAt: null,
-        });
+      },
+      onError: () => {
         setPriceLoaded(true);
-      });
+        setPriceFeed((prev) =>
+          prev.fetchedAt
+            ? prev
+            : {
+                source: "unavailable",
+                fetchedAt: null,
+                cacheWrittenAt: null,
+              }
+        );
+      },
+    });
+  }, []);
 
+  useEffect(() => {
     const nyParts = new Intl.DateTimeFormat("en-CA", {
       timeZone: "America/New_York",
       hour12: false,
@@ -240,7 +247,7 @@ export default function AIPerDollarFinder() {
         parseInt(nyGet("hour"), 10) * 60 + parseInt(nyGet("minute"), 10)
       )
     );
-    fetch("/api/dxyz-history")
+    fetch("/api/dxyz-history", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data.rows) && data.rows.length > 0) {
@@ -347,7 +354,7 @@ export default function AIPerDollarFinder() {
   };
 
   const quoteState = pagePriceState(quotes, WRAPPER_TICKERS);
-  const quoteAsOf = oldestQuoteAsOf(quotes, WRAPPER_TICKERS);
+  const quoteAsOf = chipQuoteAsOf(quoteState, quotes, WRAPPER_TICKERS);
   const chipLabel = priceChipLabel(quoteState, quoteAsOf);
   const chipTitle = [
     priceChipTitle(quoteState, quoteAsOf),

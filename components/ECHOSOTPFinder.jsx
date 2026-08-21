@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
+import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 
 // ECHO SOTP / SpaceX Proxy Calculator (ticker changed from SATS on 6/24/26)
 // Sources: SpaceX Form S-1 F-26, EchoStar SEC filings (10-K, 10-Q), Barron's (6/12/26, 7/8/26)
@@ -206,21 +207,26 @@ export default function ECHOSOTPFinder() {
     } else {
       applyBase();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    // Fetch real-time prices for ECHO + SPCX
-    const isBaseScenario = !scenario || scenario === "base";
-    fetch("/api/prices")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.prices?.ECHO) { setEchoPrice(data.prices.ECHO); setLiveEcho(data.prices.ECHO); }
-        // Update SPCX slider to live price only on the default (base) scenario.
-        // Other scenarios (bull=$175, moon=$200, etc.) keep their hypothetical SPCX prices.
+  useEffect(() => {
+    return startJsonPoll("/api/prices", {
+      onData: (data) => {
+        if (data.prices?.ECHO) {
+          setEchoPrice(data.prices.ECHO);
+          setLiveEcho(data.prices.ECHO);
+        }
         if (data.prices?.SPCX) setLiveSpcx(data.prices.SPCX);
+        const scenario = new URLSearchParams(window.location.search).get(
+          "scenario"
+        );
+        const isBaseScenario = !scenario || scenario === "base";
         if (isBaseScenario && data.prices?.SPCX) setSpcxPrice(data.prices.SPCX);
         setPriceSource(data.source || "fallback");
-      })
-      .catch(() => setPriceSource("fallback"));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      },
+      onError: () => setPriceSource("fallback"),
+    });
   }, []);
 
   const handleManualEdit = () => {
