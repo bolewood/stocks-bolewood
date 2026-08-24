@@ -32,7 +32,7 @@ const tools = [
     name: "ECHO SOTP Finder",
     status: "live",
     description:
-      "Sum-of-the-parts & SpaceX proxy calculator for EchoStar Corp (NASDAQ: ECHO, formerly SATS). Visualize the SpaceX re-rate upside against spectrum tax liabilities and the DISH DBS Chapter 11 restructuring.",
+      "Sum-of-the-parts and SpaceX proxy for EchoStar (NASDAQ: ECHO). AT&T closed; Hughes US is in Chapter 11; remaining swing is 261.8M SPCX shares due ~Nov 2027.",
     tag: "NASDAQ: ECHO",
   },
   {

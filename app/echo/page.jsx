@@ -5,11 +5,11 @@ import ECHOSOTPFinder from "@/components/ECHOSOTPFinder";
 export const metadata = {
   title: "ECHO SOTP Finder",
   description:
-    "Sum-of-the-parts and SpaceX proxy calculator for EchoStar (NASDAQ: ECHO, formerly SATS). Visualize the SpaceX re-rate upside against spectrum tax liabilities and the DISH DBS Chapter 11 restructuring.",
+    "Sum-of-the-parts and SpaceX proxy calculator for EchoStar (NASDAQ: ECHO, formerly SATS). AT&T closed July 28, 2026; Hughes US is in Chapter 11; remaining swing is 261.8M SPCX shares delivered ~Nov 30, 2027.",
   openGraph: {
     title: "ECHO SOTP Finder",
     description:
-      "Sum-of-the-parts and SpaceX proxy calculator for EchoStar (NASDAQ: ECHO, formerly SATS).",
+      "EchoStar SOTP after the AT&T close and Hughes Chapter 11. Live SPCX marks a 261.8M share delivery ~Nov 30, 2027.",
     images: ["/og-default.png"],
     url: "https://stocks.bolewood.com/echo",
   },

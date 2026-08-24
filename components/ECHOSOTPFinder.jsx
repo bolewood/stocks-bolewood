@@ -2,16 +2,40 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { startJsonPoll } from "../lib/pollLivePrices.mjs";
+import {
+  DEFAULT_ANNUAL_DISCOUNT_RATE,
+  DEFAULT_BOOST_B,
+  DEFAULT_CLOSE_PROBABILITY,
+  DEFAULT_DBS_B,
+  DEFAULT_DISH_CURED,
+  DEFAULT_DISTRESS_HAIRCUT,
+  DEFAULT_HUGHES_B,
+  DEFAULT_LIQUIDITY_DISCOUNT,
+  DEFAULT_NET_CASH_B,
+  DEFAULT_NOLS_B,
+  DEFAULT_REMAINING_SPECTRUM_B,
+  DEFAULT_TAX_BASIS_B,
+  DEFAULT_TAX_RATE,
+  DEFAULT_TOWER_LEASE_B,
+  ECHO_SHARES_BASIC_M,
+  ECHO_SHARES_DILUTED_M,
+  ATT_PROCEEDS_B,
+  FCC_TRUST_RESTRICTED_B,
+  POST_ATT_GROSS_CASH_B,
+  PRE_DEAL_NET_DEBT_B,
+  SPACEX_FIXED_SHARES_M,
+  SPACEX_PROCEEDS_B,
+  SPECTRUM_PROCEEDS_B,
+  calculateEchoSotp,
+} from "../lib/echoSotp.mjs";
 
-// ECHO SOTP / SpaceX Proxy Calculator (ticker changed from SATS on 6/24/26)
-// Sources: SpaceX Form S-1 F-26, EchoStar SEC filings (10-K, 10-Q), Barron's (6/12/26, 7/8/26)
+// ECHO SOTP / SpaceX proxy. Ticker SATS → ECHO on 2026-06-24.
+// Live SPCX marks a contractual 261.8M block delivered ~2027-11-30.
 
 const DEFAULT_ECHO_PRICE = 88.58; // 2026-08-19; live-fetched on load
 const DEFAULT_SPCX_PRICE = 138.62; // 2026-08-19; live-fetched on base
-const ECHO_SHARES_BASIC = 289.8; // million shares (Class A + B estimate)
-const ECHO_SHARES_DILUTED = 304.4; // million shares (assuming convertible bond conversion per Barron's)
-const SPACEX_FIXED_SHARES_M = 261.8; // million shares post-split (F-26 note)
-const SPECTRUM_PROCEEDS_B = 42.25; // billion (SpaceX $19.6B + AT&T $22.65B)
+const ECHO_SHARES_BASIC = ECHO_SHARES_BASIC_M;
+const ECHO_SHARES_DILUTED = ECHO_SHARES_DILUTED_M;
 
 const fmt$ = (n) =>
   n >= 1e9
@@ -45,27 +69,29 @@ export default function ECHOSOTPFinder() {
   const [shareCountBasis, setShareCountBasis] = useState("basic"); // "basic" or "diluted"
 
   // Section 01: SpaceX Stake discounts
-  const [liquidityDiscount, setLiquidityDiscount] = useState(20); // 0-30%
-  const [closeProbability, setCloseProbability] = useState(85); // 50-100%
-  const [annualDiscountRate, setAnnualDiscountRate] = useState(8); // 0-15%
+  const [liquidityDiscount, setLiquidityDiscount] = useState(DEFAULT_LIQUIDITY_DISCOUNT); // delivery/lockup, not private-block
+  const [closeProbability, setCloseProbability] = useState(DEFAULT_CLOSE_PROBABILITY);
+  const [annualDiscountRate, setAnnualDiscountRate] = useState(DEFAULT_ANNUAL_DISCOUNT_RATE);
 
   // Section 02: Other Parts
-  const [spectrumVal, setSpectrumVal] = useState(11.0); // $B (Remaining spectrum)
-  const [netCashVal, setNetCashVal] = useState(4.7); // $B (Pro-forma net cash)
-  const [stubVal, setStubVal] = useState(6.0); // $B (Operating stub DISH/Hughes/Boost)
+  const [spectrumVal, setSpectrumVal] = useState(DEFAULT_REMAINING_SPECTRUM_B);
+  const [netCashVal, setNetCashVal] = useState(DEFAULT_NET_CASH_B);
+  const [boostVal, setBoostVal] = useState(DEFAULT_BOOST_B);
+  const [dbsVal, setDbsVal] = useState(DEFAULT_DBS_B);
+  const [hughesVal, setHughesVal] = useState(DEFAULT_HUGHES_B);
 
   // Section 03: Risk Deductions
-  const [taxBasis, setTaxBasis] = useState(5.0); // $B (Spectrum tax basis)
-  const [nols, setNols] = useState(1.0); // $B (Available NOLs)
-  const [taxRate, setTaxRate] = useState(25); // 0-28% (Effective corporate tax rate)
+  const [taxBasis, setTaxBasis] = useState(DEFAULT_TAX_BASIS_B);
+  const [nols, setNols] = useState(DEFAULT_NOLS_B);
+  const [taxRate, setTaxRate] = useState(DEFAULT_TAX_RATE);
 
   // Tower lease termination costs
-  const [towerLeaseCosts, setTowerLeaseCosts] = useState(2.40); // $B (Tower lease termination liability)
+  const [towerLeaseCosts, setTowerLeaseCosts] = useState(DEFAULT_TOWER_LEASE_B);
 
-  // Credit default risk
-  const [cured, setCured] = useState("no"); // "yes" = DBS prepack exits on plan (no haircut), "no" = contested/prolonged (haircut applied)
-  const [distressHaircut, setDistressHaircut] = useState(20); // 0-50%
-  const [preDealDistress, setPreDealDistress] = useState(false); // Simulate pre-deal Net Debt of $27.7B
+  // DISH DBS overlay (Hughes equity is a separate stub slider, default $0)
+  const [cured, setCured] = useState(DEFAULT_DISH_CURED);
+  const [distressHaircut, setDistressHaircut] = useState(DEFAULT_DISTRESS_HAIRCUT);
+  const [preDealDistress, setPreDealDistress] = useState(false);
 
   // Real-time price state
   const [priceSource, setPriceSource] = useState("default"); // "live", "partial", "fallback", "default"
@@ -91,18 +117,20 @@ export default function ECHOSOTPFinder() {
     setSpcxPrice(liveSpcx ?? DEFAULT_SPCX_PRICE);
     setEchoPrice(liveEcho ?? DEFAULT_ECHO_PRICE);
     setShareCountBasis("basic");
-    setLiquidityDiscount(20);
-    setCloseProbability(85);
-    setAnnualDiscountRate(8);
-    setSpectrumVal(11.0);
-    setNetCashVal(4.7);
-    setStubVal(6.0);
-    setTaxBasis(5.0);
-    setNols(1.0);
-    setTaxRate(25);
-    setTowerLeaseCosts(2.40);
-    setCured("no");
-    setDistressHaircut(20);
+    setLiquidityDiscount(DEFAULT_LIQUIDITY_DISCOUNT);
+    setCloseProbability(DEFAULT_CLOSE_PROBABILITY);
+    setAnnualDiscountRate(DEFAULT_ANNUAL_DISCOUNT_RATE);
+    setSpectrumVal(DEFAULT_REMAINING_SPECTRUM_B);
+    setNetCashVal(DEFAULT_NET_CASH_B);
+    setBoostVal(DEFAULT_BOOST_B);
+    setDbsVal(DEFAULT_DBS_B);
+    setHughesVal(DEFAULT_HUGHES_B);
+    setTaxBasis(DEFAULT_TAX_BASIS_B);
+    setNols(DEFAULT_NOLS_B);
+    setTaxRate(DEFAULT_TAX_RATE);
+    setTowerLeaseCosts(DEFAULT_TOWER_LEASE_B);
+    setCured(DEFAULT_DISH_CURED);
+    setDistressHaircut(DEFAULT_DISTRESS_HAIRCUT);
     setPreDealDistress(false);
     setActiveScenario("base");
     updateURL("base");
@@ -112,16 +140,18 @@ export default function ECHOSOTPFinder() {
     setSpcxPrice(175);
     setEchoPrice(liveEcho ?? DEFAULT_ECHO_PRICE);
     setShareCountBasis("basic");
-    setLiquidityDiscount(20);
+    setLiquidityDiscount(DEFAULT_LIQUIDITY_DISCOUNT);
     setCloseProbability(90);
     setAnnualDiscountRate(5);
-    setSpectrumVal(11.0);
-    setNetCashVal(4.7);
-    setStubVal(6.0);
-    setTaxBasis(5.0);
-    setNols(1.0);
+    setSpectrumVal(DEFAULT_REMAINING_SPECTRUM_B);
+    setNetCashVal(DEFAULT_NET_CASH_B);
+    setBoostVal(5.0);
+    setDbsVal(0.5);
+    setHughesVal(0.5);
+    setTaxBasis(DEFAULT_TAX_BASIS_B);
+    setNols(DEFAULT_NOLS_B);
     setTaxRate(15);
-    setTowerLeaseCosts(2.40);
+    setTowerLeaseCosts(DEFAULT_TOWER_LEASE_B);
     setCured("yes");
     setDistressHaircut(0);
     setPreDealDistress(false);
@@ -133,16 +163,18 @@ export default function ECHOSOTPFinder() {
     setSpcxPrice(200);
     setEchoPrice(liveEcho ?? DEFAULT_ECHO_PRICE);
     setShareCountBasis("basic");
-    setLiquidityDiscount(10);
+    setLiquidityDiscount(5);
     setCloseProbability(95);
     setAnnualDiscountRate(3);
-    setSpectrumVal(11.0);
-    setNetCashVal(4.7);
-    setStubVal(6.0);
-    setTaxBasis(5.0);
-    setNols(1.0);
-    setTaxRate(0); // tax-deferred structure fully realized
-    setTowerLeaseCosts(2.40);
+    setSpectrumVal(DEFAULT_REMAINING_SPECTRUM_B);
+    setNetCashVal(DEFAULT_NET_CASH_B);
+    setBoostVal(6.0);
+    setDbsVal(0.5);
+    setHughesVal(0.5);
+    setTaxBasis(DEFAULT_TAX_BASIS_B);
+    setNols(DEFAULT_NOLS_B);
+    setTaxRate(0);
+    setTowerLeaseCosts(DEFAULT_TOWER_LEASE_B);
     setCured("yes");
     setDistressHaircut(0);
     setPreDealDistress(false);
@@ -153,20 +185,22 @@ export default function ECHOSOTPFinder() {
   const applyBear = () => {
     setSpcxPrice(135);
     setEchoPrice(liveEcho ?? DEFAULT_ECHO_PRICE);
-    setShareCountBasis("diluted"); // include bond conversion dilution
+    setShareCountBasis("diluted");
     setLiquidityDiscount(30);
     setCloseProbability(70);
     setAnnualDiscountRate(12);
-    setSpectrumVal(10.0); // analyst lower spectrum mark
-    setNetCashVal(2.0); // lower cash build
-    setStubVal(0.0); // zero value operating business bear case
-    setTaxBasis(3.0); // lower basis = higher tax
+    setSpectrumVal(10.0);
+    setNetCashVal(2.0);
+    setBoostVal(0);
+    setDbsVal(0);
+    setHughesVal(0);
+    setTaxBasis(3.0);
     setNols(1.0);
     setTaxRate(28);
-    setTowerLeaseCosts(2.40);
+    setTowerLeaseCosts(DEFAULT_TOWER_LEASE_B);
     setCured("no");
     setDistressHaircut(25);
-    setPreDealDistress(true); // deal stress / pre-deal net debt
+    setPreDealDistress(true);
     setActiveScenario("bear");
     updateURL("bear");
   };
@@ -175,16 +209,18 @@ export default function ECHOSOTPFinder() {
     setSpcxPrice(175);
     setEchoPrice(liveEcho ?? DEFAULT_ECHO_PRICE);
     setShareCountBasis("diluted");
-    setLiquidityDiscount(0); // acquired direct; zero illiquidity
+    setLiquidityDiscount(0);
     setCloseProbability(100);
     setAnnualDiscountRate(0);
-    setSpectrumVal(11.0);
-    setNetCashVal(4.7);
-    setStubVal(8.0); // premium for Boost buyout
-    setTaxBasis(5.0);
-    setNols(1.0);
-    setTaxRate(0); // structured as tax-free stock-for-stock swap
-    setTowerLeaseCosts(0); // assumed absorbed by acquirer
+    setSpectrumVal(DEFAULT_REMAINING_SPECTRUM_B);
+    setNetCashVal(DEFAULT_NET_CASH_B);
+    setBoostVal(8.0);
+    setDbsVal(DEFAULT_DBS_B);
+    setHughesVal(0);
+    setTaxBasis(DEFAULT_TAX_BASIS_B);
+    setNols(DEFAULT_NOLS_B);
+    setTaxRate(0);
+    setTowerLeaseCosts(0);
     setCured("yes");
     setDistressHaircut(0);
     setPreDealDistress(false);
@@ -233,173 +269,74 @@ export default function ECHOSOTPFinder() {
     setActiveScenario(null);
   };
 
-  const calc = useMemo(() => {
-    const sharesOutstanding = shareCountBasis === "basic" ? ECHO_SHARES_BASIC : ECHO_SHARES_DILUTED;
+  const calc = useMemo(
+    () =>
+      calculateEchoSotp({
+        spcxPrice,
+        echoPrice,
+        shareCountBasis,
+        liquidityDiscount,
+        closeProbability,
+        annualDiscountRate,
+        spectrumB: spectrumVal,
+        netCashB: netCashVal,
+        boostB: boostVal,
+        dbsB: dbsVal,
+        hughesB: hughesVal,
+        taxBasisB: taxBasis,
+        nolsB: nols,
+        taxRate,
+        towerLeaseB: towerLeaseCosts,
+        cured,
+        distressHaircut,
+        preDealDistress,
+      }),
+    [
+      spcxPrice,
+      echoPrice,
+      shareCountBasis,
+      liquidityDiscount,
+      closeProbability,
+      annualDiscountRate,
+      spectrumVal,
+      netCashVal,
+      boostVal,
+      dbsVal,
+      hughesVal,
+      taxBasis,
+      nols,
+      taxRate,
+      towerLeaseCosts,
+      cured,
+      distressHaircut,
+      preDealDistress,
+    ]
+  );
 
-    // Gross SpaceX Stake
-    const grossSpaceXVal = SPACEX_FIXED_SHARES_M * spcxPrice * 1_000_000; // $ value
-    const grossSpaceXPerEchoShare = grossSpaceXVal / (sharesOutstanding * 1_000_000);
-
-    // Liquidity Discount
-    const liquidityDiscountVal = grossSpaceXVal * (liquidityDiscount / 100);
-    const liquidityDiscountPerEchoShare = liquidityDiscountVal / (sharesOutstanding * 1_000_000);
-
-    // Timing/Closing Discount (1.46 years to Nov 30, 2027 closing date)
-    const timeToClose = 1.4658; // years
-    const pvFactor = 1 / Math.pow(1 + annualDiscountRate / 100, timeToClose);
-    const closeProbFactor = closeProbability / 100;
-    const combinedCloseDiscountFactor = closeProbFactor * pvFactor;
-    
-    const grossSpaceXAfterLiquidity = grossSpaceXVal - liquidityDiscountVal;
-    const netSpaceXVal = grossSpaceXAfterLiquidity * combinedCloseDiscountFactor;
-    const netSpaceXPerEchoShare = netSpaceXVal / (sharesOutstanding * 1_000_000);
-    const closingTimingDiscountVal = grossSpaceXAfterLiquidity - netSpaceXVal;
-    const closingTimingDiscountPerEchoShare = closingTimingDiscountVal / (sharesOutstanding * 1_000_000);
-
-    // Other Parts
-    const spectrumValM = spectrumVal * 1_000_000_000;
-    const spectrumPerEchoShare = spectrumValM / (sharesOutstanding * 1_000_000);
-
-    const activeCashVal = preDealDistress ? -27.7 : netCashVal; // swap cash with pre-deal net debt if toggled
-    const netCashValM = activeCashVal * 1_000_000_000;
-    const netCashPerEchoShare = netCashValM / (sharesOutstanding * 1_000_000);
-
-    const stubValM = stubVal * 1_000_000_000;
-    const stubPerEchoShare = stubValM / (sharesOutstanding * 1_000_000);
-
-    // Pre-Tax SOTP Total (Gross vs Discounted)
-    const preTaxGrossTotalM = grossSpaceXVal + spectrumValM + netCashValM + stubValM;
-    const preTaxGrossPerEchoShare = preTaxGrossTotalM / (sharesOutstanding * 1_000_000);
-
-    const preTaxDiscountedTotalM = netSpaceXVal + spectrumValM + netCashValM + stubValM;
-    const preTaxDiscountedPerEchoShare = preTaxDiscountedTotalM / (sharesOutstanding * 1_000_000);
-
-    // Risk Deductions
-    // Spectrum corporate tax on gain
-    const proceedsM = SPECTRUM_PROCEEDS_B * 1_000_000_000;
-    const taxBasisM = taxBasis * 1_000_000_000;
-    const nolsM = nols * 1_000_000_000;
-    const taxableGain = Math.max(0, proceedsM - taxBasisM - nolsM);
-    const corporateTaxVal = taxableGain * (taxRate / 100);
-    const corporateTaxPerEchoShare = corporateTaxVal / (sharesOutstanding * 1_000_000);
-
-    // Tower lease termination costs
-    const towerLeaseCostsM = towerLeaseCosts * 1_000_000_000;
-    const towerLeaseCostsPerEchoShare = towerLeaseCostsM / (sharesOutstanding * 1_000_000);
-
-    // Credit overlay / distress haircut
-    const preDistressNavM = preTaxDiscountedTotalM - corporateTaxVal - towerLeaseCostsM;
-    const distressHaircutAmt = cured === "no" ? preDistressNavM * (distressHaircut / 100) : 0;
-    const distressHaircutPerEchoShare = distressHaircutAmt / (sharesOutstanding * 1_000_000);
-
-    // Risk-Adjusted SOTP Total (After tax + tower leases + credit)
-    const riskAdjustedTotalM = preDistressNavM - distressHaircutAmt;
-    const riskAdjustedPerEchoShare = riskAdjustedTotalM / (sharesOutstanding * 1_000_000);
-
-    // Market Metrics
-    const marketCap = echoPrice * sharesOutstanding * 1_000_000;
-    
-    // Implied cost per SPCX share (EV / 261.8M)
-    // ECHO EV = Market Cap + Net Debt (or - Net Cash) - Spectrum - Stub [+ Tax]
-    const preDealDebt = 27.7 * 1_000_000_000;
-    const ev = preDealDistress
-      ? (marketCap + preDealDebt - spectrumValM - stubValM)
-      : (marketCap - netCashValM - spectrumValM - stubValM + corporateTaxVal + towerLeaseCostsM);
-    const effectiveSpcxCostPerShare = ev / (SPACEX_FIXED_SHARES_M * 1_000_000);
-
-    return {
-      sharesOutstanding,
-      grossSpaceXVal,
-      grossSpaceXPerEchoShare,
-      liquidityDiscountVal,
-      liquidityDiscountPerEchoShare,
-      netSpaceXVal,
-      netSpaceXPerEchoShare,
-      closingTimingDiscountVal,
-      closingTimingDiscountPerEchoShare,
-      spectrumValM,
-      spectrumPerEchoShare,
-      netCashValM,
-      netCashPerEchoShare,
-      stubValM,
-      stubPerEchoShare,
-      preTaxGrossTotalM,
-      preTaxGrossPerEchoShare,
-      preTaxDiscountedTotalM,
-      preTaxDiscountedPerEchoShare,
-      corporateTaxVal,
-      corporateTaxPerEchoShare,
-      towerLeaseCostsM,
-      towerLeaseCostsPerEchoShare,
-      distressHaircutAmt,
-      distressHaircutPerEchoShare,
-      riskAdjustedTotalM,
-      riskAdjustedPerEchoShare,
-      marketCap,
-      ev,
-      effectiveSpcxCostPerShare
-    };
-  }, [
-    spcxPrice,
-    echoPrice,
-    shareCountBasis,
-    liquidityDiscount,
-    closeProbability,
-    annualDiscountRate,
-    spectrumVal,
-    netCashVal,
-    stubVal,
-    taxBasis,
-    nols,
-    taxRate,
-    towerLeaseCosts,
-    cured,
-    distressHaircut,
-    preDealDistress
-  ]);
-
-  // Helper to calculate cell value dynamically for the sensitivity heatmap
   const calculateCellNAV = (rowSPCX, colVal) => {
-    const cellShares = shareCountBasis === "basic" ? ECHO_SHARES_BASIC : ECHO_SHARES_DILUTED;
-    const cellGrossSpaceX = SPACEX_FIXED_SHARES_M * rowSPCX * 1_000_000;
-    
-    let cellLiquidityDiscount = liquidityDiscount;
-    let cellTaxRate = taxRate;
-    
-    if (heatmapColMode === "tax") {
-      cellTaxRate = colVal;
-    } else {
-      cellLiquidityDiscount = colVal;
-    }
-    
-    const cellLiquidityDiscountAmt = cellGrossSpaceX * (cellLiquidityDiscount / 100);
-    const cellPvFactor = 1 / Math.pow(1 + annualDiscountRate / 100, 1.4658);
-    const cellCloseProbFactor = closeProbability / 100;
-    const cellNetSpaceX = (cellGrossSpaceX - cellLiquidityDiscountAmt) * cellCloseProbFactor * cellPvFactor;
-    
-    const cellSpectrumValM = spectrumVal * 1_000_000_000;
-    const cellActiveCash = preDealDistress ? -27.7 : netCashVal;
-    const cellNetCashValM = cellActiveCash * 1_000_000_000;
-    const cellStubValM = stubVal * 1_000_000_000;
-    
-    const cellPreTaxDiscountedTotalM = cellNetSpaceX + cellSpectrumValM + cellNetCashValM + cellStubValM;
-    
-    // Tax
-    const cellProceedsM = SPECTRUM_PROCEEDS_B * 1_000_000_000;
-    const cellTaxBasisM = taxBasis * 1_000_000_000;
-    const cellNolsM = nols * 1_000_000_000;
-    const cellTaxableGain = Math.max(0, cellProceedsM - cellTaxBasisM - cellNolsM);
-    const cellCorporateTaxVal = cellTaxableGain * (cellTaxRate / 100);
-
-    // Tower lease costs
-    const cellTowerLeaseCostsM = towerLeaseCosts * 1_000_000_000;
-    
-    // Credit overlay
-    const cellPreDistressNav = cellPreTaxDiscountedTotalM - cellCorporateTaxVal - cellTowerLeaseCostsM;
-    const cellDistressHaircutAmt = cured === "no" ? cellPreDistressNav * (distressHaircut / 100) : 0;
-    
-    const cellRiskAdjustedTotalM = cellPreDistressNav - cellDistressHaircutAmt;
-    return cellRiskAdjustedTotalM / (cellShares * 1_000_000);
+    const cellLiquidityDiscount =
+      heatmapColMode === "tax" ? liquidityDiscount : colVal;
+    const cellTaxRate = heatmapColMode === "tax" ? colVal : taxRate;
+    return calculateEchoSotp({
+      spcxPrice: rowSPCX,
+      echoPrice,
+      shareCountBasis,
+      liquidityDiscount: cellLiquidityDiscount,
+      closeProbability,
+      annualDiscountRate,
+      spectrumB: spectrumVal,
+      netCashB: netCashVal,
+      boostB: boostVal,
+      dbsB: dbsVal,
+      hughesB: hughesVal,
+      taxBasisB: taxBasis,
+      nolsB: nols,
+      taxRate: cellTaxRate,
+      towerLeaseB: towerLeaseCosts,
+      cured,
+      distressHaircut,
+      preDealDistress,
+    }).riskAdjustedPerEchoShare;
   };
 
   // Heatmap configuration
@@ -667,7 +604,7 @@ export default function ECHOSOTPFinder() {
           ECHO <span style={styles.titleAccent}>SOTP Finder</span>
         </h1>
         <p style={styles.subtitle} className="vcx-subtitle">
-          EchoStar Corp (ECHO, formerly SATS — ticker changed June 24, 2026) is a satellite, pay-TV, and wireless spectrum company. ECHO has agreed to sell its key spectrum assets to AT&T (cash) and SpaceX (primarily SpaceX stock), making ECHO shares trade as a highly liquid proxy for SpaceX. On June 30, 2026 its DISH DBS pay-TV subsidiary and certain wireless units filed a prepackaged Chapter 11 (88% bondholder support, expected to exit by end of Q3) after the delayed AT&T closing left $2B of notes unpaid — the parent and its SpaceX stake sit outside the filing. This sum-of-the-parts (SOTP) model details the SpaceX re-rate upside against the hidden drags: corporate cash taxes on the spectrum transfer, closing timelines, and restructuring overlays. Inputs default to filed deal terms; modify them below to test your own thesis.
+          EchoStar (NASDAQ: ECHO, ticker SATS through June 24, 2026) is a satellite, pay-TV, and wireless company. AT&amp;T closed July 28, 2026 — $20.25B cash to EchoStar plus $2.4B to the FCC Wireless Creditor Trust. The remaining swing asset is a contractual 261.8M SpaceX shares, marked to live public SPCX and delivered ~November 30, 2027. Two Chapter 11 estates sit below the parent: DISH DBS / DISH Wireless (prepack June 30; confirmation hearing October 13, 2026) and Hughes Satellite Systems US (free-fall August 2, case 26-90739). Parent, Boost, DISH TV, Sling, Hughes international, and the SpaceX claim sit outside both cases. This SOTP marks the SPCX delivery against remaining spectrum, post-AT&amp;T cash, three operating stubs, C-corp tax, and tower leases. Defaults are filed terms; sliders test your thesis.
         </p>
       </div>
 
@@ -676,19 +613,19 @@ export default function ECHOSOTPFinder() {
         <div style={styles.howToTitle}>How this works in 30 seconds</div>
         <ol style={styles.howToList}>
           <li style={{ marginBottom: 6 }}>
-            <strong>The core asset</strong> is the contractual 261.8M shares of SpaceX (post-split) delivered upon closing the spectrum sale (estimated November 30, 2027).
+            <strong>The core asset</strong> is the contractual 261.8M SpaceX shares (post-split) delivered ~November 30, 2027. SPCX is already public; ECHO does not hold the stock yet.
           </li>
           <li style={{ marginBottom: 6 }}>
-            <strong>We apply haircuts</strong>: a liquidity discount for private stock block size, and a closing probability × time-value-of-money haircut for the 2027 lockup.
+            <strong>We apply haircuts</strong>: a delivery/lockup discount (default 10% — not a private-block haircut), then close-probability × present value to the 2027 delivery date.
           </li>
           <li style={{ marginBottom: 6 }}>
-            <strong>We add other parts</strong>: the value of remaining spectrum, operating assets (Dish, Boost, Hughes), and pro-forma cash.
+            <strong>We add other parts</strong>: residual spectrum (700 MHz / CBRS / other — not AWS-3), post-AT&amp;T net cash, Boost, DISH DBS, and Hughes parent equity.
           </li>
           <li style={{ marginBottom: 6 }}>
-            <strong>We subtract liabilities</strong>: the heavy corporate C-corp tax on the $42.25B spectrum sale gain, and restructuring haircuts while the DISH DBS Chapter 11 and delayed AT&T closing play out.
+            <strong>We subtract liabilities</strong>: C-corp tax on $42.25B of spectrum proceeds, split between realized AT&amp;T and contingent SpaceX; tower leases; and an optional DISH distress overlay if the prepack is contested.
           </li>
           <li>
-            <strong>We compare the final NAV</strong> against ECHO's current stock price to find the implied proxy discount and effective price paid for SpaceX.
+            <strong>We compare the final NAV</strong> against ECHO&apos;s live price to get the implied proxy discount and the effective price paid for SpaceX.
           </li>
         </ol>
       </div>
@@ -719,7 +656,7 @@ export default function ECHOSOTPFinder() {
             <strong> Proxy-Unwind Demand Drop</strong>
           </div>
           <p style={styles.qualitativeText}>
-            ECHO trades at a proxy discount because SpaceX is private. If SpaceX's direct stock (SPCX) starts trading actively in liquid public markets or list lockups expire, investors will buy SPCX directly, leading to an unwind of ECHO's proxy premium.
+            SPCX is already public. ECHO still trades as a delayed-delivery proxy: the 261.8M block does not arrive until ~November 30, 2027. The relevant risk is tracking error and lockup, not a private-block discount. If ECHO&apos;s spread to SPCX collapses, the proxy thesis dies.
           </p>
         </div>
       </div>
@@ -785,7 +722,7 @@ export default function ECHOSOTPFinder() {
                 onChange={() => { setShareCountBasis("basic"); handleManualEdit(); }}
                 style={{ accentColor: "#d97706" }}
               />
-              Basic (289.8M)
+              Basic ({ECHO_SHARES_BASIC.toFixed(1)}M)
             </label>
             <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "14px" }}>
               <input
@@ -795,11 +732,11 @@ export default function ECHOSOTPFinder() {
                 onChange={() => { setShareCountBasis("diluted"); handleManualEdit(); }}
                 style={{ accentColor: "#d97706" }}
               />
-              Diluted (304.4M)
+              Diluted ({ECHO_SHARES_DILUTED.toFixed(1)}M)
             </label>
           </div>
           <span style={{ ...styles.companyNote, fontSize: "11px", color: "#78716c", marginTop: "4px", display: "block" }}>
-            Diluted includes bond conversion dilution risk noted by Barron's.
+            Basic is 159,142,240 Class A + 131,348,468 Class B as of July 21, 2026 (10-Q). Diluted adds Barron&apos;s convertibles overlay; the 3.875% notes are in the money.
           </span>
         </div>
       </div>
@@ -809,11 +746,11 @@ export default function ECHOSOTPFinder() {
         <div style={styles.howToTitle}>Preset Scenarios</div>
         <div style={styles.scenarioGrid} className="echo-scenario-grid">
           {[
-            { key: "base", label: liveSpcx ? `Base — SPCX $${Math.round(liveSpcx)} (live)` : "Base — SPCX ~$150", desc: "Standard 20% liquidity disc., 25% tax rate, contested-restructuring haircut applied.", handler: applyBase },
-            { key: "bull", label: "Bull — SPCX $175", desc: "SpaceX post-IPO re-rate to $175. Lower 15% tax (partial trust deferral), prepack exits on plan.", handler: applyBull },
-            { key: "moon", label: "Moon — SPCX $200", desc: "SpaceX valuation hits $200 (~$3T) — the Citi case. 0% tax (trust restructure), prepack exits on plan.", handler: applyMoon },
-            { key: "bear", label: "Bear — Restructuring Stress", desc: "Contested / prolonged prepack: 25% restructuring haircut. $2B cash, $0 stub.", handler: applyBear },
-            { key: "takeout", label: "Takeout (buyout)", desc: "SpaceX acquires Boost/ECHO in tax-free stock swap (0% tax, 0% disc, $8B stub).", handler: applyTakeout }
+            { key: "base", label: liveSpcx ? `Base — SPCX $${Math.round(liveSpcx)} (live)` : "Base — SPCX live", desc: "10% delivery/lockup, 90% close, $7.1B Ergen cash stack, Boost $4.0 / DBS $0.3 / Hughes $0, DISH on-plan (0 haircut).", handler: applyBase },
+            { key: "bull", label: "Bull — SPCX $175", desc: "SpaceX re-rate to $175. 15% tax. Stub Boost $5.0 / DBS $0.5 / Hughes $0.5. Prepack on plan.", handler: applyBull },
+            { key: "moon", label: "Moon — SPCX $200", desc: "Citi $200 SpaceX case. 5% lockup, 0% tax, stub Boost $6.0 / DBS $0.5 / Hughes $0.5.", handler: applyMoon },
+            { key: "bear", label: "Bear — Restructuring Stress", desc: "Contested estates, 25% haircut, pre-AT&T −$27.7B net debt, $0 stub, 30% lockup.", handler: applyBear },
+            { key: "takeout", label: "Takeout (buyout)", desc: "Tax-free stock swap: 0% tax, 0% disc. Boost $8.0 + DBS $0.3 + Hughes $0.", handler: applyTakeout }
           ].map(({ key, label, desc, handler }) => {
             const isActive = activeScenario === key;
             return (
@@ -1096,7 +1033,7 @@ export default function ECHOSOTPFinder() {
         </table>
         </div>
         <div style={{ fontSize: "11px", color: "#78716c", marginTop: "10px", fontStyle: "italic" }}>
-          *Note: To align with Barron's target of ~$185-190/sh, check the **Diluted** share count toggle (modeling convertibles), set SPCX price to **$175**, and select the **Bull Preset** (which sets a conservative 15% effective tax rate and 20% liquidity discount).
+          *Note: To align with Barron&apos;s ~$185–190/sh, use the <strong>Diluted</strong> share-count toggle (convertibles), set SPCX to <strong>$175</strong>, and pick the <strong>Bull</strong> preset (15% tax; 10% delivery/lockup, not a 20% private-block haircut).
         </div>
       </div>
 
@@ -1105,7 +1042,7 @@ export default function ECHOSOTPFinder() {
         <div style={styles.sectionHeader} className="vcx-section-header">
           <span style={styles.sectionNum}>01</span>
           <h2 style={styles.sectionTitle}>SpaceX Equity Stake (The Swing Factor)</h2>
-          <span style={styles.sectionMeta} className="vcx-section-meta">Edit discount sliders to haircut the private block</span>
+          <span style={styles.sectionMeta} className="vcx-section-meta">Haircut the undelivered public SPCX block (lockup, not private)</span>
         </div>
 
         <div style={styles.tableWrap}>
@@ -1141,8 +1078,8 @@ export default function ECHOSOTPFinder() {
           {/* Row 2: Liquidity discount */}
           <div style={styles.tr} className="vcx-row">
             <div style={{ ...styles.td, flex: "2.4" }}>
-              <div style={styles.companyName}>Block Size & Illiquidity Discount</div>
-              <div style={styles.companyNote}>Haircut for private stock block size relative to public float.</div>
+              <div style={styles.companyName}>Delivery / lockup discount</div>
+              <div style={styles.companyNote}>SPCX is public. This haircut is for shares not yet delivered (~Nov 30, 2027), not a private-block discount.</div>
               <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "12px" }}>
                 <input
                   type="range"
@@ -1204,7 +1141,7 @@ export default function ECHOSOTPFinder() {
               </div>
             </div>
             <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", fontSize: "11px" }}>
-              {(closeProbability / 100).toFixed(2)}x prob · {1.46} yr PV
+              {(closeProbability / 100).toFixed(2)}x prob · {calc.timeToClose.toFixed(2)} yr PV
             </div>
             <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", color: "#b91c1c" }}>
               -{fmt$(calc.closingTimingDiscountVal)}
@@ -1252,7 +1189,7 @@ export default function ECHOSOTPFinder() {
           <div style={styles.tr} className="vcx-row">
             <div style={{ ...styles.td, flex: "2.4" }}>
               <div style={styles.companyName}>Remaining Spectrum Holdings</div>
-              <div style={styles.companyNote}>Spectrum licenses not included in SpaceX/AT&T transaction (AWS-3, etc.)</div>
+              <div style={styles.companyNote}>Licenses not in the closed AT&amp;T sale or the SpaceX LPA (700 MHz, CBRS, other). AWS-3 is in the SpaceX deal, not residual.</div>
               <div style={{ marginTop: "8px" }}>
                 <input
                   type="range"
@@ -1276,20 +1213,22 @@ export default function ECHOSOTPFinder() {
               ${calc.spectrumPerEchoShare.toFixed(2)}
             </div>
             <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}>
-              <span style={styles.estimateBadge} title="Analyst valuation baseline">[ESTIMATE]</span>
+              <span style={styles.estimateBadge} title="Residual spectrum after AT&T close; AWS-3 is in SpaceX LPA">[ESTIMATE]</span>
             </div>
           </div>
 
           {/* Row 2: Net Cash */}
           <div style={styles.tr} className="vcx-row">
             <div style={{ ...styles.td, flex: "2.4" }}>
-              <div style={styles.companyName}>Pro-Forma Net Cash</div>
-              <div style={styles.companyNote}>Contested baseline net cash position after AT&T and SpaceX transaction cash.</div>
+              <div style={styles.companyName}>Post-AT&amp;T Net Cash</div>
+              <div style={styles.companyNote}>
+                Ergen stack: ~$14.5B gross cash after the 7/28 AT&amp;T close, minus $2.4B FCC Wireless Creditor Trust, minus ~$5B residual Holdco debt SpaceX does not take out. Seller Notes (~$9.8B) are repaid from SpaceX consideration in section 01 — not subtracted here.
+              </div>
               <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
                 <input
                   type="range"
-                  min="2.0"
-                  max="10.7"
+                  min="0"
+                  max="16"
                   step="0.1"
                   disabled={preDealDistress}
                   value={netCashVal}
@@ -1297,21 +1236,19 @@ export default function ECHOSOTPFinder() {
                   style={{ width: "120px", accentColor: "#d97706" }}
                 />
                 <span style={{ fontSize: "12px", fontFamily: "monospace", fontWeight: "bold" }}>
-                  {preDealDistress ? "-$27.7B (Pre-deal Net Debt)" : `$${netCashVal.toFixed(1)}B`}
+                  {preDealDistress ? `-$${PRE_DEAL_NET_DEBT_B.toFixed(1)}B (pre-AT&T net debt)` : `$${netCashVal.toFixed(1)}B`}
                 </span>
-                
-                {/* Quick set cash buttons */}
                 {!preDealDistress && (
                   <div style={{ display: "flex", gap: "6px" }}>
-                    <button onClick={() => { setNetCashVal(2.0); handleManualEdit(); }} style={styles.quickSetBtn}>$2.0B Decks</button>
-                    <button onClick={() => { setNetCashVal(4.7); handleManualEdit(); }} style={styles.quickSetBtn}>$4.7B Cern</button>
-                    <button onClick={() => { setNetCashVal(10.7); handleManualEdit(); }} style={styles.quickSetBtn}>$10.7B Press</button>
+                    <button onClick={() => { setNetCashVal(4.7); handleManualEdit(); }} style={styles.quickSetBtn}>$4.7B old PF</button>
+                    <button onClick={() => { setNetCashVal(DEFAULT_NET_CASH_B); handleManualEdit(); }} style={styles.quickSetBtn}>$7.1B Ergen</button>
+                    <button onClick={() => { setNetCashVal(POST_ATT_GROSS_CASH_B - FCC_TRUST_RESTRICTED_B); handleManualEdit(); }} style={styles.quickSetBtn}>$12.1B gross−trust</button>
                   </div>
                 )}
               </div>
             </div>
             <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", color: "#78716c" }}>
-              $4.7B / $2.0B / $10.7B
+              $7.1B sourced
             </div>
             <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", fontWeight: 600, color: calc.netCashValM < 0 ? "#b91c1c" : "inherit" }}>
               {calc.netCashValM < 0 ? `(${fmt$(Math.abs(calc.netCashValM))})` : fmt$(calc.netCashValM)}
@@ -1320,41 +1257,80 @@ export default function ECHOSOTPFinder() {
               ${calc.netCashPerEchoShare.toFixed(2)}
             </div>
             <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}>
-              <span style={styles.estimateBadge} title="Highly contested pro-forma cash builds">[ESTIMATE]</span>
+              <span style={styles.estimateBadge} title="Post-AT&T cash stack from 8-K + Ergen 8/10 call">[ESTIMATE]</span>
             </div>
           </div>
 
-          {/* Row 3: Operating Stub */}
+          {/* Row 3a: Boost */}
           <div style={styles.tr} className="vcx-row">
             <div style={{ ...styles.td, flex: "2.4" }}>
-              <div style={styles.companyName}>Operating Stub (DISH, Hughes, Boost)</div>
-              <div style={styles.companyNote}>Aggregate valuation of underlying satellite TV, retail wireless, and broadband units.</div>
+              <div style={styles.companyName}>Boost Mobile (going concern)</div>
+              <div style={styles.companyNote}>MVNO outside both Chapter 11 estates. Ergen: slightly FCF-positive.</div>
               <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "12px" }}>
                 <input
                   type="range"
                   min="0"
                   max="10"
-                  step="0.5"
-                  value={stubVal}
-                  onChange={(e) => { setStubVal(parseFloat(e.target.value)); handleManualEdit(); }}
+                  step="0.1"
+                  value={boostVal}
+                  onChange={(e) => { setBoostVal(parseFloat(e.target.value)); handleManualEdit(); }}
                   style={{ width: "120px", accentColor: "#d97706" }}
                 />
-                <span style={{ fontSize: "12px", fontFamily: "monospace", fontWeight: "bold" }}>${stubVal.toFixed(1)}B</span>
-                <button onClick={() => { setStubVal(0); handleManualEdit(); }} style={styles.quickSetBtn}>$0 Bear Case</button>
+                <span style={{ fontSize: "12px", fontFamily: "monospace", fontWeight: "bold" }}>${boostVal.toFixed(1)}B</span>
               </div>
             </div>
-            <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", color: "#78716c" }}>
-              $6.0B
+            <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", color: "#78716c" }}>$4.0B</div>
+            <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", fontWeight: 600 }}>{fmt$(calc.boostValM)}</div>
+            <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontFamily: "monospace", color: "#d97706", fontWeight: 600 }}>${(calc.boostValM / (calc.sharesOutstanding * 1e6)).toFixed(2)}</div>
+            <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}><span style={styles.estimateBadge}>[ESTIMATE]</span></div>
+          </div>
+
+          {/* Row 3b: DISH DBS */}
+          <div style={styles.tr} className="vcx-row">
+            <div style={{ ...styles.td, flex: "2.4" }}>
+              <div style={styles.companyName}>DISH DBS (prepack Ch. 11)</div>
+              <div style={styles.companyNote}>Pay-TV estate. Default near the ~$300M stalking-horse, not a $6B going-concern.</div>
+              <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "12px" }}>
+                <input
+                  type="range"
+                  min="0"
+                  max="6"
+                  step="0.1"
+                  value={dbsVal}
+                  onChange={(e) => { setDbsVal(parseFloat(e.target.value)); handleManualEdit(); }}
+                  style={{ width: "120px", accentColor: "#d97706" }}
+                />
+                <span style={{ fontSize: "12px", fontFamily: "monospace", fontWeight: "bold" }}>${dbsVal.toFixed(1)}B</span>
+              </div>
             </div>
-            <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", fontWeight: 600 }}>
-              {fmt$(calc.stubValM)}
+            <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", color: "#78716c" }}>$0.3B SH</div>
+            <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", fontWeight: 600 }}>{fmt$(calc.dbsValM)}</div>
+            <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontFamily: "monospace", color: "#d97706", fontWeight: 600 }}>${(calc.dbsValM / (calc.sharesOutstanding * 1e6)).toFixed(2)}</div>
+            <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}><span style={styles.estimateBadge}>[ESTIMATE]</span></div>
+          </div>
+
+          {/* Row 3c: Hughes */}
+          <div style={styles.tr} className="vcx-row">
+            <div style={{ ...styles.td, flex: "2.4" }}>
+              <div style={styles.companyName}>Hughes parent equity (free-fall Ch. 11)</div>
+              <div style={styles.companyNote}>HSSC petition 2 Aug 2026, case 26-90739. Parent, DISH TV, Sling, Boost, Hughes international are out. Default $0.</div>
+              <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "12px" }}>
+                <input
+                  type="range"
+                  min="0"
+                  max="4"
+                  step="0.1"
+                  value={hughesVal}
+                  onChange={(e) => { setHughesVal(parseFloat(e.target.value)); handleManualEdit(); }}
+                  style={{ width: "120px", accentColor: "#d97706" }}
+                />
+                <span style={{ fontSize: "12px", fontFamily: "monospace", fontWeight: "bold" }}>${hughesVal.toFixed(1)}B</span>
+              </div>
             </div>
-            <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontFamily: "monospace", color: "#d97706", fontWeight: 600 }}>
-              ${calc.stubPerEchoShare.toFixed(2)}
-            </div>
-            <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}>
-              <span style={styles.estimateBadge} title="User modeled estimate">[ESTIMATE]</span>
-            </div>
+            <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", color: "#78716c" }}>$0 recovery</div>
+            <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", fontWeight: 600 }}>{fmt$(calc.hughesValM)}</div>
+            <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontFamily: "monospace", color: "#d97706", fontWeight: 600 }}>${(calc.hughesValM / (calc.sharesOutstanding * 1e6)).toFixed(2)}</div>
+            <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}><span style={styles.estimateBadge}>[ESTIMATE]</span></div>
           </div>
 
           {/* Subtotal Pre-tax */}
@@ -1380,7 +1356,7 @@ export default function ECHOSOTPFinder() {
 
         {/* CHAPTER 11 STATUS BANNER */}
         <div style={styles.creditWarning}>
-          <strong>⚠️ CHAPTER 11 — DIVISIONS ONLY:</strong> On June 30, 2026, DISH DBS (pay-TV) and certain wireless subsidiaries filed a prepackaged Chapter 11 in Houston, backed by 88% of DBS bondholders, after the delayed ~$23B AT&T spectrum sale left $2B of notes maturing July 1 unpaid. The parent (ECHO) and its SpaceX stake are OUTSIDE the filing; Dish TV/Sling operations continue. Management expects the units to exit before the end of Q3 2026.{" "}
+          <strong>⚠️ TWO CHAPTER 11 ESTATES — PARENT OUTSIDE BOTH:</strong> DISH DBS and DISH Wireless filed a prepack June 30, 2026 (parent and SpaceX claim outside). AT&amp;T closed July 28: $20.25B cash to EchoStar, $2.4B to the FCC Wireless Creditor Trust, DBS 7.75% 2026 notes repaid, ~$3.5B of DISH 11.75% 2027s redeemed. Wireless confirmation hearing October 13, 2026. Hughes Satellite Systems + US subs filed a free-fall Chapter 11 August 2 (case 26-90739); no RSA. Parent, DISH TV, Sling, Boost, Hughes international, and the SpaceX claim are not in that case.{" "}
           {cured === "no"
             ? <>Your toggle below is set to <strong>contested / prolonged</strong>, so we apply the Distress Haircut.</>
             : <>Your toggle below assumes the prepack <strong>exits on plan</strong> — no haircut applied.</>}
@@ -1401,7 +1377,7 @@ export default function ECHOSOTPFinder() {
             <div style={{ ...styles.td, flex: "2.4" }}>
               <div style={styles.companyName}>Corporate C-Corp Tax on Spectrum Gain</div>
               <div style={styles.companyNote}>
-                ECHO will realize a massive taxable gain on the $42.25B transfer of spectrum licenses to SpaceX + AT&T.
+                AT&amp;T&apos;s ${ATT_PROCEEDS_B.toFixed(2)}B of the ${SPECTRUM_PROCEEDS_B.toFixed(2)}B proceeds closed July 28 — that tax is realized. SpaceX&apos;s ${SPACEX_PROCEEDS_B.toFixed(1)}B slice is still contingent; we haircut that tax by close-prob × PV.
               </div>
               <div style={{ marginTop: "8px", display: "flex", flexWrap: "wrap", gap: "16px" }}>
                 <div>
@@ -1441,7 +1417,11 @@ export default function ECHOSOTPFinder() {
               </div>
             </div>
             <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", fontSize: "11px" }}>
-              Taxable Gain: ${(42.25 - taxBasis - nols).toFixed(2)}B
+              AT&amp;T realized {fmt$(calc.attTaxVal)}
+              <br />
+              SpaceX PV {fmt$(calc.spacexTaxVal)}
+              <br />
+              Gain ${(SPECTRUM_PROCEEDS_B - taxBasis - nols).toFixed(2)}B
             </div>
             <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontFamily: "monospace", color: "#b91c1c", fontWeight: 600 }}>
               -{fmt$(calc.corporateTaxVal)}
@@ -1494,7 +1474,7 @@ export default function ECHOSOTPFinder() {
             <div style={{ ...styles.td, flex: "2.4" }}>
               <div style={styles.companyName}>Restructuring Haircut / Chapter 11 overlay</div>
               <div style={styles.companyNote}>
-                Haircut applied if the DBS prepack gets contested/prolonged or the delayed AT&T closing slips further.
+                Haircut if the DISH prepack is contested or prolonged. AT&amp;T has closed — this is not an AT&amp;T-delay overlay. Wireless confirmation hearing October 13, 2026.
               </div>
               <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
                 <div style={{ display: "flex", gap: "6px" }}>
@@ -1506,7 +1486,7 @@ export default function ECHOSOTPFinder() {
                       onChange={() => { setCured("yes"); handleManualEdit(); }}
                       style={{ accentColor: "#d97706" }}
                     />
-                    Exits on plan (Q3 &apos;26)
+                    On-plan (confirm 10/13/26)
                   </label>
                   <label style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", cursor: "pointer" }}>
                     <input
@@ -1554,7 +1534,7 @@ export default function ECHOSOTPFinder() {
             <div style={{ ...styles.td, flex: "2.4" }}>
               <div style={{ ...styles.companyName, color: "#991b1b" }}>Simulate Deal Break (Pre-deal Distress Net Debt)</div>
               <div style={styles.companyNote}>
-                Check this box to simulate the scenario where the transaction breaks, ECHO receives no SpaceX equity, and remains saddled with its pre-deal Net Debt of <strong>-$27.7B</strong>.
+                Historical counterfactual: AT&amp;T already closed July 28. Checking this reverts cash to pre-deal net debt of <strong>-{PRE_DEAL_NET_DEBT_B.toFixed(1)}B</strong> as if the sale never closed. Seller Notes are not part of this toggle.
               </div>
             </div>
             <div style={{ ...styles.td, flex: "1.4", textAlign: "right" }}>
@@ -1569,7 +1549,7 @@ export default function ECHOSOTPFinder() {
               {preDealDistress ? "Deal broken" : "Pro-forma deal active"}
             </div>
             <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontFamily: "monospace", color: "#b91c1c" }}>
-              {preDealDistress ? "-$95.58/sh" : "—"}
+              {preDealDistress ? `$${calc.netCashPerEchoShare.toFixed(2)}/sh` : "—"}
             </div>
             <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }}>
               <span style={{ ...styles.estimateBadge, color: "#991b1b", border: "1px solid #991b1b" }}>[DISTRESS]</span>
@@ -1668,7 +1648,7 @@ export default function ECHOSOTPFinder() {
             <h3 style={{ ...styles.sectionTitle, fontSize: "16px", margin: 0 }}>About ECHO share count</h3>
           </div>
           <div style={styles.issuanceMeta}>
-            The default ECHO basic share count of <strong>289.8M</strong> is an estimate of Class A + B outstanding. The authoritative share count changes quarterly and can be verified against EchoStar's latest Form 10-Q / 10-K. To evaluate convertible bond dilution risk noted by Barron's and Cowen, toggle on the **Diluted** share count button (which models conversion to **304.4M** shares).
+            Default basic shares are <strong>{ECHO_SHARES_BASIC.toFixed(1)}M</strong> from the 10-Q as of July 21, 2026: 159,142,240 Class A + 131,348,468 Class B. Diluted ({ECHO_SHARES_DILUTED.toFixed(1)}M) is Barron&apos;s convertibles overlay; the 3.875% notes are in the money.
           </div>
         </div>
 
@@ -1679,7 +1659,7 @@ export default function ECHOSOTPFinder() {
             <h3 style={{ ...styles.sectionTitle, fontSize: "16px", margin: 0 }}>About the spectrum tax</h3>
           </div>
           <div style={styles.issuanceMeta}>
-            Bulls frequently mark ECHO's spectrum sale gross of tax, but C-corp stock-for-asset exchanges are taxable at the corporate level. We model cash taxes on the spectrum transfer proceeds ($42.25B) less tax basis (default $5.0B) and ECHO's available NOLs (default $1.0B) at a 25% federal + state rate. If ECHO can defer tax via the "Spectrum Business Trust 2025-1" structure, the effective tax rate will be lower (preset Moon is 0%).
+            C-corp stock-for-asset exchanges are taxable at the corporate level. We split the ${SPECTRUM_PROCEEDS_B.toFixed(2)}B of proceeds: AT&amp;T ${ATT_PROCEEDS_B.toFixed(2)}B is realized (closed July 28); SpaceX ${SPACEX_PROCEEDS_B.toFixed(1)}B is still contingent, so that tax is × close-prob × PV. Basis default $5.0B and NOLs $1.0B at 25%. Moon preset is 0% (trust deferral case).
           </div>
         </div>
       </div>
@@ -1688,6 +1668,7 @@ export default function ECHOSOTPFinder() {
       <div style={styles.footer} className="footer">
         <div><strong>Changelog:</strong></div>
         <div style={{ marginBottom: "16px" }}>
+          • <strong>August 24, 2026</strong> — Model rebuilt after AT&amp;T closed July 28 ($20.25B cash to EchoStar + $2.4B FCC Wireless Creditor Trust) and Hughes US Chapter 11 August 2 (case 26-90739; parent outside; Hughes equity default $0). Live SPCX is a future delivery of 261.8M shares ~November 30, 2027, not a private block — lockup default 10%. Cash stack $7.1B = $14.5B gross − $2.4B trust − $5B residual Holdco. Stub split Boost $4.0B / DBS stalking-horse $0.3B / Hughes $0. Tax split: AT&amp;T realized vs SpaceX × close-prob × PV. Basic shares 290.5M from the 10-Q (as of July 21). DISH wireless confirmation hearing October 13, 2026. Seller Notes (~$9.8B) are repaid from SpaceX consideration and are not subtracted from cash.<br />
           • <strong>July 9, 2026</strong> — Ticker migration SATS → ECHO (effective 6/24/26 on Nasdaq; page now lives at /echo, /sats redirects). Replaced the missed-payment credit alert with the actual event: DISH DBS and certain wireless subsidiaries filed a prepackaged Chapter 11 on June 30, 2026 (88% bondholder support, expected Q3 exit) after the delayed AT&T spectrum sale left $2B of notes unpaid — the parent and SpaceX stake sit outside the filing. Restructuring toggle re-labeled (on-plan exit vs contested). Added Citi&apos;s renewed coverage (Buy, $126 PT, values SpaceX at $200/sh → $52B stake) to the Wall Street reconciliation. Updated defaults: ECHO price ~$95.88, base SPCX ~$150 (live-fetched).<br />
           • <strong>June 15, 2026</strong> — Added visual upgrades for the SATS bridge and sensitivity matrix, including cleaner chart header spacing, a compact heatmap layout, top-aligned input controls, and a non-overlapping SATS price annotation. Added real-time SATS and SPCX price fetching for the live price inputs and base scenario defaults.<br />
           • <strong>June 12, 2026</strong> — Reconciled calculator targets against Barron's strategic analysis ("EchoStar Is Falling as SpaceX Surges. Why the Stock Looks Cheap.") and TD Cowen targets ($155 NAV). Added convertible bond dilution toggle (basic 289.8M vs diluted 304.4M). Added "Takeout" preset scenario for Oppenheimer buyout optionality (SpaceX acquires SATS/Boost in tax-free stock swap, $8.0B stub). Added Wall Street targets reconciliation card. Added qualitative callouts (Ergen key-man risk, multi-year closing delays, proxy-unwind decay).<br />
@@ -1697,6 +1678,10 @@ export default function ECHOSOTPFinder() {
         
         <div><strong>Sources:</strong></div>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <div>• EchoStar 10-Q (period ended 6/30/26, filed 8/3/26; shares as of 7/21/26): <a href="https://www.sec.gov/Archives/edgar/data/1415404/000110465926089370/sats-20260630x10q.htm" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>SEC EDGAR 0001104659-26-089370</a></div>
+          <div>• AT&amp;T close 8-K (7/28/26): <a href="https://www.sec.gov/Archives/edgar/data/1415404/000141540426000035/sats-20260728x8k.htm" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>SEC EDGAR 0001415404-26-000035</a></div>
+          <div>• Hughes Chapter 11 8-K (filed 8/3/26): <a href="https://www.sec.gov/Archives/edgar/data/1415404/000141540426000038/sats-20260728x8k.htm" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>SEC EDGAR 0001415404-26-000038</a></div>
+          <div>• Ergen Q2 2026 earnings call (3 Aug 2026; cash stack): <a href="https://www.fool.com/earnings/call-transcripts/2026/08/10/echostar-echo-q2-2026-earnings-call-transcript/" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>Motley Fool transcript</a></div>
           <div>• SpaceX Form S-1 Note F-26 "Spectrum Transactions" (Deal Terms): <a href="https://www.sec.gov/Archives/edgar/data/1181412/000162828026036936/spaceexplorationtechnologi.htm" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>SEC EDGAR</a></div>
           <div>• Amended SpaceX S-1 Prospectus (Priced Deal): <a href="https://www.sec.gov/Archives/edgar/data/1181412/000162828026039276/spaceexplorationtechnologi.htm" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>SEC Prospectus</a></div>
           <div>• Barron's (Andrew Bary, 6/12/26) "Why SATS looks cheap": <a href="https://www.barrons.com/articles/echostar-spacex-stock-cheap" target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>Barron's Article</a></div>

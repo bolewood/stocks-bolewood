@@ -3,6 +3,11 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.8.5.0] - 2026-08-24
+
+### Changed
+- `/echo` SOTP rebuilt after AT&T closed (28 Jul: $20.25B cash + $2.4B FCC Wireless Creditor Trust) and Hughes US Chapter 11 (2 Aug). Net cash default is $7.1B from Ergen's post-close stack. Operating stub splits Boost / DISH DBS stalking-horse / Hughes $0. SPCX haircut is delivery/lockup, not a private block. Spectrum tax splits realized AT&T vs contingent SpaceX. Basic shares 290.5M from the 10-Q.
+
 ## [0.8.4.0] - 2026-08-21
 
 ### Fixed
