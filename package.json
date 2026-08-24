@@ -1,6 +1,6 @@
 {
   "name": "stocks-bolewood",
-  "version": "0.8.5.0",
+  "version": "0.9.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

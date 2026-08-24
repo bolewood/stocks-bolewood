@@ -14,10 +14,22 @@ const FALLBACK_PRICES = {
   SPCX: 138.62, // 2026-08-19
   DXYZ: 32.97, // 2026-08-19
   VCX: 40.0, // 2026-08-19
-  BOT: 28.04, // 2026-08-19
+  SFTBY: 16.53, // 2026-08-24
+  ARM: 238, // 2026-08-24
+  TOKYO9984: 5255, // 2026-08-24
+  USDJPY: 159, // 2026-08-24
 };
 
-const TICKERS = ["ECHO", "SPCX", "DXYZ", "VCX", "BOT"];
+const TICKERS = [
+  { yahoo: "ECHO", key: "ECHO" },
+  { yahoo: "SPCX", key: "SPCX" },
+  { yahoo: "DXYZ", key: "DXYZ" },
+  { yahoo: "VCX", key: "VCX" },
+  { yahoo: "SFTBY", key: "SFTBY" },
+  { yahoo: "ARM", key: "ARM" },
+  { yahoo: "9984.T", key: "TOKYO9984" },
+  { yahoo: "USDJPY=X", key: "USDJPY" },
+];
 
 const cache = createLiveQuoteCache();
 
@@ -31,14 +43,14 @@ async function fetchLive(prev) {
   const prices = { ...(prev?.prices || FALLBACK_PRICES) };
   let liveCount = 0;
 
-  await mapLimit(TICKERS, YAHOO_FETCH_CONCURRENCY, async (ticker) => {
+  await mapLimit(TICKERS, YAHOO_FETCH_CONCURRENCY, async ({ yahoo, key }) => {
     try {
-      const parsed = await fetchChartPrice(ticker);
+      const parsed = await fetchChartPrice(yahoo);
       if (!parsed) return;
-      prices[ticker] = parsed.price;
+      prices[key] = parsed.price;
       liveCount++;
     } catch {
-      console.warn(`Price fetch failed for ${ticker}`);
+      console.warn(`Price fetch failed for ${yahoo}`);
     }
   });
 
