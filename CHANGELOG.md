@@ -3,6 +3,14 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.9.0.0] - 2026-08-24
+
+### Added
+- `/sftby` holdco SOTP for SoftBank Group (OTCPK: SFTBY / TSE: 9984). Live ARM mark, OpenAI stripped from SVF2, IR-adjusted SBG net debt (not consolidated EV), 2:1 ADR math, and a debt reconciliation panel.
+
+### Removed
+- `/bot` RoboStrategy NAV Finder.
+
 ## [0.8.5.0] - 2026-08-24
 
 ### Changed

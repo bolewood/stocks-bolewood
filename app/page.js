@@ -20,20 +20,20 @@ const tools = [
     tag: "NYSE: DXYZ",
   },
   {
-    slug: "/bot",
-    name: "BOT NAV Finder",
-    status: "live",
-    description:
-      "Interactive calculator to estimate the Net Asset Value of RoboStrategy (NASDAQ: BOT). Mark private robotics shares (Apptronik, Figure AI) to market to determine the implied premium.",
-    tag: "NASDAQ: BOT",
-  },
-  {
     slug: "/echo",
     name: "ECHO SOTP Finder",
     status: "live",
     description:
       "Sum-of-the-parts and SpaceX proxy for EchoStar (NASDAQ: ECHO). AT&T closed; Hughes US is in Chapter 11; remaining swing is 261.8M SPCX shares due ~Nov 2027.",
     tag: "NASDAQ: ECHO",
+  },
+  {
+    slug: "/sftby",
+    name: "SFTBY SOTP Finder",
+    status: "live",
+    description:
+      "Holdco sum-of-the-parts for SoftBank Group (OTCPK: SFTBY / TSE: 9984). Live Arm mark, OpenAI pulled out of SVF2, and IR-adjusted SBG net debt — not consolidated EV.",
+    tag: "OTCPK: SFTBY",
   },
   {
     slug: "/ai",
