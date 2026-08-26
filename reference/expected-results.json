@@ -81,14 +81,14 @@
     {
       "ticker": "ZM",
       "price": 108.16,
-      "wrapperValue": 32064538188.8,
+      "wrapperValue": 31559326181.8,
       "anthBasis": "carrying-value-equiv",
       "oaiBasis": null,
-      "anthPct": 0.00333394736842,
+      "anthPct": 0.0032481865285,
       "oaiPct": null,
-      "anthPer100": 10.0336988844,
+      "anthPer100": 9.93208784607,
       "oaiPer100": 0,
-      "combinedPer100": 10.0336988844
+      "combinedPer100": 9.93208784607
     },
     {
       "ticker": "AGIX",

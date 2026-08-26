@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "methodologyVersion": "1.0.0",
-  "asOf": "2026-08-19",
+  "asOf": "2026-08-26",
   "title": "Public wrappers of Anthropic and OpenAI",
   "homepage": "https://stocks.bolewood.com/ai",
   "wrapperOrder": [
