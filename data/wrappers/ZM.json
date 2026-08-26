@@ -9,13 +9,14 @@
   "confidence": "medium",
   "note": "OpenAI is a product/API partner, not equity.",
   "shareCount": {
-    "value": 296454680,
-    "asOf": "2026-07"
+    "value": 291783711,
+    "asOf": "2026-08-14",
+    "note": "10-Q cover. Class A 263,233,141 + Class B 28,550,570."
   },
   "security": {
     "label": "Preferred",
     "linear": true,
-    "footnote": "Anthropic preferred; 10-Q carrying value $1,266.9M as of 2026-04-30."
+    "footnote": "Anthropic preferred; 10-Q carrying value $3,134.5M as of 2026-07-31."
   },
   "sources": [
     {
@@ -23,16 +24,20 @@
       "sourceClass": "primary",
       "issuer": "Zoom Communications, Inc.",
       "filingType": "10-Q",
-      "asOf": "2026-07"
+      "accession": "0001585521-26-000121",
+      "documentDate": "2026-07-31",
+      "asOf": "2026-08-14",
+      "url": "https://www.sec.gov/Archives/edgar/data/1585521/000158552126000121/zm-20260731.htm",
+      "note": "Cover-page Class A + Class B outstanding."
     }
   ],
   "anthropic": {
     "basis": "carrying-value-equiv",
     "holdingSecurity": "preferred",
-    "reportedCarryingValue": 1266900000,
-    "carryingValueAsOf": "2026-04-30",
-    "measurementCompanyMark": "anthropic-series-g",
-    "measurementMarkAsOf": "2026-02-12",
+    "reportedCarryingValue": 3134500000,
+    "carryingValueAsOf": "2026-07-31",
+    "measurementCompanyMark": "anthropic-series-h",
+    "measurementMarkAsOf": "2026-05-28",
     "confidence": "medium",
     "sources": [
       {
@@ -40,18 +45,30 @@
         "sourceClass": "primary",
         "issuer": "Zoom Communications, Inc.",
         "filingType": "10-Q",
-        "documentDate": "2026-04-30",
-        "asOf": "2026-04-30",
-        "note": "$1,266.9M carrying value after +$46M, Anthropic preferred. Not disclosed ownership."
+        "accession": "0001585521-26-000121",
+        "documentDate": "2026-07-31",
+        "asOf": "2026-07-31",
+        "url": "https://www.sec.gov/Archives/edgar/data/1585521/000158552126000121/zm-20260731.htm",
+        "note": "$3,134.5M carrying value of Anthropic preferred. Six-month additional investment $300.9M; Q2 unrealized gain $1,612.7M. Not disclosed ownership."
       },
       {
         "fields": ["measurementCompanyMark"],
         "sourceClass": "primary",
         "issuer": "Zoom Communications, Inc.",
         "filingType": "10-Q",
-        "documentDate": "2026-04-30",
-        "asOf": "2026-02-12",
-        "note": "Marked to the Feb 12, 2026 round (~$380B)."
+        "accession": "0001585521-26-000121",
+        "documentDate": "2026-07-31",
+        "asOf": "2026-05-28",
+        "url": "https://www.sec.gov/Archives/edgar/data/1585521/000158552126000121/zm-20260731.htm",
+        "note": "10-Q records the Q2 mark using information including Anthropic's May 28, 2026 financing round."
+      },
+      {
+        "fields": ["measurementCompanyMark"],
+        "sourceClass": "primary",
+        "issuer": "Anthropic",
+        "documentDate": "2026-05-28",
+        "url": "https://www.anthropic.com/news/series-h",
+        "note": "Series H $965B post-money."
       }
     ]
   },

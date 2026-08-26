@@ -3,6 +3,11 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.9.0.1] - 2026-08-26
+
+### Changed
+- `/ai` Zoom row uses the Q2 FY27 10-Q: Anthropic preferred carrying value $3,134.5M as of July 31 (marked to Series H), cover-page shares 291.8M as of August 14. The prior print was $1,266.9M / Series G as of April 30.
+
 ## [0.9.0.0] - 2026-08-24
 
 ### Added
