@@ -41,6 +41,8 @@ test("Private Tape open-data manifest advertises derived exports without raw mar
   assert.equal(manifest.schemaPath, "data/schema/private-tape.schema.json");
   assert.equal(manifest.endpoints.manifest, PRIVATE_TAPE_ENDPOINTS.manifest);
   assert.equal(manifest.liveMarketData.redistributedInRepo, false);
+  assert.ok(manifest.usageBoundary.includes("not a recommendation"));
+  assert.ok(manifest.sources.kucoinEntropyContext.includes("kucoin.com/news"));
   assert.equal(manifest.returnConvention.type, "simple_return");
   assert.ok(
     manifest.datasets

@@ -12,6 +12,14 @@ Private Tape asks whether 24/7 private-company markets for Anthropic and SpaceX 
 information that appears in DXYZ when the NYSE opens. It does **not** claim those markets
 establish fair value, true NAV, or cash equity turnover.
 
+The current Anthropic input comes from Entropy's `io:ANTH` market on Hyperliquid. Entropy is
+a third-party builder using Hyperliquid's HIP-3 infrastructure for pre-IPO and
+real-world-asset perpetual markets. Public commentary around Entropy emphasizes competition
+with Trade, lessons from Ventuals, and market-structure questions around liquidity,
+distribution partnerships and funding-rate design. Private Tape treats Entropy and
+Hyperliquid as observable market-data inputs only; it is not a recommendation to trade on,
+custody assets with, or rely on either venue.
+
 The reusable assumptions live in `data/private-tape.json` and carry their own
 `methodologyVersion`. The first version models two DXYZ filed exposures as of 2026-03-31:
 Anthropic at 18.1% of the filed portfolio and SpaceX at 14.4% of the filed portfolio. Those

@@ -3,6 +3,11 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.10.0.1] - 2026-08-27
+
+### Changed
+- Private Tape now includes fuller Entropy/Hyperliquid market-structure context and a stronger non-endorsement note: the page uses those markets as observable price-discovery inputs only.
+
 ## [0.10.0.0] - 2026-08-27
 
 ### Added

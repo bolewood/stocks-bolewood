@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "methodologyVersion": "0.1.0",
+  "methodologyVersion": "0.1.1",
   "asOf": "2026-03-31",
   "dxyzFiledPortfolioValue": 742500000,
   "modeledAssetsNote": "Private Tape models only DXYZ's filed Anthropic and SpaceX exposure. It is not a full DXYZ NAV model.",
@@ -29,6 +29,7 @@
     "hyperliquidInfoApi": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
     "hyperliquidRobustPrices": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/robust-price-indices",
     "hyperliquidHip3": "https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-improvement-proposals-hips/hip-3-builder-deployed-perpetuals",
-    "entropyAnthropicOracleNote": "https://defillama.com/rwa/asset/io%3AANTH"
+    "entropyAnthropicOracleNote": "https://defillama.com/rwa/asset/io%3AANTH",
+    "kucoinEntropyContext": "https://www.kucoin.com/news/flash/entropy-aims-to-replicate-trade-s-success-in-pre-ipo-market-competition"
   }
 }

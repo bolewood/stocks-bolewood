@@ -120,6 +120,10 @@ These exports are generated from runtime Hyperliquid and Yahoo market data. The 
 publishes the config, source links, analysis code and methodology, not raw candle histories
 or live quotes.
 
+The private-market marks come from Entropy/Hyperliquid venues. They are used only as an
+observable price-discovery tape, not as a recommendation to trade on, custody assets with,
+or rely on those venues.
+
 ---
 
 ## Denominators

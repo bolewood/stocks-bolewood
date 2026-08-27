@@ -288,6 +288,7 @@ function Sources({ sources }) {
     ["HIP-3", sources?.hyperliquidHip3],
     ["Robust price indices", sources?.hyperliquidRobustPrices],
     ["Entropy ANTH oracle note", sources?.entropyAnthropicOracleNote],
+    ["Entropy context", sources?.kucoinEntropyContext],
     ["DXYZ NPORT-P", sources?.dxyzNport],
     ["DXYZ 424B3", sources?.dxyz424b3],
   ].filter(([, href]) => href);
@@ -428,6 +429,17 @@ export default function PrivateTapeDashboard() {
             The page uses simple returns throughout. It compares only overlapping NYSE-hours returns for DXYZ tests, and the overnight test uses private-market prices available no later than the DXYZ open.
           </p>
         </div>
+        <div style={styles.contextPanel}>
+          <div style={styles.contextEyebrow}>Market Structure Context</div>
+          <div style={styles.contextGrid} className="private-tape-two-col">
+            <p style={styles.bodyCopy}>
+              Entropy is a third-party builder using Hyperliquid&apos;s HIP-3 infrastructure to list pre-IPO and real-world-asset perpetual markets. The KuCoin/TechFlow piece frames it as competing for private-market price discovery after Ventuals shut down, with the debate centered on liquidity, funding rates, and whether the market can avoid predecessor design problems.
+            </p>
+            <p style={styles.bodyCopy}>
+              We use these markets only as an observable tape: what traders are willing to mark Anthropic and SpaceX at while DXYZ is closed. This is not a recommendation to trade on Entropy, use Hyperliquid, hold perps, or treat the marks as DXYZ&apos;s fair value.
+            </p>
+          </div>
+        </div>
       </Section>
 
       <Section
@@ -557,7 +569,7 @@ export default function PrivateTapeDashboard() {
               ANTH is very new, so sample sizes can be tiny. HIP-3 oracle design can incorporate external references and local market-price smoothing, so this is not fully independent price discovery. Perpetual volume is not cash equity turnover. Correlation is not causation.
             </p>
             <p style={styles.bodyCopy}>
-              The Private Index covers only the two modeled assets, not all of DXYZ NAV, and should not be read as fair value or true NAV.
+              Entropy and Hyperliquid are market-data venues for this page, not recommendations. The Private Index covers only the two modeled assets, not all of DXYZ NAV, and should not be read as fair value or true NAV.
             </p>
           </div>
         </div>
@@ -740,6 +752,25 @@ const styles = {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
     gap: "14px",
+  },
+  contextPanel: {
+    marginTop: "18px",
+    border: "1px solid #d6d3d1",
+    background: "#fefdf8",
+    padding: "18px",
+  },
+  contextEyebrow: {
+    fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
+    fontSize: "10px",
+    letterSpacing: "0.12em",
+    color: "#92400e",
+    fontWeight: 800,
+    marginBottom: "10px",
+  },
+  contextGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "22px",
   },
   corrCard: {
     border: "1px solid #e7e5e4",
