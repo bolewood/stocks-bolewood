@@ -12,6 +12,21 @@ const CHART = {
   faint: "#d6d3d1",
 };
 
+const HELP = {
+  plainCorrelation:
+    "Each card compares percent returns, not prices. DXYZ comparisons use only overlapping NYSE cash-session 30-minute windows. r near +1 means they moved together, near -1 means opposite, and near 0 means little linear relationship. N is the number of aligned return observations.",
+  privateIndex:
+    "Both lines start at 100 on the first common close. The private index is a 56/44 Anthropic/SpaceX modeled sleeve, so a value of 105 means that sleeve is up 5% since the base. It is not full DXYZ NAV.",
+  rollingCorrelations:
+    "The x-axis is time. The y-axis is the rolling 30-day Pearson r using available 30-minute return samples. Early points can have tiny N, so treat them as unstable.",
+  overnight:
+    "Each dot is one NYSE morning. The x-axis is the weighted Anthropic/SpaceX move from DXYZ's prior close to the next open. The y-axis is DXYZ's opening gap over the same night. Upper-right dots mean private markets rose overnight and DXYZ opened higher.",
+  buckets:
+    "Rows group nights by the weighted private-market move before the DXYZ open. The bar is the average DXYZ opening gap for that bucket: right/green means DXYZ opened up on average, left/red means down. Empty buckets have no observations yet.",
+  residual:
+    "This chart shows cumulative DXYZ return left over after regressing 30-minute DXYZ returns on ANTH, SPCX, and QQQ. Above zero means DXYZ has outperformed that fitted model over the displayed window. It is not a NAV premium.",
+};
+
 function fmtMoney(n) {
   if (!Number.isFinite(n)) return "n/a";
   if (Math.abs(n) >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
@@ -90,14 +105,70 @@ function EmptyState({ children }) {
   return <div style={styles.emptyState}>{children}</div>;
 }
 
+function InfoTip({ label }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <span
+      style={styles.infoTipWrap}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        aria-label={label}
+        aria-expanded={open}
+        title={label}
+        onClick={() => setOpen((current) => !current)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        style={styles.infoTip}
+      >
+        ?
+      </button>
+      {open ? (
+        <span role="tooltip" style={styles.infoTooltip}>
+          {label}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+function StatPills({ items }) {
+  return (
+    <div style={styles.statsStrip}>
+      {items.map((item) => (
+        <span key={item.label} style={styles.statPill}>
+          <span style={styles.statLabel}>{item.label}</span>
+          <span style={styles.statValue}>{item.value}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function linePath(points) {
   return points.map((p) => `${p.x},${p.y}`).join(" ");
 }
 
-function LineChart({ series, lines, domain, valueFormatter = fmtNumber }) {
+function LineChart({
+  series,
+  lines,
+  domain,
+  valueFormatter = fmtNumber,
+  xLabel = "Time",
+  yLabel = "Value",
+  ariaLabel = "Line chart",
+}) {
   const width = 720;
-  const height = 260;
-  const pad = 28;
+  const height = 280;
+  const pad = {
+    top: 28,
+    right: 28,
+    bottom: 42,
+    left: 48,
+  };
   const valid = (series || []).filter((row) =>
     lines.some((line) => Number.isFinite(row[line.key]))
   );
@@ -112,16 +183,18 @@ function LineChart({ series, lines, domain, valueFormatter = fmtNumber }) {
     minY -= 1;
     maxY += 1;
   }
-  const xFor = (idx) => pad + (idx / Math.max(1, valid.length - 1)) * (width - pad * 2);
+  const plotWidth = width - pad.left - pad.right;
+  const plotHeight = height - pad.top - pad.bottom;
+  const xFor = (idx) => pad.left + (idx / Math.max(1, valid.length - 1)) * plotWidth;
   const yFor = (value) =>
-    height - pad - ((value - minY) / (maxY - minY)) * (height - pad * 2);
+    height - pad.bottom - ((value - minY) / (maxY - minY)) * plotHeight;
 
   return (
     <div style={styles.chartWrap}>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Line chart" style={styles.svg}>
-        <line x1={pad} x2={width - pad} y1={yFor(0)} y2={yFor(0)} stroke={CHART.faint} strokeDasharray="4 5" />
-        <line x1={pad} x2={pad} y1={pad} y2={height - pad} stroke="#e7e5e4" />
-        <line x1={pad} x2={width - pad} y1={height - pad} y2={height - pad} stroke="#e7e5e4" />
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={ariaLabel} style={styles.svg}>
+        <line x1={pad.left} x2={width - pad.right} y1={yFor(0)} y2={yFor(0)} stroke={CHART.faint} strokeDasharray="4 5" />
+        <line x1={pad.left} x2={pad.left} y1={pad.top} y2={height - pad.bottom} stroke="#e7e5e4" />
+        <line x1={pad.left} x2={width - pad.right} y1={height - pad.bottom} y2={height - pad.bottom} stroke="#e7e5e4" />
         {lines.map((line) => {
           const pts = valid
             .map((row, idx) =>
@@ -140,8 +213,20 @@ function LineChart({ series, lines, domain, valueFormatter = fmtNumber }) {
             />
           );
         })}
-        <text x={pad} y={18} style={styles.axisText}>{valueFormatter(maxY)}</text>
-        <text x={pad} y={height - 7} style={styles.axisText}>{valueFormatter(minY)}</text>
+        <text x={pad.left} y={18} style={styles.axisText}>{valueFormatter(maxY)}</text>
+        <text x={pad.left} y={height - 12} style={styles.axisText}>{valueFormatter(minY)}</text>
+        <text x={width / 2} y={height - 10} textAnchor="middle" style={styles.axisLabelText}>
+          {xLabel}
+        </text>
+        <text
+          x={14}
+          y={height / 2}
+          textAnchor="middle"
+          transform={`rotate(-90 14 ${height / 2})`}
+          style={styles.axisLabelText}
+        >
+          {yLabel}
+        </text>
       </svg>
       <div style={styles.legend}>
         {lines.map((line) => (
@@ -160,16 +245,23 @@ function ScatterPlot({ samples, regression }) {
     (row) => Number.isFinite(row.weightedReturn) && Number.isFinite(row.dxyzGap)
   );
   const width = 720;
-  const height = 300;
-  const pad = 34;
+  const height = 320;
+  const pad = {
+    top: 34,
+    right: 34,
+    bottom: 50,
+    left: 58,
+  };
   if (!rows.length) return <EmptyState>No overnight windows yet.</EmptyState>;
 
   const xs = rows.map((r) => r.weightedReturn);
   const ys = rows.map((r) => r.dxyzGap);
   const xMax = Math.max(0.01, Math.max(...xs.map(Math.abs)) * 1.15);
   const yMax = Math.max(0.01, Math.max(...ys.map(Math.abs)) * 1.15);
-  const xFor = (x) => pad + ((x + xMax) / (2 * xMax)) * (width - pad * 2);
-  const yFor = (y) => height - pad - ((y + yMax) / (2 * yMax)) * (height - pad * 2);
+  const plotWidth = width - pad.left - pad.right;
+  const plotHeight = height - pad.top - pad.bottom;
+  const xFor = (x) => pad.left + ((x + xMax) / (2 * xMax)) * plotWidth;
+  const yFor = (y) => height - pad.bottom - ((y + yMax) / (2 * yMax)) * plotHeight;
   const hasRegression = regression?.n > 1 && Number.isFinite(regression.slope);
   const x1 = -xMax;
   const x2 = xMax;
@@ -179,8 +271,8 @@ function ScatterPlot({ samples, regression }) {
   return (
     <div style={styles.chartWrap}>
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Overnight scatter plot" style={styles.svg}>
-        <line x1={xFor(0)} x2={xFor(0)} y1={pad} y2={height - pad} stroke="#d6d3d1" />
-        <line x1={pad} x2={width - pad} y1={yFor(0)} y2={yFor(0)} stroke="#d6d3d1" />
+        <line x1={xFor(0)} x2={xFor(0)} y1={pad.top} y2={height - pad.bottom} stroke="#d6d3d1" />
+        <line x1={pad.left} x2={width - pad.right} y1={yFor(0)} y2={yFor(0)} stroke="#d6d3d1" />
         {hasRegression ? (
           <line
             x1={xFor(x1)}
@@ -205,20 +297,35 @@ function ScatterPlot({ samples, regression }) {
             </title>
           </circle>
         ))}
-        <text x={width - pad - 102} y={height - 8} style={styles.axisText}>Private overnight</text>
-        <text x={8} y={pad - 10} style={styles.axisText}>DXYZ gap</text>
+        <text x={width / 2} y={height - 12} textAnchor="middle" style={styles.axisLabelText}>
+          X: weighted private overnight move
+        </text>
+        <text
+          x={16}
+          y={height / 2}
+          textAnchor="middle"
+          transform={`rotate(-90 16 ${height / 2})`}
+          style={styles.axisLabelText}
+        >
+          Y: DXYZ opening gap
+        </text>
+        <text x={pad.left} y={20} style={styles.axisText}>{fmtPct(yMax, 1)}</text>
+        <text x={pad.left} y={height - pad.bottom + 16} style={styles.axisText}>{fmtPct(-yMax, 1)}</text>
       </svg>
     </div>
   );
 }
 
-function Section({ kicker, title, meta, children }) {
+function Section({ kicker, title, meta, help, children }) {
   return (
     <section style={styles.section}>
       <div style={styles.sectionHeader}>
         <div>
           {kicker ? <div style={styles.kicker}>{kicker}</div> : null}
-          <h2 style={styles.sectionTitle}>{title}</h2>
+          <div style={styles.sectionTitleRow}>
+            <h2 style={styles.sectionTitle}>{title}</h2>
+            {help ? <InfoTip label={help} /> : null}
+          </div>
         </div>
         {meta ? <div style={styles.sectionMeta}>{meta}</div> : null}
       </div>
@@ -257,7 +364,7 @@ function BucketTable({ buckets }) {
     <div style={styles.bucketTable}>
       {(buckets || []).map((bucket) => {
         const value = bucket.avgDxyzGap || 0;
-        const width = `${Math.min(100, (Math.abs(value) / maxAbs) * 100)}%`;
+        const width = `${bucket.n ? Math.min(50, (Math.abs(value) / maxAbs) * 50) : 0}%`;
         return (
           <div key={bucket.key} style={styles.bucketRow}>
             <div style={styles.bucketLabel}>{bucket.label}</div>
@@ -268,6 +375,7 @@ function BucketTable({ buckets }) {
                   width,
                   marginLeft: value >= 0 ? "50%" : `calc(50% - ${width})`,
                   background: value >= 0 ? "#0f766e" : "#be123c",
+                  opacity: bucket.n ? 1 : 0,
                 }}
               />
               <div style={styles.bucketZero} />
@@ -445,13 +553,19 @@ export default function PrivateTapeDashboard() {
       <Section
         kicker="01"
         title="Plain Return Correlation"
+        help={HELP.plainCorrelation}
         meta={data ? `minimum N=${data.config.minimums.correlationN}` : null}
       >
         {data ? <CorrelationTable rows={data.analyses.plainCorrelation} /> : <EmptyState>Loading correlations...</EmptyState>}
       </Section>
 
       <div style={styles.twoCol} className="private-tape-two-col">
-        <Section kicker="02" title="DXYZ Private Index" meta="normalized to 100">
+        <Section
+          kicker="02"
+          title="DXYZ Private Index"
+          help={HELP.privateIndex}
+          meta="normalized to 100"
+        >
           <LineChart
             series={data?.analyses.privateIndex || []}
             lines={[
@@ -459,13 +573,21 @@ export default function PrivateTapeDashboard() {
               { key: "dxyzIndex", label: "DXYZ", color: CHART.dxyz },
             ]}
             valueFormatter={(n) => fmtNumber(n, 0)}
+            xLabel="NYSE close"
+            yLabel="Index level"
+            ariaLabel="DXYZ private index versus DXYZ"
           />
           <p style={styles.note}>
             The weight file currently normalizes DXYZ&apos;s March 31, 2026 Anthropic exposure (18.1%) and SpaceX exposure (12.4% known SpaceX SPVs plus 2.0% Snowpoint SpaceX SPV) to a two-asset sleeve: about 56% Anthropic and 44% SpaceX.
           </p>
         </Section>
 
-        <Section kicker="03" title="Rolling 30-Day Correlations" meta="shows N in the API">
+        <Section
+          kicker="03"
+          title="Rolling 30-Day Correlations"
+          help={HELP.rollingCorrelations}
+          meta="shows N in the API"
+        >
           <LineChart
             series={data?.analyses.rollingCorrelations?.dxyzAnthropic || []}
             lines={[
@@ -473,6 +595,9 @@ export default function PrivateTapeDashboard() {
             ]}
             domain={[-1, 1]}
             valueFormatter={(n) => fmtNumber(n, 1)}
+            xLabel="Sample time"
+            yLabel="Rolling r"
+            ariaLabel="Rolling 30-day correlation between DXYZ and Anthropic"
           />
           <LineChart
             series={data?.analyses.rollingCorrelations?.dxyzSpacex || []}
@@ -481,6 +606,9 @@ export default function PrivateTapeDashboard() {
             ]}
             domain={[-1, 1]}
             valueFormatter={(n) => fmtNumber(n, 1)}
+            xLabel="Sample time"
+            yLabel="Rolling r"
+            ariaLabel="Rolling 30-day correlation between DXYZ and SpaceX"
           />
         </Section>
       </div>
@@ -489,20 +617,28 @@ export default function PrivateTapeDashboard() {
         <Section
           kicker="04"
           title="Overnight Lead/Lag"
+          help={HELP.overnight}
           meta={data ? `N=${data.analyses.overnight.samples.length}` : null}
         >
           <ScatterPlot
             samples={data?.analyses.overnight.samples || []}
             regression={data?.analyses.overnight.regression}
           />
-          <div style={styles.statsStrip}>
-            <span>r {fmtNumber(data?.analyses.overnight.correlation.pearson, 2)}</span>
-            <span>R2 {fmtNumber(data?.analyses.overnight.regression?.r2, 2)}</span>
-            <span>slope {fmtNumber(data?.analyses.overnight.regression?.slope, 2)}</span>
-          </div>
+          <StatPills
+            items={[
+              { label: "Pearson r", value: fmtNumber(data?.analyses.overnight.correlation.pearson, 2) },
+              { label: "R2", value: fmtNumber(data?.analyses.overnight.regression?.r2, 2) },
+              { label: "Slope", value: fmtNumber(data?.analyses.overnight.regression?.slope, 2) },
+            ]}
+          />
         </Section>
 
-        <Section kicker="05" title="Opening Gap Buckets" meta="weighted private move">
+        <Section
+          kicker="05"
+          title="Opening Gap Buckets"
+          help={HELP.buckets}
+          meta="weighted private move"
+        >
           {data ? <BucketTable buckets={data.analyses.overnight.buckets} /> : <EmptyState>Loading buckets...</EmptyState>}
         </Section>
       </div>
@@ -510,6 +646,7 @@ export default function PrivateTapeDashboard() {
       <Section
         kicker="06"
         title="DXYZ Residual"
+        help={HELP.residual}
         meta={
           <span title="Playful label only: this is a regression residual, not a NAV premium.">
             Hype Premium label is optional
@@ -518,19 +655,24 @@ export default function PrivateTapeDashboard() {
       >
         {data?.analyses.residual.regression ? (
           <>
-            <div style={styles.statsStrip}>
-              <span>N={data.analyses.residual.regression.n}</span>
-              <span>R2 {fmtNumber(data.analyses.residual.regression.r2, 2)}</span>
-              <span>ANTH beta {fmtNumber(data.analyses.residual.regression.slopes.anthropic, 2)}</span>
-              <span>SPCX beta {fmtNumber(data.analyses.residual.regression.slopes.spacex, 2)}</span>
-              <span>QQQ beta {fmtNumber(data.analyses.residual.regression.slopes.qqq, 2)}</span>
-            </div>
+            <StatPills
+              items={[
+                { label: "N", value: data.analyses.residual.regression.n },
+                { label: "R2", value: fmtNumber(data.analyses.residual.regression.r2, 2) },
+                { label: "ANTH beta", value: fmtNumber(data.analyses.residual.regression.slopes.anthropic, 2) },
+                { label: "SPCX beta", value: fmtNumber(data.analyses.residual.regression.slopes.spacex, 2) },
+                { label: "QQQ beta", value: fmtNumber(data.analyses.residual.regression.slopes.qqq, 2) },
+              ]}
+            />
             <LineChart
               series={data.analyses.residual.series}
               lines={[
                 { key: "cumulativeResidual", label: "Cumulative residual", color: CHART.dxyz },
               ]}
               valueFormatter={(n) => fmtPct(n, 1)}
+              xLabel="Sample time"
+              yLabel="Cumulative residual"
+              ariaLabel="DXYZ cumulative regression residual"
             />
           </>
         ) : (
@@ -707,6 +849,7 @@ const styles = {
   },
   section: {
     paddingTop: "38px",
+    minWidth: 0,
   },
   sectionHeader: {
     display: "flex",
@@ -716,6 +859,12 @@ const styles = {
     paddingBottom: "10px",
     borderBottom: "1px solid #d6d3d1",
     marginBottom: "18px",
+  },
+  sectionTitleRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    flexWrap: "wrap",
   },
   kicker: {
     fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
@@ -730,6 +879,48 @@ const styles = {
     lineHeight: 1.15,
     letterSpacing: "-0.01em",
     margin: 0,
+  },
+  infoTipWrap: {
+    position: "relative",
+    display: "inline-flex",
+    alignItems: "center",
+  },
+  infoTip: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "18px",
+    height: "18px",
+    flex: "0 0 18px",
+    border: "1px solid #d6d3d1",
+    borderRadius: "999px",
+    background: "#fffaf0",
+    color: "#92400e",
+    appearance: "none",
+    cursor: "help",
+    fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
+    fontSize: "11px",
+    fontWeight: 800,
+    lineHeight: 1,
+    padding: 0,
+  },
+  infoTooltip: {
+    position: "absolute",
+    zIndex: 20,
+    top: "24px",
+    left: 0,
+    width: "min(320px, calc(100vw - 40px))",
+    border: "1px solid #d6d3d1",
+    background: "#fffaf0",
+    color: "#44403c",
+    boxShadow: "0 10px 24px rgba(28, 25, 23, 0.12)",
+    padding: "10px 12px",
+    fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
+    fontSize: "11px",
+    lineHeight: 1.55,
+    fontWeight: 500,
+    letterSpacing: 0,
+    textAlign: "left",
   },
   sectionMeta: {
     fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
@@ -808,11 +999,12 @@ const styles = {
   },
   twoCol: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
+    gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
     gap: "28px",
   },
   chartWrap: {
     width: "100%",
+    minWidth: 0,
     overflow: "hidden",
   },
   svg: {
@@ -826,6 +1018,12 @@ const styles = {
     fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
     fontSize: "11px",
     fill: "#78716c",
+  },
+  axisLabelText: {
+    fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
+    fontSize: "10px",
+    fill: "#78716c",
+    fontWeight: 700,
   },
   legend: {
     display: "flex",
@@ -855,26 +1053,53 @@ const styles = {
   statsStrip: {
     display: "flex",
     flexWrap: "wrap",
-    gap: "10px",
+    gap: "8px",
+    alignItems: "center",
     marginTop: "12px",
+  },
+  statPill: {
+    display: "inline-flex",
+    alignItems: "baseline",
+    gap: "6px",
+    border: "1px solid #e7e5e4",
+    background: "#fffaf0",
+    padding: "6px 8px",
+    color: "#1c1917",
+    fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
+    fontSize: "11px",
+    fontVariantNumeric: "tabular-nums",
+    whiteSpace: "nowrap",
+  },
+  statLabel: {
+    color: "#78716c",
+    fontSize: "10px",
+  },
+  statValue: {
+    color: "#1c1917",
+    fontWeight: 800,
   },
   bucketTable: {
     display: "grid",
     gap: "14px",
+    minWidth: 0,
   },
   bucketRow: {
     display: "grid",
-    gridTemplateColumns: "110px 1fr 116px",
+    gridTemplateColumns: "minmax(82px, 112px) minmax(120px, 1fr) minmax(86px, 104px)",
     gap: "12px",
     alignItems: "center",
+    minWidth: 0,
   },
   bucketLabel: {
     fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
     fontSize: "11px",
     color: "#44403c",
+    whiteSpace: "nowrap",
   },
   bucketBarTrack: {
     position: "relative",
+    minWidth: 0,
+    overflow: "hidden",
     height: "14px",
     background: "#f5f5f4",
     border: "1px solid #e7e5e4",

@@ -3,6 +3,11 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.10.0.2] - 2026-08-27
+
+### Fixed
+- Private Tape chart titles now have help tooltips explaining axes, sample units, and how to read each view. The Opening Gap Buckets bars are bounded inside the track so negative buckets no longer overflow.
+
 ## [0.10.0.1] - 2026-08-27
 
 ### Changed
