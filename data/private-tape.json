@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "1.0.0",
+  "methodologyVersion": "0.1.0",
+  "asOf": "2026-03-31",
+  "dxyzFiledPortfolioValue": 742500000,
+  "modeledAssetsNote": "Private Tape models only DXYZ's filed Anthropic and SpaceX exposure. It is not a full DXYZ NAV model.",
+  "assets": {
+    "anthropic": {
+      "name": "Anthropic",
+      "hyperliquidCoin": "io:ANTH",
+      "quoteUnit": "usd_billions_implied_valuation",
+      "filedPortfolioWeight": 0.181,
+      "filedExposureUsd": 134392500,
+      "source": "DXYZ March 31, 2026 NPORT-P / May 12, 2026 424B3 portfolio supplement: 18.1% of the filed $742.5M portfolio value."
+    },
+    "spacex": {
+      "name": "SpaceX",
+      "hyperliquidCoin": "xyz:SPCX",
+      "quoteUnit": "usd_per_share",
+      "filedPortfolioWeight": 0.144,
+      "filedExposureUsd": 106920000,
+      "referenceFullyDilutedShares": 13000000000,
+      "source": "DXYZ March 31, 2026 portfolio: 12.4% known share-denominated SpaceX SPVs plus 2.0% Snowpoint SpaceX SPV. Reference valuation uses 13.0B SpaceX shares until a current share-count source is added."
+    }
+  },
+  "sources": {
+    "dxyzNport": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926016628/xslFormNPORT-P_X01/primary_doc.xml",
+    "dxyz424b3": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000288/dxyz100_424b3.htm",
+    "hyperliquidInfoApi": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+    "hyperliquidRobustPrices": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/robust-price-indices",
+    "hyperliquidHip3": "https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-improvement-proposals-hips/hip-3-builder-deployed-perpetuals",
+    "entropyAnthropicOracleNote": "https://defillama.com/rwa/asset/io%3AANTH"
+  }
+}

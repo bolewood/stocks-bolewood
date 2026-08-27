@@ -6,6 +6,47 @@ This dataset estimates Anthropic and OpenAI **exposure** in public wrappers. Exp
 
 Live market prices are a **runtime** input. They are not part of this dataset.
 
+## Private Tape / DXYZ Shadow NAV
+
+Private Tape asks whether 24/7 private-company markets for Anthropic and SpaceX contain
+information that appears in DXYZ when the NYSE opens. It does **not** claim those markets
+establish fair value, true NAV, or cash equity turnover.
+
+The reusable assumptions live in `data/private-tape.json` and carry their own
+`methodologyVersion`. The first version models two DXYZ filed exposures as of 2026-03-31:
+Anthropic at 18.1% of the filed portfolio and SpaceX at 14.4% of the filed portfolio. Those
+two filed weights are normalized inside the modeled sleeve, producing approximately 56%
+Anthropic and 44% SpaceX. This is a two-asset sleeve only, not all of DXYZ NAV.
+
+Runtime analysis uses simple returns:
+
+`end_price / start_price - 1`
+
+The plain correlation test aligns 30-minute returns during overlapping NYSE cash-session
+windows. It reports DXYZ vs ANTH, DXYZ vs SPCX, and ANTH vs SPCX using returns rather than
+price levels.
+
+The overnight lead/lag test measures private-market returns from the prior DXYZ 4:00pm ET
+close to the next DXYZ 9:30am ET open, then compares those returns with DXYZ's next opening
+gap. Private-market prices are selected from candles closed at or before each boundary, so
+the construction does not use information that was unavailable before the DXYZ open.
+
+The DXYZ residual regresses DXYZ returns on ANTH, SPCX and QQQ. The residual is a
+sentiment/factor residual, not a NAV premium. Results are hidden until minimum sample sizes
+are met, and displayed correlations include N.
+
+Open exports are available from:
+
+| Endpoint | Contents |
+| --- | --- |
+| `/api/private-tape/manifest` | Dataset manifest and methodology |
+| `/api/private-tape` | Full JSON payload |
+| `/api/private-tape?format=csv&dataset=overnight` | Overnight opening-gap sample set |
+| `/api/private-tape?format=csv&dataset=rth` | NYSE-hours 30-minute return sample set |
+
+Raw Hyperliquid candles, Yahoo candles and live quotes are runtime inputs and are not
+committed to `data/`.
+
 ## FV-equivalent exposure
 
 **FV-equivalent exposure** is computed as reported fair value ÷ the company valuation associated with that mark.

@@ -20,6 +20,14 @@ const tools = [
     tag: "NYSE: DXYZ",
   },
   {
+    slug: "/private-tape",
+    name: "Private Tape",
+    status: "live",
+    description:
+      "DXYZ Shadow NAV lab comparing 24/7 Hyperliquid Anthropic and SpaceX returns against DXYZ opening gaps, rolling correlations, and residuals.",
+    tag: "DXYZ SHADOW NAV",
+  },
+  {
     slug: "/echo",
     name: "ECHO SOTP Finder",
     status: "live",

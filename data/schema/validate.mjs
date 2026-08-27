@@ -1,5 +1,6 @@
 export const SCHEMA_VERSION = "1.0.0";
 export const METHODOLOGY_VERSION = "1.0.0";
+export const PRIVATE_TAPE_SCHEMA_VERSION = "1.0.0";
 
 export const BASES = [
   "disclosed",
@@ -63,6 +64,20 @@ function validateSource(src, path) {
   }
   if (src.sourceClass !== "primary" && src.sourceClass !== "secondary") {
     fail(path, "sourceClass must be primary or secondary");
+  }
+}
+
+function isIsoDateKey(value) {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function isHttpUrl(value) {
+  if (typeof value !== "string") return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
   }
 }
 
@@ -210,6 +225,64 @@ export function validateMarks(marks) {
       }
       r.sources.forEach((s, j) => validateSource(s, `${path}.sources[${j}]`));
     });
+  }
+}
+
+export function validatePrivateTapeConfig(config) {
+  const path = "private-tape";
+  if (config?.schemaVersion !== PRIVATE_TAPE_SCHEMA_VERSION) {
+    fail(path, `schemaVersion must be ${PRIVATE_TAPE_SCHEMA_VERSION}`);
+  }
+  if (typeof config.methodologyVersion !== "string" || config.methodologyVersion.length === 0) {
+    fail(path, "methodologyVersion required");
+  }
+  if (!isIsoDateKey(config.asOf)) fail(path, "asOf must be YYYY-MM-DD");
+  if (!(config.dxyzFiledPortfolioValue > 0)) {
+    fail(path, "dxyzFiledPortfolioValue required");
+  }
+  if (!config.modeledAssetsNote) fail(path, "modeledAssetsNote required");
+
+  const expectedCoins = {
+    anthropic: "io:ANTH",
+    spacex: "xyz:SPCX",
+  };
+  const quoteUnits = new Set(["usd_billions_implied_valuation", "usd_per_share"]);
+  for (const key of ["anthropic", "spacex"]) {
+    const asset = config.assets?.[key];
+    const assetPath = `${path}.assets.${key}`;
+    if (!asset || typeof asset !== "object") fail(assetPath, "asset required");
+    if (!asset.name) fail(assetPath, "name required");
+    if (asset.hyperliquidCoin !== expectedCoins[key]) {
+      fail(assetPath, `hyperliquidCoin must be ${expectedCoins[key]}`);
+    }
+    if (!quoteUnits.has(asset.quoteUnit)) fail(assetPath, `unknown quoteUnit ${asset.quoteUnit}`);
+    if (!(asset.filedPortfolioWeight > 0 && asset.filedPortfolioWeight < 1)) {
+      fail(assetPath, "filedPortfolioWeight must be between 0 and 1");
+    }
+    if (!(asset.filedExposureUsd > 0)) fail(assetPath, "filedExposureUsd required");
+    if (!asset.source) fail(assetPath, "source required");
+
+    const expectedExposure = config.dxyzFiledPortfolioValue * asset.filedPortfolioWeight;
+    if (Math.abs(expectedExposure - asset.filedExposureUsd) > 1) {
+      fail(assetPath, "filedExposureUsd must match filedPortfolioWeight times portfolio value");
+    }
+  }
+
+  if (!(config.assets.spacex.referenceFullyDilutedShares > 0)) {
+    fail(`${path}.assets.spacex`, "referenceFullyDilutedShares required");
+  }
+
+  const requiredSources = [
+    "dxyzNport",
+    "dxyz424b3",
+    "hyperliquidInfoApi",
+    "hyperliquidRobustPrices",
+    "hyperliquidHip3",
+  ];
+  for (const key of requiredSources) {
+    if (!isHttpUrl(config.sources?.[key])) {
+      fail(`${path}.sources.${key}`, "valid source URL required");
+    }
   }
 }
 

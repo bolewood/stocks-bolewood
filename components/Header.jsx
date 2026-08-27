@@ -10,6 +10,7 @@ export default function Header() {
     { href: "/", label: "Home" },
     { href: "/vcx", label: "VCX" },
     { href: "/dxyz", label: "DXYZ" },
+    { href: "/private-tape", label: "Private Tape" },
     { href: "/echo", label: "ECHO" },
     { href: "/sftby", label: "SFTBY" },
     { href: "/ai", label: "AI Per $" },

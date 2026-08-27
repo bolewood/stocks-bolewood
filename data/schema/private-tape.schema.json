@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stocks.bolewood.com/data/schema/private-tape.schema.json",
+  "title": "Private Tape configuration",
+  "description": "Curated, sourced assumptions for the DXYZ Private Tape page. Runtime market candles and quotes are not stored in this dataset.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "methodologyVersion",
+    "asOf",
+    "dxyzFiledPortfolioValue",
+    "modeledAssetsNote",
+    "assets",
+    "sources"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "methodologyVersion": { "type": "string" },
+    "asOf": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "dxyzFiledPortfolioValue": { "type": "number", "exclusiveMinimum": 0 },
+    "modeledAssetsNote": { "type": "string", "minLength": 1 },
+    "assets": {
+      "type": "object",
+      "required": ["anthropic", "spacex"],
+      "additionalProperties": false,
+      "properties": {
+        "anthropic": { "$ref": "#/$defs/modeledAsset" },
+        "spacex": {
+          "allOf": [
+            { "$ref": "#/$defs/modeledAsset" },
+            {
+              "type": "object",
+              "required": ["referenceFullyDilutedShares"],
+              "properties": {
+                "referenceFullyDilutedShares": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "format": "uri" }
+    }
+  },
+  "$defs": {
+    "modeledAsset": {
+      "type": "object",
+      "required": [
+        "name",
+        "hyperliquidCoin",
+        "quoteUnit",
+        "filedPortfolioWeight",
+        "filedExposureUsd",
+        "source"
+      ],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "hyperliquidCoin": { "type": "string", "minLength": 1 },
+        "quoteUnit": {
+          "enum": ["usd_billions_implied_valuation", "usd_per_share"]
+        },
+        "filedPortfolioWeight": { "type": "number", "exclusiveMinimum": 0 },
+        "filedExposureUsd": { "type": "number", "exclusiveMinimum": 0 },
+        "source": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -13,10 +13,12 @@ import {
   loadPublicDataset,
   readJson,
 } from "../reference/calculate.mjs";
+import privateTapeConfig from "../data/private-tape.json" with { type: "json" };
 import {
   PRIMARY_REQUIRED_BASES,
   secondaryOnly,
   validateMarks,
+  validatePrivateTapeConfig,
   validateWrapper,
 } from "../data/schema/validate.mjs";
 import { RAW_AI_WRAPPERS, WRAPPERS } from "../lib/loadAiData.mjs";
@@ -39,6 +41,12 @@ test("every wrapper and marks.json validate against the schema", () => {
   validateMarks(marks);
   for (const w of wrappers) validateWrapper(w, { marks });
   assert.equal(wrappers.length, 11);
+});
+
+test("Private Tape config validates as curated open data", () => {
+  assert.equal(validatePrivateTapeConfig(privateTapeConfig), undefined);
+  assert.equal(privateTapeConfig.assets.anthropic.hyperliquidCoin, "io:ANTH");
+  assert.equal(privateTapeConfig.assets.spacex.hyperliquidCoin, "xyz:SPCX");
 });
 
 test("impliedExposure exists only under computed.* and matches a fresh derivation", () => {

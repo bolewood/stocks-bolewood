@@ -3,6 +3,13 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.10.0.0] - 2026-08-27
+
+### Added
+- `/private-tape` DXYZ Shadow NAV lab for comparing 24/7 Hyperliquid Anthropic (`io:ANTH`) and SpaceX (`xyz:SPCX`) return signals against DXYZ. Includes NYSE-hours return correlations, overnight lead/lag buckets, a two-asset private index, DXYZ factor residuals, caveats, and live cards.
+- `/api/private-tape` JSON plus CSV exports for overnight and NYSE-hours aligned derived samples. `/api/private-tape/manifest` exposes the open-data contract, columns, methodology, source links, and licensing notes.
+- `data/private-tape.json` as the single curated config layer for modeled assets, weights and sources, with schema validation and tests.
+
 ## [0.9.0.1] - 2026-08-26
 
 ### Changed

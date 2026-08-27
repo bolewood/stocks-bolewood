@@ -30,6 +30,7 @@ is published.
 |---|---|
 | `data/wrappers/` | One record per security |
 | `data/marks.json` | Anthropic and OpenAI round history, each mark sourced |
+| `data/private-tape.json` | Private Tape modeled sleeve config for DXYZ, Anthropic and SpaceX |
 | `data/schema/` | JSON Schema — a discriminated union on `basis` |
 | `data/METHODOLOGY.md` | How exposure is computed, and what is not modeled |
 | `data/CONTRIBUTING.md` | Source hierarchy and correction process |
@@ -100,6 +101,24 @@ Runs the standalone calculator in `reference/` over `data/` with fixed prices, s
 marks and dilution, and reproduces `reference/expected-results.json`. No application code,
 no network. If your output differs from the published table at the same inputs, that is a
 bug worth filing.
+
+## Private Tape data
+
+The [Private Tape](https://stocks.bolewood.com/private-tape) page tests whether 24/7
+private-company markets for Anthropic and SpaceX lead DXYZ's next opening gap. The curated
+assumptions are committed in `data/private-tape.json`; live aligned datasets are published
+from the site:
+
+| Endpoint | Contents |
+|---|---|
+| `/api/private-tape/manifest` | Machine-readable dataset manifest, columns, license notes and methodology |
+| `/api/private-tape` | JSON payload with config, cards, analyses and aligned datasets |
+| `/api/private-tape?format=csv&dataset=overnight` | DXYZ overnight opening-gap samples |
+| `/api/private-tape?format=csv&dataset=rth` | 30-minute overlapping NYSE-hours return samples |
+
+These exports are generated from runtime Hyperliquid and Yahoo market data. The repo
+publishes the config, source links, analysis code and methodology, not raw candle histories
+or live quotes.
 
 ---
 

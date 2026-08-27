@@ -316,5 +316,18 @@ a {
     padding: 4px 0;
     display: inline-block;
   }
-}
 
+  /* Private Tape */
+  .private-tape-container {
+    padding: 24px 16px 0 !important;
+  }
+  .private-tape-container h1 {
+    font-size: 44px !important;
+  }
+  .private-tape-two-col {
+    grid-template-columns: 1fr !important;
+  }
+  .private-tape-metric-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
