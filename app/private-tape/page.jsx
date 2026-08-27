@@ -2,9 +2,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PrivateTapeDashboard from "@/components/PrivateTapeDashboard";
 
-const TITLE = "Private Tape | DXYZ Shadow NAV";
+const TITLE = "Private Tape | DXYZ Tape Lab";
 const DESCRIPTION =
-  "Compare 24/7 Hyperliquid Anthropic and SpaceX return signals against DXYZ. Tests whether private-market price discovery leads the next NYSE open.";
+  "Compare Anthropic's private/pre-IPO tape and SpaceX's public 24/7 tape against DXYZ. Tests whether overnight tape returns lead the next NYSE open.";
 
 export const metadata = {
   title: TITLE,

@@ -6,11 +6,11 @@ This dataset estimates Anthropic and OpenAI **exposure** in public wrappers. Exp
 
 Live market prices are a **runtime** input. They are not part of this dataset.
 
-## Private Tape / DXYZ Shadow NAV
+## Private Tape / DXYZ Tape Lab
 
-Private Tape asks whether 24/7 private-company markets for Anthropic and SpaceX contain
-information that appears in DXYZ when the NYSE opens. It does **not** claim those markets
-establish fair value, true NAV, or cash equity turnover.
+Private Tape asks whether Anthropic's private/pre-IPO tape and SpaceX's public 24/7 tape
+contain information that appears in DXYZ when the NYSE opens. It does **not** claim those
+markets establish fair value, true NAV, or cash equity turnover.
 
 The current Anthropic input comes from Entropy's `io:ANTH` market on Hyperliquid. Entropy is
 a third-party builder using Hyperliquid's HIP-3 infrastructure for pre-IPO and
@@ -20,11 +20,16 @@ distribution partnerships and funding-rate design. Private Tape treats Entropy a
 Hyperliquid as observable market-data inputs only; it is not a recommendation to trade on,
 custody assets with, or rely on either venue.
 
+SpaceX began public trading as SPCX on Nasdaq on 2026-06-12, so `xyz:SPCX` is treated as a
+24/7 public-equity/perp tape rather than pre-IPO price discovery. DXYZ's SpaceX exposure is
+held through SPVs, so public SPCX moves may not flow through to DXYZ NAV one-for-one because
+of conversion timing, lockups, distributions, and vehicle-level economics.
+
 The reusable assumptions live in `data/private-tape.json` and carry their own
 `methodologyVersion`. The first version models two DXYZ filed exposures as of 2026-03-31:
 Anthropic at 18.1% of the filed portfolio and SpaceX at 14.4% of the filed portfolio. Those
 two filed weights are normalized inside the modeled sleeve, producing approximately 56%
-Anthropic and 44% SpaceX. This is a two-asset sleeve only, not all of DXYZ NAV.
+Anthropic and 44% SpaceX. This is a two-asset tape sleeve only, not all of DXYZ NAV.
 
 Runtime analysis uses simple returns:
 
@@ -34,9 +39,9 @@ The plain correlation test aligns 30-minute returns during overlapping NYSE cash
 windows. It reports DXYZ vs ANTH, DXYZ vs SPCX, and ANTH vs SPCX using returns rather than
 price levels.
 
-The overnight lead/lag test measures private-market returns from the prior DXYZ 4:00pm ET
+The overnight lead/lag test measures ANTH/SPCX tape returns from the prior DXYZ 4:00pm ET
 close to the next DXYZ 9:30am ET open, then compares those returns with DXYZ's next opening
-gap. Private-market prices are selected from candles closed at or before each boundary, so
+gap. Tape prices are selected from candles closed at or before each boundary, so
 the construction does not use information that was unavailable before the DXYZ open.
 
 The DXYZ residual regresses DXYZ returns on ANTH, SPCX and QQQ. The residual is a

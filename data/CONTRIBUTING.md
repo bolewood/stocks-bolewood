@@ -15,7 +15,7 @@ The application is not the asset. Curated inputs live under `data/`. Production 
 ## Private Tape data
 
 Private Tape assumptions live in `data/private-tape.json`. Do not hard-code DXYZ
-Anthropic/SpaceX weights, Hyperliquid symbols, source URLs, or share-count assumptions in
+Anthropic/SpaceX weights, Hyperliquid symbols, market-structure notes, or source URLs in
 app components or API routes.
 
 Weight changes must update the filed weight, filed exposure dollars, as-of date, and source

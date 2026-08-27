@@ -1,13 +1,15 @@
 {
   "schemaVersion": "1.0.0",
-  "methodologyVersion": "0.1.1",
+  "methodologyVersion": "0.1.2",
   "asOf": "2026-03-31",
   "dxyzFiledPortfolioValue": 742500000,
-  "modeledAssetsNote": "Private Tape models only DXYZ's filed Anthropic and SpaceX exposure. It is not a full DXYZ NAV model.",
+  "modeledAssetsNote": "Private Tape models only DXYZ's filed Anthropic and SpaceX exposure. Anthropic is a private/pre-IPO tape; SpaceX is now a public SPCX tape whose DXYZ SPV read-through may lag public marks. This is not a full DXYZ NAV model.",
+  "marketStructureNote": "Anthropic remains a private/pre-IPO market input via Entropy/Hyperliquid. SpaceX began public trading under SPCX on Nasdaq on 2026-06-12, so xyz:SPCX is treated as a 24/7 public-equity/perp tape, not pre-IPO price discovery.",
   "assets": {
     "anthropic": {
       "name": "Anthropic",
       "hyperliquidCoin": "io:ANTH",
+      "tapeRole": "private_pre_ipo_perp",
       "quoteUnit": "usd_billions_implied_valuation",
       "filedPortfolioWeight": 0.181,
       "filedExposureUsd": 134392500,
@@ -16,11 +18,20 @@
     "spacex": {
       "name": "SpaceX",
       "hyperliquidCoin": "xyz:SPCX",
+      "tapeRole": "public_equity_perp",
       "quoteUnit": "usd_per_share",
       "filedPortfolioWeight": 0.144,
       "filedExposureUsd": 106920000,
-      "referenceFullyDilutedShares": 13000000000,
-      "source": "DXYZ March 31, 2026 portfolio: 12.4% known share-denominated SpaceX SPVs plus 2.0% Snowpoint SpaceX SPV. Reference valuation uses 13.0B SpaceX shares until a current share-count source is added."
+      "navReadThroughNote": "DXYZ's SpaceX exposure is held through SPVs. Public SPCX and xyz:SPCX moves can be useful tape, but DXYZ NAV may lag because of SPV conversion, lockups, distribution timing, and vehicle-level economics.",
+      "publicListing": {
+        "ticker": "SPCX",
+        "exchange": "Nasdaq Global Select Market / Nasdaq Texas",
+        "firstTradeDate": "2026-06-12",
+        "ipoPrice": 135,
+        "sharesOffered": 555555555,
+        "source": "SpaceX June 11, 2026 IPO pricing release and Nasdaq Trader Data Technical News #2026-8."
+      },
+      "source": "DXYZ March 31, 2026 portfolio: 12.4% known share-denominated SpaceX SPVs plus 2.0% Snowpoint SpaceX SPV. The Private Tape page uses SPCX returns and price levels, not a placeholder fully diluted valuation."
     }
   },
   "sources": {
@@ -30,6 +41,8 @@
     "hyperliquidRobustPrices": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/robust-price-indices",
     "hyperliquidHip3": "https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-improvement-proposals-hips/hip-3-builder-deployed-perpetuals",
     "entropyAnthropicOracleNote": "https://defillama.com/rwa/asset/io%3AANTH",
-    "kucoinEntropyContext": "https://www.kucoin.com/news/flash/entropy-aims-to-replicate-trade-s-success-in-pre-ipo-market-competition"
+    "kucoinEntropyContext": "https://www.kucoin.com/news/flash/entropy-aims-to-replicate-trade-s-success-in-pre-ipo-market-competition",
+    "spacexIpoPricing": "https://ir.spacex.com/updates/releases-details/2026/Space-Exploration-Technologies-Corp--Announces-Pricing-of-Initial-Public-Offering/default.aspx",
+    "nasdaqSpacexListing": "https://m.nasdaqtrader.com/TraderNews.aspx?id=DTN2026-8"
   }
 }

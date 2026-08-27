@@ -16,13 +16,13 @@ const HELP = {
   plainCorrelation:
     "Each card compares percent returns, not prices. DXYZ comparisons use only overlapping NYSE cash-session 30-minute windows. r near +1 means they moved together, near -1 means opposite, and near 0 means little linear relationship. N is the number of aligned return observations.",
   privateIndex:
-    "Both lines start at 100 on the first common close. The private index is a 56/44 Anthropic/SpaceX modeled sleeve, so a value of 105 means that sleeve is up 5% since the base. It is not full DXYZ NAV.",
+    "Both lines start at 100 on the first common close. The tape sleeve is a 56/44 Anthropic/SpaceX modeled factor, so a value of 105 means that sleeve is up 5% since the base. It is not full DXYZ NAV or a cheap/rich signal.",
   rollingCorrelations:
-    "The x-axis is time. The y-axis is the rolling 30-day Pearson r using available 30-minute return samples. Early points can have tiny N, so treat them as unstable.",
+    "The x-axis is time. The y-axis is Pearson r using available 30-minute return samples inside a 30-calendar-day window. While ANTH history is short, this behaves more like an expanding tiny-sample readout than a mature rolling statistic.",
   overnight:
-    "Each dot is one NYSE morning. The x-axis is the weighted Anthropic/SpaceX move from DXYZ's prior close to the next open. The y-axis is DXYZ's opening gap over the same night. Upper-right dots mean private markets rose overnight and DXYZ opened higher.",
+    "Each dot is one NYSE morning. The x-axis is the weighted ANTH/SPCX tape move from DXYZ's prior close to the next open. The y-axis is DXYZ's opening gap over the same night. Upper-right dots mean the tape rose overnight and DXYZ opened higher.",
   buckets:
-    "Rows group nights by the weighted private-market move before the DXYZ open. The bar is the average DXYZ opening gap for that bucket: right/green means DXYZ opened up on average, left/red means down. Empty buckets have no observations yet.",
+    "Rows group nights by the weighted ANTH/SPCX tape move before the DXYZ open. The bar is the average DXYZ opening gap for that bucket: right/green means DXYZ opened up on average, left/red means down. Empty buckets have no observations yet.",
   residual:
     "This chart shows cumulative DXYZ return left over after regressing 30-minute DXYZ returns on ANTH, SPCX, and QQQ. Above zero means DXYZ has outperformed that fitted model over the displayed window. It is not a NAV premium.",
 };
@@ -298,7 +298,7 @@ function ScatterPlot({ samples, regression }) {
           </circle>
         ))}
         <text x={width / 2} y={height - 12} textAnchor="middle" style={styles.axisLabelText}>
-          X: weighted private overnight move
+          X: weighted ANTH/SPCX tape move
         </text>
         <text
           x={16}
@@ -397,6 +397,8 @@ function Sources({ sources }) {
     ["Robust price indices", sources?.hyperliquidRobustPrices],
     ["Entropy ANTH oracle note", sources?.entropyAnthropicOracleNote],
     ["Entropy context", sources?.kucoinEntropyContext],
+    ["SpaceX IPO pricing", sources?.spacexIpoPricing],
+    ["Nasdaq SPCX listing", sources?.nasdaqSpacexListing],
     ["DXYZ NPORT-P", sources?.dxyzNport],
     ["DXYZ 424B3", sources?.dxyz424b3],
   ].filter(([, href]) => href);
@@ -439,29 +441,31 @@ export default function PrivateTapeDashboard() {
         foot: cards.anthropic ? `as of ${fmtEt(cards.anthropic.asOfMs)} ET` : null,
       },
       {
-        eyebrow: "SPACEX",
-        value: fmtMoney(cards.spacex?.valueUsd),
+        eyebrow: "SPACEX TAPE",
+        value: fmtPrice(cards.spacex?.price),
         sub: cards.spacex
-          ? `${fmtPrice(cards.spacex.price)} on xyz:SPCX / approx FD cap`
+          ? "public SPCX / xyz:SPCX 24/7 perp"
           : "Awaiting Hyperliquid",
-        foot: cards.spacex ? `as of ${fmtEt(cards.spacex.asOfMs)} ET` : null,
+        foot: cards.spacex
+          ? `DXYZ SPV NAV may lag / as of ${fmtEt(cards.spacex.asOfMs)} ET`
+          : null,
       },
       {
-        eyebrow: "24H PRIVATE MOVE",
+        eyebrow: "24H TAPE MOVE",
         value: fmtPct(cards.move24h?.weighted),
         sub: `ANTH ${fmtPct(cards.move24h?.anthropic)} / SPCX ${fmtPct(cards.move24h?.spacex)}`,
         foot: "56/44 modeled sleeve",
         tone: pctColor(cards.move24h?.weighted),
       },
       {
-        eyebrow: data?.marketStatus?.nyseOpen ? "SINCE PRIOR CLOSE" : "OVERNIGHT PRIVATE MOVE",
+        eyebrow: data?.marketStatus?.nyseOpen ? "SINCE PRIOR CLOSE" : "OVERNIGHT TAPE MOVE",
         value: fmtPct(cards.overnight?.weighted),
         sub: `ANTH ${fmtPct(cards.overnight?.anthropic)} / SPCX ${fmtPct(cards.overnight?.spacex)}`,
         foot: cards.overnight?.nyseOpen ? "NYSE is open" : `next open ${fmtEt(cards.overnight?.nextOpenMs)} ET`,
         tone: pctColor(cards.overnight?.weighted),
       },
       {
-        eyebrow: "PRIVATE INDEX",
+        eyebrow: "TAPE SLEEVE INDEX",
         value: fmtNumber(cards.privateIndex?.value, 1),
         sub: cards.privateIndex ? `normalized to 100 on ${cards.privateIndex.baseDate}` : "Awaiting common base",
         foot: "two modeled assets only",
@@ -477,7 +481,7 @@ export default function PrivateTapeDashboard() {
         value: Number.isFinite(cards.overnightGapSignal?.predictedGap)
           ? fmtPct(cards.overnightGapSignal.predictedGap)
           : "N too small",
-        sub: `private move ${fmtPct(cards.overnightGapSignal?.weightedPrivateMove)}`,
+        sub: `tape move ${fmtPct(cards.overnightGapSignal?.weightedPrivateMove)}`,
         foot: cards.overnightGapSignal?.nyseOpen
           ? "NYSE open: pre-open signal already passed"
           : "historical regression fit, not a forecast",
@@ -507,12 +511,12 @@ export default function PrivateTapeDashboard() {
   return (
     <main style={styles.container} className="private-tape-container">
       <section style={styles.hero}>
-        <div style={styles.eyebrow}>DXYZ SHADOW NAV LAB / 24-7 PRIVATE COMPANY MARKETS</div>
+        <div style={styles.eyebrow}>DXYZ TAPE LAB / ANTH PRIVATE + SPCX PUBLIC TAPE</div>
         <h1 style={styles.title}>
           Private <span style={styles.titleAccent}>Tape</span>
         </h1>
         <p style={styles.subtitle}>
-          Private Tape: what the 24/7 markets for Anthropic and SpaceX imply for DXYZ before the NYSE opens.
+          Private Tape: what Anthropic&apos;s private/pre-IPO tape and SpaceX&apos;s public 24/7 tape imply for DXYZ before the NYSE opens.
         </p>
         {data ? (
           <StatusChip source={data.source} asOf={data.asOf} marketStatus={data.marketStatus} />
@@ -531,22 +535,25 @@ export default function PrivateTapeDashboard() {
       <Section kicker="00" title="What This Tests">
         <div style={styles.explainGrid} className="private-tape-two-col">
           <p style={styles.bodyCopy}>
-            The hypothesis is simple: if private-company perps trade all night while DXYZ sleeps, their returns may contain information that shows up in DXYZ&apos;s next opening gap.
+            The hypothesis is simple: if ANTH and SPCX-linked tape trades all night while DXYZ sleeps, those returns may contain information that shows up in DXYZ&apos;s next opening gap.
           </p>
           <p style={styles.bodyCopy}>
-            The page uses simple returns throughout. It compares only overlapping NYSE-hours returns for DXYZ tests, and the overnight test uses private-market prices available no later than the DXYZ open.
+            The page uses simple returns throughout. It compares only overlapping NYSE-hours returns for DXYZ tests, and the overnight test uses tape prices available no later than the DXYZ open.
           </p>
         </div>
         <div style={styles.contextPanel}>
           <div style={styles.contextEyebrow}>Market Structure Context</div>
           <div style={styles.contextGrid} className="private-tape-two-col">
             <p style={styles.bodyCopy}>
-              Entropy is a third-party builder using Hyperliquid&apos;s HIP-3 infrastructure to list pre-IPO and real-world-asset perpetual markets. The KuCoin/TechFlow piece frames it as competing for private-market price discovery after Ventuals shut down, with the debate centered on liquidity, funding rates, and whether the market can avoid predecessor design problems.
+              Entropy is a third-party builder using Hyperliquid&apos;s HIP-3 infrastructure to list pre-IPO and real-world-asset perpetual markets. On this page, Anthropic is the private/pre-IPO leg.
             </p>
             <p style={styles.bodyCopy}>
-              We use these markets only as an observable tape: what traders are willing to mark Anthropic and SpaceX at while DXYZ is closed. This is not a recommendation to trade on Entropy, use Hyperliquid, hold perps, or treat the marks as DXYZ&apos;s fair value.
+              SpaceX began public trading as SPCX on Nasdaq in June 2026, so the SpaceX leg is now public-equity/perp tape. DXYZ holds SpaceX through SPVs, and those marks may lag public SPCX because of conversion, lockups, timing, and vehicle economics.
             </p>
           </div>
+          <p style={{ ...styles.bodyCopy, marginTop: "14px" }}>
+            We use Entropy/Hyperliquid only as observable market data. This is not a recommendation to trade there, custody assets there, hold perps, or treat the marks as DXYZ&apos;s fair value.
+          </p>
         </div>
       </Section>
 
@@ -562,31 +569,31 @@ export default function PrivateTapeDashboard() {
       <div style={styles.twoCol} className="private-tape-two-col">
         <Section
           kicker="02"
-          title="DXYZ Private Index"
+          title="Two-Asset Tape Sleeve"
           help={HELP.privateIndex}
           meta="normalized to 100"
         >
           <LineChart
             series={data?.analyses.privateIndex || []}
             lines={[
-              { key: "privateIndex", label: "56/44 Private Index", color: CHART.private },
+              { key: "tapeSleeveIndex", label: "56/44 Tape Sleeve", color: CHART.private },
               { key: "dxyzIndex", label: "DXYZ", color: CHART.dxyz },
             ]}
             valueFormatter={(n) => fmtNumber(n, 0)}
             xLabel="NYSE close"
             yLabel="Index level"
-            ariaLabel="DXYZ private index versus DXYZ"
+            ariaLabel="DXYZ two-asset tape sleeve versus DXYZ"
           />
           <p style={styles.note}>
-            The weight file currently normalizes DXYZ&apos;s March 31, 2026 Anthropic exposure (18.1%) and SpaceX exposure (12.4% known SpaceX SPVs plus 2.0% Snowpoint SpaceX SPV) to a two-asset sleeve: about 56% Anthropic and 44% SpaceX.
+            The weight file currently normalizes DXYZ&apos;s March 31, 2026 Anthropic exposure (18.1%) and SpaceX exposure (12.4% known SpaceX SPVs plus 2.0% Snowpoint SpaceX SPV) to a two-asset sleeve: about 56% Anthropic and 44% SpaceX. It is not full NAV and should not be read as cheap/rich.
           </p>
         </Section>
 
         <Section
           kicker="03"
-          title="Rolling 30-Day Correlations"
+          title="Rolling / Expanding Correlations"
           help={HELP.rollingCorrelations}
-          meta="shows N in the API"
+          meta="30-day window once history exists"
         >
           <LineChart
             series={data?.analyses.rollingCorrelations?.dxyzAnthropic || []}
@@ -637,7 +644,7 @@ export default function PrivateTapeDashboard() {
           kicker="05"
           title="Opening Gap Buckets"
           help={HELP.buckets}
-          meta="weighted private move"
+          meta="weighted tape move"
         >
           {data ? <BucketTable buckets={data.analyses.overnight.buckets} /> : <EmptyState>Loading buckets...</EmptyState>}
         </Section>
@@ -699,19 +706,28 @@ export default function PrivateTapeDashboard() {
           <div style={styles.methodCard}>
             <h3 style={styles.methodTitle}>Method</h3>
             <p style={styles.bodyCopy}>
-              Hyperliquid candles use the public info API&apos;s candleSnapshot endpoint for io:ANTH and xyz:SPCX. DXYZ and QQQ use the same Yahoo chart pattern as the existing Bolewood quote layer. All timestamps are normalized to America/New_York.
+              Hyperliquid candles use the public info API&apos;s candleSnapshot endpoint for io:ANTH and xyz:SPCX. DXYZ, QQQ, and public SPCX context use the same source-first pattern as the existing Bolewood quote layer. All timestamps are normalized to America/New_York.
             </p>
             <p style={styles.bodyCopy}>
-              Overnight samples run from the prior DXYZ 4:00pm ET close to the next DXYZ 9:30am ET open. The construction uses the latest private candle closed at or before each boundary, so the test does not look past the open.
+              Overnight samples run from the prior DXYZ 4:00pm ET close to the next DXYZ 9:30am ET open. The construction uses the latest tape candle closed at or before each boundary, so the test does not look past the open.
             </p>
           </div>
           <div style={styles.methodCard}>
             <h3 style={styles.methodTitle}>Caveats</h3>
             <p style={styles.bodyCopy}>
-              ANTH is very new, so sample sizes can be tiny. HIP-3 oracle design can incorporate external references and local market-price smoothing, so this is not fully independent price discovery. Perpetual volume is not cash equity turnover. Correlation is not causation.
+              ANTH is very new, so sample sizes can be tiny. SPCX is now public, so xyz:SPCX is no longer pre-IPO price discovery. HIP-3 oracle design can incorporate external references and local market-price smoothing, so this is not fully independent price discovery.
             </p>
             <p style={styles.bodyCopy}>
-              Entropy and Hyperliquid are market-data venues for this page, not recommendations. The Private Index covers only the two modeled assets, not all of DXYZ NAV, and should not be read as fair value or true NAV.
+              Perpetual volume is not cash equity turnover. Entropy and Hyperliquid are market-data venues for this page, not recommendations. The tape sleeve covers only two modeled assets, not all of DXYZ NAV, and should not be read as fair value or true NAV.
+            </p>
+          </div>
+          <div style={styles.methodCard}>
+            <h3 style={styles.methodTitle}>Next Fixes</h3>
+            <p style={styles.bodyCopy}>
+              The larger upgrade is to connect this page to the DXYZ NAV Finder&apos;s ATM-adjusted weights, cash sleeve, and pro forma premium/discount instead of only the March 31 two-asset sleeve.
+            </p>
+            <p style={styles.bodyCopy}>
+              The next data upgrades are tape-quality gates for ANTH, a separate 9:30-10:00 open-window test, weekday/weekend overnight tags, and DXYZ premarket as an intermediate target.
             </p>
           </div>
         </div>

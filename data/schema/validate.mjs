@@ -241,10 +241,15 @@ export function validatePrivateTapeConfig(config) {
     fail(path, "dxyzFiledPortfolioValue required");
   }
   if (!config.modeledAssetsNote) fail(path, "modeledAssetsNote required");
+  if (!config.marketStructureNote) fail(path, "marketStructureNote required");
 
   const expectedCoins = {
     anthropic: "io:ANTH",
     spacex: "xyz:SPCX",
+  };
+  const expectedTapeRoles = {
+    anthropic: "private_pre_ipo_perp",
+    spacex: "public_equity_perp",
   };
   const quoteUnits = new Set(["usd_billions_implied_valuation", "usd_per_share"]);
   for (const key of ["anthropic", "spacex"]) {
@@ -254,6 +259,9 @@ export function validatePrivateTapeConfig(config) {
     if (!asset.name) fail(assetPath, "name required");
     if (asset.hyperliquidCoin !== expectedCoins[key]) {
       fail(assetPath, `hyperliquidCoin must be ${expectedCoins[key]}`);
+    }
+    if (asset.tapeRole !== expectedTapeRoles[key]) {
+      fail(assetPath, `tapeRole must be ${expectedTapeRoles[key]}`);
     }
     if (!quoteUnits.has(asset.quoteUnit)) fail(assetPath, `unknown quoteUnit ${asset.quoteUnit}`);
     if (!(asset.filedPortfolioWeight > 0 && asset.filedPortfolioWeight < 1)) {
@@ -268,8 +276,18 @@ export function validatePrivateTapeConfig(config) {
     }
   }
 
-  if (!(config.assets.spacex.referenceFullyDilutedShares > 0)) {
-    fail(`${path}.assets.spacex`, "referenceFullyDilutedShares required");
+  const spacexListing = config.assets.spacex.publicListing;
+  if (
+    !spacexListing ||
+    spacexListing.ticker !== "SPCX" ||
+    !isIsoDateKey(spacexListing.firstTradeDate) ||
+    !(spacexListing.ipoPrice > 0) ||
+    !(spacexListing.sharesOffered > 0)
+  ) {
+    fail(`${path}.assets.spacex.publicListing`, "SPCX listing details required");
+  }
+  if (!config.assets.spacex.navReadThroughNote) {
+    fail(`${path}.assets.spacex.navReadThroughNote`, "NAV lag note required");
   }
 
   const requiredSources = [
@@ -278,6 +296,9 @@ export function validatePrivateTapeConfig(config) {
     "hyperliquidInfoApi",
     "hyperliquidRobustPrices",
     "hyperliquidHip3",
+    "kucoinEntropyContext",
+    "spacexIpoPricing",
+    "nasdaqSpacexListing",
   ];
   for (const key of requiredSources) {
     if (!isHttpUrl(config.sources?.[key])) {

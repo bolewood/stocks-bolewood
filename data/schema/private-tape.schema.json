@@ -10,6 +10,7 @@
     "asOf",
     "dxyzFiledPortfolioValue",
     "modeledAssetsNote",
+    "marketStructureNote",
     "assets",
     "sources"
   ],
@@ -19,27 +20,14 @@
     "asOf": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
     "dxyzFiledPortfolioValue": { "type": "number", "exclusiveMinimum": 0 },
     "modeledAssetsNote": { "type": "string", "minLength": 1 },
+    "marketStructureNote": { "type": "string", "minLength": 1 },
     "assets": {
       "type": "object",
       "required": ["anthropic", "spacex"],
       "additionalProperties": false,
       "properties": {
         "anthropic": { "$ref": "#/$defs/modeledAsset" },
-        "spacex": {
-          "allOf": [
-            { "$ref": "#/$defs/modeledAsset" },
-            {
-              "type": "object",
-              "required": ["referenceFullyDilutedShares"],
-              "properties": {
-                "referenceFullyDilutedShares": {
-                  "type": "number",
-                  "exclusiveMinimum": 0
-                }
-              }
-            }
-          ]
-        }
+        "spacex": { "$ref": "#/$defs/modeledAsset" }
       }
     },
     "sources": {
@@ -53,6 +41,7 @@
       "required": [
         "name",
         "hyperliquidCoin",
+        "tapeRole",
         "quoteUnit",
         "filedPortfolioWeight",
         "filedExposureUsd",
@@ -61,11 +50,37 @@
       "properties": {
         "name": { "type": "string", "minLength": 1 },
         "hyperliquidCoin": { "type": "string", "minLength": 1 },
+        "tapeRole": {
+          "enum": ["private_pre_ipo_perp", "public_equity_perp"]
+        },
         "quoteUnit": {
           "enum": ["usd_billions_implied_valuation", "usd_per_share"]
         },
         "filedPortfolioWeight": { "type": "number", "exclusiveMinimum": 0 },
         "filedExposureUsd": { "type": "number", "exclusiveMinimum": 0 },
+        "navReadThroughNote": { "type": "string" },
+        "publicListing": {
+          "type": "object",
+          "required": [
+            "ticker",
+            "exchange",
+            "firstTradeDate",
+            "ipoPrice",
+            "sharesOffered",
+            "source"
+          ],
+          "properties": {
+            "ticker": { "type": "string", "minLength": 1 },
+            "exchange": { "type": "string", "minLength": 1 },
+            "firstTradeDate": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "ipoPrice": { "type": "number", "exclusiveMinimum": 0 },
+            "sharesOffered": { "type": "number", "exclusiveMinimum": 0 },
+            "source": { "type": "string", "minLength": 1 }
+          }
+        },
         "source": { "type": "string", "minLength": 1 }
       }
     }

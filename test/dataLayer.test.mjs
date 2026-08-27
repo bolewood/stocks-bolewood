@@ -46,7 +46,11 @@ test("every wrapper and marks.json validate against the schema", () => {
 test("Private Tape config validates as curated open data", () => {
   assert.equal(validatePrivateTapeConfig(privateTapeConfig), undefined);
   assert.equal(privateTapeConfig.assets.anthropic.hyperliquidCoin, "io:ANTH");
+  assert.equal(privateTapeConfig.assets.anthropic.tapeRole, "private_pre_ipo_perp");
   assert.equal(privateTapeConfig.assets.spacex.hyperliquidCoin, "xyz:SPCX");
+  assert.equal(privateTapeConfig.assets.spacex.tapeRole, "public_equity_perp");
+  assert.equal(privateTapeConfig.assets.spacex.publicListing.firstTradeDate, "2026-06-12");
+  assert.ok(privateTapeConfig.marketStructureNote.includes("not pre-IPO price discovery"));
 });
 
 test("impliedExposure exists only under computed.* and matches a fresh derivation", () => {

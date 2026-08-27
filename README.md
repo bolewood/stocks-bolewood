@@ -104,8 +104,8 @@ bug worth filing.
 
 ## Private Tape data
 
-The [Private Tape](https://stocks.bolewood.com/private-tape) page tests whether 24/7
-private-company markets for Anthropic and SpaceX lead DXYZ's next opening gap. The curated
+The [Private Tape](https://stocks.bolewood.com/private-tape) page tests whether Anthropic's
+private/pre-IPO tape and SpaceX's public 24/7 tape lead DXYZ's next opening gap. The curated
 assumptions are committed in `data/private-tape.json`; live aligned datasets are published
 from the site:
 
@@ -120,9 +120,10 @@ These exports are generated from runtime Hyperliquid and Yahoo market data. The 
 publishes the config, source links, analysis code and methodology, not raw candle histories
 or live quotes.
 
-The private-market marks come from Entropy/Hyperliquid venues. They are used only as an
-observable price-discovery tape, not as a recommendation to trade on, custody assets with,
-or rely on those venues.
+The Entropy/Hyperliquid marks are used only as observable market data, not as a
+recommendation to trade on, custody assets with, or rely on those venues. SpaceX now trades
+publicly as SPCX, so that leg is public-equity/perp tape rather than pre-IPO price
+discovery; DXYZ's SpaceX SPV exposure may lag public marks.
 
 ---
 

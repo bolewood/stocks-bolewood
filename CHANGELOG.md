@@ -3,6 +3,11 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.10.0.3] - 2026-08-27
+
+### Changed
+- Private Tape now distinguishes Anthropic's private/pre-IPO tape from SpaceX's public SPCX/perp tape. The SpaceX card no longer shows a placeholder fully diluted valuation, and the page, metadata, README, manifest, and caveats describe DXYZ's SpaceX SPV NAV-lag risk.
+
 ## [0.10.0.2] - 2026-08-27
 
 ### Fixed

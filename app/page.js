@@ -24,8 +24,8 @@ const tools = [
     name: "Private Tape",
     status: "live",
     description:
-      "DXYZ Shadow NAV lab comparing 24/7 Hyperliquid Anthropic and SpaceX returns against DXYZ opening gaps, rolling correlations, and residuals.",
-    tag: "DXYZ SHADOW NAV",
+      "DXYZ tape lab comparing Anthropic's private/pre-IPO tape and SpaceX's public 24/7 tape against DXYZ opening gaps, correlations, and residuals.",
+    tag: "DXYZ TAPE LAB",
   },
   {
     slug: "/echo",

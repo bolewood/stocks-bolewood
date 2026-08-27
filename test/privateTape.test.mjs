@@ -13,6 +13,7 @@ import {
   marketOpenMs,
   modeledAssetWeights,
   simpleReturn,
+  weightedTapeReturn,
   weightedPrivateReturn,
 } from "../lib/privateTape.mjs";
 import {
@@ -33,9 +34,13 @@ test("Private Tape two-asset weights normalize DXYZ March 31 Anthropic and Space
     Math.abs(weightedPrivateReturn({ anthropic: 0.10, spacex: -0.02 }) - 0.0468307692) <
       1e-10
   );
+  assert.equal(
+    weightedTapeReturn({ anthropic: 0.10, spacex: -0.02 }),
+    weightedPrivateReturn({ anthropic: 0.10, spacex: -0.02 })
+  );
 });
 
-test("Private Tape open-data manifest advertises derived exports without raw market prints", () => {
+test("Private Tape open-data manifest distinguishes private ANTH from public SPCX tape", () => {
   const manifest = privateTapeOpenDataManifest();
   assert.equal(manifest.staticConfigPath, "data/private-tape.json");
   assert.equal(manifest.schemaPath, "data/schema/private-tape.schema.json");
@@ -43,11 +48,15 @@ test("Private Tape open-data manifest advertises derived exports without raw mar
   assert.equal(manifest.liveMarketData.redistributedInRepo, false);
   assert.ok(manifest.usageBoundary.includes("not a recommendation"));
   assert.ok(manifest.sources.kucoinEntropyContext.includes("kucoin.com/news"));
+  assert.ok(manifest.sources.spacexIpoPricing.includes("ir.spacex.com"));
+  assert.ok(manifest.sources.nasdaqSpacexListing.includes("nasdaqtrader.com"));
   assert.equal(manifest.returnConvention.type, "simple_return");
+  assert.ok(manifest.modeledSleeve.marketStructureNote.includes("public trading under SPCX"));
+  assert.ok(manifest.caveats.some((caveat) => caveat.includes("SPCX is now a public")));
   assert.ok(
     manifest.datasets
       .find((dataset) => dataset.id === "overnight")
-      .columns.includes("weighted_private_return")
+      .columns.includes("weighted_tape_return")
   );
   assert.ok(PRIVATE_TAPE_DATA_COLUMNS.rth.includes("dxyz_return"));
   assert.ok(Math.abs(manifest.modeledSleeve.weights.anthropic - 0.5569230769) < 1e-10);
@@ -113,7 +122,7 @@ test("RTH return samples require overlapping same-day windows and skip overnight
   assert.equal(rows[0].qqq, 0.004999999999999893);
 });
 
-test("DXYZ Private Index normalizes unlike quote units to the first common observation", () => {
+test("DXYZ tape sleeve normalizes unlike quote units to the first common observation", () => {
   const close1 = marketCloseMs("2026-08-26");
   const close2 = marketCloseMs("2026-08-27");
   const weights = modeledAssetWeights();
@@ -128,13 +137,15 @@ test("DXYZ Private Index normalizes unlike quote units to the first common obser
 
   assert.equal(series.length, 2);
   assert.equal(series[0].privateIndex, 100);
+  assert.equal(series[0].tapeSleeveIndex, 100);
   assert.equal(series[0].dxyzIndex, 100);
   assert.ok(
     Math.abs(
-      series[1].privateIndex -
+      series[1].tapeSleeveIndex -
         100 * (weights.anthropic * 1.1 + weights.spacex * 0.9)
     ) < 1e-10
   );
+  assert.equal(series[1].privateIndex, series[1].tapeSleeveIndex);
   assert.equal(series[1].dxyzIndex, 110.00000000000001);
 });
 

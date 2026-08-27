@@ -192,14 +192,14 @@ function valuationCards({ anthropicCandles, spacexCandles, dxyzQuote, dxyzDaily,
       : null,
     spacex: spacexLatest
       ? {
-          label: "SpaceX implied valuation",
-          valueUsd:
-            spacexLatest.close *
-            PRIVATE_TAPE_CONFIG.assets.spacex.referenceFullyDilutedShares,
-          displayUnit: "approx valuation",
+          label: "SpaceX public/perp tape",
+          valueUsd: null,
+          displayUnit: "public price",
           price: spacexLatest.close,
           quoteUnit: "USD/share",
           asOfMs: spacexLatest.endMs,
+          publicListing: PRIVATE_TAPE_CONFIG.assets.spacex.publicListing,
+          navReadThroughNote: PRIVATE_TAPE_CONFIG.assets.spacex.navReadThroughNote,
         }
       : null,
     move24h: {
@@ -342,6 +342,7 @@ async function fetchLive(prev) {
       methodologyVersion: PRIVATE_TAPE_CONFIG.methodologyVersion,
       weights: modeledAssetWeights(),
       assets: PRIVATE_TAPE_CONFIG.assets,
+      marketStructureNote: PRIVATE_TAPE_CONFIG.marketStructureNote,
       sources: PRIVATE_TAPE_CONFIG.sources,
       returnConvention: "simple",
       minimums: {
@@ -375,7 +376,7 @@ async function fetchLive(prev) {
         {
           key: "dxyzSpacex",
           label: "DXYZ vs SPCX",
-          scope: "NYSE-hours 30m returns",
+          scope: "NYSE-hours 30m returns / public tape",
           ...correlationSummary(rthSamples, "spacex", "dxyz"),
         },
         {
@@ -468,7 +469,7 @@ function csvForPayload(payload, dataset) {
     { header: "start_et", value: (row) => etMinuteKey(row.startMs) },
     { header: "end_et", value: (row) => etMinuteKey(row.endMs) },
     { header: "dxyz_opening_gap", value: "dxyzGap" },
-    { header: "weighted_private_return", value: "weightedReturn" },
+    { header: "weighted_tape_return", value: "weightedReturn" },
     { header: "anthropic_return", value: "anthropic" },
     { header: "spacex_return", value: "spacex" },
     { header: "qqq_opening_gap", value: "qqqGap" },
