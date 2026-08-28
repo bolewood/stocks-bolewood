@@ -41,6 +41,25 @@
               "note": "Anthropic newsroom Series H close."
             }
           ]
+        },
+        {
+          "id": "anthropic-vcx-nport-2026-06-30",
+          "name": "VCX NPORT-implied mark (June 30, 2026)",
+          "postMoney": 863728942543.7954,
+          "closed": "2026-06-30",
+          "sources": [
+            {
+              "fields": ["postMoney"],
+              "sourceClass": "secondary",
+              "issuer": "Fundrise Innovation Fund",
+              "filingType": "NPORT-P",
+              "accession": "0001867090-26-000109",
+              "documentDate": "2026-06-30",
+              "asOf": "2026-06-30",
+              "url": "https://www.sec.gov/Archives/edgar/data/1867090/000186709026000109/xslFormNPORT-P_X01/primary_doc.xml",
+              "note": "Series G $380B × 2.2729709, the common multiple on VCX's remaining Anthropic lots (SaxeCap Advisors VIII and AI Access 12) from the March 31 NPORT to the June 30 NPORT. Not a disclosed Anthropic round."
+            }
+          ]
         }
       ]
     },

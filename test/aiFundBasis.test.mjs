@@ -92,7 +92,7 @@ test("VCX ESTIMATED keeps shares, rolls marks, and holds stake %", () => {
   const est = resolveFund(w, { basis: BASIS_ESTIMATED, deploy: DEPLOY_CASH });
   assert.equal(est.shares, filed.shares);
   assert.ok(est.anthFv > filed.anthFv);
-  assert.ok(Math.abs(est.anthFv / filed.anthFv - 965 / 380) < 1e-9);
+  assert.ok(Math.abs(est.anthFv / filed.anthFv - 965e9 / w.anthropic.roundVal) < 1e-9);
   assert.ok(est.netAssets > filed.netAssets);
   assert.ok(est.nav > filed.nav);
 
@@ -110,13 +110,14 @@ test("VCX ESTIMATED keeps shares, rolls marks, and holds stake %", () => {
   });
   assert.equal(filedM.anthPct, estM.anthPct);
   assert.equal(filedM.oaiPct, estM.oaiPct);
-  assert.ok(Math.abs(filedM.anthPct - 112_418_000 / 380_000_000_000) < 1e-15);
+  const remainingMarchAnth = 56_388_340 + 20_000_000;
+  assert.ok(Math.abs(filedM.anthPct - remainingMarchAnth / 380_000_000_000) < 1e-12);
   assert.ok(Math.abs(estM.combinedPer100 - filedM.combinedPer100) < 1e-9);
-  assert.ok(estM.combinedPer100 < 35, estM.combinedPer100);
-  assert.ok(estM.combinedPer100 > 25, estM.combinedPer100);
+  assert.ok(estM.combinedPer100 < 25, estM.combinedPer100);
+  assert.ok(estM.combinedPer100 > 15, estM.combinedPer100);
   assert.ok(estM.premium < filedM.premium);
-  assert.ok(filedM.premium > 1.0); // ~+110% at fallback $39.78 / $18.97
-  assert.ok(estM.premium > 0.5); // ~+67% at restated ~$23.80 NAV
+  assert.ok(filedM.premium > 0.7); // ~+83% at fallback $39.78 / $21.70
+  assert.ok(estM.premium > 0.5);
 });
 
 test("fund stake % is identical across filed and estimated (cash)", () => {

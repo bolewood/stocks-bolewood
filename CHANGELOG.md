@@ -3,6 +3,11 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.10.2.0] - 2026-08-28
+
+### Changed
+- `/vcx` and `/ai` VCX rows now use the June 30, 2026 NPORT-P: net assets $777.0M, NAV $21.70, 35.8M shares. Anthropic remaining lots marked 2.273× to $173.6M (implied ~$864B, not full Series H); OpenAI lots unchanged at $84.2M. Figure AI, FSTK FR, and RWL AI are new; dbt Labs is Fivetran.
+
 ## [0.10.1.0] - 2026-08-28
 
 ### Changed

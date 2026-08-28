@@ -10,13 +10,13 @@
   "note": "Trades at a large premium to NAV. Denominator is market cap, not NAV.",
   "shareCount": {
     "value": 35797138,
-    "asOf": "2026-03-31",
-    "note": "Converted from a tender-offer fund to a listed CEF on 2026-03-19 (NYSE: VCX). Continuous offering did not continue post-listing — share count held stable."
+    "asOf": "2026-06-30",
+    "note": "35,797,138 common from the March 31, 2026 N-CSR/A. June 30 NPORT-P Item B.6 reports $0 sales and $0 redemptions for April, May and June, so the audited share count is unchanged. Converted from a tender-offer fund to a listed CEF on 2026-03-19 (NYSE: VCX). No post-listing continuous offering."
   },
-  "filedNavPerShare": 18.97,
-  "filedNetAssets": 678918000,
+  "filedNavPerShare": 21.70476203768022,
+  "filedNetAssets": 776968361.92,
   "listedOn": "2026-03-19",
-  "sharesNote": "35,797,138 common (N-CSR/A 2026-03-31). Converted from a tender-offer fund to a listed CEF on 2026-03-19 (NYSE: VCX). Continuous offering did not continue post-listing — share count held stable. ESTIMATED rolls Anthropic/OpenAI marks from the Feb 2026 rounds used in the 3/31 filing to last known primary post-money; other holdings stay at 3/31.",
+  "sharesNote": "35,797,138 common (N-CSR/A 2026-03-31), confirmed outstanding at June 30 by NPORT-P zero flows. ESTIMATED keeps that share count and rolls Anthropic from the NPORT-implied ~$864B mark to Series H; OpenAI lots were unchanged at the Feb 2026 ~$850B fund mark, so ESTIMATED only rolls the $850B→$852B last-primary step.",
   "security": {
     "label": "Fund NAV",
     "linear": true,
@@ -24,48 +24,59 @@
   },
   "sources": [
     {
-      "fields": ["shareCount", "filedNavPerShare", "filedNetAssets"],
+      "fields": ["filedNavPerShare", "filedNetAssets"],
+      "sourceClass": "primary",
+      "issuer": "Fundrise Innovation Fund",
+      "filingType": "NPORT-P",
+      "accession": "0001867090-26-000109",
+      "documentDate": "2026-06-30",
+      "asOf": "2026-06-30",
+      "url": "https://www.sec.gov/Archives/edgar/data/1867090/000186709026000109/xslFormNPORT-P_X01/primary_doc.xml",
+      "note": "Net assets $776,968,361.92, total assets $813,141,712.26, liabilities $36,173,350.34. NAV per share is net assets ÷ 35,797,138 shares. Signed 2026-08-27."
+    },
+    {
+      "fields": ["shareCount"],
       "sourceClass": "primary",
       "issuer": "Fundrise Innovation Fund",
       "filingType": "N-CSR/A",
+      "accession": "0001999371-26-011950",
       "documentDate": "2026-03-31",
       "asOf": "2026-03-31",
-      "note": "Net assets $678,918k, NAV $18.97, 35,797,138 shares."
+      "note": "Net assets $678,918k, NAV $18.97, 35,797,138 shares. Share count carried forward; June 30 NPORT does not reprint SO."
     }
   ],
   "anthropic": {
     "basis": "filed-fv-equiv",
     "holdingSecurity": "fund-interest",
-    "reportedFairValue": 112418000,
-    "fairValueAsOf": "2026-03-31",
-    "measurementCompanyMark": "anthropic-series-g",
-    "measurementMarkAsOf": "2026-02-12",
+    "reportedFairValue": 173628474,
+    "fairValueAsOf": "2026-06-30",
+    "measurementCompanyMark": "anthropic-vcx-nport-2026-06-30",
+    "measurementMarkAsOf": "2026-06-30",
     "confidence": "high",
     "sources": [
       {
         "fields": ["reportedFairValue"],
         "sourceClass": "primary",
         "issuer": "Fundrise Innovation Fund",
-        "filingType": "N-CSR/A",
-        "documentDate": "2026-03-31",
-        "asOf": "2026-03-31",
-        "note": "Anthropic, PBC $112,418k — 16.5% of net assets."
+        "filingType": "NPORT-P",
+        "accession": "0001867090-26-000109",
+        "documentDate": "2026-06-30",
+        "asOf": "2026-06-30",
+        "url": "https://www.sec.gov/Archives/edgar/data/1867090/000186709026000109/xslFormNPORT-P_X01/primary_doc.xml",
+        "note": "SaxeCap Advisors VIII, LP $128,169,056 + AI Access 12, LLC $45,459,418. Both lots are 2.2729709× their March 31 NPORT values (SaxeCap $56,388,340; AI Access 12 $20,000,000), so this is a mark, not a new subscription. Together they were $76,388,340 of the 3/31 N-CSR Anthropic $112,418k economic issuer total. HOF Capital AG Follow On, LLC ($36,029,463 at 3/31) is absent at 6/30."
       },
       {
         "fields": ["measurementCompanyMark"],
-        "sourceClass": "primary",
-        "issuer": "Fundrise Innovation Fund",
-        "filingType": "N-CSR/A",
-        "documentDate": "2026-03-31",
-        "asOf": "2026-02-12"
+        "sourceClass": "secondary",
+        "note": "Implied ~$863.7B = Series G $380B × the 2.2729709× NPORT multiple on the remaining lots. Not a disclosed Anthropic round; Fundrise did not take the full Series H 965/380 multiple."
       }
     ]
   },
   "openai": {
     "basis": "filed-fv-equiv",
     "holdingSecurity": "fund-interest",
-    "reportedFairValue": 84163000,
-    "fairValueAsOf": "2026-03-31",
+    "reportedFairValue": 84162466,
+    "fairValueAsOf": "2026-06-30",
     "measurementCompanyMark": "openai-feb-2026",
     "measurementMarkAsOf": "2026-02",
     "confidence": "high",
@@ -74,15 +85,17 @@
         "fields": ["reportedFairValue"],
         "sourceClass": "primary",
         "issuer": "Fundrise Innovation Fund",
-        "filingType": "N-CSR/A",
-        "documentDate": "2026-03-31",
-        "asOf": "2026-03-31",
-        "note": "OpenAI Group PBC $84,163k — 12.4% of net assets."
+        "filingType": "NPORT-P",
+        "accession": "0001867090-26-000109",
+        "documentDate": "2026-06-30",
+        "asOf": "2026-06-30",
+        "url": "https://www.sec.gov/Archives/edgar/data/1867090/000186709026000109/xslFormNPORT-P_X01/primary_doc.xml",
+        "note": "Quiet OA Access LP $64,613,489 + HOF Capital AP Growth, LLC $19,548,977 — identical to the March 31 NPORT lots, which summed to the N-CSR OpenAI $84,163k economic-issuer total."
       },
       {
         "fields": ["measurementCompanyMark"],
         "sourceClass": "secondary",
-        "note": "Feb 2026 ~$850B fund-mark print used as the measurement company valuation."
+        "note": "Feb 2026 ~$850B fund-mark print used as the measurement company valuation. Unchanged dollar FV at June 30, so the mark was not rolled."
       }
     ]
   }

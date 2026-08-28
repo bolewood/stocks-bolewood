@@ -5,57 +5,61 @@ import PriceBadge from "./PriceBadge";
 import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 
 // VCX NAV Finder
-// Source: Fundrise Innovation Fund (f.k.a. Growth Tech Fund) Schedule of Investments, 12/31/2025
-// Share counts aggregated across tranches per position. Values in thousands where indicated.
+// Source: Fundrise Innovation Fund NPORT-P as of 2026-06-30 (filed 2026-08-27).
+// Share counts from NPORT lots; values in thousands where indicated.
 
-const VCX_SHARES_OUTSTANDING_M = 35.797138; // audited
+const VCX_SHARES_OUTSTANDING_M = 35.797138; // N-CSR/A 3/31; NPORT B.6 Q2 flows $0
 
 // Positions where we have a clean underlying share count.
-// share_count is in THOUSANDS (matching the filing's "Par/Shares" column).
+// share_count is in THOUSANDS (NPORT balance / 1000).
 const SHARE_DENOMINATED = [
-  { name: "Databricks", shares_k: 122, mark_pps_0331: 23256 / 122, note: "Common stock only. (SPV separate)" },
-  { name: "Ramp Business", shares_k: 308, mark_pps_0331: 27741 / 308, note: "Series A-2 + C-1 + Common" },
-  { name: "Flock Group", shares_k: 1547, mark_pps_0331: 23416 / 1547, note: "Class B + A + A-1st-SAFE + C" },
-  { name: "Epic Games", shares_k: 43, mark_pps_0331: 19180 / 43, note: "Common" },
-  { name: "dbt Labs", shares_k: 441, mark_pps_0331: 15000 / 441, note: "Series D Preferred" },
-  { name: "Vanta", shares_k: 555, mark_pps_0331: 10116 / 555, note: "Series B-1 Preferred" },
-  { name: "Canva", shares_k: 6, mark_pps_0331: 9599 / 6, note: "Common" },
-  { name: "Loyal Animal Health", shares_k: 780, mark_pps_0331: 9560 / 780, note: "Series C Preferred" },
-  { name: "Anduril", shares_k: 76, mark_pps_0331: 7350 / 76, note: "Series Seed Preferred only. (CIV separate)" },
-  { name: "Erebor Bank", shares_k: 19, mark_pps_0331: 5000 / 19, note: "Preferred (Acq. 2/20/26)" },
-  { name: "Handshake", shares_k: 46, mark_pps_0331: 3415 / 46, note: "Series C + D Preferred" },
-  { name: "Intercom", shares_k: 53, mark_pps_0331: 2802 / 53, note: "Common + Series A Preferred" },
-  { name: "Anyscale", shares_k: 511, mark_pps_0331: 2494 / 511, note: "Common" },
-  { name: "Hightouch", shares_k: 14, mark_pps_0331: 683 / 14, note: "Common + Series C Preferred" },
-  { name: "Stripe", shares_k: 10, mark_pps_0331: 618 / 10, note: "Common" },
+  { name: "Databricks", shares_k: 122.4, mark_pps: 23256 / 122.4, note: "Common stock only. (SPV separate)" },
+  { name: "Ramp Business", shares_k: 308.233, mark_pps: 36987.96 / 308.233, note: "Series A-2 + C-1 + Common · marked to $120" },
+  { name: "Flock Group", shares_k: 1546.831, mark_pps: 24179.907 / 1546.831, note: "Class B + A + A-1st-SAFE + C" },
+  { name: "Epic Games", shares_k: 42.963, mark_pps: 19179.61 / 42.963, note: "Common" },
+  { name: "Fivetran", shares_k: 441.177, mark_pps: 15000.018 / 441.177, note: "Series D Preferred · was dbt Labs; merger closed after 3/31" },
+  { name: "Vanta", shares_k: 554.888, mark_pps: 10115.60802 / 554.888, note: "Series B-1 Preferred" },
+  { name: "Canva", shares_k: 5.831, mark_pps: 9598.64234 / 5.831, note: "Common" },
+  { name: "Loyal Animal Health", shares_k: 815.447, mark_pps: 9999.98972 / 815.447, note: "Series C Preferred · +35.8k shares vs 3/31 at the same PPS" },
+  { name: "Anduril", shares_k: 76.087, mark_pps: 5246.199 / 76.087, note: "Series Seed Preferred only. (CIV separate)" },
+  { name: "Erebor Bank", shares_k: 18.679, mark_pps: 4999.92001 / 18.679, note: "Preferred" },
+  { name: "Handshake", shares_k: 45.538, mark_pps: 3415.35 / 45.538, note: "Series C + D Preferred" },
+  { name: "Intercom", shares_k: 52.861, mark_pps: 2801.633 / 52.861, note: "Common + Series A Preferred" },
+  { name: "Anyscale", shares_k: 510.88, mark_pps: 2493.72296 / 510.88, note: "Common" },
+  { name: "Hightouch", shares_k: 13.727, mark_pps: 1286.6921 / 13.727, note: "Common + Series C Preferred" },
+  { name: "Stripe", shares_k: 9.804, mark_pps: 617.652 / 9.804, note: "Common" },
+  { name: "Figure AI", shares_k: 51.3, mark_pps: 9999.98975 / 51.3, note: "New 6/30 position" },
 ];
 
 // Held at mark — no clean underlying share count disclosed (SPVs, convertible rights, partnership interests).
 // Values in thousands.
 const DOLLAR_DENOMINATED = [
-  { name: "Anthropic (co-investment vehicles)", value_k: 112418, note: "Three CIV lots (12/23, 08/25, 02/26) — blended 2.2x on $50.8M cost" },
-  { name: "OpenAI (co-investment vehicles)", value_k: 84163, note: "Two CIV lots (12/23, 09/24)" },
-  { name: "Databricks SPV", value_k: 72480, note: "Valued via NAV practical expedient" },
-  { name: "Anduril Industries CIV", value_k: 30231, note: "Acq. 10/23 (Series F markup)" },
-  { name: "SpaceX SPV", value_k: 26856, note: "Acq. 7/25" },
-  { name: "Visual Layer (SAFE)", value_k: 5000, note: "Converts on next round" },
-  { name: "AI-LLM, LLC (CIV)", value_k: 3105, note: "Top-10 LLM provider" },
+  { name: "Anthropic (co-investment vehicles)", value_k: 173628.474, note: "SaxeCap Advisors VIII $128.2M + AI Access 12 $45.5M · 2.273× vs 3/31 remaining lots; HOF AG Follow On exited" },
+  { name: "OpenAI (co-investment vehicles)", value_k: 84162.466, note: "Quiet OA Access $64.6M + HOF Capital AP Growth $19.5M · unchanged vs 3/31" },
+  { name: "Databricks SPV", value_k: 72479.78, note: "AI Growth GRT, LLC (was DBH1 LP) · NAV practical expedient, unchanged" },
+  { name: "Anduril Industries CIV", value_k: 21578.178, note: "8VC ANSE SPV, LP · marked down from $30.2M" },
+  { name: "SpaceX SPV", value_k: 33086.011, note: "SP Private Investments XIII, LLC · 5,100 units" },
+  { name: "AI-LLM, LLC (CIV)", value_k: 23105, note: "Top-10 LLM provider · +$20.0M vs 3/31" },
+  { name: "FSTK FR, LP", value_k: 19312.5, note: "New 6/30 vehicle (NPORT does not name the portfolio company)" },
+  { name: "RWL AI, LLC", value_k: 15000, note: "New 6/30 vehicle (NPORT does not name the portfolio company)" },
 ];
 
 // Long tail / non-private-equity holdings + net-other assets.
 const OTHER_HOLDINGS = [
-  { name: "CMBS / Data Center Fixed Income", value_k: 65751, note: "SOFR-floating, short duration" },
-  { name: "Other assets in excess of liabilities", value_k: 64732, note: "Net positive: cash, receivables less liabilities" },
-  { name: "JPM Treasury MMF", value_k: 38310, note: "Cash equivalent (~3.62% 7-day yield)" },
-  { name: "Inspectify (PE + SAFE)", value_k: 6000, note: "Series A-5 Preferred + SAFE" },
-  { name: "Promissory Note — Theory Ventures", value_k: 4732, note: "10.0% coupon, matures 4/28/33" },
-  { name: "Rhino Labs", value_k: 1414, note: "Series P + D-1A + D-1" },
-  { name: "Immuta", value_k: 1022, note: "Common" },
-  { name: "DittoLive", value_k: 1000, note: "Series B" },
-  { name: "Omni Analytics", value_k: 588, note: "Series B-1" },
-  { name: "Risotto", value_k: 500, note: "Seed 2 + Seed 1" },
-  { name: "Luminos", value_k: 364, note: "Seed 2 + Seed 1" },
-  { name: "Gumloop", value_k: 22, note: "Series A-2" },
+  { name: "CMBS / Data Center Fixed Income", value_k: 65925.32525, note: "Eight data-center CMBS lots" },
+  { name: "JPM Treasury MMF", value_k: 41695.51229, note: "Cash equivalent" },
+  { name: "Cash & cash equivalents (not in schedule)", value_k: 60828.53165, note: "NPORT Item B.2.f", locked: true },
+  { name: "Reverse repurchase agreements", value_k: -30532.4973, note: "Five Barclays reverse repos vs CMBS collateral", locked: true },
+  { name: "Inspectify (PE + SAFE)", value_k: 5999.96501, note: "Series A-5 Preferred + SAFE" },
+  { name: "Promissory Note — Theory Ventures", value_k: 5696.275, note: "10.0% coupon, matures 4/28/33" },
+  { name: "Rhino Labs", value_k: 1414.78316, note: "Series P + D-1A + D-1" },
+  { name: "Immuta", value_k: 1021.6, note: "Common" },
+  { name: "DittoLive", value_k: 999.99278, note: "Series B" },
+  { name: "Omni Analytics", value_k: 1219.917, note: "Series B-1" },
+  { name: "Risotto", value_k: 500.43143, note: "Seed 2 + Seed 1" },
+  { name: "Luminos", value_k: 363.71146, note: "Seed 2 + Seed 1" },
+  { name: "Gumloop", value_k: 67.225, note: "Series A-2" },
+  { name: "Other assets less other liabilities", value_k: 236.28629, note: "Plug so itemized lots + cash + repos = NPORT net assets $776,968,361.92", locked: true },
 ];
 
 const fmt$ = (n) =>
@@ -85,9 +89,9 @@ export default function VCXNAVFinder() {
   // Track which preset scenario is active (null = custom/manual edits)
   const [activeScenario, setActiveScenario] = useState("mark");
 
-  // Initialize PPS at the 3/31/26 marks
+  // Initialize PPS at the 6/30/26 NPORT marks
   const [ppsOverrides, setPpsOverrides] = useState(
-    SHARE_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: p.mark_pps_0331 }), {})
+    SHARE_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: p.mark_pps }), {})
   );
   const [vcxShares, setVcxShares] = useState(VCX_SHARES_OUTSTANDING_M);
   const [vcxPrice, setVcxPrice] = useState(40.0); // 2026-08-19; live-fetched on load
@@ -104,12 +108,12 @@ export default function VCXNAVFinder() {
   }, []);
 
   // MOIC overrides for SPV/SAFE positions (Box 2) and other holdings (Box 3).
-  // 1.0x = held at 12/31 mark.
+  // 1.0x = held at 6/30 NPORT mark.
   const [dollarMOICs, setDollarMOICs] = useState(
     DOLLAR_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {})
   );
   const [otherMOICs, setOtherMOICs] = useState(
-    OTHER_HOLDINGS.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {})
+    OTHER_HOLDINGS.filter((p) => !p.locked).reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {})
   );
 
   const updatePPS = (name, val) => {
@@ -140,10 +144,10 @@ export default function VCXNAVFinder() {
 
   const resetToMark = () => {
     setPpsOverrides(
-      SHARE_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: p.mark_pps_0331 }), {})
+      SHARE_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: p.mark_pps }), {})
     );
     setDollarMOICs(DOLLAR_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
-    setOtherMOICs(OTHER_HOLDINGS.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
+    setOtherMOICs(OTHER_HOLDINGS.filter((p) => !p.locked).reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
     setActiveScenario("mark");
     updateURL("mark");
   };
@@ -155,7 +159,7 @@ export default function VCXNAVFinder() {
       "Ramp Business": 240,
       "Flock Group": 36,
       "Epic Games": 1132,
-      "dbt Labs": 84,
+      "Fivetran": 84,
       "Vanta": 40,
       "Canva": 3600,
       "Loyal Animal Health": 30,
@@ -166,6 +170,7 @@ export default function VCXNAVFinder() {
       "Anyscale": 12,
       "Hightouch": 120,
       "Stripe": 140,
+      "Figure AI": 390,
     });
     setDollarMOICs({
       "Anthropic (co-investment vehicles)": 3.0,
@@ -173,10 +178,11 @@ export default function VCXNAVFinder() {
       "Databricks SPV": 2.4,
       "Anduril Industries CIV": 2.4,
       "SpaceX SPV": 2.2,
-      "Visual Layer (SAFE)": 2.0,
       "AI-LLM, LLC (CIV)": 4.0,
+      "FSTK FR, LP": 2.0,
+      "RWL AI, LLC": 2.0,
     });
-    setOtherMOICs(OTHER_HOLDINGS.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
+    setOtherMOICs(OTHER_HOLDINGS.filter((p) => !p.locked).reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
     setActiveScenario("dream");
     updateURL("dream");
   };
@@ -185,8 +191,8 @@ export default function VCXNAVFinder() {
     resetToMark();
     setDollarMOICs((prev) => ({
       ...prev,
-      "Anthropic (co-investment vehicles)": 2.9,
-      "OpenAI (co-investment vehicles)": 1.9,
+      "Anthropic (co-investment vehicles)": 1.19,
+      "OpenAI (co-investment vehicles)": 1.04,
     }));
     setActiveScenario("notice");
     updateURL("notice");
@@ -196,8 +202,8 @@ export default function VCXNAVFinder() {
     resetToMark();
     setDollarMOICs((prev) => ({
       ...prev,
-      "Anthropic (co-investment vehicles)": 4.0,
-      "OpenAI (co-investment vehicles)": 2.5,
+      "Anthropic (co-investment vehicles)": 1.62,
+      "OpenAI (co-investment vehicles)": 1.39,
     }));
     setActiveScenario("ventuals");
     updateURL("ventuals");
@@ -239,6 +245,16 @@ export default function VCXNAVFinder() {
     });
 
     const otherRows = OTHER_HOLDINGS.map((p) => {
+      if (p.locked) {
+        const positionValue = p.value_k * 1000;
+        return {
+          ...p,
+          moic: undefined,
+          markValue: positionValue,
+          positionValue,
+          navPerVcxShare: positionValue / (vcxShares * 1_000_000),
+        };
+      }
       const moic = parseFloat(otherMOICs[p.name]) || 0;
       const positionValue = p.value_k * 1000 * moic;
       return {
@@ -272,7 +288,7 @@ export default function VCXNAVFinder() {
           VCX <span style={styles.titleAccent}>NAV Finder</span>
         </h1>
         <p style={styles.subtitle} className="vcx-subtitle">
-          VCX is a closed-end fund holding stakes in private companies (Anthropic, Databricks, OpenAI, SpaceX, etc.). It listed on the NYSE on March 19, 2026 and currently trades at a steep premium to its underlying net asset value. This tool lets you mark each holding to a current secondary-market price so you can estimate what VCX is actually worth per share. Inputs default to Fundrise's audited March 31, 2026 marks; override using current data from Hiive, Caplight, Notice, Forge, or your own estimates.
+          VCX is a closed-end fund holding stakes in private companies (Anthropic, Databricks, OpenAI, SpaceX, etc.). It listed on the NYSE on March 19, 2026 and currently trades at a steep premium to its underlying net asset value. This tool lets you mark each holding to a current secondary-market price so you can estimate what VCX is actually worth per share. Inputs default to the June 30, 2026 NPORT-P; override using current data from Hiive, Caplight, Notice, Forge, or your own estimates.
         </p>
       </div>
 
@@ -280,7 +296,7 @@ export default function VCXNAVFinder() {
         <div style={styles.howToTitle}>How this works in 30 seconds</div>
         <ol style={styles.howToList}>
           <li style={{ marginBottom: 6 }}>The fund holds three buckets of assets: private-company shares (Box 1), SPV/SAFE/convertible positions (Box 2), and a mix of public stock, fixed income, cash and liabilities (Box 3).</li>
-          <li style={{ marginBottom: 6 }}>Update price-per-share for Box 1 holdings and MOIC multipliers for Box 2/3. Defaults are Fundrise's audited March 31, 2026 marks.</li>
+          <li style={{ marginBottom: 6 }}>Update price-per-share for Box 1 holdings and MOIC multipliers for Box 2/3. Defaults are the June 30, 2026 NPORT-P marks.</li>
           <li style={{ marginBottom: 6 }}>Try the preset buttons to see plausible "current market" and "everything-doubles" scenarios.</li>
           <li>The grand total at the bottom shows estimated NAV per share and the implied premium vs. the current VCX market price.</li>
         </ol>
@@ -316,9 +332,9 @@ export default function VCXNAVFinder() {
         </div>
         <div style={styles.controlGroup}>
           {[
-            { key: "mark", label: "3/31/26 Audited Marks (base case)", handler: resetToMark },
-            { key: "notice", label: "Mark-to-Secondary (Notice)", handler: applyNotice, title: "Adjusts Anthropic & OpenAI only; other holdings stay at the 3/31 audited mark (no dated secondary source on file)." },
-            { key: "ventuals", label: "Derivative Ceiling (Ventuals)", handler: applyVentuals, title: "Adjusts Anthropic & OpenAI only; other holdings stay at the 3/31 audited mark (no dated secondary source on file)." },
+            { key: "mark", label: "6/30/26 NPORT marks (base case)", handler: resetToMark },
+            { key: "notice", label: "Mark-to-Secondary (Notice)", handler: applyNotice, title: "Adjusts Anthropic & OpenAI only vs the June 30 NPORT mark. Notice prints are dated June 1, 2026 — stale relative to this filing." },
+            { key: "ventuals", label: "Derivative Ceiling (Ventuals)", handler: applyVentuals, title: "Adjusts Anthropic & OpenAI only vs the June 30 NPORT mark. Ventuals prints are dated June 1, 2026 — stale relative to this filing." },
             { key: "dream", label: "Dream Scenario (2×)", handler: applyDream },
           ].map(({ key, label, handler, title }) => {
             const isActive = activeScenario === key;
@@ -353,7 +369,7 @@ export default function VCXNAVFinder() {
           <h3 style={{ ...styles.sectionTitle, fontSize: "16px", margin: 0 }}>About the share count</h3>
         </div>
         <div style={styles.issuanceMeta}>
-          The default share count of <strong>35,797,138</strong> is the audited figure from the March 31, 2026 Annual Report. This supersedes the prior cap-table reconstruction (~35.9M) by Reddit user Fit_Equal6932, which proved highly accurate (within 0.3%). The April 24 Form 144 figure of 28.3M was indeed the stale Schedule TO baseline and did not capture late retail subscriptions or the REIT block.
+          The default share count of <strong>35,797,138</strong> is the audited figure from the March 31, 2026 Annual Report. The June 30 NPORT-P reports $0 sales and $0 redemptions for April–June, so that count is unchanged. This supersedes the prior cap-table reconstruction (~35.9M) by Reddit user Fit_Equal6932, which proved highly accurate (within 0.3%). The April 24 Form 144 figure of 28.3M was the stale Schedule TO baseline.
         </div>
       </div>
 
@@ -376,7 +392,7 @@ export default function VCXNAVFinder() {
           </div>
 
           {calc.shareRows.map((r) => {
-            const delta = ((r.pps - r.mark_pps_0331) / r.mark_pps_0331) * 100;
+            const delta = ((r.pps - r.mark_pps) / r.mark_pps) * 100;
             return (
               <div key={r.name} style={styles.tr} className="vcx-row">
                 <div style={{ ...styles.td, flex: "2.2" }}>
@@ -434,13 +450,13 @@ export default function VCXNAVFinder() {
         <div style={styles.sectionHeader} className="vcx-section-header">
           <span style={styles.sectionNum}>02</span>
           <h2 style={styles.sectionTitle}>SPV / Convertible / SAFE — flex with MOIC</h2>
-          <span style={styles.sectionMeta} className="vcx-section-meta">1.0x = held at 3/31/26 mark</span>
+          <span style={styles.sectionMeta} className="vcx-section-meta">1.0x = held at 6/30/26 NPORT mark</span>
         </div>
 
         <div style={styles.tableWrap}>
           <div style={styles.tableHeaderRow} className="vcx-table-header">
             <div style={{ ...styles.th, flex: "2.6" }}>Position</div>
-            <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>3/31 Mark</div>
+            <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>6/30 Mark</div>
             <div style={{ ...styles.th, flex: "1.0", textAlign: "right" }}>MOIC</div>
             <div style={{ ...styles.th, flex: "1.4", textAlign: "right" }}>Position Value</div>
             <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>$/VCX share</div>
@@ -452,7 +468,7 @@ export default function VCXNAVFinder() {
                 <div style={styles.companyName}>{r.name}</div>
                 <div style={styles.companyNote}>{r.note}</div>
               </div>
-              <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "#78716c" }} data-label="3/31 Mark">
+              <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "#78716c" }} data-label="6/30 Mark">
                 {fmt$(r.markValue)}
               </div>
               <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }} className="vcx-moic-cell" data-label="MOIC">
@@ -490,19 +506,19 @@ export default function VCXNAVFinder() {
           </div>
         </div>
         <div style={styles.callout}>
-          <p style={{ marginTop: 0 }}><strong>How Fundrise set these 3/31 marks.</strong> These are Level 3 fair values determined by Fundrise Advisors (the Valuation Designee, under SEC Rule 2a-5) using the <strong>market approach</strong>, adjusted to each position's latest funding round. The audited report groups the $432.9M Level 3 book into two techniques: <strong>"Market Transaction"</strong> ($327.1M — marked to private transaction prices / non-public third-party pricing) and <strong>"Recent Transaction"</strong> ($105.8M — held at the original round or secondary entry price). Every CIV/SPV line shows <strong>N/A shares</strong>, so an exact implied company valuation cannot be computed from the filing. The figures below are our inference, triangulating the dated cost/value lots in the restricted-securities schedule against each company's last known primary round:</p>
+          <p style={{ marginTop: 0 }}><strong>How these 6/30 marks were read.</strong> The June 30 NPORT-P reports legal vehicles, not economic issuers. Mapping to the March 31 NPORT and N-CSR/A: <strong>SaxeCap Advisors VIII</strong> and <strong>AI Access 12</strong> are the remaining Anthropic lots; <strong>Quiet OA Access</strong> and <strong>HOF Capital AP Growth</strong> are the OpenAI lots. Every CIV/SPV line is 1 membership unit with <strong>N/A shares</strong>, so look-through company valuation is inferred from the change in those lots versus March 31, when the N-CSR marked Anthropic to Series G (~$380B) and OpenAI to a ~$850B fund print:</p>
           <ul style={{ paddingLeft: "1.5rem", marginBottom: "1rem" }}>
-            <li><strong>Anthropic ≈ $350B.</strong> The freshest lot (acquired 2/10/26, cost $20.8M held at $20.0M — essentially flat) lines up with Anthropic's ~$350B round in Jan 2026; the older 12/23 and 8/25 lots carry the markup to that level (blended <strong>2.2× on $50.8M cost</strong>).</li>
-            <li><strong>OpenAI ≈ $450–500B.</strong> Reflects OpenAI's ~$500B primary round (Oct 2025). The 9/24 lot is up ~2.5× and the 12/23 lot ~3.7× on cost. <em>(This corrects a prior ~$300B figure — Fundrise's mark embeds the Oct-2025 round, not a 2024 valuation.)</em></li>
-            <li><strong>Databricks ≈ SPV NAV.</strong> Marked via the SPV's own reported NAV (practical expedient), not a look-through to Databricks shares.</li>
-            <li><strong>Anduril ≈ Series F (2025),</strong> ~5× on the 2023 cost basis.</li>
+            <li><strong>Anthropic ≈ $864B implied.</strong> SaxeCap $56.4M → $128.2M and AI Access 12 $20.0M → $45.5M, the same 2.273× multiple. That is a mark, not a new subscription. It is <em>not</em> a full Series H ($965B) roll. HOF Capital AG Follow On ($36.0M at March 31, the third Anthropic CIV) is gone.</li>
+            <li><strong>OpenAI still ≈ $850B.</strong> Quiet OA $64.6M and HOF AP $19.5M are unchanged dollar-for-dollar versus March 31, so Fundrise did not roll the OpenAI mark in Q2.</li>
+            <li><strong>Databricks SPV ≈ own NAV.</strong> AI Growth GRT (was DBH1 LP) $72.5M, unchanged; practical expedient, not a look-through to Databricks shares.</li>
+            <li><strong>Anduril CIV marked down</strong> ($30.2M → $21.6M on 8VC ANSE SPV). Direct seed shares marked down with it.</li>
           </ul>
-          <p><strong>Where secondary venues currently price the two megacaps</strong> (used by the Mark-to-Secondary and Derivative-Ceiling scenarios — see presets):</p>
+          <p><strong>Where secondary venues priced the two megacaps on June 1</strong> (used by the Mark-to-Secondary and Derivative-Ceiling scenarios — those prints predate this NPORT):</p>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", marginTop: "8px", marginBottom: "8px" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid #d6d3d1", textAlign: "left" }}>
                 <th style={{ padding: "4px 8px" }}></th>
-                <th style={{ padding: "4px 8px" }}>Fundrise 3/31 implied*</th>
+                <th style={{ padding: "4px 8px" }}>Fundrise 6/30 implied*</th>
                 <th style={{ padding: "4px 8px" }}>Notice consensus</th>
                 <th style={{ padding: "4px 8px" }}>Ventuals oracle / mark</th>
               </tr>
@@ -510,26 +526,26 @@ export default function VCXNAVFinder() {
             <tbody>
               <tr style={{ borderBottom: "1px solid #e7e5e4" }}>
                 <td style={{ padding: "4px 8px", fontWeight: "600" }}>Anthropic</td>
-                <td style={{ padding: "4px 8px" }}>~$350B</td>
+                <td style={{ padding: "4px 8px" }}>~$864B</td>
                 <td style={{ padding: "4px 8px" }}>$1.03T (Jun 1)</td>
                 <td style={{ padding: "4px 8px" }}>$1.40T / $1.59T (Jun 1)</td>
               </tr>
               <tr style={{ borderBottom: "1px solid #e7e5e4" }}>
                 <td style={{ padding: "4px 8px", fontWeight: "600" }}>OpenAI</td>
-                <td style={{ padding: "4px 8px" }}>~$450–500B</td>
+                <td style={{ padding: "4px 8px" }}>~$850B</td>
                 <td style={{ padding: "4px 8px" }}>$887B (May 30)</td>
                 <td style={{ padding: "4px 8px" }}>$1.18T / $1.37T (Jun 1)</td>
               </tr>
               <tr style={{ color: "#78716c", fontStyle: "italic" }}>
                 <td style={{ padding: "4px 8px" }}>implied MOIC →</td>
                 <td style={{ padding: "4px 8px" }}>1.0× (base)</td>
-                <td style={{ padding: "4px 8px" }}>Anthropic ~2.9× · OpenAI ~1.8–2.0×</td>
-                <td style={{ padding: "4px 8px" }}>Anthropic ~4.0× (oracle) · OpenAI ~2.5×</td>
+                <td style={{ padding: "4px 8px" }}>Anthropic ~1.19× · OpenAI ~1.04×</td>
+                <td style={{ padding: "4px 8px" }}>Anthropic ~1.62× (oracle) · OpenAI ~1.39×</td>
               </tr>
             </tbody>
           </table>
           <p style={{ marginBottom: 0, fontSize: "12px", color: "#57534e" }}>
-            <em>*Inferred from Fundrise's marks; not disclosed in the filing.</em> <strong>Notice</strong> is an algorithmic secondary-market consensus (transaction + reference data, dated/timestamped). <strong>Ventuals</strong> is a perpetual-futures venue — its <strong>"mark" carries a funding premium over its "oracle" index</strong> (e.g., Anthropic mark 1,594 vs oracle 1,402 on Jun 1), so treat the oracle as the reference and the mark as a sentiment ceiling, not a transaction tape. Both are accessed from a restricted jurisdiction and are not executable here.
+            <em>*Inferred from the 6/30 vs 3/31 NPORT multiple on identified lots; NPORT does not name the Anthropic round.</em> <strong>Notice</strong> is an algorithmic secondary-market consensus (transaction + reference data, dated/timestamped). <strong>Ventuals</strong> is a perpetual-futures venue — its <strong>&quot;mark&quot; carries a funding premium over its &quot;oracle&quot; index</strong> (e.g., Anthropic mark 1,594 vs oracle 1,402 on Jun 1), so treat the oracle as the reference and the mark as a sentiment ceiling, not a transaction tape. Both are accessed from a restricted jurisdiction and are not executable here.
           </p>
         </div>
       </div>
@@ -539,30 +555,30 @@ export default function VCXNAVFinder() {
         <div style={styles.sectionHeader} className="vcx-section-header">
           <span style={styles.sectionNum}>03</span>
           <h2 style={styles.sectionTitle}>Long tail · public · fixed income · cash · liabilities</h2>
-          <span style={styles.sectionMeta} className="vcx-section-meta">1.0x = held at 3/31/26 mark · Issuance lines locked</span>
+          <span style={styles.sectionMeta} className="vcx-section-meta">1.0x = held at 6/30/26 NPORT mark · Cash / repos / plug locked</span>
         </div>
         <div style={styles.tableWrap}>
           <div style={styles.tableHeaderRow} className="vcx-table-header">
             <div style={{ ...styles.th, flex: "2.6" }}>Position</div>
-            <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>3/31 Mark</div>
+            <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>6/30 Mark</div>
             <div style={{ ...styles.th, flex: "1.0", textAlign: "right" }}>MOIC</div>
             <div style={{ ...styles.th, flex: "1.4", textAlign: "right" }}>Position Value</div>
             <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>$/VCX share</div>
             <div style={{ ...styles.th, flex: "1.0", textAlign: "right" }}>¢ per $1</div>
           </div>
           {calc.otherRows.map((r) => {
-            const isIssuance = r.moic === undefined;
+            const isLocked = !!r.locked;
             return (
               <div key={r.name} style={styles.tr} className="vcx-row">
                 <div style={{ ...styles.td, flex: "2.6" }}>
                   <div style={styles.companyName}>{r.name}</div>
                   <div style={styles.companyNote}>{r.note}</div>
                 </div>
-                <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "#78716c" }} data-label="3/31 Mark">
-                  {isIssuance ? "—" : (r.markValue < 0 ? `(${fmt$(Math.abs(r.markValue))})` : fmt$(r.markValue))}
+                <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "#78716c" }} data-label="6/30 Mark">
+                  {r.markValue < 0 ? `(${fmt$(Math.abs(r.markValue))})` : fmt$(r.markValue)}
                 </div>
                 <div style={{ ...styles.td, flex: "1.0", textAlign: "right" }} className="vcx-moic-cell" data-label="MOIC">
-                  {isIssuance ? (
+                  {isLocked ? (
                     <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "#a8a29e" }}>locked</span>
                   ) : (
                     <input
@@ -638,6 +654,7 @@ export default function VCXNAVFinder() {
 
       <div style={styles.footer}>
         <div><strong>Changelog:</strong></div>
+        <div>• <strong>August 28, 2026</strong> — Baseline rolled to the June 30, 2026 NPORT-P (accession 0001867090-26-000109, signed Aug 27): net assets $777.0M, NAV $21.70 per share, 35,797,138 shares (Q2 flows were zero). Anthropic remaining lots (SaxeCap + AI Access 12) marked 2.273× to $173.6M, implying ~$864B vs Series G — not a full Series H roll; HOF AG Follow On ($36.0M) exited. OpenAI lots (Quiet OA + HOF AP) unchanged at $84.2M. New vehicles: Figure AI $10.0M, FSTK FR $19.3M, RWL AI $15.0M; AI-LLM +$20.0M. dbt Labs renamed Fivetran (merger closed). Visual Layer SAFE gone. SpaceX SPV $26.9M→$33.1M; Anduril CIV $30.2M→$21.6M. Cash $60.8M and reverse repos −$30.5M now explicit. Notice/Ventuals MOICs recomputed vs the new implied marks (those secondary prints are still dated June 1).</div>
         <div>• <strong>June 1, 2026</strong> — Rebased to 3/31/26 audited annual report. Base case changed from unaudited 12/31/25 marks to the audited 3/31/26 annual report (KPMG opinion 5/30/26). The 12/31 scenario has been retired. Share count set to the audited 35,797,138 (was a ~35.9M Reddit reconstruction, which proved accurate within 0.3%). Default NAV now $678.9M / $18.97 per share (was $533.8M / $14.87). The ~$145M increase is almost entirely the Q1 2026 AI markup, concentrated in five names: Anthropic +$62M, OpenAI +$31M, Anduril +$25M, SpaceX +$20M, Flock +$7M. Anthropic and SpaceX were moved from the PPS-marked box to the MOIC box, as both are held via CIV/SPV with no look-through share count, so the prior per-share lines were structurally wrong. OpenAI was relabeled from "Convertible Rights + Partnership" to two co-investment-vehicle lots ($84.2M total). ServiceTitan (TTAN, $12.7M) was removed — no longer in the schedule; sold during the year. Theory Ventures was reclassified from a sold LP interest to an in-kind promissory note ($4.73M, 10% coupon, matures 2033). Removed the $100M synthetic "pre-listing issuance" plug and flipped the net-other line from –$27.3M to +$64.7M — the audited balance sheet already reflects post-issuance cash ($75.7M), so the bridge and the negative-liabilities assumption were double-counting / sign-wrong. New/trued-up positions include Erebor Bank ($5.0M, new), Flock Class A + Class A First SAFE (new 3/2/26 tranches), Loyal share count 680→780, Stripe marked up, MMF $26.6M→$38.3M, CMBS $66.4M→$65.8M. Premium at the default price recomputed to ~15.4x / ~1,445% (was 19.7x / 1,870%). Added two scenario presets — "Mark-to-Secondary" (Notice consensus) and "Derivative Ceiling" (Ventuals oracle) — that mark Anthropic and OpenAI to current secondary/derivative prices. Even at the Ventuals ceiling, the implied premium stays ~9x; at the Notice consensus, ~11x. Expanded the Section 02 footnote to explain how Fundrise derived the 3/31 marks (Level 3 market approach; "Market Transaction" vs "Recent Transaction") and our inferred implied valuations (Anthropic ~$350B, OpenAI ~$450–500B), and corrected the prior stale ~$300B OpenAI figure. Default price updated to $211 (premium ~11.1x / ~1,012%).</div>
         <div>• <strong>May 12, 2026</strong> — Added "¢ per $1" column to all three tables, showing how many cents of each underlying holding you get for every dollar invested in VCX at the current market price. Updated default VCX market price from $240 to $293.</div>
         <div>• <strong>May 11, 2026 (evening update)</strong> — Updated default share count from 28.3M to 35.9M based on a forensic cap-table reconciliation by Reddit user Fit_Equal6932 (<a href="https://www.reddit.com/r/VCX_Fundrise/s/bit09tvNnO" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>full analysis here</a>). His walk anchors on a Fundrise platform screenshot from February 20, 2026 ($563M AUM at $18.27 NAV, implying 30.82M shares) and walks forward through documented Q1 2026 events to reconcile against Fundrise's reported $679M pre-listing AUM, arriving at ~35.9M total shares outstanding. The prior 28.3M figure from the April 24 Form 144 appears to be the January 29 Schedule TO baseline that didn't get updated for late retail subscriptions or the Tech Infrastructure REIT block. At 35.9M shares the bear case math is sharper, not softer — the per-share NAV in every scenario is lower than the prior version showed. Bloomberg's reported ~4.7M free float at listing ties closely to the ~5.1M implied by his analysis.</div>
@@ -645,10 +662,10 @@ export default function VCXNAVFinder() {
         <div>• <strong>May 11, 2026 (morning update)</strong> — Updated default share count from 30.57M (estimate based on assumed post-listing ATM issuance) to 28.3M, per the Form 144 filed April 24, 2026 by Fundrise Real Estate Interval Fund. Removed the "Forward Dilution" section and the dynamic issuance-cash inputs entirely. The previous model incorrectly assumed Fundrise was conducting an at-the-market offering (ATM) that was adding cash to VCX's balance sheet and diluting per-share exposure to the underlying companies. EDGAR filings show no such primary issuance is occurring; the ~60,000 shares/day of public-market supply is instead coming from a Fundrise-affiliated entity liquidating shares it acquired in a pre-listing registered offering. This means per-share claims on Anthropic and other holdings are static, not decaying. The bear case rests on premium-to-NAV math and the September 2026 platform-investor lockup expiry rather than ongoing dilution. Default VCX market price updated from $158.98 to $240 to reflect more recent trading. Thanks to /u/CapAggravating784 on Reddit for the correction.</div>
         <div>• <strong>May 10, 2026</strong> — Initial publication.</div>
         <div style={{ marginTop: 16 }}><strong>Sources:</strong></div>
-        <div>• Position data: Fundrise Innovation Fund, LLC — audited Annual Report for the fiscal year ended March 31, 2026 (Report of Independent Registered Public Accounting Firm, KPMG LLP, dated May 30, 2026), Schedule of Investments and Statement of Assets & Liabilities.</div>
-        <div>• Share count: 35,797,138 shares outstanding, audited, per the Statement of Assets and Liabilities (3/31/26). Supersedes the prior cap-table reconstruction.</div>
+        <div>• Position data: Fundrise Innovation Fund, LLC — Form NPORT-P as of June 30, 2026 (accession 0001867090-26-000109, signed August 27, 2026). Vehicle-to-issuer mapping uses the March 31, 2026 NPORT-P (0001867090-26-000054) and the N-CSR/A economic-issuer schedule (0001999371-26-011950).</div>
+        <div>• Share count: 35,797,138 shares outstanding, audited, per the Statement of Assets and Liabilities (3/31/26). June 30 NPORT Item B.6 reports $0 sales and $0 redemptions for April–June.</div>
         <div>• Supply mechanics: Daily public-market sales since the NYSE listing are largely attributable to Fundrise Real Estate Interval Fund's wholly-owned subsidiary (Tech Infrastructure REIT) liquidating shares it acquired in a February 24, 2026 registered offering. This is affiliate redistribution under Rule 144, not primary issuance by VCX.</div>
-        <div>• Secondary-market price-per-share inputs: User-supplied, with defaults from Fundrise's 3/31/26 marks. Recommended sources for current pricing include Hiive, Caplight, Notice, and Forge Global.</div>
+        <div>• Secondary-market price-per-share inputs: User-supplied, with defaults from the June 30, 2026 NPORT-P. Recommended sources for current pricing include Hiive, Caplight, Notice, and Forge Global.</div>
         <div>• NYSE listing: VCX began trading on the New York Stock Exchange on March 19, 2026.</div>
       </div>
 
