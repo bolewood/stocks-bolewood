@@ -1,6 +1,6 @@
 # Methodology
 
-`schemaVersion` **1.0.0** · `methodologyVersion` **1.0.0** · as of 2026-08-19
+`schemaVersion` **1.0.0** · `methodologyVersion` **1.0.0** · as of 2026-08-28
 
 This dataset estimates Anthropic and OpenAI **exposure** in public wrappers. Exposure is not always legal ownership. Each leg declares a `basis` so those cases are not flattened into one number.
 
@@ -26,10 +26,10 @@ held through SPVs, so public SPCX moves may not flow through to DXYZ NAV one-for
 of conversion timing, lockups, distributions, and vehicle-level economics.
 
 The reusable assumptions live in `data/private-tape.json` and carry their own
-`methodologyVersion`. The first version models two DXYZ filed exposures as of 2026-03-31:
-Anthropic at 18.1% of the filed portfolio and SpaceX at 14.4% of the filed portfolio. Those
-two filed weights are normalized inside the modeled sleeve, producing approximately 56%
-Anthropic and 44% SpaceX. This is a two-asset tape sleeve only, not all of DXYZ NAV.
+`methodologyVersion`. The first version models two DXYZ filed exposures as of 2026-06-30:
+Anthropic at 14.4% of the filed portfolio and SpaceX at 10.5% of the filed portfolio. Those
+two filed weights are normalized inside the modeled sleeve, producing approximately 58%
+Anthropic and 42% SpaceX. This is a two-asset tape sleeve only, not all of DXYZ NAV.
 
 Runtime analysis uses simple returns:
 
@@ -104,7 +104,7 @@ SKM: ordinary shares from the 20-F, ADS ratio 5/9, ADS-equivalent = ordinary × 
 
 ## ATM issuance bridge (DXYZ)
 
-DXYZ has an active ATM. Filed share count is implied by NPORT-P net assets ÷ NAV as of 2026-03-31. Estimated share count uses the same `computeAtmBridge` as [stocks.bolewood.com/dxyz](https://stocks.bolewood.com/dxyz): Q1 sales are already in the March 31 baseline; Apr–May inferred issuance is capped at the prior shelf remainder; post–May 26 issuance is simulated. See `lib/dxyzAtm.mjs` for the algorithm. The filed snapshot itself lives in `data/wrappers/DXYZ.json`.
+DXYZ has an active ATM. Filed share count is March 31 NPORT implied shares plus 17,191,674 ATM shares sold April 1–June 30 (424B3 dated Aug 28, 2026). Estimated share count uses the same `computeAtmBridge` as [stocks.bolewood.com/dxyz](https://stocks.bolewood.com/dxyz): Q2 sales are already in the June 30 baseline; post–June 30 issuance is simulated from July 1. See `lib/dxyzAtm.mjs` for the algorithm. The filed snapshot itself lives in `data/wrappers/DXYZ.json`.
 
 ## Deployment of post-filing inflows
 
@@ -116,7 +116,7 @@ DXYZ and ARKVX raised capital after the holdings print. Until the next N-PORT, i
 
 ## Exclusions
 
-**DXYZ OAI I PPUs** (1.0% of the March 31 portfolio) are **not equity** per the N-CSR and are **excluded from IPO scaling**. Only the 4.7% Goanna Series C SPV is treated as OpenAI equity exposure. This exclusion is in the DXYZ OpenAI record and in the row expansion.
+**DXYZ OAI I PPUs** (0.5% of the June 30 portfolio) are **not equity** per the N-CSR and are **excluded from IPO scaling**. Only the 2.1% Goanna Series C SPV is treated as OpenAI equity exposure. This exclusion is in the DXYZ OpenAI record and in the row expansion. The Aug 13 $150M additional Goanna purchase is applied on ESTIMATED only (cash already inside June 30 NAV).
 
 Amazon's $100B AWS commitments are not equity.
 

@@ -3,6 +3,11 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.10.1.0] - 2026-08-28
+
+### Changed
+- `/dxyz` and `/ai` DXYZ rows now use the August 28, 2026 424B3: June 30 NAV $34.30, ~$1.64B portfolio, Anthropic 14.4%, OpenAI equity 2.1%. Filed April–June ATM sales are in the baseline; the issuance bridge estimates only from July 1. Private Tape sleeve weights follow the same print.
+
 ## [0.10.0.3] - 2026-08-27
 
 ### Changed

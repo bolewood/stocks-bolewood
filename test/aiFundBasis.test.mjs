@@ -20,7 +20,7 @@ import {
   resolveFund,
   cappedConfidence,
 } from "../lib/aiFundBasis.mjs";
-import { computeAtmBridge, impliedMarch31Shares } from "../lib/dxyzAtm.mjs";
+import { computeAtmBridge, impliedFiledShares } from "../lib/dxyzAtm.mjs";
 
 const snapshot = JSON.parse(
   readFileSync(new URL("../app/api/dxyz-history/snapshot.json", import.meta.url))
@@ -46,7 +46,6 @@ test("DXYZ ESTIMATED shares equal computeAtmBridge on the same rows", () => {
     dxyzBridge: fromHelper,
   });
   assert.equal(est.shares, bridge.proFormaShares);
-  assert.notEqual(est.shares, impliedMarch31Shares());
   assert.equal(est.confidence, "medium");
 
   const filed = resolveFund(w, {
@@ -54,7 +53,9 @@ test("DXYZ ESTIMATED shares equal computeAtmBridge on the same rows", () => {
     deploy: DEPLOY_CASH,
     dxyzBridge: fromHelper,
   });
-  assert.equal(filed.shares, impliedMarch31Shares());
+  assert.equal(filed.shares, impliedFiledShares());
+  assert.equal(filed.oaiFv, 34_440_000);
+  assert.equal(est.oaiFv, 34_440_000 + 150_000_000);
 });
 
 test("ARKVX ESTIMATED cash combined is ~$13.49 at the fallback NAV", () => {
@@ -145,7 +146,19 @@ test("fund stake % is identical across filed and estimated (cash)", () => {
       resolved: est,
     });
     assert.equal(filedM.anthPct, estM.anthPct, `${w.ticker} anthPct`);
-    assert.equal(filedM.oaiPct, estM.oaiPct, `${w.ticker} oaiPct`);
+    if (w.ticker === "DXYZ") {
+      const subsequent = w.openai?.subsequentPurchasesUsd || 0;
+      const round = w.openai?.roundVal;
+      assert.ok(subsequent > 0);
+      assert.equal(
+        estM.oaiPct,
+        (filed.oaiFv + subsequent) / round,
+        "DXYZ ESTIMATED OpenAI % includes the filed subsequent purchase"
+      );
+      assert.notEqual(filedM.oaiPct, estM.oaiPct);
+    } else {
+      assert.equal(filedM.oaiPct, estM.oaiPct, `${w.ticker} oaiPct`);
+    }
   }
 });
 
@@ -160,7 +173,15 @@ test("no HIGH confidence when as-of is >90 days old", () => {
 
 test("DXYZ deploy range spans cash < prorata", () => {
   const w = WRAPPERS.find((x) => x.ticker === "DXYZ");
-  const bridge = dxyzBridgeFromRows(snapshot.rows, { mode: BASIS_ESTIMATED });
+  const bridge = computeAtmBridge({
+    mode: "calibrated",
+    rows: [
+      { date: "2026-07-01", close: 50, volume: 5_000_000 },
+      { date: "2026-07-02", close: 50, volume: 5_000_000 },
+    ],
+    participation: 0.08,
+    expenseDragAnnualRate: 0,
+  });
   const ranged = resolveFund(w, {
     basis: BASIS_ESTIMATED,
     deploy: DEPLOY_RANGE,

@@ -2,6 +2,20 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { startJsonPoll } from "../lib/pollLivePrices.mjs";
+import privateTapeConfig from "../data/private-tape.json";
+
+const SLEEVE = (() => {
+  const a = privateTapeConfig.assets.anthropic.filedPortfolioWeight;
+  const s = privateTapeConfig.assets.spacex.filedPortfolioWeight;
+  const t = a + s;
+  return {
+    anthPct: Math.round((a / t) * 100),
+    spcxPct: Math.round((s / t) * 100),
+    anthFiled: (a * 100).toFixed(1),
+    spcxFiled: (s * 100).toFixed(1),
+    asOf: privateTapeConfig.asOf,
+  };
+})();
 
 const CHART = {
   private: "#0f766e",
@@ -16,7 +30,7 @@ const HELP = {
   plainCorrelation:
     "Each card compares percent returns, not prices. DXYZ comparisons use only overlapping NYSE cash-session 30-minute windows. r near +1 means they moved together, near -1 means opposite, and near 0 means little linear relationship. N is the number of aligned return observations.",
   privateIndex:
-    "Both lines start at 100 on the first common close. The tape sleeve is a 56/44 Anthropic/SpaceX modeled factor, so a value of 105 means that sleeve is up 5% since the base. It is not full DXYZ NAV or a cheap/rich signal.",
+    "Both lines start at 100 on the first common close. The tape sleeve is a modeled Anthropic/SpaceX factor from filed DXYZ weights, so a value of 105 means that sleeve is up 5% since the base. It is not full DXYZ NAV or a cheap/rich signal.",
   rollingCorrelations:
     "The x-axis is time. The y-axis is Pearson r using available 30-minute return samples inside a 30-calendar-day window. While ANTH history is short, this behaves more like an expanding tiny-sample readout than a mature rolling statistic.",
   overnight:
@@ -454,7 +468,7 @@ export default function PrivateTapeDashboard() {
         eyebrow: "24H TAPE MOVE",
         value: fmtPct(cards.move24h?.weighted),
         sub: `ANTH ${fmtPct(cards.move24h?.anthropic)} / SPCX ${fmtPct(cards.move24h?.spacex)}`,
-        foot: "56/44 modeled sleeve",
+        foot: `${SLEEVE.anthPct}/${SLEEVE.spcxPct} modeled sleeve`,
         tone: pctColor(cards.move24h?.weighted),
       },
       {
@@ -576,7 +590,7 @@ export default function PrivateTapeDashboard() {
           <LineChart
             series={data?.analyses.privateIndex || []}
             lines={[
-              { key: "tapeSleeveIndex", label: "56/44 Tape Sleeve", color: CHART.private },
+              { key: "tapeSleeveIndex", label: `${SLEEVE.anthPct}/${SLEEVE.spcxPct} Tape Sleeve`, color: CHART.private },
               { key: "dxyzIndex", label: "DXYZ", color: CHART.dxyz },
             ]}
             valueFormatter={(n) => fmtNumber(n, 0)}
@@ -585,7 +599,7 @@ export default function PrivateTapeDashboard() {
             ariaLabel="DXYZ two-asset tape sleeve versus DXYZ"
           />
           <p style={styles.note}>
-            The weight file currently normalizes DXYZ&apos;s March 31, 2026 Anthropic exposure (18.1%) and SpaceX exposure (12.4% known SpaceX SPVs plus 2.0% Snowpoint SpaceX SPV) to a two-asset sleeve: about 56% Anthropic and 44% SpaceX. It is not full NAV and should not be read as cheap/rich.
+            The weight file currently normalizes DXYZ&apos;s {SLEEVE.asOf} Anthropic exposure ({SLEEVE.anthFiled}%) and SpaceX exposure ({SLEEVE.spcxFiled}%) to a two-asset sleeve: about {SLEEVE.anthPct}% Anthropic and {SLEEVE.spcxPct}% SpaceX. It is not full NAV and should not be read as cheap/rich.
           </p>
         </Section>
 
@@ -724,7 +738,7 @@ export default function PrivateTapeDashboard() {
           <div style={styles.methodCard}>
             <h3 style={styles.methodTitle}>Next Fixes</h3>
             <p style={styles.bodyCopy}>
-              The larger upgrade is to connect this page to the DXYZ NAV Finder&apos;s ATM-adjusted weights, cash sleeve, and pro forma premium/discount instead of only the March 31 two-asset sleeve.
+              The larger upgrade is to connect this page to the DXYZ NAV Finder&apos;s ATM-adjusted weights, cash sleeve, and pro forma premium/discount instead of only the filed two-asset sleeve.
             </p>
             <p style={styles.bodyCopy}>
               The next data upgrades are tape-quality gates for ANTH, a separate 9:30-10:00 open-window test, weekday/weekend overnight tags, and DXYZ premarket as an intermediate target.
