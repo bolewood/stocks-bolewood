@@ -15,6 +15,7 @@ Typed entries: **Data update** · **Correction** · **Methodology change** · **
 - 2026-08-27: Bumped Private Tape methodology to v0.1.2 and schema-tagged Anthropic as private/pre-IPO tape and SpaceX as public-equity/perp tape after the 2026-06-12 SPCX Nasdaq listing. Removed the placeholder fully diluted SpaceX valuation from the app surface.
 
 ### Data update
+- 2026-08-28: VCX June 30, 2026 NPORT-P (accession 0001867090-26-000109): net assets $776,968,361.92, NAV $21.70/share, 35,797,138 shares (Q2 flows $0). Anthropic remaining lots SaxeCap + AI Access 12 = $173,628,474 at an implied ~$863.7B mark (2.273× vs March 31 remaining lots; HOF AG Follow On exited). OpenAI Quiet OA + HOF AP = $84,162,466, unchanged vs March 31.
 - 2026-08-28: DXYZ June 30, 2026 snapshot from the Aug 28 424B3 (accession 0001575872-26-000624): NAV $34.30, approximate $1.64B portfolio, Anthropic 14.4% ($236.16M, Series H mark), OpenAI equity 2.1% ($34.44M), PPUs 0.5% excluded. Filed Q2 ATM 17,191,674 shares already in the baseline. Subsequent $150M OpenAI purchase (2026-08-13) on ESTIMATED only.
 - 2026-08-28: Private Tape sleeve rolled to the same June 30 weights: Anthropic 14.4% and SpaceX 10.5%, normalized to approximately 58% / 42%.
 - 2026-08-27: Added `data/private-tape.json` with the initial two-asset modeled DXYZ sleeve: Anthropic 18.1% filed weight and SpaceX 14.4% filed weight, normalized to approximately 56% / 44% inside the Private Tape index. Added a machine-readable manifest and CSV/JSON export paths for aligned derived samples.

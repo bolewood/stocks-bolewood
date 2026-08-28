@@ -68,9 +68,9 @@ committed to `data/`.
 
 Because the figure is a ratio of a fair value to the valuation that produced it, rolling both forward together leaves the ratio unchanged. Any code path in which re-marking alters the computed exposure percentage is a bug.
 
-Example: VCX Anthropic filed at $112,418,000 against the Feb 2026 ~$380B mark. Rolling the dollar mark to Series H ($965B) must also roll the measurement mark, so
+Example: VCX Anthropic remaining lots filed at $173,628,474 against the June 30 NPORT-implied ~$863.7B mark (Series G $380B × the 2.273× multiple on SaxeCap and AI Access 12). Rolling the dollar mark to Series H ($965B) must also roll the measurement mark, so
 
-`(112,418,000 × 965/380) / 965,000,000,000` equals `112,418,000 / 380,000,000,000`.
+`(173,628,474 × 965/863.7) / 965,000,000,000` equals `173,628,474 / 863,700,000,000`.
 
 The scenario sliders then apply that **same percentage** to a user-chosen IPO valuation. Changing only the scenario company valuation must not change the percentage.
 
