@@ -7,11 +7,11 @@ import {
   PROSPECTUS_424B5,
   PRIOR_ATM,
   Q1_ATM,
+  Q2_ATM,
   DEFAULTS as ATM_DEFAULTS,
-  impliedMarch31Shares,
-  priorShelfRemainingApr1,
+  impliedFiledShares,
   completedTradingRows,
-  calibrate,
+  calibratePostFiling,
   computeAtmBridge,
 } from "../lib/dxyzAtm.mjs";
 import historySnapshot from "../app/api/dxyz-history/snapshot.json";
@@ -19,89 +19,88 @@ import {
   SPCX_FILED_SHARES_TOTAL,
   SPCX_POST_SPLIT_SHARES,
   SPCX_SPLIT,
-  SPCX_SPLIT_ADJUSTED_MARK_PPS,
+  SPCX_JUNE30_MARK_PPS,
   SPCX_YAHOO_SYMBOL,
 } from "../lib/dxyzSpcx.mjs";
 import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 
 // DXYZ NAV Finder
 // Source: Destiny Tech100 SEC filings (N-CSR 12/31/2025, NPORT-P 3/31/2026,
-// 424B3 05/12/2026, 424B5 05/26/2026)
-// Share counts from 12/31/2025 where available. March 31, 2026 defaults are tied
-// to the filed $742.5M portfolio value plus $5.9M other net assets, reconciling
-// to $748.36M filed net assets (NPORT-P).
+// 424B3 08/28/2026 Supplement No. 1 for the June 30, 2026 snapshot).
+// Share counts from 12/31/2025 where available. June 30, 2026 defaults are tied
+// to the filed ~$1.64B portfolio value. Net assets = implied March 31 shares
+// plus filed Apr 1–Jun 30 ATM shares, times $34.30.
 
-const DXYZ_PORTFOLIO_VALUE_K = 742_500; // March 31, 2026 portfolio value from 424B3
-// Derived from the filed constants in lib/dxyzAtm.mjs so they can't desync:
-// $5.861M other net assets; ~30.47M shares implied by $748.361M / $24.56.
+const DXYZ_PORTFOLIO_VALUE_K = Math.round(FILED.portfolioValue / 1000);
 const DXYZ_OTHER_NET_ASSETS_K = Math.round(OTHER_NET_ASSETS / 1000);
-const DXYZ_SHARES_OUTSTANDING_M = Math.round(impliedMarch31Shares() / 10_000) / 100;
+const DXYZ_SHARES_OUTSTANDING_M = Math.round(impliedFiledShares() / 10_000) / 100;
 const COMMISSION_DEFAULT_PCT = ATM_DEFAULTS.commissionRate * 100;
 const pctValueK = (pct) => Math.round(DXYZ_PORTFOLIO_VALUE_K * pct / 100);
 
 // Positions where we have a clean underlying share count from the 12/31/2025 N-CSR.
-// share_count is in THOUSANDS.
+// share_count is in THOUSANDS. Weights in notes are June 30, 2026 424B3.
 const SHARE_DENOMINATED = [
   {
     name: "SpaceX",
     yahooSymbol: SPCX_YAHOO_SYMBOL,
     shares_k: SPCX_POST_SPLIT_SHARES / 1000,
-    mark_pps_1231: Number(SPCX_SPLIT_ADJUSTED_MARK_PPS.toFixed(2)),
-    note: `DXYZ SpaceX I + MWAM VC SpaceX-II · ${(SPCX_FILED_SHARES_TOTAL / 1000).toFixed(3)}K N-CSR shares × ${SPCX_SPLIT.ratio}-for-1 split (${SPCX_SPLIT.effective})`,
+    mark_pps_1231: Number(SPCX_JUNE30_MARK_PPS.toFixed(2)),
+    note: `DXYZ SpaceX I + MWAM VC SpaceX-II · ${(SPCX_FILED_SHARES_TOTAL / 1000).toFixed(3)}K N-CSR shares × ${SPCX_SPLIT.ratio}-for-1 split (${SPCX_SPLIT.effective}) · 9.0% June 30 weighting`,
   },
   {
     name: "Revolut",
     shares_k: 8.200,
     mark_pps_1231: 1448.78,
-    note: "Common Stock (1.6% March 31 weighting)",
+    note: "Common Stock (1.0% June 30 weighting)",
   },
   {
     name: "Discord",
     shares_k: 2.380, // 1,311 Series G + 1,069 Common
     mark_pps_1231: 277.66,
-    note: "Series G + Common (<0.1% March 31 weighting)",
+    note: "Series G + Common (0.0% June 30 weighting)",
   },
   {
     name: "Klarna",
     shares_k: 36.924,
     mark_pps_1231: 20.11,
-    note: "Common Stock (0.1% March 31 weighting)",
+    note: "Common Stock (0.0% June 30 weighting)",
   },
   {
     name: "Chime",
     shares_k: 60.250,
     mark_pps_1231: 24.65,
-    note: "Common Stock (0.2% March 31 weighting)",
+    note: "Common Stock (0.1% June 30 weighting)",
   },
   {
     name: "Flexport",
     shares_k: 26.000,
     mark_pps_1231: 3.14,
-    note: "Common Stock (<0.1% March 31 weighting)",
+    note: "Common Stock (0.0% June 30 weighting)",
   },
 ];
 
-// Implied values based on March 31, 2026 percentages of $742.5M filed portfolio value.
+// Implied values based on June 30, 2026 percentages of the ~$1.64B filed portfolio.
 // Value is in thousands.
 const DOLLAR_DENOMINATED = [
-  { name: "Anthropic", value_k: pctValueK(18.1), note: "18.1% weighting (Magnitude ANC III SPV)" },
-  { name: "OpenAI", value_k: pctValueK(5.7), note: "5.7% weighting (DXYZ OAI I + Goanna Capital SPVs)" },
-  { name: "OpenEvidence", value_k: pctValueK(4.6), note: "4.6% weighting (SP21Z Opportunities SPV)" },
-  { name: "Shield AI", value_k: pctValueK(4.2), note: "4.2% weighting (Snowpoint Growth 2.5 SPV)" },
-  { name: "Databricks", value_k: pctValueK(2.5), note: "2.5% weighting (DA-1125 + MCTC SPVs)" },
-  { name: "CHAOS Industries", value_k: pctValueK(2.1), note: "2.1% weighting" },
-  { name: "Hermeus", value_k: pctValueK(2.0), note: "2.0% weighting" },
-  { name: "Beast Industries", value_k: pctValueK(2.0), note: "2.0% weighting" },
-  { name: "SpaceX (Snowpoint SPV)", value_k: pctValueK(2.0), note: "2.0% weighting; no disclosed share count" },
-  { name: "Tenstorrent", value_k: pctValueK(1.7), note: "1.7% weighting" },
-  { name: "General Intuition", value_k: pctValueK(1.5), note: "1.5% weighting" },
-  { name: "Skild AI", value_k: pctValueK(1.4), note: "1.4% weighting" },
+  { name: "Anthropic", value_k: pctValueK(14.4), note: "14.4% weighting (Magnitude ANC III SPV)" },
+  { name: "OpenAI", value_k: pctValueK(2.6), note: "2.6% weighting (Goanna Capital 2.1% + DXYZ OAI I PPUs 0.5%)" },
+  { name: "OpenEvidence", value_k: pctValueK(2.1), note: "2.1% weighting (SP21Z Opportunities SPV)" },
+  { name: "Shield AI", value_k: pctValueK(1.8), note: "1.8% weighting (Snowpoint Growth 2.5 SPV)" },
+  { name: "SpaceX (Snowpoint SPV)", value_k: pctValueK(1.5), note: "1.5% weighting (Snowpoint Growth 2.6); no disclosed share count" },
+  { name: "Databricks", value_k: pctValueK(1.2), note: "1.2% weighting (DA-1125 0.5% + MCTC 0.7%)" },
+  { name: "CHAOS Industries", value_k: pctValueK(1.0), note: "1.0% weighting (WH Strategic Opportunities Fund V)" },
+  { name: "Hermeus", value_k: pctValueK(0.9), note: "0.9% weighting" },
+  { name: "Beast Industries", value_k: pctValueK(0.9), note: "0.9% weighting" },
+  { name: "Mercury", value_k: pctValueK(0.9), note: "0.9% weighting (Mercury Technologies Series D)" },
+  { name: "Tenstorrent", value_k: pctValueK(0.8), note: "0.8% weighting (Prive Tens convertible note)" },
+  { name: "Skild AI", value_k: pctValueK(0.7), note: "0.7% weighting" },
+  { name: "Ferox Games", value_k: pctValueK(0.7), note: "0.7% weighting (Hexagon Master LLC Series 1)" },
 ];
 
 const OTHER_HOLDINGS = [
-  { name: "Cash & Cash Equivalents", value_k: pctValueK(31.4), locked: true, note: "31.4% First American Treasury Obligations weighting" },
-  { name: "Long Tail Private Holdings", value_k: 47520, note: "~6.4% residual to reconcile filed $742.5M portfolio value" },
-  { name: "Other Net Assets", value_k: DXYZ_OTHER_NET_ASSETS_K, locked: true, note: "Receivables less liabilities — reconciles $742.5M portfolio to $748.36M filed net assets (3/31/26 NPORT-P)" },
+  { name: "Cash & Cash Equivalents", value_k: pctValueK(57.3), locked: true, note: "57.3% First American Treasury Obligations weighting" },
+  { name: "Long Tail Private Holdings", value_k: pctValueK(3.1), note: "~3.1% residual of names below 0.5% to reconcile the stated ~$1.64B portfolio" },
+  { name: "Other Net Assets", value_k: DXYZ_OTHER_NET_ASSETS_K, locked: true, note: "Rounding plug: stated ~$1.64B portfolio vs (March 31 implied shares + Q2 ATM shares) × $34.30. The 424B3 does not print other assets or liabilities." },
 ];
 
 const fmt$ = (n) =>
@@ -178,8 +177,6 @@ export default function DXYZNAVFinder() {
   const [commissionPct, setCommissionPct] = useState(String(COMMISSION_DEFAULT_PCT));
   // Custom-mode overrides; empty string = use the calibrated default.
   const [atmCustom, setAtmCustom] = useState({
-    aprSharesM: "",
-    aprPrice: "",
     partPct: "",
     capacityM: "",
     premPct: "",
@@ -220,7 +217,7 @@ export default function DXYZNAVFinder() {
     window.history.replaceState({}, "", url);
   };
 
-  const spaceXMarkPps = () => liveSpcx ?? Number(SPCX_SPLIT_ADJUSTED_MARK_PPS.toFixed(2));
+  const spaceXMarkPps = () => liveSpcx ?? Number(SPCX_JUNE30_MARK_PPS.toFixed(2));
 
   const resetToMark = () => {
     spcxFollowLive.current = true;
@@ -259,7 +256,9 @@ export default function DXYZNAVFinder() {
       "Hermeus": 1.5,
       "Beast Industries": 1.5,
       "Tenstorrent": 1.5,
-      "General Intuition": 1.5,
+      "Skild AI": 1.5,
+      "Mercury": 1.5,
+      "Ferox Games": 1.5,
     });
     setOtherMOICs(OTHER_HOLDINGS.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
     setActiveScenario("aggressive");
@@ -289,7 +288,9 @@ export default function DXYZNAVFinder() {
       "Hermeus": 3.0,
       "Beast Industries": 3.0,
       "Tenstorrent": 3.0,
-      "General Intuition": 3.0,
+      "Skild AI": 3.0,
+      "Mercury": 3.0,
+      "Ferox Games": 3.0,
     });
     setOtherMOICs(OTHER_HOLDINGS.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
     setActiveScenario("dream");
@@ -394,7 +395,7 @@ export default function DXYZNAVFinder() {
   }, [ppsOverrides, dxyzShares, dollarMOICs, otherMOICs]);
 
   // ── ATM Issuance Bridge math ───────────────────────────────────────────
-  const atmCal = useMemo(() => calibrate(historyRows), [historyRows]);
+  const atmCal = useMemo(() => calibratePostFiling(historyRows), [historyRows]);
 
   const num = (s) => {
     const v = parseFloat(s);
@@ -413,10 +414,6 @@ export default function DXYZNAVFinder() {
       commissionRate: (commission ?? COMMISSION_DEFAULT_PCT) / 100,
     };
     if (atmMode === "custom") {
-      const s = num(atmCustom.aprSharesM);
-      if (s !== null) opts.aprMayShares = s * 1_000_000;
-      const p = num(atmCustom.aprPrice);
-      if (p !== null) opts.aprMayAvgPrice = p;
       const part = num(atmCustom.partPct);
       if (part !== null) opts.participation = part / 100;
       const cap = num(atmCustom.capacityM);
@@ -432,7 +429,7 @@ export default function DXYZNAVFinder() {
 
   const atmBridge = useMemo(() => computeAtmBridge(atmOpts), [atmOpts]);
 
-  // Low / base / high participation sensitivity (post-May-26 program).
+  // Low / base / high participation sensitivity (post–June 30).
   // Same options as the bridge above, varying participation only.
   const atmSensitivity = useMemo(() => {
     if (atmMode === "filed") return [];
@@ -472,8 +469,8 @@ export default function DXYZNAVFinder() {
         <ol style={styles.howToList}>
           <li style={{ marginBottom: 6 }}>The fund holds shares directly (Box 1) and through SPVs (Box 2). </li>
           <li style={{ marginBottom: 6 }}>Update price-per-share for Box 1 and MOIC (Multiple on Invested Capital) for Box 2.</li>
-          <li style={{ marginBottom: 6 }}>Defaults are tied to the March 31, 2026 NAV filing and use December 31, 2025 share counts where the newer filing only discloses portfolio weights.</li>
-          <li style={{ marginBottom: 6 }}>The ATM Issuance Bridge estimates share issuance since March 31 (default: Calibrated Estimate) and produces the pro forma NAV used in the headline metrics — switch it to Filed Only to see the filed baseline alone.</li>
+          <li style={{ marginBottom: 6 }}>Defaults are tied to the June 30, 2026 NAV filing and use December 31, 2025 share counts where the newer filing only discloses portfolio weights.</li>
+          <li style={{ marginBottom: 6 }}>The ATM Issuance Bridge estimates share issuance since June 30 (default: Calibrated Estimate). April 1–June 30 sales of 17,191,674 shares are already in the filed baseline — switch to Filed Only to see that snapshot alone.</li>
           <li>The bottom bar shows the implied premium vs. the current DXYZ market price.</li>
         </ol>
       </div>
@@ -516,7 +513,7 @@ export default function DXYZNAVFinder() {
         </div>
         <div style={styles.controlGroup}>
           {[
-            { key: "mark", label: "Baseline / 3/31/26 NAV", handler: resetToMark },
+            { key: "mark", label: "Baseline / 6/30/26 NAV", handler: resetToMark },
             { key: "aggressive", label: "Aggressive", handler: applyAggressive },
             { key: "dream", label: "Dream Scenario", handler: applyDream },
           ].map(({ key, label, handler }) => {
@@ -547,7 +544,7 @@ export default function DXYZNAVFinder() {
         <div style={styles.sectionHeader} className="vcx-section-header">
           <span style={styles.sectionNum}>⇄</span>
           <h2 style={{ ...styles.sectionTitle, fontSize: "20px" }}>ATM Issuance Bridge</h2>
-          <span style={styles.sectionMeta} className="vcx-section-meta">Estimated share issuance since the March 31 filing</span>
+          <span style={styles.sectionMeta} className="vcx-section-meta">Estimated share issuance since the June 30 filing</span>
         </div>
 
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "12px" }} className="vcx-controls">
@@ -581,7 +578,7 @@ export default function DXYZNAVFinder() {
             padding: "10px 14px",
             marginBottom: "12px",
           }}>
-            ⚠ Estimated, not company reported — DXYZ&apos;s last filed NAV is ${FILED.navPerShare.toFixed(2)} as of March 31, 2026
+            ⚠ Estimated, not company reported — DXYZ&apos;s last filed NAV is ${FILED.navPerShare.toFixed(2)} as of June 30, 2026
           </div>
         )}
 
@@ -603,10 +600,6 @@ export default function DXYZNAVFinder() {
             {atmMode === "custom" && (
               <>
                 {[
-                  { key: "aprSharesM", label: "Apr–May Shares (M)", ph: fmtM(atmCal.aprMayShares).replace("M", "") },
-                  // Effective default: the calibrated VWAP after the prior-shelf
-                  // capacity cap — what a blank field actually models.
-                  { key: "aprPrice", label: "Apr–May Avg Price ($)", ph: (atmCal.aprMayShares > 0 ? Math.min(atmCal.aprMayAvgPrice, priorShelfRemainingApr1() / atmCal.aprMayShares) : atmCal.aprMayAvgPrice).toFixed(2) },
                   { key: "partPct", label: "Participation (%)", ph: (atmCal.participation * 100).toFixed(1) },
                   { key: "capacityM", label: "ATM Capacity ($M)", ph: String(PROSPECTUS_424B5.capacityGross / 1_000_000) },
                   { key: "premPct", label: "Min Premium (%)", ph: "0" },
@@ -628,7 +621,7 @@ export default function DXYZNAVFinder() {
                   <label style={styles.label}>As-of Date</label>
                   <input
                     type="date"
-                    min={ATM_DEFAULTS.postMayStart}
+                    min={ATM_DEFAULTS.postFilingStart}
                     value={atmCustom.asOf}
                     onChange={(e) => setAtmCustom((prev) => ({ ...prev, asOf: e.target.value }))}
                     style={{ ...styles.smallInput, width: "160px", fontSize: "13px" }}
@@ -649,8 +642,10 @@ export default function DXYZNAVFinder() {
           </div>
           <div style={styles.tr} className="vcx-row">
             <div style={{ ...styles.td, flex: "2.4" }}>
-              <div style={styles.companyName}>Filed NAV — March 31, 2026 <ConfBadge level="FILED" /></div>
-              <div style={styles.companyNote}>NPORT-P: $748.36M net assets; ~30.47M shares implied by the filed $24.56 NAV</div>
+              <div style={styles.companyName}>Filed NAV — June 30, 2026 <ConfBadge level="FILED" /></div>
+              <div style={styles.companyNote}>
+                424B3: ${FILED.navPerShare.toFixed(2)} NAV; {fmtM(impliedFiledShares())} shares = March 31 implied + {Q2_ATM.shares.toLocaleString("en-US")} ATM shares sold Apr 1–Jun 30
+              </div>
             </div>
             <div style={{ ...styles.td, flex: "1.3", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Shares">{fmtM(FILED.netAssets / FILED.navPerShare)}</div>
             <div style={{ ...styles.td, flex: "1.5", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Net Assets">{fmt$(FILED.netAssets)}</div>
@@ -671,28 +666,25 @@ export default function DXYZNAVFinder() {
 
           {bridgeActive && (
             <>
+              {atmBridge.aprMay.shares > 0 && (
               <div style={styles.tr} className="vcx-row">
                 <div style={{ ...styles.td, flex: "2.4" }}>
-                  <div style={styles.companyName}>+ Apr 1 – May 21 ATM (prior program) <ConfBadge level="INFERRED" /></div>
+                  <div style={styles.companyName}>+ Extra Apr–May ATM (counterfactual) <ConfBadge level="INFERRED" /></div>
                   <div style={styles.companyNote}>
-                    {fmtM(atmBridge.aprMay.shares)} shares {atmMode === "custom" && atmCustom.aprSharesM !== "" ? "(your custom input)" : "backed out of the 424B5 share count"}
-                    {atmMode === "custom" && atmCustom.aprPrice !== ""
-                      ? ` @ $${atmBridge.aprMay.avgPrice.toFixed(2)} (your custom price${atmBridge.aprMay.gross > atmBridge.aprMay.priorRemaining ? ` — ⚠ implies ${fmt$(atmBridge.aprMay.gross)} gross, EXCEEDING the prior program's ${fmt$(atmBridge.aprMay.priorRemaining)} filed remainder; not possible under the actual shelf` : `; within the prior program's ${fmt$(atmBridge.aprMay.priorRemaining)} filed remainder`})`
-                      : atmBridge.aprMay.capped
-                      ? `; gross capped at the prior $1B program's ${fmt$(atmBridge.aprMay.priorRemaining)} filed remainder → ~$${atmBridge.aprMay.avgPrice.toFixed(2)} effective avg (shelf exhausted by May 21; new program effective May 26)`
-                      : ` @ ~$${atmBridge.aprMay.avgPrice.toFixed(2)} close-volume-weighted`}
+                    {fmtM(atmBridge.aprMay.shares)} shares on top of filed Q2 sales — not in the default calibrated path
                   </div>
                 </div>
                 <div style={{ ...styles.td, flex: "1.3", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Shares">+{fmtM(atmBridge.aprMay.shares)}</div>
                 <div style={{ ...styles.td, flex: "1.5", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Net Proceeds">+{fmt$(atmBridge.aprMay.net)}</div>
                 <div style={{ ...styles.td, flex: "1.2", textAlign: "right" }} data-label="NAV/Share" />
               </div>
+              )}
 
               <div style={styles.tr} className="vcx-row">
                 <div style={{ ...styles.td, flex: "2.4" }}>
-                  <div style={styles.companyName}>+ May 26 – {atmBridge.asOfDate} ATM (new $1B program) <ConfBadge level="ESTIMATED" /></div>
+                  <div style={styles.companyName}>+ July 1 – {atmBridge.asOfDate} ATM (new $1B program) <ConfBadge level="ESTIMATED" /></div>
                   <div style={styles.companyNote}>
-                    {(atmBridge.participation * 100).toFixed(1)}% of daily volume; issued {atmBridge.postMay.daysIssued} of {atmBridge.postMay.daysIssued + atmBridge.postMay.daysSkipped} days (none when price ≤ rolling NAV{atmBridge.postMay.exhaustedOn ? `; capacity exhausted ${atmBridge.postMay.exhaustedOn}` : ""})
+                    {(atmBridge.participation * 100).toFixed(1)}% of daily volume, calibrated from filed Q2 sales ÷ Apr–Jun volume; issued {atmBridge.postMay.daysIssued} of {atmBridge.postMay.daysIssued + atmBridge.postMay.daysSkipped} days (none when price ≤ rolling NAV{atmBridge.postMay.exhaustedOn ? `; capacity exhausted ${atmBridge.postMay.exhaustedOn}` : ""}). Apr 1–Jun 30 sales of {Q2_ATM.shares.toLocaleString("en-US")} shares are already in the June 30 baseline.
                   </div>
                 </div>
                 <div style={{ ...styles.td, flex: "1.3", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Shares">+{fmtM(atmBridge.postMay.shares)}</div>
@@ -703,7 +695,7 @@ export default function DXYZNAVFinder() {
               <div style={styles.tr} className="vcx-row">
                 <div style={{ ...styles.td, flex: "2.4" }}>
                   <div style={styles.companyName}>− Expense accrual <ConfBadge level="ESTIMATED" /></div>
-                  <div style={styles.companyNote}>2.50% management fee (424B5) annualized over {atmBridge.days} days since March 31</div>
+                  <div style={styles.companyNote}>2.50% management fee (424B5) annualized over {atmBridge.days} days since June 30</div>
                 </div>
                 <div style={{ ...styles.td, flex: "1.3", textAlign: "right" }} data-label="Shares">—</div>
                 <div style={{ ...styles.td, flex: "1.5", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Net Proceeds">−{fmt$(atmBridge.drag)}</div>
@@ -738,7 +730,7 @@ export default function DXYZNAVFinder() {
           }}>
             <span>ATM accretion: <strong style={{ color: atmBridge.accretionPerShare >= 0 ? "#15803d" : "#b91c1c" }}>{atmBridge.accretionPerShare >= 0 ? "+" : ""}${atmBridge.accretionPerShare.toFixed(2)}/sh</strong></span>
             <span>Remaining new-ATM capacity: <strong>{fmt$(atmBridge.postMay.capacityRemaining)}</strong> of {fmt$(PROSPECTUS_424B5.capacityGross)} gross</span>
-            <span>Next filed NAV: June 30 N-PORT, due ~Aug 29, 2026</span>
+            <span>Next filed NAV: June 30 N-PORT / N-CSRS, not yet posted as of the Aug 28 424B3</span>
             <span>History: {historyRows.length} trading days ·{" "}
               <span style={{ color: historySource === "live" || historySource === "cache" ? "#15803d" : historySource === "stale" ? "#d97706" : "#78716c" }}>
                 {historySource === "live" || historySource === "cache"
@@ -755,7 +747,7 @@ export default function DXYZNAVFinder() {
           <div style={{ ...styles.tableWrap, marginTop: "16px" }}>
             <div style={styles.tableHeaderRow} className="vcx-table-header">
               <div style={{ ...styles.th, flex: "1.6" }}>Participation Scenario</div>
-              <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>Post-5/26 Shares</div>
+              <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>Post-6/30 Shares</div>
               <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>Gross Raised</div>
               <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>Pro Forma NAV</div>
             </div>
@@ -767,7 +759,7 @@ export default function DXYZNAVFinder() {
                     <div style={styles.companyNote}>Aug–Sep 2025 pace (filed shares ÷ observed volume) — the program&apos;s high-water mark</div>
                   )}
                 </div>
-                <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Post-5/26 Shares">{fmtM(bridge.postMay.shares)}</div>
+                <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Post-6/30 Shares">{fmtM(bridge.postMay.shares)}</div>
                 <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Gross Raised">{fmt$(bridge.postMay.gross)}</div>
                 <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600, color: "#d97706" }} data-label="Pro Forma NAV">${bridge.proFormaNav.toFixed(2)}</div>
               </div>
@@ -782,7 +774,7 @@ export default function DXYZNAVFinder() {
           <h3 style={{ ...styles.sectionTitle, fontSize: "16px", margin: 0 }}>Note on Holding Data</h3>
         </div>
         <div style={styles.issuanceMeta}>
-          Because Destiny Tech100 acquires many of its largest stakes (e.g. Anthropic, OpenAI) through Special Purpose Vehicles (SPVs), exact per-share counts are not fully available in public EDGAR filings. The baseline reconciles to DXYZ&apos;s March 31, 2026 NPORT-P: $742.5M portfolio value plus $5.9M other net assets equals $748.36M filed net assets, which at the filed $24.56 NAV per share implies ~30.47M shares outstanding. Share-denominated holdings use December 31, 2025 counts where available and March 31, 2026 portfolio weights for the baseline marks. SpaceX (SPCX) is the exception: the N-CSR share count is scaled by SpaceX&apos;s 5-for-1 split (effective May 4, 2026, after the N-PORT and before the IPO) and the row is marked to the live Yahoo SPCX quote from the shared price API. Issuance after March 31 is modeled separately in the ATM Issuance Bridge above and never restates these filed figures.
+          Because Destiny Tech100 acquires many of its largest stakes (e.g. Anthropic, OpenAI) through Special Purpose Vehicles (SPVs), exact per-share counts are not fully available in public EDGAR filings. The baseline uses the Aug 28, 2026 424B3: NAV $34.30 as of June 30, 2026 and an approximate $1.64B portfolio. Net assets are inferred as (March 31 NPORT implied shares + 17,191,674 ATM shares sold April 1–June 30) × $34.30. Share-denominated holdings use December 31, 2025 counts where available and June 30, 2026 portfolio weights for the baseline marks. SpaceX (SPCX) is the exception: the N-CSR share count is scaled by SpaceX&apos;s 5-for-1 split (effective May 4, 2026) and the row is marked to the live Yahoo SPCX quote from the shared price API. Issuance after June 30 is modeled separately in the ATM Issuance Bridge above and never restates these filed figures. Subsequent events in the 424B3 ($150M additional OpenAI on Aug 13, plus Fluidstack and Boom) are mix shifts from cash already in the June 30 NAV — they are not new ATM proceeds.
         </div>
       </div>
 
@@ -870,7 +862,7 @@ export default function DXYZNAVFinder() {
         <div style={styles.sectionHeader} className="vcx-section-header">
           <span style={styles.sectionNum}>02</span>
           <h2 style={styles.sectionTitle}>SPVs & Percentage-Weighted Holdings</h2>
-          <span style={styles.sectionMeta} className="vcx-section-meta">1.0x = March 31, 2026 filed NAV baseline</span>
+          <span style={styles.sectionMeta} className="vcx-section-meta">1.0x = June 30, 2026 filed NAV baseline</span>
         </div>
 
         <div style={styles.tableWrap}>
@@ -995,12 +987,12 @@ export default function DXYZNAVFinder() {
       </div>
 
       <div style={styles.grandTotal} className="vcx-grand-total">
-        <div style={styles.gtLabel}>TOTAL MARKED NET ASSETS (3/31 BASIS)</div>
+        <div style={styles.gtLabel}>TOTAL MARKED NET ASSETS (6/30 BASIS)</div>
         <div style={styles.gtValue} className="vcx-gt-value-large">{fmt$exact(calc.totalNAV)}</div>
         <div style={styles.gtDivider} />
         <div style={{ display: "flex", gap: "64px", flexWrap: "wrap" }} className="vcx-gt-metrics">
           <div className="vcx-gt-metric">
-            <div style={styles.gtLabel}>NAV / SHARE (3/31 SHARES)</div>
+            <div style={styles.gtLabel}>NAV / SHARE (6/30 SHARES)</div>
             <div style={{ ...styles.gtValueAccent, ...(bridgeActive ? { fontSize: "40px", color: "#fff" } : {}) }} className="vcx-gt-value-accent">${calc.navPerShare.toFixed(2)}</div>
           </div>
           {bridgeActive && (
@@ -1034,13 +1026,14 @@ export default function DXYZNAVFinder() {
         <div style={styles.gtMeta}>
           {bridgeActive
             ? `Estimated NAV from user-supplied marks + modeled ATM issuance (${atmMode} mode) · ${fmtM(effectiveShares)} est. pro forma shares · Estimated, not company reported`
-            : `Filed-basis NAV from user-supplied marks · ${dxyzShares.toFixed(2)}M shares outstanding (3/31/26) · No post-March issuance modeled`}
+            : `Filed-basis NAV from user-supplied marks · ${dxyzShares.toFixed(2)}M shares outstanding (6/30/26) · No post-June issuance modeled`}
         </div>
       </div>
 
       <div style={styles.footer}>
         <div><strong>Changelog:</strong></div>
         <div style={{ marginBottom: "16px" }}>
+          • <strong>August 28, 2026</strong> — Baseline rolled to the Aug 28 424B3 (Supplement No. 1): NAV $34.30 and ~$1.64B portfolio as of June 30, 2026. Anthropic 14.4% ($236.2M), OpenAI equity 2.1% ($34.4M), SpaceX 10.5%. Filed Q2 ATM of 17,191,674 shares is inside the baseline; the issuance bridge now estimates only from July 1. Stated ATM wavg $34.25 does not reconcile to stated net proceeds $715.4M — both stored as printed. Subsequent $150M OpenAI purchase (Aug 13) is a mix shift from cash already in June 30 NAV.<br />
           • <strong>August 20, 2026</strong> — SpaceX Box 1 now uses post-split shares (177,992 N-CSR × 5-for-1 = 889,960) and the live Yahoo SPCX quote from the shared <code>/api/prices</code> cache. Split effective May 4, 2026 per SpaceX 424B4, after the March 31 N-PORT and before the June IPO.<br />
           • <strong>July 9, 2026 (calibration refinement)</strong> — Capped the inferred Apr 1–May 21 issuance proceeds at the original $1B ATM program&apos;s filed remainder (~$429M gross: $1B less $327.1M of 2025 sales per the N-CSR and $244.2M of Q1 sales per the 424B3), deriving a ~$39 effective average price instead of the $46.23 close-VWAP — the new $1B prospectus is dated May 26, so the old shelf was the only capacity available. Commission default recalibrated to 1.0% from the audited 2025 gross-vs-net (~0.95% effective). Sensitivity high bound raised to 16.4%, the filed Aug–Sep 2025 issuance pace. Added the next filed NAV checkpoint (June 30 N-PORT, due ~Aug 29).<br />
           • <strong>July 9, 2026</strong> — Added the ATM Issuance Bridge. Reconciled the March 31 baseline to filed net assets ($742.5M portfolio + $5.9M other net assets = $748.36M per the NPORT-P), correcting implied shares outstanding from 30.23M to ~30.47M. Added Filed Only / Calibrated Estimate / Custom modes that estimate post-March ATM share issuance: Apr 1–May 21 shares (~10.90M) inferred from the May 26 424B5 share count, post-May-26 issuance modeled daily from Yahoo price/volume history at a calibrated ~8.3% volume-participation rate, capped at $1B gross capacity, with no issuance on days at or below rolling NAV. Commission, participation, capacity, premium threshold, expense drag, and as-of date are adjustable. Every figure is labeled Filed, Inferred, or Estimated.<br />
@@ -1048,13 +1041,15 @@ export default function DXYZNAVFinder() {
         </div>
 
         <div><strong>Sources & Methodology:</strong></div>
-        <div>• <strong>Baseline NAV & Net Assets:</strong> $24.56 per share; $753.29M total assets, $4.93M liabilities, $748.36M net assets as of March 31, 2026, per the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000089418926016628/xslFormNPORT-P_X01/primary_doc.xml" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>March 31, 2026 NPORT-P</a> and <a href="https://www.sec.gov/Archives/edgar/data/1843974/000157587226000359/dxyz102_424b5.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>May 26, 2026 424B5</a>.</div>
-        <div>• <strong>Portfolio Value:</strong> Approximately $742.5M as of March 31, 2026, per the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000157587226000288/dxyz100_424b3.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>May 12, 2026 424B3 portfolio supplement</a>.</div>
-        <div>• <strong>Share Counts:</strong> Extracted from the December 31, 2025 Schedule of Investments within the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000121390026025304/ea0276106-01_ncsr.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSR filed March 10, 2026</a> where available. For holdings where March 31 only discloses portfolio percentages, baseline value is inferred from the filed $742.5M portfolio value.</div>
-        <div>• <strong>SpaceX (SPCX):</strong> Filed 177,992 shares (DXYZ SpaceX I 135,135 + MWAM VC SpaceX-II 42,857) from the N-CSR. Multiplied by 5 for SpaceX&apos;s five-for-one split of Class A, B, and C common stock, effective May 4, 2026 (SpaceX <a href="https://www.sec.gov/Archives/edgar/data/1181412/000162828026042639/spaceexplorationtechnologi.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>424B4</a>; also the <a href="https://www.sec.gov/Archives/edgar/data/1181412/000162828026052535/spcx-20260630.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>10-Q for the quarter ended June 30, 2026</a>). The split sits after DXYZ&apos;s March 31 N-PORT and before the June IPO. The row is marked to the live Yahoo SPCX quote via <code>/api/prices</code> (same cache as the DXYZ market price). The Snowpoint SpaceX SPV in Box 2 has no disclosed share count and stays on MOIC.</div>
-        <div>• <strong>Outstanding Shares:</strong> Defaults to ~30.47M, implied by $748.36M filed net assets divided by the filed $24.56 NAV per share (inferred — the NPORT-P does not state a share count directly).</div>
-        <div>• <strong>Prior ATM Program:</strong> Original $1B shelf (File 333-278734) effective July 15, 2025; Jefferies Sales Agreement dated August 8, 2025. Sold {PRIOR_ATM.sold2025.shares.toLocaleString("en-US")} shares at ${PRIOR_ATM.sold2025.wavgPrice} weighted average through December 31, 2025 (${(PRIOR_ATM.sold2025.netProceeds / 1e6).toFixed(1)}M net; ~0.95% effective commission) per the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000121390026025304/ea0276106-01_ncsr.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSR</a>, plus Q1 2026 sales of {Q1_ATM.shares.toLocaleString("en-US")} shares at ${Q1_ATM.wavgPrice} weighted average (~{fmt$(Q1_ATM.netProceeds)} net; already reflected in the March 31 baseline) per the 424B3 — leaving ~{fmt$(priorShelfRemainingApr1())} of gross capacity entering April, which caps the inferred Apr–May proceeds. New $1B gross-capacity program through Jefferies (commission up to 3.0% of gross sales price) per the 424B5, which discloses up to 57,591,678 shares outstanding <em>after</em> a full offering at the assumed $61.66 price — implying ~41.37M pre-offering shares and thus ~10.90M shares issued April 1–May 21 under the prior program (inferred).</div>
-        <div>• <strong>Post-May-26 Issuance (estimated):</strong> Modeled daily as a fixed share of Yahoo Finance trading volume (calibrated ~8.3%), issuing only on days above rolling pro forma NAV, until gross capacity is exhausted. Estimated, not company reported.</div>
+        <div>• <strong>Baseline NAV:</strong> $34.30 per share as of June 30, 2026, per the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>August 28, 2026 424B3 (Supplement No. 1)</a>. Net assets inferred as (March 31 NPORT implied shares + filed Q2 ATM shares) × $34.30. The 424B3 does not print total assets or liabilities.</div>
+        <div>• <strong>Portfolio Value:</strong> Approximately $1.64B as of June 30, 2026, same 424B3. Includes 57.3% First American Treasury / cash.</div>
+        <div>• <strong>Share Counts:</strong> Extracted from the December 31, 2025 Schedule of Investments within the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000121390026025304/ea0276106-01_ncsr.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSR filed March 10, 2026</a> where available. For holdings where June 30 only discloses portfolio percentages, baseline value is inferred from the filed $1.64B portfolio value.</div>
+        <div>• <strong>SpaceX (SPCX):</strong> Filed 177,992 shares (DXYZ SpaceX I 135,135 + MWAM VC SpaceX-II 42,857) from the N-CSR. Multiplied by 5 for SpaceX&apos;s five-for-one split of Class A, B, and C common stock, effective May 4, 2026 (SpaceX <a href="https://www.sec.gov/Archives/edgar/data/1181412/000162828026042639/spaceexplorationtechnologi.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>424B4</a>; also the <a href="https://www.sec.gov/Archives/edgar/data/1181412/000162828026052535/spcx-20260630.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>10-Q for the quarter ended June 30, 2026</a>). June 30 weights: SpaceX I 7.0% + MWAM 2.0% = 9.0% share-denominated; Snowpoint 2.6 at 1.5% stays on MOIC. The row is marked to the live Yahoo SPCX quote via <code>/api/prices</code>.</div>
+        <div>• <strong>Outstanding Shares:</strong> Defaults to ~{DXYZ_SHARES_OUTSTANDING_M.toFixed(2)}M: March 31 NPORT implied ~30.47M plus {Q2_ATM.shares.toLocaleString("en-US")} ATM shares sold April 1–June 30 (filed). The 424B3 does not state a June 30 share count directly.</div>
+        <div>• <strong>Q2 ATM (filed, already in baseline):</strong> {Q2_ATM.shares.toLocaleString("en-US")} shares at a stated weighted average of ${Q2_ATM.wavgPrice} for stated net proceeds of {fmt$(Q2_ATM.netProceeds)}, April 1–June 30, per the 424B3. Stated wavg × shares does not equal stated net proceeds; both figures are stored as printed. Q1 2026 sales of {Q1_ATM.shares.toLocaleString("en-US")} shares were already in the March 31 NPORT.</div>
+        <div>• <strong>Prior ATM Program:</strong> Original $1B shelf (File 333-278734) effective July 15, 2025; Jefferies Sales Agreement dated August 8, 2025. Sold {PRIOR_ATM.sold2025.shares.toLocaleString("en-US")} shares at ${PRIOR_ATM.sold2025.wavgPrice} weighted average through December 31, 2025 (${(PRIOR_ATM.sold2025.netProceeds / 1e6).toFixed(1)}M net; ~0.95% effective commission) per the <a href="https://www.sec.gov/Archives/edgar/data/1843974/000121390026025304/ea0276106-01_ncsr.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSR</a>. New $1B program through Jefferies (commission up to 3.0%) per the May 26 424B5. Q2 mixed leftover original-shelf capacity with the new program; the 424B3 does not split those proceeds, so post–June 30 simulation keeps the full $1B remaining.</div>
+        <div>• <strong>Post-June 30 Issuance (estimated):</strong> Modeled daily from July 1 as a fixed share of Yahoo Finance trading volume (calibrated from filed Q2 shares ÷ Apr–Jun volume), issuing only on days above rolling pro forma NAV, until gross capacity is exhausted. Estimated, not company reported.</div>
+        <div>• <strong>Subsequent events (mix shift, not new ATM):</strong> Aug 13 $150.0M additional Goanna Capital 26E (OpenAI Class A Common); Jul 16 $15.0M Magnitude FSTK / Fluidstack Series B; Aug 4 $4.0M Boom SAFE. Funded from existing cash inside the June 30 NAV.</div>
       </div>
 
       <div style={styles.stickyBar} className="vcx-sticky-bar">

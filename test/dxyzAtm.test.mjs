@@ -4,17 +4,21 @@ import { readFileSync } from "node:fs";
 
 import {
   FILED,
+  MARCH_31_NPORT,
   OTHER_NET_ASSETS,
   PROSPECTUS_424B5,
   PRIOR_ATM,
   Q1_ATM,
+  Q2_ATM,
   DEFAULTS,
   impliedMarch31Shares,
+  impliedFiledShares,
   inferredAprMayShares,
   priorShelfRemainingApr1,
   windowStats,
   completedTradingRows,
   calibrate,
+  calibratePostFiling,
   simulatePostMay,
   computeAtmBridge,
 } from "../lib/dxyzAtm.mjs";
@@ -32,19 +36,33 @@ test("filed baseline reconciles: portfolio + other net assets = filed net assets
   );
 });
 
-test("implied March 31 shares ≈ 30.47M and reproduce $24.56 filed NAV", () => {
+test("implied March 31 shares ≈ 30.47M and reproduce $24.56 NAV", () => {
   const shares = impliedMarch31Shares();
   assert.ok(Math.abs(shares - 30_470_723) < 5);
-  assert.equal((FILED.netAssets / shares).toFixed(2), "24.56");
+  assert.equal((MARCH_31_NPORT.netAssets / shares).toFixed(2), "24.56");
 });
 
-test("zero issuance (Filed Only) reproduces $24.56", () => {
+test("implied June 30 filed shares ≈ 47.66M and reproduce $34.30 NAV", () => {
+  const shares = impliedFiledShares();
+  assert.equal(shares, impliedMarch31Shares() + Q2_ATM.shares);
+  assert.ok(Math.abs(shares - 47_662_398) < 5);
+  assert.equal((FILED.netAssets / shares).toFixed(2), "34.30");
+  assert.ok(Math.abs(FILED.netAssets - shares * FILED.navPerShare) < 0.1);
+});
+
+test("zero issuance (Filed Only) reproduces $34.30", () => {
   const b = computeAtmBridge({ mode: "filed", rows: snapshot.rows });
-  assert.equal(b.proFormaNav.toFixed(2), "24.56");
-  assert.equal(b.proFormaShares, impliedMarch31Shares());
+  assert.equal(b.proFormaNav.toFixed(2), "34.30");
+  assert.equal(b.proFormaShares, impliedFiledShares());
   assert.equal(b.aprMay.shares, 0);
   assert.equal(b.postMay.shares, 0);
   assert.equal(b.accretionPerShare, 0);
+});
+
+test("calibrated estimate does not double-count filed Q2 ATM shares", () => {
+  const b = computeAtmBridge({ mode: "calibrated", rows: snapshot.rows });
+  assert.equal(b.aprMay.shares, 0);
+  assert.equal(b.aprMay.capped, false);
 });
 
 test("inferred Apr 1–May 21 issuance ≈ 10.90M shares", () => {
@@ -58,6 +76,16 @@ test("calibrated participation from snapshot ≈ 8.3%", () => {
   assert.ok(Math.abs(cal.aprMayAvgPrice - 46.23) < 0.25, `got ${cal.aprMayAvgPrice}`);
 });
 
+test("forward participation is calibrated from filed Q2 ATM shares", () => {
+  const cal = calibratePostFiling(snapshot.rows);
+  assert.equal(cal.q2Shares, Q2_ATM.shares);
+  assert.ok(cal.participation > 0.05, `got ${cal.participation}`);
+  assert.ok(cal.participation < 0.20, `got ${cal.participation}`);
+  assert.equal(Q2_ATM.shares, 17_191_674);
+  assert.equal(Q2_ATM.wavgPrice, 34.25);
+  assert.equal(Q2_ATM.netProceeds, 715_442_732);
+});
+
 test("issuance gross proceeds cannot exceed $1B capacity", () => {
   // Huge synthetic volume at a big premium would raise ~$60B unconstrained.
   const rows = Array.from({ length: 30 }, (_, i) => ({
@@ -69,7 +97,7 @@ test("issuance gross proceeds cannot exceed $1B capacity", () => {
     rows,
     participation: 0.1,
     commissionRate: 0.005,
-    startingNetAssets: FILED.netAssets,
+    startingNetAssets: MARCH_31_NPORT.netAssets,
     startingShares: impliedMarch31Shares(),
   });
   assert.ok(sim.gross <= PROSPECTUS_424B5.capacityGross + 0.01, `gross ${sim.gross}`);
@@ -88,7 +116,7 @@ test("days with market price below rolling NAV issue zero shares", () => {
     rows,
     participation: 0.083,
     commissionRate: 0.005,
-    startingNetAssets: FILED.netAssets,
+    startingNetAssets: MARCH_31_NPORT.netAssets,
     startingShares: impliedMarch31Shares(),
   });
   assert.equal(sim.shares, 0);
@@ -98,20 +126,39 @@ test("days with market price below rolling NAV issue zero shares", () => {
 });
 
 test("ATM issuance above NAV is accretive", () => {
+  const rows = [
+    { date: "2026-07-01", close: 50, volume: 2_000_000 },
+    { date: "2026-07-02", close: 50, volume: 2_000_000 },
+  ];
   const b = computeAtmBridge({
     mode: "calibrated",
-    rows: snapshot.rows,
+    rows,
+    participation: 0.08,
     expenseDragAnnualRate: 0, // isolate issuance accretion from fee drag
   });
   assert.ok(b.proFormaNav > b.markedNav, `${b.proFormaNav} vs ${b.markedNav}`);
   assert.ok(b.accretionPerShare > 0);
-  assert.ok(b.proFormaShares > impliedMarch31Shares());
+  assert.ok(b.proFormaShares > impliedFiledShares());
 });
 
 test("higher commission reduces net proceeds and pro forma NAV", () => {
-  const lo = computeAtmBridge({ mode: "calibrated", rows: snapshot.rows, commissionRate: 0 });
-  const hi = computeAtmBridge({ mode: "calibrated", rows: snapshot.rows, commissionRate: 0.03 });
-  assert.ok(hi.aprMay.net < lo.aprMay.net);
+  const rows = [
+    { date: "2026-07-01", close: 50, volume: 2_000_000 },
+    { date: "2026-07-02", close: 50, volume: 2_000_000 },
+  ];
+  const lo = computeAtmBridge({
+    mode: "calibrated",
+    rows,
+    participation: 0.08,
+    commissionRate: 0,
+  });
+  const hi = computeAtmBridge({
+    mode: "calibrated",
+    rows,
+    participation: 0.08,
+    commissionRate: 0.03,
+  });
+  assert.equal(hi.aprMay.shares, 0);
   assert.ok(hi.postMay.net < lo.postMay.net);
   assert.ok(hi.proFormaNav < lo.proFormaNav);
 });
@@ -140,7 +187,7 @@ test("empty windows are zero-safe: windowStats, calibrate, and computeAtmBridge"
   assert.equal(b.drag, 0);
   assert.equal(b.aprMay.shares, 0);
   assert.equal(b.postMay.shares, 0);
-  assert.equal(b.proFormaNav.toFixed(2), "24.56");
+  assert.equal(b.proFormaNav.toFixed(2), "34.30");
 });
 
 test("modeled issuance is invariant to user re-marks (filed-basis gate)", () => {
@@ -180,15 +227,13 @@ test("out-of-range rates are clamped: commission to [0,1], participation to >= 0
   assert.equal(negParticipation.gross, 0);
 });
 
-test("as-of dates before the new program start are clamped to May 26", () => {
-  // An earlier as-of would still carry the full Apr–May inferred layer,
-  // presenting ~10.9M shares that had not been issued by that date.
+test("as-of dates before the post-filing start are clamped to July 1", () => {
   const b = computeAtmBridge({
     mode: "custom",
     rows: snapshot.rows,
     asOfDate: "2026-04-10",
   });
-  assert.equal(b.asOfDate, "2026-05-26");
+  assert.equal(b.asOfDate, "2026-07-01");
 });
 
 test("negative or NaN custom inputs cannot invert the issuance gate", () => {
@@ -231,6 +276,8 @@ test("partial calibration windows are rejected, not misinterpreted", () => {
   assert.equal(b.postMay.shares, 0);
   // Full snapshot still calibrates normally.
   assert.ok(calibrate(snapshot.rows).participation > 0.08);
+  assert.ok(calibratePostFiling(snapshot.rows).participation > 0.05);
+  assert.equal(calibratePostFiling(partial).participation, 0);
 });
 
 test("completedTradingRows drops the in-progress session only", () => {
@@ -265,8 +312,14 @@ test("prior shelf remainder reconciles to filed gross usage", () => {
 test("Apr–May proceeds are capped at the prior shelf's filed remainder", () => {
   // At the observed ~$46.23 close-VWAP, 10.9M shares would gross ~$504M —
   // more than the old shelf could legally supply. The cap binds and the
-  // effective average price falls out of the division.
-  const b = computeAtmBridge({ mode: "calibrated", rows: snapshot.rows });
+  // effective average price falls out of the division. Calibrated mode no
+  // longer layers these shares (they're in the June 30 baseline); this is
+  // the historical extra-share path.
+  const b = computeAtmBridge({
+    mode: "custom",
+    rows: snapshot.rows,
+    aprMayShares: inferredAprMayShares(),
+  });
   assert.equal(b.aprMay.capped, true);
   assert.ok(Math.abs(b.aprMay.gross - priorShelfRemainingApr1()) < 1);
   assert.ok(Math.abs(b.aprMay.avgPrice - 39.32) < 0.05, `got ${b.aprMay.avgPrice}`);
@@ -275,6 +328,7 @@ test("Apr–May proceeds are capped at the prior shelf's filed remainder", () =>
   const low = computeAtmBridge({
     mode: "custom",
     rows: snapshot.rows,
+    aprMayShares: inferredAprMayShares(),
     aprMayAvgPrice: 30,
   });
   assert.equal(low.aprMay.capped, false);
@@ -287,6 +341,7 @@ test("explicit price overrides bypass the cap; shares-only overrides stay capped
   const explicit = computeAtmBridge({
     mode: "custom",
     rows: snapshot.rows,
+    aprMayShares: inferredAprMayShares(),
     aprMayAvgPrice: 50,
     expenseDragAnnualRate: 0,
   });
@@ -332,7 +387,11 @@ test("commission default is calibrated to the filed ~0.95% effective rate", () =
   assert.ok(Math.abs(effective - 0.0095) < 0.0005, `got ${effective}`);
   assert.equal(DEFAULTS.commissionRate, 0.01);
 
-  const b = computeAtmBridge({ mode: "calibrated", rows: snapshot.rows });
+  const b = computeAtmBridge({
+    mode: "custom",
+    rows: snapshot.rows,
+    aprMayShares: inferredAprMayShares(),
+  });
   assert.ok(
     Math.abs(b.aprMay.net - priorShelfRemainingApr1() * (1 - DEFAULTS.commissionRate)) < 1,
     `net ${b.aprMay.net}`
@@ -344,12 +403,14 @@ test("computeAtmBridge enforces the filed 3% commission cap", () => {
   const capped = computeAtmBridge({
     mode: "custom",
     rows: snapshot.rows,
+    aprMayShares: inferredAprMayShares(),
     commissionRate: 0.30,
     expenseDragAnnualRate: 0,
   });
   const atCap = computeAtmBridge({
     mode: "custom",
     rows: snapshot.rows,
+    aprMayShares: inferredAprMayShares(),
     commissionRate: PROSPECTUS_424B5.commissionCap,
     expenseDragAnnualRate: 0,
   });
@@ -368,7 +429,7 @@ test("minPremium gates issuance on days at a premium below the threshold", () =>
     rows,
     participation: 0.083,
     commissionRate: 0.005,
-    startingNetAssets: FILED.netAssets,
+    startingNetAssets: MARCH_31_NPORT.netAssets,
     startingShares: impliedMarch31Shares(),
   };
   const open = simulatePostMay({ ...base, minPremium: 0 });
@@ -456,12 +517,12 @@ test("custom overrides are respected", () => {
     participation: 0.05,
     commissionRate: 0.01,
     expenseDragAnnualRate: 0,
-    asOfDate: "2026-06-15",
+    asOfDate: "2026-07-08",
   });
   assert.equal(b.aprMay.shares, 5_000_000);
   assert.ok(Math.abs(b.aprMay.net - 5_000_000 * 40 * 0.99) < 1);
-  assert.equal(b.asOfDate, "2026-06-15");
-  // no post-May rows beyond the as-of date contribute; identical inputs with
+  assert.equal(b.asOfDate, "2026-07-08");
+  // no post-filing rows beyond the as-of date contribute; identical inputs with
   // a later as-of date can only add issuance
   const later = computeAtmBridge({
     mode: "custom",

@@ -1,18 +1,21 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { FILED } from "../lib/dxyzAtm.mjs";
+import { FILED, MARCH_31_NPORT } from "../lib/dxyzAtm.mjs";
 import {
   SPCX_FILED_SHARES,
   SPCX_FILED_SHARES_TOTAL,
   SPCX_MARCH31_WEIGHT,
+  SPCX_JUNE30_WEIGHT,
   SPCX_POST_SPLIT_SHARES,
   SPCX_SPLIT,
   SPCX_SPLIT_ADJUSTED_MARK_PPS,
+  SPCX_JUNE30_MARK_PPS,
   SPCX_YAHOO_SYMBOL,
   spcxPositionValue,
   spcxPreSplitMarkPps,
   spcxSplitAdjustedMarkPps,
+  spcxJune30MarkPps,
 } from "../lib/dxyzSpcx.mjs";
 
 test("DXYZ SpaceX N-CSR share count is DXYZ SpaceX I + MWAM VC SpaceX-II", () => {
@@ -42,8 +45,15 @@ test("split-adjusted mark keeps the March 31 SpaceX dollar value", () => {
   const splitValue = post * SPCX_POST_SPLIT_SHARES;
   assert.ok(Math.abs(filedValue - splitValue) < 1e-6);
   assert.ok(
-    Math.abs(filedValue - FILED.portfolioValue * SPCX_MARCH31_WEIGHT) < 1
+    Math.abs(filedValue - MARCH_31_NPORT.portfolioValue * SPCX_MARCH31_WEIGHT) < 1
   );
+});
+
+test("June 30 share-denominated SpaceX mark is 9.0% of the $1.64B portfolio", () => {
+  const pps = spcxJune30MarkPps();
+  assert.equal(SPCX_JUNE30_WEIGHT, 0.09);
+  assert.equal(SPCX_JUNE30_MARK_PPS, pps);
+  assert.ok(Math.abs(pps * SPCX_POST_SPLIT_SHARES - FILED.portfolioValue * 0.09) < 1);
 });
 
 test("live SPCX marks the post-split share count, not the N-CSR print", () => {

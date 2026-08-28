@@ -105,14 +105,14 @@
     {
       "ticker": "DXYZ",
       "price": 32.84,
-      "wrapperValue": 1000658563.94,
+      "wrapperValue": 1565233150.32,
       "anthBasis": "filed-fv-equiv",
       "oaiBasis": "filed-fv-equiv",
-      "anthPct": 0.000353664473684,
-      "oaiPct": 0.0000410558823529,
-      "anthPer100": 34.1061606231,
-      "oaiPer100": 3.49565906147,
-      "combinedPer100": 37.6018196845
+      "anthPct": 0.000244725388601,
+      "oaiPct": 0.0000405176470588,
+      "anthPer100": 15.0878480916,
+      "oaiPer100": 2.2054883828,
+      "combinedPer100": 17.2933364744
     },
     {
       "ticker": "ARKVX",

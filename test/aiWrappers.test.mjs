@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { impliedMarch31Shares, FILED } from "../lib/dxyzAtm.mjs";
+import { impliedMarch31Shares } from "../lib/dxyzAtm.mjs";
 import {
   ANTHROPIC_ROUND_FEB_2026,
   OPENAI_ROUND_FEB_2026,
@@ -103,9 +103,9 @@ test("Aug 7 DXYZ Anthropic pin: FV / round / $1.25B mcap at $1T", () => {
   // Screenshot table: DXYZ mcap $1.25B, est. 0.0354% of Anthropic @ $1T
   // printed ~$28.32. 0.0354% is 18.1% of the $742.5M portfolio ÷ the Feb
   // 2026 $380B round, rounded. Pins below are the unrounded filed numbers.
-  const fairValue = 0.181 * FILED.portfolioValue; // $134,392,500
+  const fairValue = 0.181 * 742_500_000; // March 31 $742.5M portfolio, frozen
   const roundVal = ANTHROPIC_ROUND_FEB_2026; // $380,000,000,000
-  const shares = impliedMarch31Shares(); // 30,470,724 = round(filed NAV / $24.56)
+  const shares = impliedMarch31Shares(); // 30,470,724 = round(March 31 NAV / $24.56)
   const marketCapPin = 1_250_000_000;
   const price = marketCapPin / shares;
   const ipoVal = 1_000_000_000_000;
@@ -132,11 +132,12 @@ test("Aug 7 DXYZ Anthropic pin: FV / round / $1.25B mcap at $1T", () => {
 
 test("DXYZ OpenAI Series C scales; PPU slice is not in WRAPPERS FV", () => {
   const dxyz = WRAPPERS.find((w) => w.ticker === "DXYZ");
-  const seriesC = 0.047 * FILED.portfolioValue;
-  const ppus = 0.01 * FILED.portfolioValue;
+  const seriesC = 0.021 * 1_640_000_000;
+  const ppus = 0.005 * 1_640_000_000;
   assert.equal(dxyz.openai.fairValue, seriesC);
   assert.ok(dxyz.openai.fairValue < seriesC + ppus);
-  assert.equal(dxyz.openai.fairValue + ppus, 0.057 * FILED.portfolioValue);
+  assert.equal(dxyz.openai.fairValue + ppus, 0.026 * 1_640_000_000);
+  assert.equal(dxyz.openai.subsequentPurchasesUsd, 150_000_000);
 });
 
 test("combined per $100 is the sum of the two legs", () => {

@@ -24,14 +24,14 @@ import {
 
 const point = (endMs, close) => ({ endMs, close });
 
-test("Private Tape two-asset weights normalize DXYZ March 31 Anthropic and SpaceX exposure", () => {
+test("Private Tape two-asset weights normalize DXYZ June 30 Anthropic and SpaceX exposure", () => {
   const weights = modeledAssetWeights();
-  assert.ok(Math.abs(weights.totalFiledWeight - 0.325) < 1e-12);
-  assert.ok(Math.abs(weights.anthropic - 0.5569230769) < 1e-10);
-  assert.ok(Math.abs(weights.spacex - 0.4430769231) < 1e-10);
+  assert.ok(Math.abs(weights.totalFiledWeight - 0.249) < 1e-12);
+  assert.ok(Math.abs(weights.anthropic - 0.5783132530120482) < 1e-10);
+  assert.ok(Math.abs(weights.spacex - 0.42168674698795183) < 1e-10);
   assert.ok(Math.abs(simpleReturn(100, 112) - 0.12) < 1e-12);
   assert.ok(
-    Math.abs(weightedPrivateReturn({ anthropic: 0.10, spacex: -0.02 }) - 0.0468307692) <
+    Math.abs(weightedPrivateReturn({ anthropic: 0.10, spacex: -0.02 }) - 0.04939759036144578) <
       1e-10
   );
   assert.equal(
@@ -59,7 +59,7 @@ test("Private Tape open-data manifest distinguishes private ANTH from public SPC
       .columns.includes("weighted_tape_return")
   );
   assert.ok(PRIVATE_TAPE_DATA_COLUMNS.rth.includes("dxyz_return"));
-  assert.ok(Math.abs(manifest.modeledSleeve.weights.anthropic - 0.5569230769) < 1e-10);
+  assert.ok(Math.abs(manifest.modeledSleeve.weights.anthropic - 0.5783132530120482) < 1e-10);
 });
 
 test("NYSE session calendar handles 2026 holidays and DST boundaries", () => {

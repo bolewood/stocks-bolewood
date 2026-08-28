@@ -72,14 +72,14 @@ and no per-$100 figure.
 
 ```
 basis:                    filed-fv-equiv
-reportedFairValue:        $134.3925M     (as of 2026-03-31, NPORT-P)
-measurementCompanyMark:   $380B          (Series G, 2026-02-12)
-→ impliedExposure:        0.0353664%     (computed, not stored)
+reportedFairValue:        $236.16M       (as of 2026-06-30, 424B3)
+measurementCompanyMark:   $965B          (Series H, 2026-05-28)
+→ impliedExposure:        0.0244725%     (computed, not stored)
 
 scenario valuation:       $965B          (Anthropic Series H, 2026-05-28)
-denominator:              $1.000659B     (market-cap: 30,470,724 sh × $32.84)
+denominator:              $1.565233B     (market-cap: 47,662,398 sh × $32.84)
 
-0.0353664% × $965B ÷ $1.000659B × $100  =  $34.11 per $100
+0.0244725% × $965B ÷ $1.565233B × $100  =  $15.09 per $100
 ```
 
 *($32.84 and scenario marks from `reference/fixtures.json` — frozen for reproducibility, not live quotes.)*

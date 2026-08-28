@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
   "methodologyVersion": "0.1.2",
-  "asOf": "2026-03-31",
-  "dxyzFiledPortfolioValue": 742500000,
+  "asOf": "2026-06-30",
+  "dxyzFiledPortfolioValue": 1640000000,
   "modeledAssetsNote": "Private Tape models only DXYZ's filed Anthropic and SpaceX exposure. Anthropic is a private/pre-IPO tape; SpaceX is now a public SPCX tape whose DXYZ SPV read-through may lag public marks. This is not a full DXYZ NAV model.",
   "marketStructureNote": "Anthropic remains a private/pre-IPO market input via Entropy/Hyperliquid. SpaceX began public trading under SPCX on Nasdaq on 2026-06-12, so xyz:SPCX is treated as a 24/7 public-equity/perp tape, not pre-IPO price discovery.",
   "assets": {
@@ -11,17 +11,17 @@
       "hyperliquidCoin": "io:ANTH",
       "tapeRole": "private_pre_ipo_perp",
       "quoteUnit": "usd_billions_implied_valuation",
-      "filedPortfolioWeight": 0.181,
-      "filedExposureUsd": 134392500,
-      "source": "DXYZ March 31, 2026 NPORT-P / May 12, 2026 424B3 portfolio supplement: 18.1% of the filed $742.5M portfolio value."
+      "filedPortfolioWeight": 0.144,
+      "filedExposureUsd": 236160000,
+      "source": "DXYZ June 30, 2026 portfolio from the Aug 28, 2026 424B3: 14.4% of the approximate $1.64B portfolio (Magnitude ANC III SPV)."
     },
     "spacex": {
       "name": "SpaceX",
       "hyperliquidCoin": "xyz:SPCX",
       "tapeRole": "public_equity_perp",
       "quoteUnit": "usd_per_share",
-      "filedPortfolioWeight": 0.144,
-      "filedExposureUsd": 106920000,
+      "filedPortfolioWeight": 0.105,
+      "filedExposureUsd": 172200000,
       "navReadThroughNote": "DXYZ's SpaceX exposure is held through SPVs. Public SPCX and xyz:SPCX moves can be useful tape, but DXYZ NAV may lag because of SPV conversion, lockups, distribution timing, and vehicle-level economics.",
       "publicListing": {
         "ticker": "SPCX",
@@ -31,12 +31,12 @@
         "sharesOffered": 555555555,
         "source": "SpaceX June 11, 2026 IPO pricing release and Nasdaq Trader Data Technical News #2026-8."
       },
-      "source": "DXYZ March 31, 2026 portfolio: 12.4% known share-denominated SpaceX SPVs plus 2.0% Snowpoint SpaceX SPV. The Private Tape page uses SPCX returns and price levels, not a placeholder fully diluted valuation."
+      "source": "DXYZ June 30, 2026 portfolio: 7.0% DXYZ SpaceX I + 2.0% MWAM VC SpaceX-II + 1.5% Snowpoint Growth 2.6. The Private Tape page uses SPCX returns and price levels, not a placeholder fully diluted valuation."
     }
   },
   "sources": {
     "dxyzNport": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926016628/xslFormNPORT-P_X01/primary_doc.xml",
-    "dxyz424b3": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000288/dxyz100_424b3.htm",
+    "dxyz424b3": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm",
     "hyperliquidInfoApi": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
     "hyperliquidRobustPrices": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/robust-price-indices",
     "hyperliquidHip3": "https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-improvement-proposals-hips/hip-3-builder-deployed-perpetuals",
