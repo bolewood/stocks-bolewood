@@ -68,7 +68,7 @@ test("impliedExposure exists only under computed.* and matches a fresh derivatio
       assert.equal(Object.prototype.hasOwnProperty.call(rawLeg, "value"), false);
       const derived = impliedExposure(rawLeg, marks);
       assert.equal(leg.computed.impliedExposure, derived);
-      if (rawLeg.basis === "commitment") {
+      if (rawLeg.basis === "commitment" || rawLeg.basis === "filed-units") {
         assert.equal(derived, null);
       }
     }
@@ -150,6 +150,24 @@ test("scenario valuation does not change FV-equivalent exposure %", () => {
     });
     for (const side of ["anthropic", "openai"]) {
       const basis = raw[side]?.basis;
+      if (basis === "filed-units") {
+        const perKey = side === "anthropic" ? "anthPer100" : "oaiPer100";
+        const pctKey = side === "anthropic" ? "anthPct" : "oaiPct";
+        assert.equal(lo[pctKey], null, `${w.ticker} ${side} published a company %`);
+        assert.equal(lo[perKey], hi[perKey], `${w.ticker} ${side} per$100 moved with $T slider`);
+        const diluted = fundRowMetrics(w, price, {
+          anthVal: 965_000_000_000,
+          oaiVal: 852_000_000_000,
+          dilution: 0.1,
+          resolved,
+        });
+        assert.equal(
+          lo[perKey],
+          diluted[perKey],
+          `${w.ticker} ${side} per$100 moved with IPO dilution slider`
+        );
+        continue;
+      }
       if (basis !== "filed-fv-equiv" && basis !== "carrying-value-equiv") continue;
       const key = side === "anthropic" ? "anthPct" : "oaiPct";
       assert.equal(lo[key], hi[key], `${w.ticker} ${side} % moved with scenario val`);

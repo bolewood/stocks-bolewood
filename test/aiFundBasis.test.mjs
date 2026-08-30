@@ -54,8 +54,8 @@ test("DXYZ ESTIMATED shares equal computeAtmBridge on the same rows", () => {
     dxyzBridge: fromHelper,
   });
   assert.equal(filed.shares, impliedFiledShares());
-  assert.equal(filed.oaiFv, 34_440_000);
-  assert.equal(est.oaiFv, 34_440_000 + 150_000_000);
+  assert.equal(filed.oaiFv, 35_040_868.2);
+  assert.equal(est.oaiFv, 35_040_868.2 + 150_000_000);
 });
 
 test("ARKVX ESTIMATED cash combined is ~$13.49 at the fallback NAV", () => {
@@ -149,14 +149,12 @@ test("fund stake % is identical across filed and estimated (cash)", () => {
     assert.equal(filedM.anthPct, estM.anthPct, `${w.ticker} anthPct`);
     if (w.ticker === "DXYZ") {
       const subsequent = w.openai?.subsequentPurchasesUsd || 0;
-      const round = w.openai?.roundVal;
       assert.ok(subsequent > 0);
-      assert.equal(
-        estM.oaiPct,
-        (filed.oaiFv + subsequent) / round,
-        "DXYZ ESTIMATED OpenAI % includes the filed subsequent purchase"
-      );
-      assert.notEqual(filedM.oaiPct, estM.oaiPct);
+      assert.equal(filedM.anthPct, null);
+      assert.equal(estM.anthPct, null);
+      assert.equal(filedM.oaiPct, null);
+      assert.equal(estM.oaiPct, null);
+      assert.ok(estM.oaiPer100 > filedM.oaiPer100);
     } else {
       assert.equal(filedM.oaiPct, estM.oaiPct, `${w.ticker} oaiPct`);
     }

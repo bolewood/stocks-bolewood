@@ -476,7 +476,8 @@ export default function AIPerDollarFinder() {
         OpenAI $0.852T). Assumes pro rata dilution of existing holders. Does
         not model participation rights, anti-dilution provisions, ownership
         caps, or security-specific conversion terms. Default 0% is gross
-        look-through.
+        look-through. DXYZ Anthropic and OpenAI use filed unit counts and
+        do not follow these $T sliders.
       </p>
 
       <div style={styles.basisBlock}>
@@ -506,7 +507,8 @@ export default function AIPerDollarFinder() {
           ⚠ Estimated, not company reported — fund share counts, net assets
           & marks are rolled forward together. Strategic rows do not move.
           DXYZ last filed NAV is ${FILED.navPerShare.toFixed(2)} as of{" "}
-          {FILED.asOf}.
+          {FILED.asOf}. DXYZ Anthropic and OpenAI use filed unit counts and
+          do not follow the $T IPO slider.
         </div>
       ) : (
         <p style={styles.caption}>
@@ -749,9 +751,11 @@ export default function AIPerDollarFinder() {
         <p style={styles.caption}>
           Implied exposure is not always ownership. Disclosed means an issuer
           or investor stated a percentage. Filed FV-equiv is fair value ÷ the
-          round that marked it. Round-implied is dollars invested ÷
-          post-money. Commitment has no percentage. DXYZ OpenAI PPUs are
-          excluded (not equity).
+          round that marked it. Filed units is a filed share-equivalent count
+          × price; it does not use a primary-round post-money. Round-implied
+          is dollars invested ÷ post-money. Commitment has no percentage.
+          DXYZ OpenAI PPUs are excluded (not equity). DXYZ Anthropic/OpenAI
+          rows do not follow the $T IPO slider.
         </p>
         {WRAPPERS.map((w) => (
           <div key={w.ticker} style={styles.noteBlock}>
@@ -768,10 +772,18 @@ export default function AIPerDollarFinder() {
               {w.anthropic?.kind === "fund"
                 ? ` Anth. FV ${fmt$(w.anthropic.fairValue)} at ${fmt$(w.anthropic.roundVal)} (${w.anthropic.asOf}).`
                 : ""}
+              {w.anthropic?.kind === "filed-units"
+                ? ` Anth. ${w.anthropic.filedUnits.toLocaleString("en-US")} units at $${Number(w.anthropic.markPerUnit).toFixed(2)}/unit (${fmt$(w.anthropic.fairValue)}, ${w.anthropic.asOf}).`
+                : ""}
               {w.openai?.kind === "fund"
                 ? ` OAI FV ${fmt$(w.openai.fairValue)} at ${fmt$(w.openai.roundVal)} (${w.openai.asOf}).`
                 : ""}
-              {` Implied exposure ${fmtExposurePct(claimPct(w.anthropic), { max: !!w.anthropic?.displayAsMax })} Anthropic / ${fmtExposurePct(claimPct(w.openai))} OpenAI.`}
+              {w.openai?.kind === "filed-units"
+                ? ` OAI ${w.openai.filedUnits.toLocaleString("en-US")} units at $${Number(w.openai.markPerUnit).toFixed(2)}/unit (${fmt$(w.openai.fairValue)}, ${w.openai.asOf}).`
+                : ""}
+              {w.anthropic?.kind === "filed-units" || w.openai?.kind === "filed-units"
+                ? " No company-ownership percentage: filed units × mark, not fair value ÷ a primary-round post-money."
+                : ` Implied exposure ${fmtExposurePct(claimPct(w.anthropic), { max: !!w.anthropic?.displayAsMax })} Anthropic / ${fmtExposurePct(claimPct(w.openai))} OpenAI.`}
             </div>
           </div>
         ))}
@@ -820,7 +832,8 @@ function LegDetail({ name, leg, pct, per100, ipoVal, wrapperValue, dilution }) {
   const meta = basisMeta(leg);
   const fv = leg.fairValue || leg.investmentUsd;
   const round = leg.roundVal;
-  const showPct = leg.kind !== "commitment" && pct > 0;
+  const isUnits = leg.kind === "filed-units";
+  const showPct = !isUnits && leg.kind !== "commitment" && pct > 0;
   const result =
     showPct && wrapperValue > 0
       ? (pct * (1 - dilution) * ipoVal * 100) / wrapperValue
@@ -835,6 +848,16 @@ function LegDetail({ name, leg, pct, per100, ipoVal, wrapperValue, dilution }) {
           {leg.investmentUsd
             ? ` Amount referenced: ${fmtUsdPrecise(leg.investmentUsd)}.`
             : ""}
+        </div>
+      ) : null}
+      {isUnits ? (
+        <div>
+          Filed units: {leg.filedUnits.toLocaleString("en-US")} as of {leg.asOf || "—"}.
+          Fair value {fmtUsdPrecise(fv)} ({`$${Number(leg.markPerUnit).toFixed(2)}`} per unit).
+          Carry {Math.round((leg.carriedInterestPct || 0) * 100)}%. No company-ownership
+          percentage: a fully diluted share count is not public, so this row does not
+          follow the $T IPO slider. Per $100 = filed fair value ÷ denominator × $100
+          = {fmtPer100(per100)}.
         </div>
       ) : null}
       {fv > 0 && round > 0 ? (

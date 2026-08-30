@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import {
   adsEquivalentShares,
   impliedExposure,
+  lookThroughFiledFv,
   lookThroughPer100,
 } from "./derive.mjs";
 
@@ -34,6 +35,9 @@ export function loadPublicDataset() {
 }
 
 function sharesOutstanding(raw) {
+  if (raw.filedSnapshot?.sharesOutstanding > 0) {
+    return raw.filedSnapshot.sharesOutstanding;
+  }
   if (raw.filedSnapshot?.netAssets > 0 && raw.filedSnapshot?.navPerShare > 0) {
     return raw.filedSnapshot.netAssets / raw.filedSnapshot.navPerShare;
   }
@@ -67,8 +71,20 @@ export function rowFromData(raw, marks, fixtures) {
   const value = wrapperValue(raw, price);
   const anthPct = impliedExposure(raw.anthropic, marks);
   const oaiPct = impliedExposure(raw.openai, marks);
-  const anthPer100 = per100(anthPct, fixtures.anthVal, value, fixtures.dilution);
-  const oaiPer100 = per100(oaiPct, fixtures.oaiVal, value, fixtures.dilution);
+  const anthPer100 =
+    raw.anthropic?.basis === "filed-units"
+      ? lookThroughFiledFv({
+          fairValue: raw.anthropic.reportedFairValue,
+          wrapperValue: value,
+        })
+      : per100(anthPct, fixtures.anthVal, value, fixtures.dilution);
+  const oaiPer100 =
+    raw.openai?.basis === "filed-units"
+      ? lookThroughFiledFv({
+          fairValue: raw.openai.reportedFairValue,
+          wrapperValue: value,
+        })
+      : per100(oaiPct, fixtures.oaiVal, value, fixtures.dilution);
   return {
     ticker: raw.ticker,
     price,

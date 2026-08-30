@@ -39,11 +39,17 @@ export function impliedExposure(leg, marks) {
       if (!(leg.investmentAmount > 0) || !(round > 0)) return null;
       return leg.investmentAmount / round;
     }
+    case "filed-units":
     case "commitment":
       return null;
     default:
       return null;
   }
+}
+
+export function lookThroughFiledFv({ fairValue, wrapperValue }) {
+  if (!(wrapperValue > 0) || !(fairValue > 0)) return 0;
+  return (fairValue * 100) / wrapperValue;
 }
 
 export function lookThroughPer100({ claimPct, ipoVal, wrapperValue, dilution = 0 }) {
