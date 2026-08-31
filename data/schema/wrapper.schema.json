@@ -15,8 +15,8 @@
     "sources"
   ],
   "properties": {
-    "schemaVersion": { "const": "1.0.0" },
-    "methodologyVersion": { "const": "1.0.0" },
+    "schemaVersion": { "const": "1.1.0" },
+    "methodologyVersion": { "const": "1.1.0" },
     "wrapperType": {
       "enum": [
         "operating-company",

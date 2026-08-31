@@ -16,7 +16,7 @@ const tools = [
     name: "DXYZ NAV Finder",
     status: "live",
     description:
-      "Interactive calculator to estimate the real-time Net Asset Value of Destiny Tech100 (NYSE: DXYZ). Adjust underlying valuations and SPV multipliers to see implied premiums.",
+      "Interactive calculator to estimate Destiny Tech100 (NYSE: DXYZ) NAV from filed unit counts. Mark Anthropic, OpenAI, and SpaceX at a price per share; remaining SPVs by MOIC.",
     tag: "NYSE: DXYZ",
   },
   {

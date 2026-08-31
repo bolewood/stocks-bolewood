@@ -1,31 +1,55 @@
 {
-  "schemaVersion": "1.0.0",
-  "methodologyVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
+  "methodologyVersion": "1.1.0",
   "ticker": "DXYZ",
   "yahooSymbol": "DXYZ",
   "name": "Destiny Tech100",
   "wrapperType": "closed-end-fund",
   "denominatorType": "market-cap",
   "confidence": "medium",
-  "note": "OpenAI PPUs excluded from the scaled numerator. Confidence is MEDIUM: ATM issuance after June 30 is estimated, not filed. Subsequent $150M OpenAI purchase (2026-08-13) is cash already inside June 30 NAV, applied on ESTIMATED only.",
-  "sharesNote": "FILED: March 31 NPORT implied shares plus 17,191,674 ATM shares sold April 1–June 30 (424B3). ESTIMATED: /dxyz ATM bridge from July 1. Active ATM.",
+  "note": "OpenAI PPUs excluded from the scaled numerator. Confidence is MEDIUM: ATM issuance after June 30 is estimated, not filed. Subsequent $150M OpenAI purchase (2026-08-13) is cash already inside June 30 NAV, applied on ESTIMATED only. DXYZ does not mark Anthropic or OpenAI to the last primary round.",
+  "sharesNote": "FILED: 47,657,338 shares from the June 30, 2026 N-CSRS. ESTIMATED: /dxyz ATM bridge from July 1. Active ATM. Board approved an August 2026 below-NAV repurchase program, discretionary as to size and timing.",
   "security": {
     "label": "Fund NAV",
     "linear": true,
-    "footnote": "Look-through from filed fair value ÷ the round used to mark that FV."
+    "footnote": "Look-through is filed units × share price, not fair value ÷ a primary-round post-money. /ai does not convert a $T IPO slider into DXYZ NAV."
   },
   "filedSnapshot": {
     "asOf": "2026-06-30",
     "navPerShare": 34.3,
-    "totalAssets": 1634820251.4,
-    "liabilities": 0,
-    "netAssets": 1634820251.4,
-    "portfolioValue": 1640000000,
-    "filingType": "424B3",
-    "accession": "0001575872-26-000624",
-    "note": "NAV $34.30 and approximate $1.64B portfolio from the Aug 28 424B3. Net assets = (March 31 NPORT implied shares + filed Apr 1–Jun 30 ATM shares) × $34.30. The 424B3 does not print total assets or liabilities. Stated ATM wavg $34.25 × 17,191,674 shares does not equal the stated $715,442,732 net proceeds — both figures are stored as printed."
+    "sharesOutstanding": 47657338,
+    "totalAssets": 1643373700,
+    "liabilities": 8543448,
+    "netAssets": 1634830252,
+    "portfolioValue": 1640039144,
+    "portfolioCost": 1347802540,
+    "filingType": "N-CSRS",
+    "accession": "0001213900-26-095201",
+    "note": "N-CSRS Statement of Assets: net assets $1,634,830,252, shares 47,657,338, printed NAV $34.30. NPORT-P TNA is $1,634,830,251.28 ($0.72 difference). Printed NAV is the rounded $34.30; exact is net assets ÷ shares. Investments FV $1,640,039,144 / cost $1,347,802,540. Q2 ATM 17,191,674 shares are already in this share count (30,465,664 + 17,191,674)."
   },
   "sources": [
+    {
+      "fields": ["filedSnapshot"],
+      "sourceClass": "primary",
+      "issuer": "Destiny Tech100 Inc.",
+      "filingType": "N-CSRS",
+      "accession": "0001213900-26-095201",
+      "documentDate": "2026-06-30",
+      "asOf": "2026-06-30",
+      "url": "https://www.sec.gov/Archives/edgar/data/1843974/000121390026095201/ea0302101-01_ncsrs.htm",
+      "note": "Semi-annual report as of June 30, 2026, filed Aug 29, 2026. Shares 47,657,338, net assets $1,634,830,252, printed NAV $34.30, investments FV $1,640,039,144 / cost $1,347,802,540. Level 3 table: VWAP/index/recent transaction prices, not announced primaries. Subsequent event: August 2026 below-NAV share repurchase program."
+    },
+    {
+      "fields": ["filedSnapshot"],
+      "sourceClass": "primary",
+      "issuer": "Destiny Tech100 Inc.",
+      "filingType": "NPORT-P",
+      "accession": "0000894189-26-024246",
+      "documentDate": "2026-06-30",
+      "asOf": "2026-06-30",
+      "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/primary_doc.xml",
+      "note": "June 30, 2026 NPORT-P. TNA $1,634,830,251.28. invstOrSec balance is share-equivalent units. Magnitude ANC III 386,088 units / $235,671,976.08. SpaceX I 675,675 / $115,445,830.50 = $170.86."
+    },
     {
       "fields": ["filedSnapshot"],
       "sourceClass": "primary",
@@ -35,89 +59,81 @@
       "documentDate": "2026-06-30",
       "asOf": "2026-06-30",
       "url": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm",
-      "note": "Supplement No. 1 dated Aug 28, 2026: NAV $34.30 and approximate $1.64B portfolio as of June 30, 2026. Apr 1–Jun 30 ATM: 17,191,674 shares, stated wavg $34.25, stated net proceeds $715,442,732."
-    },
-    {
-      "fields": ["filedSnapshot"],
-      "sourceClass": "primary",
-      "issuer": "Destiny Tech100 Inc.",
-      "filingType": "NPORT-P",
-      "accession": "0000894189-26-016628",
-      "documentDate": "2026-03-31",
-      "asOf": "2026-03-31",
-      "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926016628/xslFormNPORT-P_X01/primary_doc.xml",
-      "note": "March 31 NPORT-P net assets $748,360,972.30 / NAV $24.56 imply 30,470,724 shares. June 30 share count is that figure plus filed Q2 ATM sales."
+      "note": "Supplement No. 1 dated Aug 28, 2026: NAV $34.30 and approximate $1.64B portfolio. Apr 1–Jun 30 ATM: 17,191,674 shares. Subsequent $150.0M OpenAI purchase on 2026-08-13."
     }
   ],
   "anthropic": {
-    "basis": "filed-fv-equiv",
+    "basis": "filed-units",
     "holdingSecurity": "spv-interest",
-    "reportedFairValue": 236160000,
+    "filedUnits": 386088,
+    "reportedFairValue": 235671976.08,
     "fairValueAsOf": "2026-06-30",
-    "measurementCompanyMark": "anthropic-series-h",
-    "measurementMarkAsOf": "2026-05-28",
-    "portfolioWeight": 0.144,
+    "carriedInterestPct": 0,
     "confidence": "high",
     "sources": [
       {
-        "fields": ["reportedFairValue", "portfolioWeight"],
+        "fields": ["filedUnits", "reportedFairValue", "carriedInterestPct"],
         "sourceClass": "primary",
         "issuer": "Destiny Tech100 Inc.",
-        "filingType": "424B3",
-        "accession": "0001575872-26-000624",
+        "filingType": "NPORT-P",
+        "accession": "0000894189-26-024246",
         "documentDate": "2026-06-30",
         "asOf": "2026-06-30",
-        "url": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm",
-        "note": "14.4% of the approximate $1.64B portfolio (Magnitude ANC III SPV). 424B3 does not name the Anthropic round used to mark the position."
+        "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/primary_doc.xml",
+        "note": "Magnitude ANC III, LLC: balance 386,088, valUSD 235,671,976.08. N-CSRS footnote (g)/(i): units are the equivalent number of Anthropic Series B preferred shares. SPV carry 0%/0%."
       },
       {
-        "fields": ["measurementCompanyMark"],
+        "fields": ["filedUnits", "reportedFairValue", "carriedInterestPct"],
         "sourceClass": "primary",
-        "issuer": "Anthropic",
-        "documentDate": "2026-05-28",
-        "url": "https://www.anthropic.com/news/series-h",
-        "note": "Series H $965B closed May 28, 2026, the last primary round before the June 30 as-of. Dollar FV rose 1.76× vs March ($134.4M → $236.2M), less than a full 965/380 roll."
+        "issuer": "Destiny Tech100 Inc.",
+        "filingType": "N-CSRS",
+        "accession": "0001213900-26-095201",
+        "documentDate": "2026-06-30",
+        "asOf": "2026-06-30",
+        "url": "https://www.sec.gov/Archives/edgar/data/1843974/000121390026095201/ea0302101-01_ncsrs.htm",
+        "note": "SOI: 386,088 units, cost $107,000,000, FV $235,671,976. Level 3 bucket $278,448,755 is VWAP, index prices, and recent transaction price ($589.00–$766.76, avg $651.51) — Magnitude ANC III + Goanna + OAI I. Announced primary rounds are not an input."
       }
     ]
   },
   "openai": {
-    "basis": "filed-fv-equiv",
+    "basis": "filed-units",
     "holdingSecurity": "spv-interest",
-    "reportedFairValue": 34440000,
+    "filedUnits": 50895,
+    "reportedFairValue": 35040868.2,
     "fairValueAsOf": "2026-06-30",
-    "measurementCompanyMark": "openai-feb-2026",
-    "measurementMarkAsOf": "2026-02",
-    "portfolioWeight": 0.021,
+    "carriedInterestPct": 0,
     "subsequentPurchasesUsd": 150000000,
     "confidence": "low",
     "exclusions": [
       {
         "holding": "DXYZ OAI I PPUs",
-        "weight": 0.005,
-        "reason": "Not equity per the N-CSR. Excluded from IPO scaling."
+        "units": 11236,
+        "reportedFairValue": 7735911.09,
+        "reason": "Not equity per the N-CSR. Excluded from IPO scaling. Still inside June 30 NAV."
       }
     ],
     "sources": [
       {
-        "fields": ["reportedFairValue", "portfolioWeight"],
+        "fields": ["filedUnits", "reportedFairValue", "carriedInterestPct"],
         "sourceClass": "primary",
         "issuer": "Destiny Tech100 Inc.",
-        "filingType": "424B3",
-        "accession": "0001575872-26-000624",
+        "filingType": "NPORT-P",
+        "accession": "0000894189-26-024246",
         "documentDate": "2026-06-30",
         "asOf": "2026-06-30",
-        "url": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm",
-        "note": "2.1% Goanna Capital 26E Series C preferred only, as of June 30."
+        "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/primary_doc.xml",
+        "note": "Goanna Capital 26E LLC: balance 50,895, valUSD 35,040,868.20. Carry 0%/0%."
       },
       {
         "fields": ["exclusions"],
         "sourceClass": "primary",
         "issuer": "Destiny Tech100 Inc.",
-        "filingType": "424B3",
-        "accession": "0001575872-26-000624",
+        "filingType": "N-CSRS",
+        "accession": "0001213900-26-095201",
         "documentDate": "2026-06-30",
         "asOf": "2026-06-30",
-        "note": "0.5% DXYZ OAI I PPUs (OpenAI Group PBC Profit Participation Units) are not equity and are excluded from IPO scaling."
+        "url": "https://www.sec.gov/Archives/edgar/data/1843974/000121390026095201/ea0302101-01_ncsrs.htm",
+        "note": "DXYZ OAI I LLC 11,236 units, FV $7,735,911 are OpenAI Group PBC Profit Participation Units, not equity."
       },
       {
         "fields": ["subsequentPurchasesUsd"],

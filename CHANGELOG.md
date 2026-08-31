@@ -3,6 +3,11 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.11.0.0] - 2026-08-30
+
+### Changed
+- `/dxyz` and `/ai` DXYZ rows now use the June 30, 2026 N-CSRS and NPORT-P: 47,657,338 shares, net assets $1,634,830,252, printed NAV $34.30. Anthropic and OpenAI equity are filed unit counts (386,088 and 50,895), not last-primary FV-equivalent. SpaceX marks to live SPCX with per-SPV carry. New `filed-units` basis. ATM remaining capacity is no longer a leftover $1B figure; the August 2026 below-NAV repurchase sits beside the open ATM. Private Tape sleeve uses NPORT fair values.
+
 ## [0.10.2.0] - 2026-08-28
 
 ### Changed

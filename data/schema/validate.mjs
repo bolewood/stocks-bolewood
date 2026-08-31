@@ -1,5 +1,5 @@
-export const SCHEMA_VERSION = "1.0.0";
-export const METHODOLOGY_VERSION = "1.0.0";
+export const SCHEMA_VERSION = "1.1.0";
+export const METHODOLOGY_VERSION = "1.1.0";
 export const PRIVATE_TAPE_SCHEMA_VERSION = "1.0.0";
 
 export const BASES = [
@@ -7,6 +7,7 @@ export const BASES = [
   "pro-forma",
   "historical",
   "filed-fv-equiv",
+  "filed-units",
   "carrying-value-equiv",
   "round-implied",
   "commitment",
@@ -18,6 +19,7 @@ export const PRIMARY_REQUIRED_BASES = [
   "pro-forma",
   "historical",
   "filed-fv-equiv",
+  "filed-units",
   "carrying-value-equiv",
   "round-implied",
 ];
@@ -127,6 +129,17 @@ function validateLeg(leg, path, { company }) {
       if (!leg.measurementCompanyMark) fail(path, "measurementCompanyMark required");
       if (!leg.measurementMarkAsOf) fail(path, "measurementMarkAsOf required");
       break;
+    case "filed-units":
+      if (!(leg.filedUnits > 0)) fail(path, "filedUnits required");
+      if (!(leg.reportedFairValue > 0)) fail(path, "reportedFairValue required");
+      if (!leg.fairValueAsOf) fail(path, "fairValueAsOf required");
+      if (typeof leg.carriedInterestPct !== "number" || leg.carriedInterestPct < 0) {
+        fail(path, "carriedInterestPct required (>= 0)");
+      }
+      if (leg.measurementCompanyMark) {
+        fail(path, "filed-units must not carry measurementCompanyMark");
+      }
+      break;
     case "carrying-value-equiv":
       if (!(leg.reportedCarryingValue > 0)) fail(path, "reportedCarryingValue required");
       if (!leg.carryingValueAsOf) fail(path, "carryingValueAsOf required");
@@ -182,8 +195,10 @@ export function validateWrapper(wrapper, { marks } = {}) {
     if (!(wrapper.shareCount.value > 0) || !wrapper.shareCount.asOf) {
       fail(t, "shareCount.value and asOf required");
     }
+  } else if (wrapper.filedSnapshot?.sharesOutstanding > 0) {
+    // DXYZ: filed share count from the N-CSRS; do not infer from rounded NAV.
   } else if (wrapper.filedSnapshot?.netAssets > 0 && wrapper.filedSnapshot?.navPerShare > 0) {
-    // DXYZ: shares are implied by filed NAV.
+    fail(t, "filedSnapshot.sharesOutstanding required (do not infer shares from rounded NAV)");
   } else {
     fail(t, "shareCount or totalNetAssets or filedSnapshot required");
   }

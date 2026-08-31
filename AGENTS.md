@@ -20,6 +20,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # Pages
 
 - `/sats` permanently redirects (308) to `/echo` (`next.config.mjs` `redirects()`, covered by `test/redirects.test.mjs`).
+- `/dxyz` — Destiny Tech100 NAV calculator (`components/DXYZNAVFinder.jsx`). June 30, 2026 N-CSRS / NPORT-P unit counts via `lib/dxyzHoldings.mjs`; ATM bridge `lib/dxyzAtm.mjs` (same module as `/ai`). Anthropic scenario input is $/share, not a $T valuation. SpaceX live Yahoo with per-SPV carry.
 - `/private-tape` — Private Tape / DXYZ Shadow NAV lab. Uses returns, not price levels; `lib/privateTape.mjs` owns timestamp windows, no-leakage overnight construction, weighting, correlations, regressions, and CSV helpers.
 - `/sftby` — SoftBank Group holdco SOTP (`components/SFTBYSOTPFinder.jsx`). Live ARM / SFTBY / 9984.T / USDJPY from `/api/prices`.
-- `/ai` — Pre-IPO Anthropic and OpenAI per $100 (`components/AIPerDollarFinder.jsx`). Live prices from `/api/ai-prices`; wrapper records from `data/` via `lib/loadAiData.mjs`. Fund FILED/ESTIMATED in `lib/aiFundBasis.mjs`. Quote chip is market-hours-aware: LIVE/CACHED while RTH is open, CLOSE after the session, STALE only when a quote lags an open market.
+- `/ai` — Pre-IPO Anthropic and OpenAI per $100 (`components/AIPerDollarFinder.jsx`). Live prices from `/api/ai-prices`; wrapper records from `data/` via `lib/loadAiData.mjs`. DXYZ Anthropic/OpenAI use `filed-units` (no $T IPO slider). Fund FILED/ESTIMATED in `lib/aiFundBasis.mjs`. Quote chip is market-hours-aware: LIVE/CACHED while RTH is open, CLOSE after the session, STALE only when a quote lags an open market.

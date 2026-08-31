@@ -52,6 +52,7 @@ rather than stored.
 | `pro-forma` | Disclosed percentage **upon completion** of a pending transaction | Primary |
 | `historical` | Disclosed at an earlier date; may since have been diluted | Primary |
 | `filed-fv-equiv` | Fund's reported fair value ÷ the valuation that marked it | Primary |
+| `filed-units` | Fund's filed share-equivalent units × price; no company % | Primary |
 | `carrying-value-equiv` | Corporate carrying value ÷ the valuation that marked it | Primary |
 | `round-implied` | Investment amount ÷ round post-money | Primary |
 | `commitment` | Capital promised; ownership and terms unavailable — **no percentage published** | Primary or secondary |
@@ -71,23 +72,25 @@ and no per-$100 figure.
 **DXYZ — Anthropic leg**
 
 ```
-basis:                    filed-fv-equiv
-reportedFairValue:        $236.16M       (as of 2026-06-30, 424B3)
-measurementCompanyMark:   $965B          (Series H, 2026-05-28)
-→ impliedExposure:        0.0244725%     (computed, not stored)
+basis:                    filed-units
+filedUnits:               386,088       
+reportedFairValue:        $235.671976M   (as of 2026-06-30, N-CSRS)
+→ markPerUnit:            $610.41        (computed, not stored)
+→ impliedExposure:        none — no public fully diluted share count
 
-scenario valuation:       $965B          (Anthropic Series H, 2026-05-28)
-denominator:              $1.565233B     (market-cap: 47,662,398 sh × $32.84)
+ΔNAV per $1 PPS:          $0.008101      (386,088 ÷ 47,657,338)
+denominator:              $1.565067B     (market-cap: 47,657,338 sh × $32.84)
 
-0.0244725% × $965B ÷ $1.565233B × $100  =  $15.09 per $100
+$235.671976M ÷ $1.565067B × $100  =  $15.06 per $100
 ```
 
-*($32.84 and scenario marks from `reference/fixtures.json` — frozen for reproducibility, not live quotes.)*
+*($32.84 from `reference/fixtures.json` — frozen for reproducibility, not a live quote. The $T IPO slider does not apply to this row.)*
 <!-- END GENERATED: worked-example -->
 
-The percentage is never hand-authored. Rolling the mark forward changes the fair value and
-the valuation together, so the ratio is unchanged — see *Arithmetic identity vs. modeling
-convention* in `data/METHODOLOGY.md`.
+For `filed-fv-equiv` legs the percentage is never hand-authored: rolling the mark forward
+changes fair value and the measurement valuation together, so the ratio is unchanged. For
+`filed-units` (DXYZ) there is no company-ownership percentage — see *Filed units* in
+`data/METHODOLOGY.md`.
 
 ---
 
@@ -175,7 +178,7 @@ proceeds, or price targets.
 Corrections are welcome and are the main reason this data is public.
 
 Records typed `disclosed`, `pro-forma`, `historical`, `filed-fv-equiv`,
-`carrying-value-equiv` or `round-implied` require a **primary source** — SEC EDGAR, issuer
+`filed-units`, `carrying-value-equiv` or `round-implied` require a **primary source** — SEC EDGAR, issuer
 IR, a depositary agreement. Secondary sources are accepted only for `estimate`, and for
 `commitment` where no primary announcement exists.
 

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "1.0.0",
-  "methodologyVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
+  "methodologyVersion": "1.1.0",
   "asOf": "2026-08-19",
   "anthVal": 965000000000,
   "oaiVal": 852000000000,
@@ -105,14 +105,14 @@
     {
       "ticker": "DXYZ",
       "price": 32.84,
-      "wrapperValue": 1565233150.32,
-      "anthBasis": "filed-fv-equiv",
-      "oaiBasis": "filed-fv-equiv",
-      "anthPct": 0.000244725388601,
-      "oaiPct": 0.0000405176470588,
-      "anthPer100": 15.0878480916,
-      "oaiPer100": 2.2054883828,
-      "combinedPer100": 17.2933364744
+      "wrapperValue": 1565066979.92,
+      "anthBasis": "filed-units",
+      "oaiBasis": "filed-units",
+      "anthPct": null,
+      "oaiPct": null,
+      "anthPer100": 15.0582677357,
+      "oaiPer100": 2.23893728828,
+      "combinedPer100": 17.297205024
     },
     {
       "ticker": "ARKVX",

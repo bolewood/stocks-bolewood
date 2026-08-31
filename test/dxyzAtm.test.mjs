@@ -10,6 +10,7 @@ import {
   PRIOR_ATM,
   Q1_ATM,
   Q2_ATM,
+  MARCH_31_SHARES_FILED,
   DEFAULTS,
   impliedMarch31Shares,
   impliedFiledShares,
@@ -42,12 +43,24 @@ test("implied March 31 shares ≈ 30.47M and reproduce $24.56 NAV", () => {
   assert.equal((MARCH_31_NPORT.netAssets / shares).toFixed(2), "24.56");
 });
 
-test("implied June 30 filed shares ≈ 47.66M and reproduce $34.30 NAV", () => {
+test("filed June 30 shares are 47,657,338 and do not equal shares × printed $34.30", () => {
   const shares = impliedFiledShares();
-  assert.equal(shares, impliedMarch31Shares() + Q2_ATM.shares);
-  assert.ok(Math.abs(shares - 47_662_398) < 5);
+  assert.equal(shares, 47_657_338);
+  assert.equal(shares, MARCH_31_SHARES_FILED + Q2_ATM.shares);
+  assert.equal(MARCH_31_SHARES_FILED, 30_465_664);
+  assert.equal(FILED.sharesOutstanding, 47_657_338);
+  assert.equal(FILED.netAssets, 1_634_830_252);
+  assert.equal(FILED.portfolioValue, 1_640_039_144);
+  assert.equal(FILED.liabilities, 8_543_448);
   assert.equal((FILED.netAssets / shares).toFixed(2), "34.30");
-  assert.ok(Math.abs(FILED.netAssets - shares * FILED.navPerShare) < 0.1);
+  assert.ok(Math.abs(FILED.netAssets - shares * FILED.navPerShare) > 1000);
+});
+
+test("ATM accretion-only path against filed 6/30 shares is $30.71", () => {
+  const preAppreciation =
+    (MARCH_31_SHARES_FILED * MARCH_31_NPORT.navPerShare + Q2_ATM.netProceeds) /
+    impliedFiledShares();
+  assert.equal(preAppreciation.toFixed(2), "30.71");
 });
 
 test("zero issuance (Filed Only) reproduces $34.30", () => {
