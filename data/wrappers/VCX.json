@@ -7,16 +7,16 @@
   "wrapperType": "closed-end-fund",
   "denominatorType": "market-cap",
   "confidence": "high",
-  "note": "Trades at a large premium to NAV. Denominator is market cap, not NAV.",
+  "note": "Trades at a large premium to NAV. Denominator is market cap, not NAV. Lockup expiration accelerated; shares freely tradeable as of Aug 14, 2026.",
   "shareCount": {
     "value": 35797138,
     "asOf": "2026-06-30",
-    "note": "35,797,138 common from the March 31, 2026 N-CSR/A. June 30 NPORT-P Item B.6 reports $0 sales and $0 redemptions for April, May and June, so the audited share count is unchanged. Converted from a tender-offer fund to a listed CEF on 2026-03-19 (NYSE: VCX). No post-listing continuous offering."
+    "note": "35,797,138 common from the March 31, 2026 N-CSR/A. June 30 NPORT-P Item B.6 reports $0 sales and $0 redemptions for April, May and June, so the audited share count is unchanged. Affiliated holder Fundrise Real Estate Interval Fund (N-CSRS filed 2026-08-31) confirms holding 1,163,216 shares at June 30 with $192.9M sold since listing. Converted from a tender-offer fund to a listed CEF on 2026-03-19 (NYSE: VCX). No post-listing continuous offering."
   },
   "filedNavPerShare": 21.70476203768022,
   "filedNetAssets": 776968361.92,
   "listedOn": "2026-03-19",
-  "sharesNote": "35,797,138 common (N-CSR/A 2026-03-31), confirmed outstanding at June 30 by NPORT-P zero flows. ESTIMATED keeps that share count and rolls Anthropic from the NPORT-implied ~$864B mark to Series H; OpenAI lots were unchanged at the Feb 2026 ~$850B fund mark, so ESTIMATED only rolls the $850B→$852B last-primary step.",
+  "sharesNote": "35,797,138 common (N-CSR/A 2026-03-31), confirmed outstanding at June 30 by NPORT-P zero flows and Interval Fund N-CSRS affiliate reconciliation. ESTIMATED keeps that share count and rolls Anthropic from the NPORT-implied ~$864B mark to Series H; OpenAI lots were unchanged at the Feb 2026 ~$850B fund mark, so ESTIMATED only rolls the $850B→$852B last-primary step.",
   "security": {
     "label": "Fund NAV",
     "linear": true,
@@ -32,7 +32,7 @@
       "documentDate": "2026-06-30",
       "asOf": "2026-06-30",
       "url": "https://www.sec.gov/Archives/edgar/data/1867090/000186709026000109/xslFormNPORT-P_X01/primary_doc.xml",
-      "note": "Net assets $776,968,361.92, total assets $813,141,712.26, liabilities $36,173,350.34. NAV per share is net assets ÷ 35,797,138 shares. Signed 2026-08-27."
+      "note": "Net assets $776,968,361.92, total assets $813,141,712.26, liabilities $36,173,350.34. NAV per share is net assets ÷ 35,797,138 shares. Signed 2026-08-27, filed 2026-08-28. Also referencing Schedule of Investments (04400.htm)."
     },
     {
       "fields": ["shareCount"],
@@ -43,6 +43,17 @@
       "documentDate": "2026-03-31",
       "asOf": "2026-03-31",
       "note": "Net assets $678,918k, NAV $18.97, 35,797,138 shares. Share count carried forward; June 30 NPORT does not reprint SO."
+    },
+    {
+      "fields": ["shareCount"],
+      "sourceClass": "secondary",
+      "issuer": "Fundrise Real Estate Interval Fund, LLC",
+      "filingType": "N-CSRS",
+      "accession": "0001777677-26-000057",
+      "documentDate": "2026-06-30",
+      "asOf": "2026-06-30",
+      "url": "https://www.sec.gov/Archives/edgar/data/1777677/000177767726000057/primary-document.htm",
+      "note": "Note 6 affiliated investments schedule: confirms $50M initial cost, $192.885M sales proceeds, and 1,163,216 shares ($100.537M Level 1 FV) remaining as of June 30, 2026. Filed August 31, 2026."
     }
   ],
   "anthropic": {
@@ -63,7 +74,7 @@
         "documentDate": "2026-06-30",
         "asOf": "2026-06-30",
         "url": "https://www.sec.gov/Archives/edgar/data/1867090/000186709026000109/xslFormNPORT-P_X01/primary_doc.xml",
-        "note": "SaxeCap Advisors VIII, LP $128,169,056 + AI Access 12, LLC $45,459,418. Both lots are 2.2729709× their March 31 NPORT values (SaxeCap $56,388,340; AI Access 12 $20,000,000), so this is a mark, not a new subscription. Together they were $76,388,340 of the 3/31 N-CSR Anthropic $112,418k economic issuer total. HOF Capital AG Follow On, LLC ($36,029,463 at 3/31) is absent at 6/30."
+        "note": "SaxeCap Advisors VIII, LP $128,169,056 + AI Access 12, LLC $45,459,418. Both lots are 2.2729709× their March 31 NPORT values (SaxeCap $56,388,340; AI Access 12 $20,000,000), so this is a mark, not a new subscription. Together they were $76,388,340 of the 3/31 N-CSR Anthropic $112,418k economic issuer total. HOF Capital AG Follow On, LLC ($36,029,463 at 3/31) is absent at 6/30. Also referencing Schedule of Investments (04400.htm)."
       },
       {
         "fields": ["measurementCompanyMark"],
@@ -90,7 +101,7 @@
         "documentDate": "2026-06-30",
         "asOf": "2026-06-30",
         "url": "https://www.sec.gov/Archives/edgar/data/1867090/000186709026000109/xslFormNPORT-P_X01/primary_doc.xml",
-        "note": "Quiet OA Access LP $64,613,489 + HOF Capital AP Growth, LLC $19,548,977 — identical to the March 31 NPORT lots, which summed to the N-CSR OpenAI $84,163k economic-issuer total."
+        "note": "Quiet OA Access LP $64,613,489 + HOF Capital AP Growth, LLC $19,548,977 — identical to the March 31 NPORT lots, which summed to the N-CSR OpenAI $84,163k economic-issuer total. Also referencing Schedule of Investments (04400.htm)."
       },
       {
         "fields": ["measurementCompanyMark"],

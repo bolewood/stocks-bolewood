@@ -3,6 +3,11 @@
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 
+## [0.11.0.1] - 2026-08-31
+
+### Changed
+- `/vcx` and `/ai` VCX rows now cross-reference Fundrise Real Estate Interval Fund&apos;s June 30 N-CSRS (accession 0001777677-26-000057, filed August 31): Note 6 confirms the $50M February registered offering purchase, $192.9M of sales proceeds realized ($164.1M gain) through June 30, and 1,163,216 shares ($100.5M Level 1 FV) remaining in affiliate hands as of June 30. Form 144 filings show ongoing sales into August. Added note on the retail lockup acceleration (expired Aug 13, 2026, freely tradeable Aug 14 per July 27 Form 8-K).
+
 ## [0.11.0.0] - 2026-08-30
 
 ### Changed

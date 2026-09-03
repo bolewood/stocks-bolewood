@@ -11,6 +11,7 @@ Typed entries: **Data update** · **Correction** · **Methodology change** · **
 - DXYZ Anthropic/OpenAI look-through is units × price, not FV ÷ a primary-round post-money. The $T IPO slider does not apply to those rows. Per-SPV carry on `/dxyz` SpaceX. ATM accretion-only path calibrated to $30.71 vs filed $34.30.
 
 ### Data update
+- 2026-08-31: VCX affiliate overhang reconciled via Fundrise Real Estate Interval Fund, LLC Form N-CSRS (accession 0001777677-26-000057) and NPORT-P (0001777677-26-000056): Note 6 confirms $50M initial cost, $192.885M public sales proceeds ($164.114M realized gain), and 1,163,216 shares ($100.537M Level 1 FV at $86.43/share) held at June 30, 2026. Added secondary source to data/wrappers/VCX.json.
 - 2026-08-30: DXYZ June 30, 2026 N-CSRS (accession 0001213900-26-095201) and NPORT-P (0000894189-26-024246): shares 47,657,338, net assets $1,634,830,252, investments FV $1,640,039,144 / cost $1,347,802,540. Anthropic Magnitude ANC III 386,088 units / $235,671,976.08. OpenAI Goanna 50,895 / $35,040,868.20. SpaceX three SPVs $173,061,169.35. Private Tape sleeve rolled to those FVs.
 
 ## [1.0.0] - 2026-08-19
