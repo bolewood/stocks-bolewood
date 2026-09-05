@@ -1,0 +1,119 @@
+{
+  "version": "1.0.0",
+  "reviewedAt": "2026-09-05",
+  "ir": {
+    "asOf": "2026-06-30",
+    "publicationDate": "2026-08-06",
+    "basis": "issuer-adjusted-holdco-nav",
+    "source": "https://group.softbank/en/ir/stock/sotp",
+    "usdJpy": 162.39,
+    "jpyT": {
+      "holdings": 83.11,
+      "armGross": 53.13,
+      "armAbf": 3.22,
+      "armAdj": 49.91,
+      "svf1": 3.6,
+      "svf2": 19.29,
+      "latam": 1,
+      "sbkkAdj": 2.79,
+      "tmobileAdj": 0,
+      "others": 6.51,
+      "nav": 72.3,
+      "sbgAdjNd": 10.81,
+      "consolNibd": 22.29,
+      "selfFin": 6.03,
+      "otherDebtAdj": 5.45
+    },
+    "note": "Rounded issuer observations. Keep SVF2 at SBG's reported share of NAV and bridge only subsequent OpenAI changes. The difference between total holdings and the displayed components is rounding. Freeze these balances in USD at reporting FX; a current FX quote does not identify the currency mix of debt or assets."
+  },
+  "arm": {
+    "shares": 922733999,
+    "asOf": "2026-05-21",
+    "publicationDate": "2026-05-26",
+    "basis": "disclosed-beneficial-shares",
+    "source": "https://investors.arm.com/static-files/0b97f8e1-ac58-4b25-84d8-9df66807ab19",
+    "note": "Arm FY2026 20-F, major shareholders: approximately 86.4% at that date. Use the share count, not a fixed percentage of Arm."
+  },
+  "openaiJune": {
+    "fairValueUsdB": 89.6,
+    "costUsdB": 44.6,
+    "asOf": "2026-06-30",
+    "publicationDate": "2026-08-06",
+    "basis": "reported-gross-fund-fair-value",
+    "source": "https://group.softbank/media/Project/sbg/sbg/pdf/ir/financials/financial_reports/financial-report_q1fy2026_01_en.pdf",
+    "note": "Gross OpenAI value is a bridge reference, not a separately disclosed SBG-attributable asset. July FV and pro forma ownership are shared with wrappers/SFTBY.json."
+  },
+  "management": {
+    "equityInterestPct": 17.25,
+    "asOf": "2026-06-30",
+    "publicationDate": "2026-08-06",
+    "basis": "disclosed-fund-program-terms",
+    "source": "https://group.softbank/media/Project/sbg/sbg/pdf/ir/financials/financial_reports/financial-report_q1fy2026_01_en.pdf#page=65",
+    "scopeSource": "https://group.softbank/media/Project/sbg/sbg/pdf/ir/investors/shareholders/2026/shareholders-meeting_46_02_en.pdf#page=71",
+    "note": "MgmtCo has 17.25% of SVF2 LLC Equity, subordinate to SBG Preferred Equity. Distributions have fund-wide 130%-200% hurdles and receivable offsets. This is not a 17.25% interest in every gross investment. Exact incremental shareholder allocation cannot be reproduced from these aggregate disclosures."
+  },
+  "assumptions": {
+    "asOf": "2026-09-05",
+    "basis": "author-selected-sensitivity",
+    "source": "https://github.com/bolewood/stocks-bolewood/blob/main/data/SFTBY_METHODOLOGY.md",
+    "defaultTaxPct": 0,
+    "defaultLiquidityPct": 0,
+    "armTaxBasisProxyUsdB": 40,
+    "defaultManagementPct": 17.25,
+    "defaultOtherNetDebtUsdB": 0,
+    "note": "Management sensitivity deducts 0%-17.25% of positive post-June OpenAI revaluation excluding new invested capital; default is the larger deduction. This bracket is not a confidence interval or full fund waterfall. Tax is optional and uses an adjustable, unverified Arm basis proxy. Other net-debt adjustment is an explicit unresolved bridge; zero is not a claim of no subsequent cash flows."
+  },
+  "quoteSnapshot": {
+    "asOf": "2026-09-04",
+    "basis": "market-close-fallback",
+    "source": "https://stocks.bolewood.com/api/prices",
+    "ARM": 252.09,
+    "SFTBY": 17.72,
+    "TOKYO": 5590,
+    "USDJPY": 156.221
+  },
+  "events": [
+    {
+      "asOf": "2026-08-05",
+      "basis": "announced-financing",
+      "source": "https://group.softbank/media/Project/sbg/sbg/pdf/ir/financials/financial_reports/financial-report_q1fy2026_01_en.pdf#page=71",
+      "title": "SVF2 $10B loan agreement",
+      "note": "Expected August borrowing, guaranteed by SBG, with a cash collateral account and OpenAI-value triggers. Actual draw and net use of proceeds are not reconciled here. Do not add the facility as net debt automatically."
+    },
+    {
+      "asOf": "2026-08-04",
+      "basis": "announced-bond-issue",
+      "source": "https://group.softbank/en/news/press/20260729",
+      "title": "¥90B bonds, August 4 issue date",
+      "note": "Redemption funding; borrowing and cash proceeds do not by themselves increase net debt. No separate NAV uplift or automatic net-debt addition."
+    },
+    {
+      "asOf": "2026-08-28",
+      "basis": "announced-timing-change",
+      "source": "https://group.softbank/en/news/press/20260828",
+      "title": "LINE MAN $130M investment delayed to October",
+      "note": "Inside LY / SoftBank Corp.; do not separately add it to SBG's listed-equity holding."
+    },
+    {
+      "asOf": "2026-09-02",
+      "basis": "announced-ipo-filing",
+      "source": "https://group.softbank/en/news/press/20260902",
+      "title": "SB Energy filed for an IPO",
+      "note": "No offering price or share count determined. Retain the existing June other-assets line; no invented IPO value or duplicate asset."
+    },
+    {
+      "asOf": "2026-09-04",
+      "basis": "announced-future-bond",
+      "source": "https://group.softbank/en/news/press/20260904",
+      "title": "¥1T bond at 4.75%, planned September 17",
+      "note": "Proceeds for bond redemptions and part of ABB robotics purchase. Future financing, not September 5 debt or free cash."
+    },
+    {
+      "asOf": "2026-07-30",
+      "basis": "announced-stock-option-terms",
+      "source": "https://group.softbank/en/news/press/20260730",
+      "title": "Stock-option terms finalized",
+      "note": "Option issuance is not an exercised ordinary share. Retain the June issued-less-treasury denominator, shared with /ai; future SBG dilution is not modeled."
+    }
+  ]
+}
