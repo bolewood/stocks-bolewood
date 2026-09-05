@@ -105,7 +105,7 @@ test("/dxyz finder uses NPORT units and per-SPV carry, not a 5× on June 30 coun
     "utf8"
   );
   assert.match(finder, /data\.prices\?\.SPCX/);
-  assert.match(finder, /spcxPositionValueAt/);
+  assert.match(readFileSync(new URL("../lib/dxyzNav.mjs", import.meta.url), "utf8"), /spcxPositionValueAt/);
   assert.match(finder, /Unit Parity/);
   assert.doesNotMatch(finder, /shares_k: 177\.992/);
   assert.match(finder, /SHARE_REPURCHASE/);

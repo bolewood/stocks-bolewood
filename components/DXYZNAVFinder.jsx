@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useRef, useSyncExternalStore } from "react";
 import {
   FILED,
-  OTHER_NET_ASSETS,
   PROSPECTUS_424B5,
   Q1_ATM,
   Q2_ATM,
@@ -18,98 +17,36 @@ import {
 } from "../lib/dxyzAtm.mjs";
 import historySnapshot from "../app/api/dxyz-history/snapshot.json";
 import {
-  SPCX_POST_SPLIT_SHARES,
-  SPCX_SPLIT,
   SPCX_JUNE30_MARK_PPS,
   SPCX_YAHOO_SYMBOL,
-  SPCX_VAL_USD_TOTAL,
-  spcxPositionValueAt,
 } from "../lib/dxyzSpcx.mjs";
 import {
   ANTHROPIC_SPV,
   OPENAI_EQUITY_SPV,
-  SHARE_LOTS,
-  MOIC_LOTS,
-  MONEY_MARKET,
-  longTailValue,
   markPerUnit,
   anthropicNavPerDollarPps,
   NCSRS_JUNE_30,
   NPORT_JUNE_30,
+  AUGUST_OPENAI_PURCHASE,
+  AUGUST_OPENAI_SOURCE,
 } from "../lib/dxyzHoldings.mjs";
+import { SHARE_DENOMINATED, DOLLAR_DENOMINATED, OTHER_HOLDINGS, calculateDxyzNav } from "../lib/dxyzNav.mjs";
+import { CAPITALIZATION, DEFAULT_DXYZ_OAI_ENTRY_PRICE } from "../reference/unitExposure.mjs";
 import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 
 // DXYZ NAV Finder
 // Source: Destiny Tech100 N-CSRS and NPORT-P as of June 30, 2026 (filed
-// Aug 28–29). Unit counts are NPORT balance fields. Share count is the
+// Aug 28). Unit counts are NPORT balance fields. Share count is the
 // N-CSRS 47,657,338. ATM after June 30 is estimated from July 1.
 
 const DXYZ_SHARES_OUTSTANDING_M = impliedFiledShares() / 1_000_000;
 const COMMISSION_DEFAULT_PCT = ATM_DEFAULTS.commissionRate * 100;
 const ANTHROPIC_NAV_SENS = anthropicNavPerDollarPps();
 
-const SHARE_DENOMINATED = [
-  {
-    name: "SpaceX",
-    yahooSymbol: SPCX_YAHOO_SYMBOL,
-    units: SPCX_POST_SPLIT_SHARES,
-    shares_k: SPCX_POST_SPLIT_SHARES / 1000,
-    mark_pps_1231: Number(SPCX_JUNE30_MARK_PPS.toFixed(2)),
-    filedValue: SPCX_VAL_USD_TOTAL,
-    valueAt: spcxPositionValueAt,
-    note: `DXYZ SpaceX I 675,675 + Snowpoint 2.6 142,425 at SPCX; MWAM VC SpaceX-II 214,285 with 10% carry. June 30 units are post ${SPCX_SPLIT.ratio}-for-1 Unit Parity (${SPCX_SPLIT.effective}). Do not re-split.`,
-  },
-  {
-    name: "Anthropic",
-    units: ANTHROPIC_SPV.units,
-    shares_k: ANTHROPIC_SPV.units / 1000,
-    mark_pps_1231: Number(markPerUnit(ANTHROPIC_SPV).toFixed(2)),
-    filedValue: ANTHROPIC_SPV.valUSD,
-    note: `${ANTHROPIC_SPV.vehicle} · ${ANTHROPIC_SPV.units.toLocaleString("en-US")} units · 0% carry · ΔNAV/share = $${ANTHROPIC_NAV_SENS.toFixed(6)} per $1 of Anthropic share price`,
-  },
-  {
-    name: "OpenAI",
-    units: OPENAI_EQUITY_SPV.units,
-    shares_k: OPENAI_EQUITY_SPV.units / 1000,
-    mark_pps_1231: Number(markPerUnit(OPENAI_EQUITY_SPV).toFixed(2)),
-    filedValue: OPENAI_EQUITY_SPV.valUSD,
-    note: `${OPENAI_EQUITY_SPV.vehicle} Series C · ${OPENAI_EQUITY_SPV.units.toLocaleString("en-US")} units · 0% carry. PPUs are a separate NAV line, excluded from /ai IPO scaling.`,
-  },
-  ...SHARE_LOTS.map((lot) => ({
-    name: lot.name,
-    units: lot.units,
-    shares_k: lot.units / 1000,
-    mark_pps_1231: Number((lot.valUSD / lot.units).toFixed(2)),
-    filedValue: lot.valUSD,
-    note: lot.note,
-  })),
-];
-
-const DOLLAR_DENOMINATED = MOIC_LOTS.map((lot) => ({
-  name: lot.name,
-  value_k: lot.valUSD / 1000,
-  note: lot.note,
-}));
-
-const OTHER_HOLDINGS = [
-  {
-    name: MONEY_MARKET.name,
-    value_k: MONEY_MARKET.valUSD / 1000,
-    locked: true,
-    note: "First American Treasury Obligations, 57.48% of net assets (N-CSRS 6/30)",
-  },
-  {
-    name: "Long Tail Private Holdings",
-    value_k: longTailValue() / 1000,
-    note: "Residual of unnamed June 30 lots so named holdings + cash + residual = filed investments",
-  },
-  {
-    name: "Other Net Assets",
-    value_k: OTHER_NET_ASSETS / 1000,
-    locked: true,
-    note: "Other assets less liabilities on the N-CSRS schedule of investments (−$5,208,892)",
-  },
-];
+const ENTRY = CAPITALIZATION.dxyzOpenaiEntry;
+const subscribeHydration = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
 
 const fmt$ = (n) =>
   n >= 1e9
@@ -154,6 +91,9 @@ function ConfBadge({ level }) {
 }
 
 export default function DXYZNAVFinder() {
+  const ready = useSyncExternalStore(subscribeHydration, clientReady, serverReady);
+  const [includeAugust, setIncludeAugust] = useState(true);
+  const [entryPrice, setEntryPrice] = useState(DEFAULT_DXYZ_OAI_ENTRY_PRICE);
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 720);
@@ -241,6 +181,16 @@ export default function DXYZNAVFinder() {
     updateURL("mark");
   };
 
+  const restoreJuneSnapshot = () => {
+    resetToMark();
+    spcxFollowLive.current = false;
+    setPpsOverrides(Object.fromEntries(SHARE_DENOMINATED.map(p => [p.name, p.mark_pps_1231])));
+    setDxyzShares(DXYZ_SHARES_OUTSTANDING_M);
+    setIncludeAugust(false);
+    setAtmMode("filed");
+    setEntryPrice(DEFAULT_DXYZ_OAI_ENTRY_PRICE);
+  };
+
   const applyAggressive = () => {
     spcxFollowLive.current = false;
     setPpsOverrides({
@@ -305,10 +255,14 @@ export default function DXYZNAVFinder() {
     const params = new URLSearchParams(window.location.search);
     const scenario = params.get("scenario");
     if (scenario === "aggressive") {
+      // Initial URL seed after hydration; intentionally runs once.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       applyAggressive();
     } else if (scenario === "dream") {
       applyDream();
     }
+    // Presets are only URL defaults on mount, not reactive dependencies.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -338,6 +292,8 @@ export default function DXYZNAVFinder() {
       hour: "2-digit", minute: "2-digit",
     }).formatToParts(new Date());
     const nyGet = (type) => nyParts.find((p) => p.type === type)?.value;
+    // Date filtering is deferred until hydration to keep SSR deterministic.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHistoryRows(
       completedTradingRows(
         historySnapshot.rows,
@@ -357,53 +313,10 @@ export default function DXYZNAVFinder() {
       .catch(() => setHistorySource("snapshot"));
   }, []);
 
-  const calc = useMemo(() => {
-    const shareRows = SHARE_DENOMINATED.map((p) => {
-      const pps = parseFloat(ppsOverrides[p.name]) || 0;
-      const units = p.units ?? p.shares_k * 1000;
-      let positionValue;
-      if (p.valueAt) positionValue = p.valueAt(pps);
-      else if (p.filedValue != null && Math.abs(pps - p.mark_pps_1231) < 0.005) {
-        positionValue = p.filedValue;
-      } else {
-        positionValue = pps * units;
-      }
-      const navPerShare = positionValue / (dxyzShares * 1_000_000);
-      return { ...p, pps, positionValue, navPerShare };
-    });
+  const calc = useMemo(() => calculateDxyzNav({
+    ppsOverrides, dxyzShares, dollarMOICs, otherMOICs, includeAugust, entryPrice,
+  }), [ppsOverrides, dxyzShares, dollarMOICs, otherMOICs, includeAugust, entryPrice]);
 
-    const dollarRows = DOLLAR_DENOMINATED.map((p) => {
-      const moic = parseFloat(dollarMOICs[p.name]) || 0;
-      const positionValue = p.value_k * 1000 * moic;
-      return {
-        ...p,
-        moic,
-        markValue: p.value_k * 1000,
-        positionValue,
-        navPerShare: positionValue / (dxyzShares * 1_000_000),
-      };
-    });
-
-    const otherRows = OTHER_HOLDINGS.map((p) => {
-      const moic = parseFloat(otherMOICs[p.name]) || 0;
-      const positionValue = p.value_k * 1000 * moic;
-      return {
-        ...p,
-        moic,
-        markValue: p.value_k * 1000,
-        positionValue,
-        navPerShare: positionValue / (dxyzShares * 1_000_000),
-      };
-    });
-
-    const shareTotal = shareRows.reduce((s, r) => s + r.positionValue, 0);
-    const dollarTotal = dollarRows.reduce((s, r) => s + r.positionValue, 0);
-    const otherTotal = otherRows.reduce((s, r) => s + r.positionValue, 0);
-    const totalNAV = shareTotal + dollarTotal + otherTotal;
-    const navPerShare = totalNAV / (dxyzShares * 1_000_000);
-
-    return { shareRows, dollarRows, otherRows, shareTotal, dollarTotal, otherTotal, totalNAV, navPerShare };
-  }, [ppsOverrides, dxyzShares, dollarMOICs, otherMOICs]);
 
   // ── ATM Issuance Bridge math ───────────────────────────────────────────
   const atmCal = useMemo(() => calibratePostFiling(historyRows), [historyRows]);
@@ -464,14 +377,14 @@ export default function DXYZNAVFinder() {
   const bridgeActive = atmMode !== "filed";
 
   return (
-    <div style={styles.container} className="vcx-container">
+    <fieldset disabled={!ready} aria-busy={!ready} style={{ ...styles.container, border: 0, minWidth: 0 }} className="vcx-container">
       <div style={styles.header}>
         <div style={styles.eyebrow} className="vcx-eyebrow">DESTINY TECH100 · NYSE: DXYZ · ESTIMATED NAV CALCULATOR</div>
         <h1 style={styles.title} className="vcx-title">
           DXYZ <span style={styles.titleAccent}>NAV Finder</span>
         </h1>
         <p style={styles.subtitle} className="vcx-subtitle">
-          DXYZ is a closed-end fund. Box 1 marks filed unit counts to a price per share (Anthropic, OpenAI equity, SpaceX with per-SPV carry). Box 2 applies MOICs to remaining SPV lots. DXYZ does not mark private names to the last announced primary round.
+          DXYZ is a closed-end fund. Box 1 marks June filed units and the estimated August OpenAI units to a price per share (Anthropic, OpenAI equity, SpaceX with per-SPV carry). Box 2 applies MOICs to remaining SPV lots. DXYZ does not mark private names to the last announced primary round.
         </p>
       </div>
 
@@ -479,9 +392,9 @@ export default function DXYZNAVFinder() {
         <div style={styles.howToTitle}>How this works</div>
         <ol style={styles.howToList}>
           <li style={{ marginBottom: 6 }}>The fund holds share-equivalent units (Box 1) and other SPVs (Box 2). Anthropic is a $/share input: {ANTHROPIC_SPV.units.toLocaleString("en-US")} units, so ΔNAV/share = ${ANTHROPIC_NAV_SENS.toFixed(6)} per $1 of Anthropic price.</li>
-          <li style={{ marginBottom: 6 }}>Update price-per-share for Box 1 and MOIC for Box 2. Defaults are the June 30, 2026 N-CSRS / NPORT-P marks.</li>
+          <li style={{ marginBottom: 6 }}>Update price-per-share for Box 1 and MOIC for Box 2. Private-price defaults are the June 30, 2026 marks. Subsequent purchases through August 13 are included by default; their cash cost is deducted once.</li>
           <li style={{ marginBottom: 6 }}>SpaceX uses the live Yahoo SPCX quote with per-SPV carried interest (MWAM 10%; others 0%). June 30 units are already post 5-for-1 Unit Parity.</li>
-          <li style={{ marginBottom: 6 }}>The ATM Issuance Bridge estimates share issuance since June 30 (default: Calibrated Estimate). April 1–June 30 sales of 17,191,674 shares are already in the filed baseline — switch to Filed Only to see that snapshot alone.</li>
+          <li style={{ marginBottom: 6 }}>The ATM Issuance Bridge estimates share issuance since June 30 (default: Calibrated Estimate). April 1–June 30 sales of 17,191,674 shares are already in the filed baseline — the ATM toggle only controls issuance. Use Restore June 30 snapshot for the original filed holdings and marks.</li>
           <li>The bottom bar shows the implied premium vs. the current DXYZ market price.</li>
         </ol>
       </div>
@@ -491,9 +404,9 @@ export default function DXYZNAVFinder() {
           <label style={styles.label}>DXYZ Shares Outstanding (M)</label>
           <input
             type="number"
-            step="0.01"
+            step="0.01" min="0.000001" aria-label="DXYZ shares outstanding (millions)"
             value={dxyzShares}
-            onChange={(e) => setDxyzShares(parseFloat(e.target.value) || 0)}
+            onChange={(e) => setDxyzShares(Number.isFinite(Number(e.target.value)) && Number(e.target.value) > 0 ? Number(e.target.value) : DXYZ_SHARES_OUTSTANDING_M)}
             style={styles.smallInput}
             className="vcx-input vcx-small-input"
           />
@@ -503,7 +416,7 @@ export default function DXYZNAVFinder() {
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <input
               type="number"
-              step="0.01"
+              step="0.01" min="0" aria-label="DXYZ market price"
               value={dxyzPrice}
               onChange={(e) => { setDxyzPrice(parseFloat(e.target.value) || 0); setPriceSource("manual"); }}
               style={styles.smallInput}
@@ -524,15 +437,15 @@ export default function DXYZNAVFinder() {
         </div>
         <div style={styles.controlGroup}>
           {[
-            { key: "mark", label: "Baseline / 6/30/26 NAV", handler: resetToMark },
-            { key: "aggressive", label: "Aggressive", handler: applyAggressive },
-            { key: "dream", label: "Dream Scenario", handler: applyDream },
-          ].map(({ key, label, handler }) => {
+            { key: "mark", label: "Baseline marks / live SPCX" },
+            { key: "aggressive", label: "Aggressive" },
+            { key: "dream", label: "Dream Scenario" },
+          ].map(({ key, label }) => {
             const isActive = activeScenario === key;
             return (
               <button
                 key={key}
-                onClick={handler}
+                onClick={() => { if (key === "mark") resetToMark(); else if (key === "aggressive") applyAggressive(); else applyDream(); }}
                 style={{
                   ...styles.presetBtn,
                   ...(isActive ? styles.presetBtnActive : {}),
@@ -549,6 +462,42 @@ export default function DXYZNAVFinder() {
             <span style={styles.customLabel}>Custom</span>
           )}
         </div>
+      </div>
+
+      <div style={styles.issuanceBox}>
+        <h2 style={{ ...styles.sectionTitle, fontSize: "20px" }}>August OpenAI purchase</h2>
+        {!ready && <p role="status">Preparing calculator controls…</p>}
+        <p style={styles.issuanceMeta}>
+          <a href={AUGUST_OPENAI_SOURCE.url} target="_blank" rel="noopener noreferrer" style={{ color: "#92400e", textDecoration: "underline" }}>The August 28 filing</a> reports
+          a {fmt$(AUGUST_OPENAI_PURCHASE.costUsd)} purchase on {AUGUST_OPENAI_PURCHASE.date}, paid from existing cash.
+          The purchase price and units were not disclosed. This page now uses the same holding records, entry-price assumptions and unit calculation as <a href="/ai?holdings=estimated" style={{ color: "#92400e", textDecoration: "underline" }}>AI Per $</a>.
+        </p>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center", margin: "16px 0" }}>
+          <label><input type="checkbox" checked={includeAugust} onChange={e => setIncludeAugust(e.target.checked)} /> Include subsequent purchases through August 13</label>
+          <ConfBadge level={includeAugust ? "ESTIMATED" : "FILED"} />
+          <button type="button" onClick={restoreJuneSnapshot} style={styles.presetBtn}>Restore June 30 snapshot</button>
+        </div>
+        {includeAugust && <>
+          <label htmlFor="dxyz-entry" style={styles.label}>Assumed August OpenAI entry price / share</label>
+          <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", margin: "10px 0" }}>
+            <input id="dxyz-entry" type="range" min={ENTRY.minPrice} max={ENTRY.maxPrice} step="any" value={entryPrice}
+              onChange={e => setEntryPrice(Number(e.target.value))} style={{ flex: "1 1 220px", accentColor: "#d97706" }} />
+            <input aria-label="August OpenAI entry price in dollars" type="number" min={ENTRY.minPrice} max={ENTRY.maxPrice} step="any" value={entryPrice}
+              onChange={e => { const v = Number(e.target.value); if (v > 0) setEntryPrice(Math.min(ENTRY.maxPrice, Math.max(ENTRY.minPrice, v))); }}
+              style={{ ...styles.smallInput, width: 180, fontSize: 14 }} className="vcx-input" />
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+            {[["Lower entry", ENTRY.lowPrice], ["Default proxy", ENTRY.defaultPrice], ["Higher entry", ENTRY.highPrice]].map(([label, value]) =>
+              <button key={label} type="button" onClick={() => setEntryPrice(value)} style={styles.presetBtn}>{label} ${value.toFixed(2)}</button>)}
+          </div>
+          <p style={styles.issuanceMeta}>The default is the June preferred mark, used as a proxy for August common shares. The ±25% choices are sensitivity assumptions, not observed transaction quotes. Common/preferred parity is assumed. Change OpenAI PPS in the table to value both equity lots; changing that mark leaves the estimated purchase units fixed.</p>
+          <p style={styles.issuanceMeta} data-testid="august-summary">
+            Estimated August units: <strong>{fmtNum(calc.acquisitionLot.units)}</strong> · June filed units: <strong>{fmtNum(OPENAI_EQUITY_SPV.units)}</strong><br />
+            August position: <strong>{fmt$exact(calc.augustValue)}</strong> · Gain / loss versus cost: <strong>{fmt$exact(calc.augustGain)}</strong> (${(calc.augustGain / (dxyzShares * 1e6)).toFixed(2)} per DXYZ share, before ATM).<br />
+            Cash moved into investments: <strong>{fmt$(calc.cashSpent)}</strong>, including $15M Fluidstack and $4M Boom held at cost. June cash less these purchases is shown below; other cash movements and later valuation changes are unknown.
+          </p>
+          {bridgeActive && atmBridge.asOfDate < AUGUST_OPENAI_PURCHASE.date && <p style={{ ...styles.issuanceMeta, color: "#92400e" }}>Mixed dates: holdings include the August 13 purchase, but the ATM history ends {atmBridge.asOfDate}. Later issuance and expenses are not covered by that history.</p>}
+        </>}
       </div>
 
       <div style={styles.section}>
@@ -667,7 +616,7 @@ export default function DXYZNAVFinder() {
             <div style={styles.tr} className="vcx-row">
               <div style={{ ...styles.td, flex: "2.4" }}>
                 <div style={styles.companyName}>Your re-marked baseline <ConfBadge level="ESTIMATED" /></div>
-                <div style={styles.companyNote}>Your holding marks and share count from the tables below — replaces the filed baseline in this bridge</div>
+                <div style={styles.companyNote}>Your holding marks, selected purchases and share count — replaces the filed baseline in this bridge</div>
               </div>
               <div style={{ ...styles.td, flex: "1.3", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Shares">{fmtM(1_000_000 * dxyzShares)}</div>
               <div style={{ ...styles.td, flex: "1.5", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Net Assets">{fmt$(calc.totalNAV)}</div>
@@ -785,14 +734,14 @@ export default function DXYZNAVFinder() {
           <h3 style={{ ...styles.sectionTitle, fontSize: "16px", margin: 0 }}>Note on Holding Data</h3>
         </div>
         <div style={styles.issuanceMeta}>
-          The June 30, 2026 NPORT-P reports share-equivalent units (N-CSRS footnotes (f)/(g)/(h)/(i)). Anthropic is 386,088 Magnitude ANC III units at a filed $610.41/unit; OpenAI equity is 50,895 Goanna units at $688.49; the three SpaceX SPVs are post 5-for-1 Unit Parity and mark to quoted SPCX with per-SPV carry (MWAM 10%). Level 3 inputs are volume-weighted secondary prices, index prices, and recent transactions — not announced primary rounds. Baseline NAV is the N-CSRS print: $34.30 on 47,657,338 shares, net assets $1,634,830,252, investments $1,640,039,144. Issuance after June 30 is modeled in the ATM bridge and never restates these filed figures. The Aug 13 $150M OpenAI purchase is a mix shift from cash already in the June 30 NAV.
+          The June 30, 2026 NPORT-P reports share-equivalent units (N-CSRS footnotes (f)/(g)/(h)/(i)). Anthropic is 386,088 Magnitude ANC III units at a filed $610.41/unit; OpenAI equity is 50,895 Goanna units at $688.49; the three SpaceX SPVs are post 5-for-1 Unit Parity and mark to quoted SPCX with per-SPV carry (MWAM 10%). Level 3 inputs are volume-weighted secondary prices, index prices, and recent transactions — not announced primary rounds. Baseline NAV is the N-CSRS print: $34.30 on 47,657,338 shares, net assets $1,634,830,252, investments $1,640,039,144. Issuance after June 30 is modeled in the ATM bridge and never restates these filed figures. The August OpenAI lot is now valued separately, with an equal cost deduction from cash; only its gain or loss changes NAV.
         </div>
       </div>
 
       <div style={styles.section}>
         <div style={styles.sectionHeader} className="vcx-section-header">
           <span style={styles.sectionNum}>01</span>
-          <h2 style={styles.sectionTitle}>Positions with filed unit counts</h2>
+          <h2 style={styles.sectionTitle}>Positions valued by share price</h2>
           <span style={styles.sectionMeta} className="vcx-section-meta">Edit PPS to mark each position to current market</span>
         </div>
 
@@ -809,10 +758,10 @@ export default function DXYZNAVFinder() {
           {calc.shareRows.map((r) => {
             const delta = ((r.pps - r.mark_pps_1231) / r.mark_pps_1231) * 100;
             return (
-              <div key={r.name} style={styles.tr} className="vcx-row">
+              <div key={r.name} data-position={r.name} style={styles.tr} className="vcx-row">
                 <div style={{ ...styles.td, flex: "2.2" }}>
                   <div style={styles.companyName}>
-                    {r.name}
+                    {r.name} {r.estimated && <ConfBadge level="ESTIMATED" />}
                     {r.yahooSymbol ? (
                       <span style={styles.tickerTag}> {r.yahooSymbol}</span>
                     ) : null}
@@ -826,8 +775,9 @@ export default function DXYZNAVFinder() {
                   <input
                     type="number"
                     step="any"
-                    value={ppsOverrides[r.name]}
-                    onChange={(e) => updatePPS(r.name, e.target.value)}
+                    min="0" aria-label={`${r.name} price per share`}
+                    value={ppsOverrides[r.inputName || r.name]}
+                    onChange={(e) => updatePPS(r.inputName || r.name, e.target.value)}
                     style={styles.ppsInput}
                     className="vcx-input"
                   />
@@ -838,7 +788,7 @@ export default function DXYZNAVFinder() {
                   )}
                   {r.yahooSymbol === SPCX_YAHOO_SYMBOL &&
                   liveSpcx != null &&
-                  Math.abs(Number(ppsOverrides[r.name]) - liveSpcx) < 0.005 ? (
+                  Math.abs(Number(ppsOverrides[r.inputName || r.name]) - liveSpcx) < 0.005 ? (
                     <div style={{ ...styles.delta, color: "#15803d" }}>● LIVE {r.yahooSymbol}</div>
                   ) : null}
                 </div>
@@ -886,7 +836,7 @@ export default function DXYZNAVFinder() {
             <div style={{ ...styles.th, flex: "1.0", textAlign: "right" }}>¢ per $1</div>
           </div>
           {calc.dollarRows.map((r) => (
-            <div key={r.name} style={styles.tr} className="vcx-row">
+            <div key={r.name} data-position={r.name} style={styles.tr} className="vcx-row">
               <div style={{ ...styles.td, flex: "2.6" }}>
                 <div style={styles.companyName}>{r.name}</div>
                 <div style={styles.companyNote}>{r.note}</div>
@@ -898,6 +848,7 @@ export default function DXYZNAVFinder() {
                 <input
                   type="number"
                   step="0.1"
+                  aria-label={`${r.name} value multiple`}
                   value={dollarMOICs[r.name]}
                   onChange={(e) => updateDollarMOIC(r.name, e.target.value)}
                   style={styles.moicInput}
@@ -948,7 +899,7 @@ export default function DXYZNAVFinder() {
           {calc.otherRows.map((r) => {
             const isLocked = r.locked;
             return (
-              <div key={r.name} style={styles.tr} className="vcx-row">
+              <div key={r.name} data-position={r.name} style={styles.tr} className="vcx-row">
                 <div style={{ ...styles.td, flex: "2.6" }}>
                   <div style={styles.companyName}>{r.name}</div>
                   <div style={styles.companyNote}>{r.note}</div>
@@ -963,6 +914,7 @@ export default function DXYZNAVFinder() {
                     <input
                       type="number"
                       step="0.1"
+                      aria-label={`${r.name} value multiple`}
                       value={otherMOICs[r.name]}
                       onChange={(e) => updateOtherMOIC(r.name, e.target.value)}
                       style={styles.moicInput}
@@ -998,13 +950,13 @@ export default function DXYZNAVFinder() {
       </div>
 
       <div style={styles.grandTotal} className="vcx-grand-total">
-        <div style={styles.gtLabel}>TOTAL MARKED NET ASSETS (6/30 BASIS)</div>
-        <div style={styles.gtValue} className="vcx-gt-value-large">{fmt$exact(calc.totalNAV)}</div>
+        <div style={styles.gtLabel}>TOTAL MARKED NET ASSETS {includeAugust ? "(INCLUDING SUBSEQUENT PURCHASES)" : "(JUNE HOLDINGS)"}</div>
+        <div data-testid="dxyz-net-assets" style={styles.gtValue} className="vcx-gt-value-large">{fmt$exact(calc.totalNAV)}</div>
         <div style={styles.gtDivider} />
         <div style={{ display: "flex", gap: "64px", flexWrap: "wrap" }} className="vcx-gt-metrics">
           <div className="vcx-gt-metric">
             <div style={styles.gtLabel}>NAV / SHARE (6/30 SHARES)</div>
-            <div style={{ ...styles.gtValueAccent, ...(bridgeActive ? { fontSize: "40px", color: "#fff" } : {}) }} className="vcx-gt-value-accent">${calc.navPerShare.toFixed(2)}</div>
+            <div style={{ ...styles.gtValueAccent, ...(bridgeActive ? { fontSize: "40px", color: "#fff" } : {}) }} data-testid="dxyz-nav-per-share" className="vcx-gt-value-accent">${calc.navPerShare.toFixed(2)}</div>
           </div>
           {bridgeActive && (
             <div className="vcx-gt-metric">
@@ -1037,14 +989,15 @@ export default function DXYZNAVFinder() {
         <div style={styles.gtMeta}>
           {bridgeActive
             ? `Estimated NAV from user-supplied marks + modeled ATM issuance (${atmMode} mode) · ${fmtM(effectiveShares)} est. pro forma shares · Estimated, not company reported`
-            : `Filed-basis NAV from user-supplied marks · ${dxyzShares.toFixed(2)}M shares outstanding (6/30/26) · No post-June issuance modeled`}
+            : `Estimated NAV from user marks${includeAugust ? " and subsequent purchases" : " on June holdings"} · ${dxyzShares.toFixed(2)}M shares outstanding (6/30/26) · No post-June issuance modeled`}
         </div>
       </div>
 
       <div style={styles.footer}>
         <div><strong>Changelog:</strong></div>
         <div style={{ marginBottom: "16px" }}>
-          • <strong>August 30, 2026</strong> — Baseline rolled to the June 30, 2026 N-CSRS (filed Aug 29) and NPORT-P. Filed shares 47,657,338, net assets $1,634,830,252, printed NAV $34.30. Anthropic, OpenAI equity, and SpaceX move to filed unit counts with per-SPV carry. ATM remaining capacity is no longer shown as a leftover $1B. August 2026 below-NAV repurchase program noted beside the ATM.<br />
+          • <strong>September 5, 2026</strong> — August OpenAI units now use the shared AI Per $ model with adjustable entry price. Both OpenAI equity lots respond to PPS; purchase costs reduce cash once. Fluidstack and Boom subsequent purchases are held at cost. June snapshot remains reproducible.<br />
+          • <strong>August 30, 2026</strong> — Baseline rolled to the June 30, 2026 N-CSRS (filed Aug 28) and NPORT-P. Filed shares 47,657,338, net assets $1,634,830,252, printed NAV $34.30. Anthropic, OpenAI equity, and SpaceX move to filed unit counts with per-SPV carry. ATM remaining capacity is no longer shown as a leftover $1B. August 2026 below-NAV repurchase program noted beside the ATM.<br />
           • <strong>August 28, 2026</strong> — Baseline rolled to the Aug 28 424B3 (Supplement No. 1): NAV $34.30 and ~$1.64B portfolio as of June 30, 2026. Anthropic 14.4% ($236.2M), OpenAI equity 2.1% ($34.4M), SpaceX 10.5%. Filed Q2 ATM of 17,191,674 shares is inside the baseline; the issuance bridge now estimates only from July 1. Stated ATM wavg $34.25 does not reconcile to stated net proceeds $715.4M — both stored as printed. Subsequent $150M OpenAI purchase (Aug 13) is a mix shift from cash already in June 30 NAV.<br />
           • <strong>August 20, 2026</strong> — SpaceX Box 1 now uses post-split shares (177,992 N-CSR × 5-for-1 = 889,960) and the live Yahoo SPCX quote from the shared <code>/api/prices</code> cache. Split effective May 4, 2026 per SpaceX 424B4, after the March 31 N-PORT and before the June IPO.<br />
           • <strong>July 9, 2026 (calibration refinement)</strong> — Capped the inferred Apr 1–May 21 issuance proceeds at the original $1B ATM program&apos;s filed remainder (~$429M gross: $1B less $327.1M of 2025 sales per the N-CSR and $244.2M of Q1 sales per the 424B3), deriving a ~$39 effective average price instead of the $46.23 close-VWAP — the new $1B prospectus is dated May 26, so the old shelf was the only capacity available. Commission default recalibrated to 1.0% from the audited 2025 gross-vs-net (~0.95% effective). Sensitivity high bound raised to 16.4%, the filed Aug–Sep 2025 issuance pace. Added the next filed NAV checkpoint (June 30 N-PORT, due ~Aug 29).<br />
@@ -1053,7 +1006,7 @@ export default function DXYZNAVFinder() {
         </div>
 
         <div><strong>Sources & Methodology:</strong></div>
-        <div>• <strong>Baseline NAV:</strong> Printed $34.30 per share as of June 30, 2026, per the <a href={NCSRS_JUNE_30.url} target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSRS filed Aug 29, 2026</a>. Net assets $1,634,830,252 on 47,657,338 shares (exact NAV ${(FILED.netAssets / impliedFiledShares()).toFixed(5)}). NPORT-P TNA is $1,634,830,251.28.</div>
+        <div>• <strong>Baseline NAV:</strong> Printed $34.30 per share as of June 30, 2026, per the <a href={NCSRS_JUNE_30.url} target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSRS filed Aug 28, 2026</a>. Net assets $1,634,830,252 on 47,657,338 shares (exact NAV ${(FILED.netAssets / impliedFiledShares()).toFixed(5)}). NPORT-P TNA is $1,634,830,251.28.</div>
         <div>• <strong>Portfolio:</strong> Investments at fair value $1,640,039,144 (cost $1,347,802,540). Money market $939,712,701 (57.48% of net assets). Other assets less liabilities −$5,208,892.</div>
         <div>• <strong>Valuation method:</strong> N-CSRS Level 3 table. Anthropic + OpenAI equity + PPUs ($278,448,755) use volume-weighted average transaction prices, index prices, and recent transaction price ($589.00–$766.76, avg $651.51). The three SpaceX SPVs ($173,061,170) use quoted underlying share price adjusted for SPV carried interest and Unit Parity. Announced primary rounds are not an input. At March 31 Anthropic was marked $347.35/unit on the same 386,088 units — above Series G and below the later Series H announcement.</div>
         <div>• <strong>Unit counts:</strong> NPORT-P <code>balance</code> / N-CSRS units are share-equivalents of the underlying company (footnotes (f)–(i)). <a href={NPORT_JUNE_30.url} target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>June 30 NPORT-P XML</a>.</div>
@@ -1064,7 +1017,7 @@ export default function DXYZNAVFinder() {
         <div>• <strong>ATM capacity:</strong> Original $1B shelf (File 333-278734) through 2025 and Q1. New shelf {NEW_SHELF.fileNumber} (effective {NEW_SHELF.filedDate}) authorizes an <strong>indeterminate</strong> amount — there is no filed remaining-capacity dollar figure. Post–June 30 simulation uses the May 26 424B5 $1B illustration as a modeling cap only. Jefferies commission up to 3.0%.</div>
         <div>• <strong>Share repurchase:</strong> In {SHARE_REPURCHASE.approved} the Board approved repurchases of common stock at prices below then-current NAV, discretionary as to size and timing (<a href={SHARE_REPURCHASE.url} target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSRS subsequent events</a>). Presented next to the open ATM; neither is treated as dominant.</div>
         <div>• <strong>Post-June 30 Issuance (estimated):</strong> Modeled daily from July 1 as a fixed share of Yahoo Finance trading volume (calibrated from filed Q2 shares ÷ Apr–Jun volume), issuing only on days above rolling pro forma NAV. Estimated, not company reported.</div>
-        <div>• <strong>Subsequent events (mix shift, not new ATM):</strong> Aug 13 $150.0M additional Goanna Capital 26E (OpenAI Class A Common); Jul 16 $15.0M Magnitude FSTK / Fluidstack Series B; Aug 4 $4.0M Boom SAFE. Funded from existing cash inside the June 30 NAV. Boom Series B-2 ($1.74M FV) is already on the June 30 schedule.</div>
+        <div>• <strong>Subsequent events (mix shift, not new ATM):</strong> Aug 13 $150.0M additional Goanna Capital 26E (OpenAI Class A Common); Jul 16 $15.0M Magnitude FSTK / Fluidstack Series B; Aug 4 $4.0M Boom SAFE. When subsequent purchases are enabled, all $169M of costs are deducted from cash. August OpenAI uses estimated units and the same scenario PPS as June equity; Fluidstack and the new Boom SAFE are held at cost. Boom Series B-2 ($1.74M FV) is already on the June 30 schedule.</div>
       </div>
 
       <div style={styles.stickyBar} className="vcx-sticky-bar">
@@ -1097,7 +1050,7 @@ export default function DXYZNAVFinder() {
           </div>
         </div>
       </div>
-    </div>
+    </fieldset>
   );
 }
 

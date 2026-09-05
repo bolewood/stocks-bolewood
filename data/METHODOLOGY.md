@@ -118,6 +118,16 @@ SpaceX units underwent a 5:1 Unit Parity restatement between March 31 and June 3
 
 SKM: ordinary shares from the June 30 DART half-year report, ADS ratio 5/9, ADS-equivalent = ordinary × 9/5. SFTBY: Tokyo common × 2 for the 1:2 ADR.
 
+## DXYZ NAV and subsequent purchases
+
+`/dxyz` imports June Anthropic/OpenAI observations from `data/wrappers/DXYZ.json` and uses the same `unitLots` calculation and `data/capitalization.json` entry assumptions as `/ai`. `lib/dxyzNav.mjs` values the complete NAV ledger. Its price-per-share input corresponds to `/ai` company valuation × (1 − dilution) ÷ estimated FD shares. Equal inputs produce equal equity exposure; the NAV tests also compare complete scenario net assets with `/ai` using cash deployment and the same wrapper shares, without ATM or other holding revaluations.
+
+Subsequent purchases through August 13 are enabled by default, independently of the ATM toggle. The [August 28 424B3, Portfolio Deployment Update](https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm) discloses $150M OpenAI common on August 13, $15M Fluidstack preferred on July 16 and a separate $4M Boom SAFE on August 4, funded from existing cash. The model subtracts all $169M from June money-market assets, leaving $770,712,701 before ATM proceeds, expenses and other unknown cash movements. Fluidstack and the new Boom SAFE remain at cost; this is an assumption, not a newer filed fair value. June Boom preferred remains in the original ledger.
+
+August OpenAI units = $150M ÷ assumed entry price. Entry defaults to the full-precision June preferred mark, $688.4933333333333; ±25% presets and a $100–$2,000 slider are sensitivity choices, not observed transaction quotes. The new common and June preferred lots use the same scenario price under assumed parity. Entry and units stay fixed when scenario PPS changes. Only August value less its $150M cost changes NAV. At default entry and PPS, NAV is unchanged; doubling PPS creates $150M of August gain, about $3.15 per filed DXYZ share. PPUs remain a separate MOIC line and do not follow equity PPS.
+
+Restore June 30 snapshot disables subsequent purchases and ATM estimates, restores filed shares and private marks, and stops live SpaceX marks. It reproduces $1,634,830,252 / 47,657,338 = $34.30385 per share. The ATM model takes the corrected marked ledger once; it does not add purchase cost or scale August units with modeled issuance. If history stops before August 13, the UI flags the mixed dates and incomplete issuance/expense coverage. These are scenario estimates, not company-reported current NAV.
+
 ## ATM issuance bridge (DXYZ)
 
 DXYZ has an active ATM. Filed share count is **47,657,338** from the June 30, 2026 N-CSRS (30,465,664 at March 31 = 21,976,305 year-end + 8,489,359 Q1 ATM, plus 17,191,674 Q2 ATM). Estimated share count uses the same `computeAtmBridge` as [stocks.bolewood.com/dxyz](https://stocks.bolewood.com/dxyz): Q2 sales are already in the June 30 baseline; post–June 30 issuance is simulated from July 1. See `lib/dxyzAtm.mjs`. The filed snapshot lives in `data/wrappers/DXYZ.json`.
