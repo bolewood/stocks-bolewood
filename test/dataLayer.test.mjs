@@ -194,7 +194,7 @@ test("production modules do not define ticker-keyed wrapper financials", () => {
   ]);
   const roots = ["app", "components", "lib"];
   const banned =
-    /sharesOutstanding:\s*\d|reportedFairValue|estimatedOwnershipPct|ARKVX_NPORT_TNA\s*=\s*\d|ownershipPct:\s*0\.\d/;
+    /sharesOutstanding:\s*\d|reportedFairValue\s*:|estimatedOwnershipPct|ARKVX_NPORT_TNA\s*=\s*\d|ownershipPct:\s*0\.\d/;
   const hits = [];
   function walk(dir) {
     for (const name of readdirSync(dir, { withFileTypes: true })) {

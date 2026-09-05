@@ -33,3 +33,7 @@ The numerical matrix tests both holdings modes and cash/pro rata/range, all 11 s
 ## SoftBank SOTP follow-up — September 5, 2026
 
 The `/sftby` audit replaces the $840B anchor and cost-ratio ownership with the shared $852B / pro forma 13% inputs or an explicit July FV proxy. It preserves the reported SVF2 NAV and applies an incremental OpenAI bridge with a separately labeled management-allocation sensitivity. `/ai` continues to display gross fund exposure; its notes now explain why that is not shareholder net ownership. Source-linked subsequent events, unreconciled net cash flows, tax-basis uncertainty and exact equations are documented in [SFTBY_METHODOLOGY.md](./SFTBY_METHODOLOGY.md). Numerical `/ai` reference results are unchanged.
+
+## DXYZ NAV follow-through — September 5, 2026
+
+The `/dxyz` page previously mentioned the August OpenAI purchase but retained only June equity units and all June cash. It now consumes the same raw observations, purchase record and estimated entry-price model as `/ai`; the purchase is a separate estimated-unit lot and its cost is deducted once. Rechecked the [August 28 424B3 Portfolio Deployment Update](https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm): all three purchases were funded from existing cash. Added the July 16 $15M Fluidstack and August 4 $4M Boom SAFE observations to `otherSubsequentPurchases`, with dates, source and explicit cost valuation assumptions. No new OpenAI quantity, transaction price or FD count was disclosed. `/ai` reference results are unchanged.

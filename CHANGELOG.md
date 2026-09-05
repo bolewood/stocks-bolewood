@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.13.1.0] — 2026-09-05
+
+- Connect DXYZ NAV to the shared AI exposure holdings and August OpenAI unit model. Both equity lots respond to price; an adjustable entry-price estimate determines the undisclosed August quantity.
+- Deduct cash-funded purchase costs once, include Fluidstack and Boom at cost, preserve exact June snapshot restoration, and flag incomplete ATM history.
+- Add cross-calculator exposure/NAV regressions and disable DXYZ controls until their calculation handlers attach.
+
 ## [0.13.0.1] — 2026-09-05
 
 - Disable SFTBY controls until client calculation handlers attach, preventing an early slider movement from leaving stale server-rendered results.

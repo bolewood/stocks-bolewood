@@ -207,5 +207,31 @@
       "entryPriceModel": "dxyz-openai-august-entry",
       "note": "Purchase cost is filed; acquired units and entry price are not disclosed. Different security from the June preferred lot; parity and the June mark as entry-price proxy are assumptions."
     }
-  }
+  },
+  "otherSubsequentPurchases": [
+    {
+      "id": "fluidstack-2026-07-16",
+      "name": "Fluidstack — July purchase",
+      "date": "2026-07-16",
+      "publicationDate": "2026-08-28",
+      "costUsd": 15000000,
+      "security": "Magnitude FSTK, LLC / Series B preferred",
+      "funding": "existing-cash",
+      "basis": "filed-cost",
+      "valuationBasis": "Held at cost pending a newer mark; not a filed fair value",
+      "source": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm"
+    },
+    {
+      "id": "boom-2026-08-04",
+      "name": "Boom — August SAFE",
+      "date": "2026-08-04",
+      "publicationDate": "2026-08-28",
+      "costUsd": 4000000,
+      "security": "SAFE; separate from June Series B-2 holding",
+      "funding": "existing-cash",
+      "basis": "filed-cost",
+      "valuationBasis": "Held at cost pending a newer mark; not a filed fair value",
+      "source": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm"
+    }
+  ]
 }
