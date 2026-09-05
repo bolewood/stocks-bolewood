@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   SFTBY_SOTP_DATA as data, DEFAULT_INPUTS, computeSotp, ARM_SHARES,
   TOKYO_SHARES, ADR_SHARES, IR_JPY_T, IR_USDJPY, jpyTToUsdB,
@@ -15,12 +15,15 @@ const fmtUsdB = n => Number.isFinite(n) ? `${n < 0 ? "−" : ""}$${Math.abs(n).t
 const fmtNum = (n, d = 0) => Number.isFinite(n) ? n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }) : "—";
 const fmtPct = (n, d = 1) => Number.isFinite(n) ? `${n.toFixed(d)}%` : "—";
 const fmtYenT = n => `¥${n.toFixed(2)}T`;
+const subscribeHydration = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
 
 function Source({ href, children }) {
   return <a href={href} target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>{children}</a>;
 }
 
-function Input({ field, label, inputs, setInput, step = 1, range, note }) {
+function Input({ field, label, inputs, setInput, ready, step = 1, range, note }) {
   const [min, max] = INPUT_LIMITS[field];
   const update = e => {
     if (e.target.value.trim() === "") return;
@@ -29,9 +32,9 @@ function Input({ field, label, inputs, setInput, step = 1, range, note }) {
   };
   return <div style={styles.controlGroup}>
     <label htmlFor={`sftby-${field}`} style={styles.label}>{label}</label>
-    <input id={`sftby-${field}`} type="number" min={min} max={max} step={step}
+    <input id={`sftby-${field}`} disabled={!ready} type="number" min={min} max={max} step={step}
       value={inputs[field]} onChange={update} style={styles.smallInput} className="vcx-input vcx-small-input" />
-    {range && <input aria-label={`${label} slider`} type="range" min={range[0]} max={range[1]} step={step}
+    {range && <input disabled={!ready} aria-label={`${label} slider`} type="range" min={range[0]} max={range[1]} step={step}
       value={Math.max(range[0], Math.min(range[1], inputs[field]))} onChange={update}
       style={{ width: "100%", marginTop: 8, accentColor: "#d97706" }} />}
     {note && <div style={styles.note}>{note}</div>}
@@ -39,6 +42,9 @@ function Input({ field, label, inputs, setInput, step = 1, range, note }) {
 }
 
 export default function SFTBYSOTPFinder({ initialInputs = DEFAULT_INPUTS, initialScenario = "base", pinnedFields = [], reference = false }) {
+  // Native inputs can change before React attaches handlers. Keep the server
+  // render disabled so a first interaction cannot leave stale financial output.
+  const ready = useSyncExternalStore(subscribeHydration, clientReady, serverReady);
   const [inputs, setInputs] = useState(initialInputs);
   const [activeScenario, setActiveScenario] = useState(initialScenario);
   const [quoteState, setQuoteState] = useState(reference ? "Frozen September 4 reference quotes" : "September 4 fallback quotes");
@@ -88,7 +94,7 @@ export default function SFTBYSOTPFinder({ initialInputs = DEFAULT_INPUTS, initia
     setExportMessage("");
   };
   const calc = useMemo(() => computeSotp(inputs), [inputs]);
-  const inputProps = { inputs, setInput };
+  const inputProps = { inputs, setInput, ready };
   const copyScenario = async () => {
     const url = `${window.location.origin}/sftby?${writeSotpScenario(inputs)}`;
     window.history.replaceState({}, "", url);
@@ -125,7 +131,7 @@ export default function SFTBYSOTPFinder({ initialInputs = DEFAULT_INPUTS, initia
 
     <div style={styles.asOfBox}>
       <strong>Research checked September 5, 2026.</strong> Holdings and debt: June 30. OpenAI funded fair value: July 31. This is a mixture of dated disclosures, selected quotes and estimates, not a current reported balance sheet.
-      <div style={{ marginTop: 8 }}>{quoteState} Controls can override quotes.</div>
+      <div style={{ marginTop: 8 }}>{ready ? `${quoteState} Controls can override quotes.` : "Preparing calculator controls…"}</div>
     </div>
     <div style={styles.howToBox}>
       <div style={styles.howToTitle}>What the model assumes</div>
@@ -146,7 +152,7 @@ export default function SFTBYSOTPFinder({ initialInputs = DEFAULT_INPUTS, initia
     <div style={styles.controls} className="vcx-controls">
       <div style={styles.controlGroup}>
         <label htmlFor="sftby-case" style={styles.label}>OpenAI holdings basis</label>
-        <select id="sftby-case" value={inputs.openaiCase} onChange={e => setInput("openaiCase", e.target.value)} className="vcx-input" style={{ ...styles.smallInput, width: "100%", fontSize: 14 }}>
+        <select id="sftby-case" disabled={!ready} value={inputs.openaiCase} onChange={e => setInput("openaiCase", e.target.value)} className="vcx-input" style={{ ...styles.smallInput, width: "100%", fontSize: 14 }}>
           <option value="funded13">Pro forma 13% · October included</option>
           <option value="current">July funded fair-value proxy</option>
         </select>
@@ -160,7 +166,7 @@ export default function SFTBYSOTPFinder({ initialInputs = DEFAULT_INPUTS, initia
     <div style={{ marginBottom: 32 }}>
       <div style={styles.howToTitle}>Scenarios</div>
       <div style={styles.scenarioGrid} className="sats-scenario-grid">
-        {Object.entries(PRESETS).map(([key, preset]) => <button key={key} onClick={() => applyPreset(key)} aria-pressed={activeScenario === key}
+        {Object.entries(PRESETS).map(([key, preset]) => <button key={key} disabled={!ready} onClick={() => applyPreset(key)} aria-pressed={activeScenario === key}
           style={{ ...styles.scenarioCard, ...(activeScenario === key ? styles.scenarioCardActive : {}) }}>
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{preset.label}</div>
           <div style={{ fontSize: 12, lineHeight: 1.4 }}>{preset.note}</div>
@@ -286,8 +292,8 @@ export default function SFTBYSOTPFinder({ initialInputs = DEFAULT_INPUTS, initia
         <li><Source href="https://group.softbank/en/ir/financials/annual_reports/2026/message/goto">CFO capital and acquisition plans</Source>. Investment commitments can use cash or borrowing; changes to asset ownership and financing belong together.</li>
       </ul>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <button onClick={copyScenario} style={styles.scenarioCard}>Copy exact scenario link</button>
-        <button onClick={exportScenario} style={styles.scenarioCard}>Download inputs, results and sources</button>
+        <button disabled={!ready} onClick={copyScenario} style={styles.scenarioCard}>Copy exact scenario link</button>
+        <button disabled={!ready} onClick={exportScenario} style={styles.scenarioCard}>Download inputs, results and sources</button>
       </div>
       {exportMessage && <p role="status" style={styles.note}>{exportMessage}</p>}
       <p style={styles.note}><Source href="https://github.com/bolewood/stocks-bolewood/blob/main/data/SFTBY_METHODOLOGY.md">Full methodology and unresolved assumptions</Source>{" · "}<Source href="https://github.com/bolewood/stocks-bolewood/blob/main/data/sftby-sotp.json">Dated source data</Source>{" · "}<a href="/sftby?reference=sftby" style={styles.sourceLink}>Frozen reference scenario</a></p>
