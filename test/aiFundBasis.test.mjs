@@ -150,10 +150,10 @@ test("fund stake % is identical across filed and estimated (cash)", () => {
     if (w.ticker === "DXYZ") {
       const subsequent = w.openai?.subsequentPurchasesUsd || 0;
       assert.ok(subsequent > 0);
-      assert.equal(filedM.anthPct, null);
-      assert.equal(estM.anthPct, null);
-      assert.equal(filedM.oaiPct, null);
-      assert.equal(estM.oaiPct, null);
+      assert.ok(filedM.anthPct > 0);
+      assert.equal(estM.anthPct, filedM.anthPct);
+      assert.ok(filedM.oaiPct > 0);
+      assert.ok(estM.oaiPct > filedM.oaiPct);
       assert.ok(estM.oaiPer100 > filedM.oaiPer100);
     } else {
       assert.equal(filedM.oaiPct, estM.oaiPct, `${w.ticker} oaiPct`);

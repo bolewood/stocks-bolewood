@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "1.1.0",
-  "methodologyVersion": "1.1.0",
+  "schemaVersion": "1.2.0",
+  "methodologyVersion": "1.2.0",
   "ticker": "AMZN",
   "yahooSymbol": "AMZN",
   "name": "Amazon.com Inc.",
@@ -20,13 +20,19 @@
   },
   "sources": [
     {
-      "fields": ["shareCount"],
+      "fields": [
+        "shareCount"
+      ],
       "sourceClass": "primary",
       "issuer": "Amazon.com, Inc.",
       "filingType": "10-Q",
       "documentDate": "2026-06-30",
       "asOf": "2026-07-22",
-      "note": "Cover-page shares outstanding."
+      "note": "Cover-page shares outstanding.",
+      "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000026/amzn-20260630.htm",
+      "measurementDate": "2026-07-22",
+      "publicationDate": null,
+      "section": "See source note"
     }
   ],
   "anthropic": {
@@ -38,26 +44,44 @@
     "measurementMarkAsOf": "2026-05-28",
     "confidence": "medium",
     "components": [
-      { "label": "nonvoting preferred", "amount": 92500000000 },
-      { "label": "convertible notes FV", "amount": 97900000000 }
+      {
+        "label": "nonvoting preferred",
+        "amount": 92500000000
+      },
+      {
+        "label": "convertible notes FV",
+        "amount": 97900000000
+      }
     ],
     "sources": [
       {
-        "fields": ["reportedFairValue", "components"],
+        "fields": [
+          "reportedFairValue",
+          "components"
+        ],
         "sourceClass": "primary",
         "issuer": "Amazon.com, Inc.",
         "filingType": "10-Q",
         "documentDate": "2026-06-30",
         "asOf": "2026-06-30",
-        "note": "Nonvoting preferred $92.5B + convertible notes FV $97.9B = $190.4B. $100B AWS is not equity. Conversion terms and any ownership cap are undisclosed."
+        "note": "Nonvoting preferred $92.5B + convertible notes FV $97.9B = $190.4B. $100B AWS is not equity. Conversion terms and any ownership cap are undisclosed.",
+        "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000026/amzn-20260630.htm",
+        "measurementDate": "2026-06-30",
+        "publicationDate": null,
+        "section": "See source note"
       },
       {
-        "fields": ["measurementCompanyMark"],
+        "fields": [
+          "measurementCompanyMark"
+        ],
         "sourceClass": "primary",
         "issuer": "Anthropic",
         "documentDate": "2026-05-28",
         "url": "https://www.anthropic.com/news/series-h",
-        "note": "Series H $965B post-money."
+        "note": "Series H $965B post-money.",
+        "measurementDate": "2026-05-28",
+        "publicationDate": null,
+        "section": "See source note"
       }
     ]
   },
@@ -65,27 +89,44 @@
     "basis": "round-implied",
     "holdingSecurity": "unknown",
     "investmentAmount": 50000000000,
-    "investmentAsOf": "2026-06-30",
+    "investmentAsOf": "2026-07",
     "roundPostMoneyValuation": "openai-mar-2026",
     "confidence": "medium",
     "sources": [
       {
-        "fields": ["investmentAmount"],
+        "fields": [
+          "investmentAmount",
+          "fundedAtQuarterEndUsd",
+          "subsequentFundingUsd",
+          "dateNote"
+        ],
         "sourceClass": "primary",
         "issuer": "Amazon.com, Inc.",
         "filingType": "10-Q",
         "documentDate": "2026-06-30",
-        "asOf": "2026-06-30",
-        "note": "$15.0B Series C in Q1 + $13.7B in Q2 = $28.7B on the 2026-06-30 balance sheet; subsequent event funded the remaining $21.3B, completing $50B. $100B AWS is not equity."
+        "asOf": "2026-07",
+        "note": "$15.0B Series C in Q1 + $13.7B in Q2 = $28.7B on the 2026-06-30 balance sheet; subsequent event funded the remaining $21.3B, completing $50B. $100B AWS is not equity.",
+        "measurementDate": "2026-07",
+        "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000026/amzn-20260630.htm",
+        "publicationDate": null,
+        "section": "See source note"
       },
       {
-        "fields": ["roundPostMoneyValuation"],
+        "fields": [
+          "roundPostMoneyValuation"
+        ],
         "sourceClass": "primary",
         "issuer": "OpenAI",
         "documentDate": "2026-03-31",
         "url": "https://openai.com/index/accelerating-the-next-phase-ai/",
-        "note": "$852B post-money."
+        "note": "$852B post-money.",
+        "measurementDate": "2026-03-31",
+        "publicationDate": null,
+        "section": "See source note"
       }
-    ]
+    ],
+    "fundedAtQuarterEndUsd": 28700000000,
+    "subsequentFundingUsd": 21300000000,
+    "dateNote": "June 30 balance sheet $28.7B plus post-quarter $21.3B by the July 10-Q publication. Exact completion day not disclosed."
   }
 }

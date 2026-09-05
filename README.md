@@ -76,21 +76,24 @@ basis:                    filed-units
 filedUnits:               386,088       
 reportedFairValue:        $235.671976M   (as of 2026-06-30, N-CSRS)
 → markPerUnit:            $610.41        (computed, not stored)
-→ impliedExposure:        none — no public fully diluted share count
+→ estimated FD shares:    1,580,904,638 (adjustable calibration proxy, not filed)
+→ scenario price:         $610.41 = valuation × (1 − dilution) ÷ estimated FD shares
+→ scenario exposure:      0.024421966% (units ÷ estimated FD shares)
 
 ΔNAV per $1 PPS:          $0.008101      (386,088 ÷ 47,657,338)
 denominator:              $1.565067B     (market-cap: 47,657,338 sh × $32.84)
 
-$235.671976M ÷ $1.565067B × $100  =  $15.06 per $100
+386,088 × $610.41 ÷ $1.565067B × $100  =  $15.06 per $100
 ```
 
-*($32.84 from `reference/fixtures.json` — frozen for reproducibility, not a live quote. The $T IPO slider does not apply to this row.)*
+*($32.84 from `reference/fixtures.json` — frozen prices dated August 19 with the September 5 dataset, not a historical backtest. Filed Holdings; both valuation and FD controls revalue this row. Display digits are rounded; calculation uses full precision.)*
 <!-- END GENERATED: worked-example -->
 
 For `filed-fv-equiv` legs the percentage is never hand-authored: rolling the mark forward
 changes fair value and the measurement valuation together, so the ratio is unchanged. For
-`filed-units` (DXYZ) there is no company-ownership percentage — see *Filed units* in
-`data/METHODOLOGY.md`.
+`filed-units` (DXYZ and SKM), units / selected FD shares produces an estimated equivalent
+stake. Both valuation and FD controls revalue these holdings. See *Filed units* in
+`data/METHODOLOGY.md` and the linked evidence in `data/SOURCE_CHANGES.md`.
 
 ---
 
@@ -101,9 +104,14 @@ npm run reference
 ```
 
 Runs the standalone calculator in `reference/` over `data/` with fixed prices, scenario
-marks and dilution, and reproduces `reference/expected-results.json`. No application code,
+marks, dilution, FD and acquisition assumptions, and reproduces `reference/expected-results.json`
+plus `reference/estimated-expected-results.json`. No application code,
 no network. If your output differs from the published table at the same inputs, that is a
 bug worth filing.
+
+Use `/ai?reference=filed` or `/ai?reference=estimated` to load identical frozen inputs.
+Copy/export scenario JSON from the page and run `npm run reference -- --scenario /path/ai-scenario.json`
+to reproduce another setting with its frozen dataset, prices and ATM bridge.
 
 ## Private Tape data
 
@@ -145,17 +153,17 @@ easy way to get a badly wrong answer:
 
 ## Filed vs. Estimated
 
-Two coherent bases, never mixed:
+Holdings selection is separate from scenario valuation:
 
-- **Filed Only** — every input as of its filing date. Fully sourced, and stale by
-  construction.
-- **Estimated** — share counts, net assets and marks rolled forward *together*. For funds
-  with active at-the-market programs, share issuance is modelled by a documented bridge.
-  Clearly labelled as not company-reported.
+- **Filed Holdings** uses filed fund quantities and denominators. The valuation sliders
+  still revalue holdings using explicit assumptions, including estimated FD counts.
+- **Estimated Holdings** adds DXYZ's August purchase and a documented ATM bridge, plus
+  modeled fund inflows/mark changes. Strategic records retain their displayed historical,
+  pro forma or other basis. Source dates and evidence can be mixed and are labeled.
 
 Where a fund raised capital after its last filing and the deployment is unknown, the result
-is published as a **range** rather than a point estimate: an upper bound assuming proceeds
-bought more of the same holdings, a lower bound assuming they sit in cash.
+is published as a **deployment sensitivity range** covering cash and pro rata endpoints.
+FD/entry-price sensitivity is shown separately; neither range is a confidence interval.
 
 ---
 

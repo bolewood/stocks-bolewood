@@ -2,6 +2,10 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  CAPITALIZATION,
+  DEFAULT_ANTH_FD_SHARES,
+  DEFAULT_OAI_FD_SHARES,
+  DEFAULT_DXYZ_OAI_ENTRY_PRICE,
   DEFAULT_ANTH_VAL,
   DEFAULT_DILUTION,
   DEFAULT_OAI_VAL,
@@ -43,7 +47,7 @@ import {
   fundRowMetrics,
   resolveFund,
 } from "../lib/aiFundBasis.mjs";
-import { FILED, completedTradingRows } from "../lib/dxyzAtm.mjs";
+import { completedTradingRows } from "../lib/dxyzAtm.mjs";
 import {
   disclosureAgeLabel,
   disclosureSentence,
@@ -57,6 +61,11 @@ import {
   priceChipTitle,
 } from "../lib/priceState.mjs";
 import { startJsonPoll } from "../lib/pollLivePrices.mjs";
+import { META, MARKS, RAW_AI_WRAPPERS } from '../lib/loadAiData.mjs';
+import { createScenarioExport } from '../reference/engine.mjs';
+import { unitPrice } from '../reference/unitExposure.mjs';
+import referenceInputs from '../reference/fixtures.json';
+import estimatedInputs from '../reference/estimated-fixtures.json';
 import disclosure from "../data/disclosure.json";
 import historySnapshot from "../app/api/dxyz-history/snapshot.json";
 
@@ -131,6 +140,11 @@ export default function AIPerDollarFinder() {
   const [anthB, setAnthB] = useState(valToBillions(DEFAULT_ANTH_VAL));
   const [oaiB, setOaiB] = useState(valToBillions(DEFAULT_OAI_VAL));
   const [dilutionPct, setDilutionPct] = useState(DEFAULT_DILUTION * 100);
+  const [anthFdShares, setAnthFdShares] = useState(DEFAULT_ANTH_FD_SHARES);
+  const [oaiFdShares, setOaiFdShares] = useState(DEFAULT_OAI_FD_SHARES);
+  const [dxyzOaiEntryPrice, setDxyzOaiEntryPrice] = useState(DEFAULT_DXYZ_OAI_ENTRY_PRICE);
+  const [frozenInputs, setFrozenInputs] = useState(null);
+  const [exportStatus, setExportStatus] = useState('');
   const [prices, setPrices] = useState(FALLBACK_PRICES);
   const [sortKey, setSortKey] = useState("combinedPer100");
   const [sortDir, setSortDir] = useState("desc");
@@ -166,7 +180,23 @@ export default function AIPerDollarFinder() {
 
   useEffect(() => {
     if (!window.location.search) return;
+    const refMode = new URLSearchParams(window.location.search).get('reference');
+    if (refMode === 'filed' || refMode === 'estimated') {
+      const frozen = refMode === 'filed' ? referenceInputs : estimatedInputs;
+      // One-time hydration from the external URL after the server render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFrozenInputs(frozen);
+      setPrices(frozen.prices);
+      setAnthB(frozen.anthVal / 1e9); setOaiB(frozen.oaiVal / 1e9);
+      setDilutionPct(frozen.dilution * 100); setBasis(frozen.holdingsBasis); setDeploy(frozen.deploy);
+      setAnthFdShares(frozen.anthFdShares); setOaiFdShares(frozen.oaiFdShares); setDxyzOaiEntryPrice(frozen.dxyzOaiEntryPrice);
+      setPriceLoaded(true);
+      return;
+    }
     const parsed = parseScenarioSearch(window.location.search);
+    setAnthFdShares(parsed.anthFdShares);
+    setOaiFdShares(parsed.oaiFdShares);
+    setDxyzOaiEntryPrice(parsed.dxyzOaiEntryPrice);
     setAnthB(parsed.anthB);
     setOaiB(parsed.oaiB);
     setDilutionPct(parsed.dilutionPct);
@@ -186,12 +216,13 @@ export default function AIPerDollarFinder() {
       skipNextWrite.current = false;
       return;
     }
+    if (frozenInputs) return;
     const timer = setTimeout(() => {
       const qs = serializeScenarioSearch({
         anthB,
         oaiB,
         dilutionPct,
-        sortKey,
+        sortKey, anthFdShares, oaiFdShares, dxyzOaiEntryPrice,
         basis,
         deploy,
       });
@@ -200,9 +231,11 @@ export default function AIPerDollarFinder() {
       if (cur !== next) history.replaceState(null, "", next);
     }, 300);
     return () => clearTimeout(timer);
-  }, [anthB, oaiB, dilutionPct, sortKey, basis, deploy]);
+  }, [anthB, oaiB, dilutionPct, sortKey, basis, deploy, anthFdShares, oaiFdShares, dxyzOaiEntryPrice, frozenInputs]);
 
   useEffect(() => {
+    const refMode = new URLSearchParams(window.location.search).get("reference");
+    if (refMode === 'filed' || refMode === 'estimated') return;
     return startJsonPoll("/api/ai-prices", {
       onData: (data) => {
         if (data.prices) setPrices({ ...FALLBACK_PRICES, ...data.prices });
@@ -230,6 +263,8 @@ export default function AIPerDollarFinder() {
   }, []);
 
   useEffect(() => {
+    const refMode = new URLSearchParams(window.location.search).get("reference");
+    if (refMode === 'filed' || refMode === 'estimated') return;
     const nyParts = new Intl.DateTimeFormat("en-CA", {
       timeZone: "America/New_York",
       hour12: false,
@@ -240,6 +275,8 @@ export default function AIPerDollarFinder() {
       minute: "2-digit",
     }).formatToParts(new Date());
     const nyGet = (type) => nyParts.find((p) => p.type === type)?.value;
+    // Filter the server snapshot using the client's trading-session clock.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHistoryRows(
       completedTradingRows(
         historySnapshot.rows,
@@ -262,7 +299,7 @@ export default function AIPerDollarFinder() {
       anthB,
       oaiB,
       dilutionPct,
-      sortKey,
+      sortKey, anthFdShares, oaiFdShares, dxyzOaiEntryPrice,
       basis,
       deploy,
     });
@@ -278,8 +315,8 @@ export default function AIPerDollarFinder() {
   };
 
   const dxyzBridge = useMemo(
-    () => dxyzBridgeFromRows(historyRows, { mode: basis }),
-    [historyRows, basis]
+    () => frozenInputs?.dxyzBridge || dxyzBridgeFromRows(frozenInputs ? [] : historyRows, { mode: basis }),
+    [historyRows, basis, frozenInputs]
   );
 
   const rows = useMemo(() => {
@@ -293,12 +330,30 @@ export default function AIPerDollarFinder() {
       const metrics = fundRowMetrics(w, price, {
         anthVal,
         oaiVal,
-        dilution,
+        dilution, anthFdShares, oaiFdShares, dxyzOaiEntryPrice,
         resolved,
       });
       return { wrapper: w, ...metrics };
     });
-  }, [prices, anthVal, oaiVal, dilution, basis, deploy, dxyzBridge]);
+  }, [prices, anthVal, oaiVal, dilution, basis, deploy, dxyzBridge, anthFdShares, oaiFdShares, dxyzOaiEntryPrice]);
+
+  const exportScenario = async (copy = false) => {
+    try {
+      const inputs = { asOf: new Date().toISOString().slice(0,10), priceAsOf: frozenInputs?.priceAsOf || priceFeed.fetchedAt, prices, anthVal, oaiVal, dilution, anthFdShares, oaiFdShares, dxyzOaiEntryPrice, holdingsBasis: basis, deploy, dxyzBridge, historyRows: frozenInputs?.historyRows || historyRows };
+      const snapshot = createScenarioExport({ meta: META, marks: MARKS, wrappers: RAW_AI_WRAPPERS, capitalization: CAPITALIZATION }, inputs, { exportedAt: new Date().toISOString(), priceFeed, quotes, frozen: !!frozenInputs });
+      const json = JSON.stringify(snapshot, null, 2) + '\n';
+      if (copy) {
+        await navigator.clipboard.writeText(json);
+        setExportStatus('Frozen scenario JSON copied.');
+        return;
+      }
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a'); link.href = url; link.download = 'ai-scenario.json'; link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setExportStatus('Scenario exported with frozen prices, holdings, assumptions and ATM bridge.');
+    } catch (error) { setExportStatus(`Export failed: ${error.message}`); }
+  };
 
   const sorted = useMemo(() => {
     const filtered = hideThin
@@ -392,7 +447,7 @@ export default function AIPerDollarFinder() {
       </p>
 
       <div style={styles.badgeRow}>
-        {priceLoaded ? (
+        {frozenInputs ? <span style={styles.badgeMuted}>FROZEN PRICES</span> : priceLoaded ? (
           <span
             style={{
               ...styles.badge,
@@ -416,6 +471,7 @@ export default function AIPerDollarFinder() {
         <span style={styles.badgeMuted}>SEE AS-OF · EXPAND A ROW</span>
       </div>
 
+      {frozenInputs ? <p style={styles.estBanner}>Frozen reference prices ({frozenInputs.priceAsOf}); dataset {META.asOf}. Sliders remain interactive. Reload to reset.</p> : null}
       <div style={styles.sliderToolbar}>
         <p style={styles.anchorNote}>
           Last primary: Anthropic Series H $965B (2026-05-28) / OpenAI $852B
@@ -427,10 +483,13 @@ export default function AIPerDollarFinder() {
           onClick={copyScenarioLink}
           style={styles.copyBtn}
         >
-          {copied ? "Copied" : "Copy link to this scenario"}
+          {copied ? "Copied" : "Copy assumptions link"}
         </button>
       </div>
 
+      <button type="button" onClick={() => exportScenario()} style={styles.copyBtn}>Export frozen scenario JSON</button>
+      <button type="button" onClick={() => exportScenario(true)} style={styles.copyBtn}>Copy scenario JSON</button>
+      <p style={styles.caption} role="status">{exportStatus || 'Links share assumptions; exported JSON also freezes prices and the ATM bridge for offline reproduction.'}</p>
       <div style={styles.controls} className="vcx-controls ai-controls">
         <Slider
           label="Anthropic IPO valuation"
@@ -476,16 +535,28 @@ export default function AIPerDollarFinder() {
         OpenAI $0.852T). Assumes pro rata dilution of existing holders. Does
         not model participation rights, anti-dilution provisions, ownership
         caps, or security-specific conversion terms. Default 0% is gross
-        look-through. DXYZ Anthropic and OpenAI use filed unit counts and
-        do not follow these $T sliders.
+        look-through. Both valuations revalue every quantified holding in both holdings modes,
+        including DXYZ and SKM. Unknown stakes and commitments remain unquantified.
       </p>
+
+      <details style={styles.assumptions} open>
+        <summary>Company share counts & acquisition assumptions</summary>
+        <p style={styles.caption}>These are pre-IPO fully diluted (FD) share-equivalent estimates, not published cap tables. Low/high presets are sensitivity choices, not probabilities. IPO dilution is additional to these share counts.</p>
+        <div style={styles.controls} className="vcx-controls ai-controls">
+          <AssumptionControl label="Anthropic FD shares (millions)" value={anthFdShares / 1e6} onChange={n => setAnthFdShares(n * 1e6)} config={CAPITALIZATION.anthropic} unitScale={1e6} suffix="Shares" />
+          <AssumptionControl label="OpenAI FD shares (millions)" value={oaiFdShares / 1e6} onChange={n => setOaiFdShares(n * 1e6)} config={CAPITALIZATION.openai} unitScale={1e6} suffix="Shares" />
+          <AssumptionControl label="DXYZ August OpenAI entry price ($)" value={dxyzOaiEntryPrice} onChange={setDxyzOaiEntryPrice} config={CAPITALIZATION.dxyzOpenaiEntry} unitScale={1} suffix="Price" />
+        </div>
+        <p style={styles.caption}>Implied scenario prices: Anthropic ${unitPrice({ valuation: anthVal, fdShares: anthFdShares, dilution }).toFixed(2)} / share; OpenAI ${unitPrice({ valuation: oaiVal, fdShares: oaiFdShares, dilution }).toFixed(2)} / share. The August lot is included only in Estimated Holdings.</p>
+        <button type="button" style={styles.copyBtn} onClick={() => { setAnthFdShares(DEFAULT_ANTH_FD_SHARES); setOaiFdShares(DEFAULT_OAI_FD_SHARES); setDxyzOaiEntryPrice(DEFAULT_DXYZ_OAI_ENTRY_PRICE); }}>Reset assumptions to recommended</button>
+      </details>
 
       <div style={styles.basisBlock}>
         <div style={styles.basisKicker}>Share counts, net assets & marks</div>
         <div style={styles.basisRow}>
           {[
-            { key: BASIS_FILED, label: "Filed Only" },
-            { key: BASIS_ESTIMATED, label: "Estimated" },
+            { key: BASIS_FILED, label: "Filed Holdings" },
+            { key: BASIS_ESTIMATED, label: "Estimated Holdings" },
           ].map(({ key, label }) => (
             <button
               key={key}
@@ -504,16 +575,11 @@ export default function AIPerDollarFinder() {
       </div>
       {basis === BASIS_ESTIMATED ? (
         <div style={styles.estBanner}>
-          ⚠ Estimated, not company reported — fund share counts, net assets
-          & marks are rolled forward together. Strategic rows do not move.
-          DXYZ last filed NAV is ${FILED.navPerShare.toFixed(2)} as of{" "}
-          {FILED.asOf}. DXYZ Anthropic and OpenAI use filed unit counts and
-          do not follow the $T IPO slider.
+          Estimated Holdings adds DXYZ’s August $150M cash-funded OpenAI purchase and estimated ATM issuance; ARKVX uses an inflow proxy and VCX rolls measurement marks. Both valuation sliders revalue these holdings. Strategic records retain their individual historical, pro forma or estimated basis.
         </div>
       ) : (
         <p style={styles.caption}>
-          Filed Only freezes every fund row at its last filing. Strategic
-          rows are unchanged either way.
+          Filed Holdings uses filed fund quantities and denominators, revalued under your scenario. No August DXYZ acquisition or post-filing ATM issuance. FD share counts remain estimates; strategic rows retain the basis shown on each leg.
         </p>
       )}
       {basis === BASIS_ESTIMATED ? (
@@ -586,7 +652,7 @@ export default function AIPerDollarFinder() {
           const isOpen = !!expanded[row.ticker];
           const anthBasis = basisMeta(row.wrapper.anthropic);
           const oaiBasis = basisMeta(row.wrapper.openai);
-          const evidence = weakestEvidence(row.wrapper);
+          const evidence = row.wrapper.anthropic?.hasAssumptions || row.wrapper.openai?.hasAssumptions ? "mixed / est." : weakestEvidence(row.wrapper);
           const denom = DENOM_KIND[row.denomKind] || DENOM_KIND.marketCap;
           const holdingsAsOf = [
             row.wrapper.anthropic?.asOf,
@@ -611,6 +677,9 @@ export default function AIPerDollarFinder() {
               <div
                 style={{ ...styles.tr, cursor: "pointer" }}
                 className="vcx-row"
+                data-ticker={row.ticker}
+                role="button" tabIndex={0} aria-expanded={isOpen} aria-label={`${row.ticker} calculation details`}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(prev => ({ ...prev, [row.ticker]: !prev[row.ticker] })); } }}
                 onClick={() =>
                   setExpanded((prev) => ({
                     ...prev,
@@ -751,11 +820,7 @@ export default function AIPerDollarFinder() {
         <p style={styles.caption}>
           Implied exposure is not always ownership. Disclosed means an issuer
           or investor stated a percentage. Filed FV-equiv is fair value ÷ the
-          round that marked it. Filed units is a filed share-equivalent count
-          × price; it does not use a primary-round post-money. Round-implied
-          is dollars invested ÷ post-money. Commitment has no percentage.
-          DXYZ OpenAI PPUs are excluded (not equity). DXYZ Anthropic/OpenAI
-          rows do not follow the $T IPO slider.
+          measurement valuation associated with it, which may be inferred. Filed units × scenario price uses an adjustable estimated FD denominator. Round-implied is dollars invested ÷ post-money. Commitments have no percentage. DXYZ PPUs are excluded from equity scaling. Source dates and assumptions can differ within a row.
         </p>
         {WRAPPERS.map((w) => (
           <div key={w.ticker} style={styles.noteBlock}>
@@ -773,7 +838,7 @@ export default function AIPerDollarFinder() {
                 ? ` Anth. FV ${fmt$(w.anthropic.fairValue)} at ${fmt$(w.anthropic.roundVal)} (${w.anthropic.asOf}).`
                 : ""}
               {w.anthropic?.kind === "filed-units"
-                ? ` Anth. ${w.anthropic.filedUnits.toLocaleString("en-US")} units at $${Number(w.anthropic.markPerUnit).toFixed(2)}/unit (${fmt$(w.anthropic.fairValue)}, ${w.anthropic.asOf}).`
+                ? ` Anth. ${w.anthropic.filedUnits.toLocaleString("en-US")} filed units (${w.anthropic.asOf}); scenario uses the shared estimated FD count.`
                 : ""}
               {w.openai?.kind === "fund"
                 ? ` OAI FV ${fmt$(w.openai.fairValue)} at ${fmt$(w.openai.roundVal)} (${w.openai.asOf}).`
@@ -782,7 +847,7 @@ export default function AIPerDollarFinder() {
                 ? ` OAI ${w.openai.filedUnits.toLocaleString("en-US")} units at $${Number(w.openai.markPerUnit).toFixed(2)}/unit (${fmt$(w.openai.fairValue)}, ${w.openai.asOf}).`
                 : ""}
               {w.anthropic?.kind === "filed-units" || w.openai?.kind === "filed-units"
-                ? " No company-ownership percentage: filed units × mark, not fair value ÷ a primary-round post-money."
+                ? " Scenario-equivalent stake = units / selected FD shares; not a filed ownership percentage."
                 : ` Implied exposure ${fmtExposurePct(claimPct(w.anthropic), { max: !!w.anthropic?.displayAsMax })} Anthropic / ${fmtExposurePct(claimPct(w.openai))} OpenAI.`}
             </div>
           </div>
@@ -820,7 +885,7 @@ function BasisPills({ anth, oai, anthLeg, oaiLeg }) {
   );
 }
 
-function LegDetail({ name, leg, pct, per100, ipoVal, wrapperValue, dilution }) {
+function LegDetail({ name, leg, pct, per100, ipoVal, wrapperValue, dilution, detail, per100High }) {
   if (!leg) {
     return (
       <div style={styles.legBlock}>
@@ -850,14 +915,15 @@ function LegDetail({ name, leg, pct, per100, ipoVal, wrapperValue, dilution }) {
             : ""}
         </div>
       ) : null}
-      {isUnits ? (
+      {isUnits && detail ? (
         <div>
-          Filed units: {leg.filedUnits.toLocaleString("en-US")} as of {leg.asOf || "—"}.
-          Fair value {fmtUsdPrecise(fv)} ({`$${Number(leg.markPerUnit).toFixed(2)}`} per unit).
-          Carry {Math.round((leg.carriedInterestPct || 0) * 100)}%. No company-ownership
-          percentage: a fully diluted share count is not public, so this row does not
-          follow the $T IPO slider. Per $100 = filed fair value ÷ denominator × $100
-          = {fmtPer100(per100)}.
+          <div>Filed quantity: {leg.filedUnits.toLocaleString('en-US')} ({leg.asOf}). {fv > 0 ? `Historical USD fair value ${fmtUsdPrecise(fv)}; filed mark $${leg.markPerUnit.toFixed(6)} / unit.` : 'Local-currency book value is preserved in the source record; no USD conversion is assumed.'}</div>
+          {detail.lots.map(lot => <div key={lot.id}>{lot.label}: {lot.units.toLocaleString('en-US', {maximumFractionDigits: 6})} units ({lot.evidence}, {lot.asOf || 'ATM bridge'}), {lot.carryingValue != null ? `carrying amount $${lot.carryingValue.toLocaleString('en-US', {maximumFractionDigits: 2})}; ` : ''}scenario value ${lot.scenarioValue.toLocaleString('en-US', {maximumFractionDigits: 2})}.</div>)}
+          <div>Scenario-equivalent stake: {fmtExposurePct(detail.pct)} = {detail.units.toLocaleString('en-US', {maximumFractionDigits: 6})} units / {detail.fdShares.toLocaleString('en-US', {maximumFractionDigits: 3})} estimated FD shares.</div>
+          <div>Scenario price ${detail.pps.toFixed(6)} = ${ipoVal.toLocaleString('en-US')} × (1 − {dilution}) / {detail.fdShares.toLocaleString('en-US', {maximumFractionDigits: 3})}. Selected result: ${detail.scenarioValue.toLocaleString('en-US', {maximumFractionDigits: 2})} / ${wrapperValue.toLocaleString('en-US', {maximumFractionDigits: 2})} × 100 = {fmtPer100(detail.per100)}.</div>
+          <div>Table result: {fmtPer100Cell(per100, per100High, true)}. {detail.high.units !== detail.units ? `Pro rata endpoint: ${detail.high.units.toLocaleString('en-US', {maximumFractionDigits: 6})} units × $${detail.high.pps.toFixed(6)} / $${wrapperValue.toLocaleString('en-US', {maximumFractionDigits: 2})} × 100 = ${fmtPer100(detail.high.per100)}.` : ''}</div>
+          <div>FD / entry-price preset sensitivity: {fmtPer100(detail.sensitivity.low)}–{fmtPer100(detail.sensitivity.high)} per $100, holding deployment at the selected setting. This separate range is not a confidence interval.</div>
+          {leg.raw.reportedOwnership ? <div>Issuer cross-check: reported {(leg.raw.reportedOwnership.pct * 100).toFixed(1)}% rounded. {leg.raw.reportedOwnership.note}</div> : null}
         </div>
       ) : null}
       {fv > 0 && round > 0 ? (
@@ -882,9 +948,13 @@ function LegDetail({ name, leg, pct, per100, ipoVal, wrapperValue, dilution }) {
           ÷ {fmtUsdPrecise(wrapperValue)} × $100
           {dilution > 0 ? ` × (1 − ${Math.round(dilution * 100)}%)` : ""}. Result:{" "}
           {fmtPer100(result)}.
+          {per100High > per100 + 0.005 ? ` Table deployment range: ${fmtPer100(per100)}–${fmtPer100(per100High)}. Alternate endpoint uses denominator $${detail.high.wrapperValue.toLocaleString('en-US', {maximumFractionDigits: 2})}: ${fmtPer100(detail.high.per100)}.` : ''}
         </div>
       ) : null}
       {leg.source ? <div>Source: {leg.source}</div> : null}
+      {leg.raw.dateNote ? <div>{leg.raw.dateNote}</div> : null}
+      {leg.evidenceNote ? <div>{leg.evidenceNote}</div> : null}
+      {leg.sources?.map((source, i) => <div key={i}><a href={source.url || `https://www.sec.gov/edgar/search/#/q=${source.accession}`} target="_blank" rel="noopener noreferrer">{source.issuer || source.sourceClass} · {source.section || source.filingType || 'Evidence'}</a> — measured {source.measurementDate}; published {source.publicationDate || 'date not pinned'}; {source.sourceClass}{source.verificationStatus === 'unverified' ? ' · UNVERIFIED source mapping' : ''}.</div>)}
       {leg.secondaryOnly ? (
         <div>Source class: secondary. Not an issuer or filing disclosure.</div>
       ) : null}
@@ -944,6 +1014,8 @@ function RowDetail({
         leg={row.wrapper.anthropic}
         pct={row.anthPct}
         per100={row.anthPer100}
+        per100High={row.anthPer100High}
+        detail={row.anthDetail}
         ipoVal={anthVal}
         wrapperValue={row.wrapperValue || row.marketCap}
         dilution={dilution}
@@ -953,10 +1025,13 @@ function RowDetail({
         leg={row.wrapper.openai}
         pct={row.oaiPct}
         per100={row.oaiPer100}
+        per100High={row.oaiPer100High}
+        detail={row.oaiDetail}
         ipoVal={oaiVal}
         wrapperValue={row.wrapperValue || row.marketCap}
         dilution={dilution}
       />
+      {row.scenarioNetAssets != null ? <div>DXYZ modeled assets after equity revaluation: {fmtUsdPrecise(row.scenarioNetAssets)}. Cash-funded purchase cost is already inside baseline assets; only the valuation change is added. This is a partial scenario, not reported NAV.</div> : null}
       {row.wrapper.security ? (
         <div style={styles.asOf}>
           Security: {row.wrapper.security.label}. {row.wrapper.security.footnote}
@@ -972,7 +1047,7 @@ function RowDetail({
 const DATA_REPO_URL = "https://github.com/bolewood/stocks-bolewood";
 
 export const OPEN_DATA_AUDIT_PROMPT = `Check https://github.com/bolewood/stocks-bolewood: read data/METHODOLOGY.md and data/wrappers/, then run npm run reference.
-Confirm every published Anthropic/OpenAI percentage is derived (not stored), each record has a basis, source and as-of date, and stocks.bolewood.com/ai matches reference/expected-results.json at the same inputs. Report any unpublished stake, mixed Filed/Estimated inputs, or unreproducible figure.`;
+Confirm scenario outputs are derived from sourced observations and labeled assumptions; stated issuer percentages may be stored as observations. Check each basis, source and measurement/publication date, both holdings modes, every quantified slider response, and parity with reference/expected-results.json or an exported frozen scenario. Report unverified sources, mixed dates, unpublished stakes and unreproducible figures.`;
 
 function OpenDataCallout() {
   const [copied, setCopied] = useState(false);
@@ -991,12 +1066,10 @@ function OpenDataCallout() {
         Underlying Open Source Data
       </h2>
       <p style={styles.openDataBody}>
-        Every figure on this page is typed by the kind of evidence behind it,
-        carries its own as-of date, and cites a source. Ownership percentages
-        are derived from filings — never stored as a hand-authored stake. Where
-        no primary source supports a percentage, none is published. The
-        calculator is one consumer of a public dataset; you can reproduce every
-        published figure without running the site.
+        Scenario outputs are calculated from public observations and explicit assumptions.
+        Stated issuer percentages are stored as observations; implied stakes and per-$100 results are derived.
+        Filed units use estimated FD share counts. Some historical source mappings remain unverified and are flagged.
+        Export a frozen scenario to reproduce its exact inputs offline, including mixed source dates.
       </p>
       <p style={styles.openDataBody}>
         Schema, methodology and a standalone calculator live in{" "}
@@ -1056,6 +1129,7 @@ function Slider({
   tickLabel,
   onTick,
 }) {
+  const [draft, setDraft] = useState(null);
   const isT = unit === "T";
   const isLog = scale === "log";
   const numberMin = isT ? SLIDER_T_MIN : min;
@@ -1064,6 +1138,14 @@ function Slider({
   const numberValue = isT ? Number(fmtSliderTrillions(value)) : value;
   const rangeMin = isLog ? 0 : min;
   const rangeMax = isLog ? LOG_SLIDER_STEPS : max;
+  const commitNumber = () => {
+    const n = Number(draft);
+    if (draft !== null && draft !== '' && Number.isFinite(n)) {
+      const bounded = Math.min(numberMax, Math.max(numberMin, n));
+      onChange(isT ? trillionsToBillions(bounded) : bounded);
+    }
+    setDraft(null);
+  };
   const rangeStep = isLog ? 1 : step;
   const rangeValue = isLog ? logPosFromBillions(value) : value;
 
@@ -1073,20 +1155,14 @@ function Slider({
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <input
           type="number"
+          aria-label={`${label} number`}
           min={numberMin}
           max={numberMax}
           step={numberStep}
-          value={numberValue}
-          onChange={(e) => {
-            const n = Number(e.target.value);
-            if (!Number.isFinite(n)) return;
-            if (isT) {
-              const b = trillionsToBillions(n);
-              onChange(Math.min(max, Math.max(min, b)));
-            } else {
-              onChange(n);
-            }
-          }}
+          value={draft ?? numberValue}
+          onChange={e => setDraft(e.target.value)}
+          onBlur={commitNumber}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitNumber(); } }}
           style={styles.smallInput}
           className="vcx-input vcx-small-input"
         />
@@ -1096,11 +1172,20 @@ function Slider({
       <div style={styles.sliderTrack} className="ai-slider-track">
         <input
           type="range"
+          aria-label={label}
           min={rangeMin}
           max={rangeMax}
           step={rangeStep}
           value={rangeValue}
+          onKeyDown={e => {
+            if (isLog && ['ArrowLeft','ArrowDown','ArrowRight','ArrowUp'].includes(e.key)) {
+              e.preventDefault(); setDraft(null);
+              const delta = e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -50 : 50;
+              onChange(Math.min(max, Math.max(min, value + delta)));
+            }
+          }}
           onChange={(e) => {
+            setDraft(null);
             const n = Number(e.target.value);
             onChange(isLog ? billionsFromLogPos(n) : n);
           }}
@@ -1121,7 +1206,28 @@ function Slider({
   );
 }
 
+function AssumptionControl({ label, value, onChange, config, unitScale, suffix }) {
+  const [draft, setDraft] = useState(null);
+  const min = config['min' + suffix] / unitScale;
+  const max = config['max' + suffix] / unitScale;
+  const commit = () => {
+    const n = Number(draft);
+    if (draft !== null && draft !== '' && Number.isFinite(n) && n > 0) onChange(Math.min(max, Math.max(min, n)));
+    setDraft(null);
+  };
+  return <div style={styles.controlGroup}>
+    <label style={styles.label}>{label}<input className="vcx-input" type="number" aria-label={label + ' number'} min={min} max={max} step="any" value={draft ?? Number(value.toFixed(6))} onChange={e => setDraft(e.target.value)} onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commit(); } }} style={styles.assumptionInput} /></label>
+    <input type="range" aria-label={label} min={min} max={max} step="any" value={value} onChange={e => { setDraft(null); onChange(Number(e.target.value)); }} style={styles.rangeInput} />
+    <div style={styles.basisRow}>{['low','default','high'].map(key => <button type="button" key={key} style={styles.copyBtn} onClick={() => { setDraft(null); onChange(config[key + suffix] / unitScale); }}>{key === 'default' ? 'Base' : key === 'low' ? 'Low' : 'High'} {(config[key + suffix] / unitScale).toFixed(2)}</button>)}</div>
+    <div style={styles.hint}>Base is the recommended starting assumption.</div>
+    <p style={styles.hint}>{config.method}</p>
+    {config.sources.map((source, i) => <div key={i} style={styles.hint}><a href={source.url} target="_blank" rel="noopener noreferrer">{source.sourceClass}: {source.measurementDate}</a> · {source.note}</div>)}
+  </div>;
+}
+
 const styles = {
+  assumptions: { border: '1px solid #d6d3d1', padding: '16px', margin: '16px 0' },
+  assumptionInput: { display: 'block', width: '100%', maxWidth: '220px', padding: '8px', margin: '8px 0' },
   main: {
     maxWidth: "1180px",
     margin: "0 auto",

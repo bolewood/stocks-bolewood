@@ -89,7 +89,7 @@ test("README generated worked example matches data/ + fixtures", () => {
   assert.equal(ex.reportedFairValue, 235671976.08);
   assert.equal(ex.filedUnits, 386088);
   assert.equal(ex.price, 32.84);
-  assert.equal(ex.impliedExposure, null);
+  assert.equal(ex.impliedExposure, ex.filedUnits / ex.fdShares);
   assert.ok(Math.abs(ex.per100 - dxyz.anthPer100) < 1e-9);
   assert.ok(Math.abs(ex.wrapperValue - dxyz.wrapperValue) < 1e-2);
   assert.match(expected, /reference\/fixtures\.json/);

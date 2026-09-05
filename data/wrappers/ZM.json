@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "1.1.0",
-  "methodologyVersion": "1.1.0",
+  "schemaVersion": "1.2.0",
+  "methodologyVersion": "1.2.0",
   "ticker": "ZM",
   "yahooSymbol": "ZM",
   "name": "Zoom Communications",
@@ -20,7 +20,9 @@
   },
   "sources": [
     {
-      "fields": ["shareCount"],
+      "fields": [
+        "shareCount"
+      ],
       "sourceClass": "primary",
       "issuer": "Zoom Communications, Inc.",
       "filingType": "10-Q",
@@ -28,7 +30,10 @@
       "documentDate": "2026-07-31",
       "asOf": "2026-08-14",
       "url": "https://www.sec.gov/Archives/edgar/data/1585521/000158552126000121/zm-20260731.htm",
-      "note": "Cover-page Class A + Class B outstanding."
+      "note": "Cover-page Class A + Class B outstanding.",
+      "measurementDate": "2026-08-14",
+      "publicationDate": null,
+      "section": "See source note"
     }
   ],
   "anthropic": {
@@ -41,7 +46,9 @@
     "confidence": "medium",
     "sources": [
       {
-        "fields": ["reportedCarryingValue"],
+        "fields": [
+          "reportedCarryingValue"
+        ],
         "sourceClass": "primary",
         "issuer": "Zoom Communications, Inc.",
         "filingType": "10-Q",
@@ -49,10 +56,15 @@
         "documentDate": "2026-07-31",
         "asOf": "2026-07-31",
         "url": "https://www.sec.gov/Archives/edgar/data/1585521/000158552126000121/zm-20260731.htm",
-        "note": "$3,134.5M carrying value of Anthropic preferred. Six-month additional investment $300.9M; Q2 unrealized gain $1,612.7M. Not disclosed ownership."
+        "note": "$3,134.5M carrying value of Anthropic preferred. Six-month additional investment $300.9M; Q2 unrealized gain $1,612.7M. Not disclosed ownership.",
+        "measurementDate": "2026-07-31",
+        "publicationDate": null,
+        "section": "See source note"
       },
       {
-        "fields": ["measurementCompanyMark"],
+        "fields": [
+          "measurementCompanyMark"
+        ],
         "sourceClass": "primary",
         "issuer": "Zoom Communications, Inc.",
         "filingType": "10-Q",
@@ -60,15 +72,23 @@
         "documentDate": "2026-07-31",
         "asOf": "2026-05-28",
         "url": "https://www.sec.gov/Archives/edgar/data/1585521/000158552126000121/zm-20260731.htm",
-        "note": "10-Q records the Q2 mark using information including Anthropic's May 28, 2026 financing round."
+        "note": "10-Q records the Q2 mark using information including Anthropic's May 28, 2026 financing round.",
+        "measurementDate": "2026-05-28",
+        "publicationDate": null,
+        "section": "See source note"
       },
       {
-        "fields": ["measurementCompanyMark"],
+        "fields": [
+          "measurementCompanyMark"
+        ],
         "sourceClass": "primary",
         "issuer": "Anthropic",
         "documentDate": "2026-05-28",
         "url": "https://www.anthropic.com/news/series-h",
-        "note": "Series H $965B post-money."
+        "note": "Series H $965B post-money.",
+        "measurementDate": "2026-05-28",
+        "publicationDate": null,
+        "section": "See source note"
       }
     ]
   },

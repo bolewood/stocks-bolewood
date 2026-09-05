@@ -1,18 +1,20 @@
 {
-  "schemaVersion": "1.1.0",
-  "methodologyVersion": "1.1.0",
+  "schemaVersion": "1.2.0",
+  "methodologyVersion": "1.2.0",
   "ticker": "SKM",
   "yahooSymbol": "SKM",
   "name": "SK Telecom Co.",
   "wrapperType": "adr",
   "denominatorType": "adr-equivalent-market-cap",
-  "confidence": "low",
-  "note": "Anthropic 0.30% (range 0.30–0.70%). No OpenAI.",
+  "confidence": "medium",
+  "note": "DART reports 3,860,330 Anthropic shares and a rounded 0.2% at June 30. Scenario exposure uses these units and the shared estimated Anthropic FD denominator. No disclosed OpenAI holding.",
   "shareCount": {
-    "value": 212982275,
-    "asOf": "2025-12-31",
+    "value": 213057911,
+    "issued": 214790053,
+    "treasury": 1732142,
+    "asOf": "2026-06-30",
     "unit": "ordinary",
-    "note": "Net of 1,807,778 treasury. Seoul listing is 017670.KS."
+    "note": "DART half-year report I.4: issued less treasury; no assumed completion of the August 27 disposal authorization."
   },
   "adrRatio": {
     "ordinary": 5,
@@ -20,48 +22,108 @@
     "asOf": "2025-12-31",
     "note": "Each ADS (NYSE: SKM) represents 5/9 of one ordinary share (Citi; 20-F cover). ADS-equivalent = ordinary × 9/5."
   },
-  "sharesNote": "ADS-equivalent so SKM USD price × shares ≈ SK Telecom cap. 212,982,275 ordinary outstanding (20-F / 6-K as of 2025-12-31, net of 1,807,778 treasury) ÷ (5/9) = 383,368,095 ADS. Seoul listing is 017670.KS.",
+  "sharesNote": "213,057,911 ordinary outstanding × 9/5 = 383,504,239.8 ADS-equivalent. This is an exact quote-line equivalent, not a count of issued ADSs.",
   "security": {
-    "label": "Equity",
+    "label": "Equity equivalents",
     "linear": true,
-    "footnote": "Anthropic equity; % not issuer-disclosed (Aug 7 table / Hana ~0.30%)."
+    "footnote": "Filed Anthropic shares; security conversion parity and the company FD denominator are modeled. The rounded reported 0.2% is a cross-check, not an exact FD count."
   },
   "sources": [
     {
-      "fields": ["shareCount"],
+      "fields": [
+        "shareCount"
+      ],
       "sourceClass": "primary",
-      "issuer": "SK Telecom Co., Ltd.",
-      "filingType": "20-F",
-      "documentDate": "2025-12-31",
-      "asOf": "2025-12-31",
-      "note": "Ordinary outstanding net of treasury. Confirmed in 6-K."
+      "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813001728",
+      "measurementDate": "2026-06-30",
+      "publicationDate": "2026-08-13",
+      "asOf": "2026-06-30",
+      "section": "I.4 Total shares",
+      "note": "214,790,053 issued less 1,732,142 treasury."
     },
     {
-      "fields": ["adrRatio"],
+      "fields": [
+        "adrRatio"
+      ],
       "sourceClass": "primary",
-      "issuer": "Citibank, N.A.",
-      "filingType": "20-F",
-      "documentDate": "2025-12-31",
-      "note": "ADS ratio 5/9 on the 20-F cover and Citi depositary."
+      "url": "https://www.sec.gov/Archives/edgar/data/1015650/000119312526188763/d78252d20f.htm",
+      "measurementDate": "2025-12-31",
+      "publicationDate": "2026-04-29",
+      "asOf": "2025-12-31",
+      "section": "20-F cover",
+      "note": "20-F cover: each ADS represents five-ninths of one ordinary share.",
+      "accession": "0001193125-26-188763"
+    },
+    {
+      "fields": [
+        "pendingTreasuryDisposal"
+      ],
+      "sourceClass": "primary",
+      "url": "https://www.sec.gov/Archives/edgar/data/1015650/000119312526369444/d93094d6k.htm",
+      "measurementDate": "2026-08-27",
+      "publicationDate": "2026-08-27",
+      "asOf": "2026-08-27",
+      "section": "See source note",
+      "note": "Authorization only; do not subtract from treasury until completion is evidenced."
     }
   ],
   "anthropic": {
-    "basis": "estimate",
-    "holdingSecurity": "common",
-    "estimatedOwnershipPct": 0.003,
-    "estimateAsOf": "2026-06",
-    "pctLow": 0.003,
-    "pctHigh": 0.007,
-    "methodology": "Analyst estimate from the Aug 7 table / Hana, not issuer-disclosed. Undisclosed Series H follow-on (Jun 2026) may have changed the stake.",
-    "confidence": "low",
+    "basis": "filed-units",
+    "holdingSecurity": "unknown",
+    "filedUnits": 3860330,
+    "unitsAsOf": "2026-06-30",
+    "carriedInterestPct": 0,
+    "confidence": "medium",
+    "unitLabel": "SK Telecom Anthropic shares",
+    "reportedOwnership": {
+      "pct": 0.002,
+      "decimalPlacesInPercent": 1,
+      "roundingConvention": "not-verified",
+      "note": "If rounded to nearest 0.1 percentage point, 0.15%–0.25% is a cross-check interval, not an ownership confidence interval. Definition may differ from fully diluted."
+    },
+    "observations": {
+      "beginningUnits": 3703141,
+      "acquiredUnits": 157189,
+      "investmentKrw": 139925000000,
+      "endingBookValueKrw": 3505017000000
+    },
     "sources": [
       {
-        "fields": ["estimatedOwnershipPct", "pctLow", "pctHigh"],
-        "sourceClass": "secondary",
-        "documentDate": "2026-06",
-        "note": "Analyst estimate ~0.30% (range 0.30–0.70%). Not issuer-disclosed."
+        "fields": [
+          "filedUnits",
+          "unitsAsOf",
+          "reportedOwnership",
+          "observations"
+        ],
+        "sourceClass": "primary",
+        "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813001728",
+        "measurementDate": "2026-06-30",
+        "publicationDate": "2026-08-13",
+        "asOf": "2026-06-30",
+        "section": "XII.3 Detailed investments in other corporations",
+        "note": "Beginning 3,703,141 + acquired 157,189 = ending 3,860,330. Ownership printed 0.2%; investment 139,925 and book value 3,505,017 in KRW millions."
+      },
+      {
+        "fields": [
+          "carriedInterestPct"
+        ],
+        "sourceClass": "assumption",
+        "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813001728",
+        "measurementDate": "2026-06-30",
+        "publicationDate": "2026-08-13",
+        "asOf": "2026-06-30",
+        "section": "See source note",
+        "note": "Direct corporate holding; gross model assumes no SPV carry.",
+        "estimationMethod": "Direct corporate holding; gross model assumes no SPV carry."
       }
     ]
   },
-  "openai": null
+  "openai": null,
+  "pendingTreasuryDisposal": {
+    "shares": 1061,
+    "approved": "2026-08-27",
+    "plannedFrom": "2026-08-28",
+    "plannedTo": "2026-09-30",
+    "status": "authorized-not-confirmed-completed"
+  }
 }

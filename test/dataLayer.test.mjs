@@ -37,9 +37,9 @@ import {
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 test("every wrapper and marks.json validate against the schema", () => {
-  const { marks, wrappers } = loadPublicDataset();
+  const { marks, wrappers, capitalization } = loadPublicDataset();
   validateMarks(marks);
-  for (const w of wrappers) validateWrapper(w, { marks });
+  for (const w of wrappers) validateWrapper(w, { marks, capitalization });
   assert.equal(wrappers.length, 11);
 });
 
@@ -82,7 +82,7 @@ test("schema rejects a disclosed record whose only source is secondary", () => {
     {
       fields: ["ownershipPct"],
       sourceClass: "secondary",
-      note: "press only",
+      note: "press only", url: "https://example.com/press", measurementDate: "2026-06",
     },
   ];
   assert.throws(
@@ -107,8 +107,8 @@ test("holdingSecurity, wrapperType and denominatorType are separate fields", () 
 test("share count, ADR ratio, TNA and marks each carry as-of and sources", () => {
   const { marks } = loadPublicDataset();
   const skm = RAW_AI_WRAPPERS.find((w) => w.ticker === "SKM");
-  assert.equal(skm.shareCount.value, 212_982_275);
-  assert.equal(skm.shareCount.asOf, "2025-12-31");
+  assert.equal(skm.shareCount.value, 213_057_911);
+  assert.equal(skm.shareCount.asOf, "2026-06-30");
   assert.deepEqual([skm.adrRatio.ordinary, skm.adrRatio.ads], [5, 9]);
   assert.ok(skm.sources.some((s) => s.fields.includes("shareCount")));
   assert.ok(skm.sources.some((s) => s.fields.includes("adrRatio")));
@@ -153,19 +153,11 @@ test("scenario valuation does not change FV-equivalent exposure %", () => {
       if (basis === "filed-units") {
         const perKey = side === "anthropic" ? "anthPer100" : "oaiPer100";
         const pctKey = side === "anthropic" ? "anthPct" : "oaiPct";
-        assert.equal(lo[pctKey], null, `${w.ticker} ${side} published a company %`);
-        assert.equal(lo[perKey], hi[perKey], `${w.ticker} ${side} per$100 moved with $T slider`);
-        const diluted = fundRowMetrics(w, price, {
-          anthVal: 965_000_000_000,
-          oaiVal: 852_000_000_000,
-          dilution: 0.1,
-          resolved,
-        });
-        assert.equal(
-          lo[perKey],
-          diluted[perKey],
-          `${w.ticker} ${side} per$100 moved with IPO dilution slider`
-        );
+        assert.ok(lo[pctKey] > 0, 'estimated unit/FD exposure');
+        assert.equal(lo[pctKey], hi[pctKey]);
+        assert.ok(hi[perKey] > lo[perKey], `${w.ticker} must respond to valuation`);
+        const diluted = fundRowMetrics(w, price, { anthVal: 965e9, oaiVal: 852e9, dilution: 0.1, resolved });
+        assert.ok(Math.abs(diluted[perKey] - lo[perKey] * 0.9) < 1e-10);
         continue;
       }
       if (basis !== "filed-fv-equiv" && basis !== "carrying-value-equiv") continue;
@@ -187,12 +179,12 @@ test("npm run reference reproduces expected-results.json from data/", () => {
   assert.deepEqual(got, expected);
 });
 
-test("SKM estimate is secondary-only; disclosed legs are not", () => {
+test("SKM quantities and commitment announcements have primary evidence", () => {
   const skm = RAW_AI_WRAPPERS.find((w) => w.ticker === "SKM");
-  assert.equal(secondaryOnly(skm.anthropic), true);
+  assert.equal(secondaryOnly(skm.anthropic), false);
   const msft = RAW_AI_WRAPPERS.find((w) => w.ticker === "MSFT");
   assert.equal(secondaryOnly(msft.openai), false);
-  assert.equal(secondaryOnly(msft.anthropic), true);
+  assert.equal(secondaryOnly(msft.anthropic), false);
 });
 
 test("production modules do not define ticker-keyed wrapper financials", () => {

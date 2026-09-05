@@ -1,5 +1,5 @@
-export const SCHEMA_VERSION = "1.1.0";
-export const METHODOLOGY_VERSION = "1.1.0";
+export const SCHEMA_VERSION = "1.2.0";
+export const METHODOLOGY_VERSION = "1.2.0";
 export const PRIVATE_TAPE_SCHEMA_VERSION = "1.0.0";
 
 export const BASES = [
@@ -64,9 +64,20 @@ function validateSource(src, path) {
   if (!Array.isArray(src.fields) || src.fields.length === 0) {
     fail(path, "source.fields must be a non-empty array");
   }
-  if (src.sourceClass !== "primary" && src.sourceClass !== "secondary") {
-    fail(path, "sourceClass must be primary or secondary");
+  if (!["primary", "secondary", "assumption"].includes(src.sourceClass)) {
+    fail(path, "sourceClass must be primary, secondary or assumption");
   }
+  if (!isHttpUrl(src.url) && !/^\d{10}-\d{2}-\d{6}$/.test(src.accession || '')) fail(path, 'source URL or resolvable accession required');
+  if (!isMeasurementDate(src.measurementDate)) fail(path, 'measurementDate required (YYYY-MM or YYYY-MM-DD)');
+  if (src.publicationDate != null && !isMeasurementDate(src.publicationDate)) fail(path, 'invalid publicationDate');
+  if (src.sourceClass === 'assumption' && !src.estimationMethod) fail(path, 'assumption estimationMethod required');
+}
+
+function isMeasurementDate(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}(-\d{2})?$/.test(value)) return false;
+  const full = value.length === 7 ? value + '-01' : value;
+  const date = new Date(full + 'T00:00:00Z');
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === full;
 }
 
 function isIsoDateKey(value) {
@@ -130,9 +141,12 @@ function validateLeg(leg, path, { company }) {
       if (!leg.measurementMarkAsOf) fail(path, "measurementMarkAsOf required");
       break;
     case "filed-units":
-      if (!(leg.filedUnits > 0)) fail(path, "filedUnits required");
-      if (!(leg.reportedFairValue > 0)) fail(path, "reportedFairValue required");
-      if (!leg.fairValueAsOf) fail(path, "fairValueAsOf required");
+      if (!Number.isFinite(leg.filedUnits) || !(leg.filedUnits > 0)) fail(path, "filedUnits required");
+      if (!isMeasurementDate(leg.unitsAsOf || leg.fairValueAsOf)) fail(path, "unitsAsOf required");
+      if (leg.reportedFairValue != null && (!(leg.reportedFairValue > 0) || !isMeasurementDate(leg.fairValueAsOf))) fail(path, 'USD fair value requires a value and fairValueAsOf');
+      if (leg.acquisition) {
+        if (!Number.isFinite(leg.acquisition.costUsd) || !(leg.acquisition.costUsd > 0) || !isMeasurementDate(leg.acquisition.date) || !leg.acquisition.entryPriceModel) fail(path, 'invalid acquisition assumption');
+      }
       if (typeof leg.carriedInterestPct !== "number" || leg.carriedInterestPct < 0) {
         fail(path, "carriedInterestPct required (>= 0)");
       }
@@ -165,7 +179,7 @@ function validateLeg(leg, path, { company }) {
   }
 }
 
-export function validateWrapper(wrapper, { marks } = {}) {
+export function validateWrapper(wrapper, { marks, capitalization } = {}) {
   const t = wrapper?.ticker || "?";
   if (wrapper.schemaVersion !== SCHEMA_VERSION) {
     fail(t, `schemaVersion must be ${SCHEMA_VERSION}`);
@@ -209,6 +223,13 @@ export function validateWrapper(wrapper, { marks } = {}) {
 
   validateLeg(wrapper.anthropic, `${t}.anthropic`, { company: "anthropic" });
   validateLeg(wrapper.openai, `${t}.openai`, { company: "openai" });
+  if (capitalization) {
+    validateCapitalization(capitalization);
+    for (const side of ['anthropic', 'openai']) {
+      if (wrapper[side]?.basis === 'filed-units' && !capitalization[side]?.method) fail(t, `${side} FD model required`);
+      if (wrapper[side]?.acquisition?.entryPriceModel && wrapper[side].acquisition.entryPriceModel !== 'dxyz-openai-august-entry') fail(t, 'unknown acquisition entry-price model');
+    }
+  }
 
   if (marks) {
     for (const leg of [wrapper.anthropic, wrapper.openai]) {
@@ -240,6 +261,21 @@ export function validateMarks(marks) {
       }
       r.sources.forEach((s, j) => validateSource(s, `${path}.sources[${j}]`));
     });
+  }
+}
+
+export function validateCapitalization(config) {
+  if (config?.schemaVersion !== SCHEMA_VERSION || config.methodologyVersion !== METHODOLOGY_VERSION) fail('capitalization', 'version mismatch');
+  if (!isMeasurementDate(config.asOf)) fail('capitalization', 'asOf required');
+  for (const side of ['anthropic', 'openai', 'dxyzOpenaiEntry']) {
+    const item = config[side];
+    const suffix = side === 'dxyzOpenaiEntry' ? 'Price' : 'Shares';
+    for (const key of ['min', 'low', 'default', 'high', 'max']) {
+      if (!Number.isFinite(item?.[key + suffix]) || item[key + suffix] <= 0) fail(side, 'finite positive assumptions required');
+    }
+    if (!(item['min'+suffix] <= item['low'+suffix] && item['low'+suffix] <= item['default'+suffix] && item['default'+suffix] <= item['high'+suffix] && item['high'+suffix] <= item['max'+suffix])) fail(side, 'assumptions must be ordered');
+    if (!item.method || !item.sources?.length) fail(side, 'method and sources required');
+    item.sources.forEach((s,i) => validateSource(s, `${side}.sources[${i}]`));
   }
 }
 

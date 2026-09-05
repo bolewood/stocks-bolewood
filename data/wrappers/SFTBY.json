@@ -1,18 +1,20 @@
 {
-  "schemaVersion": "1.1.0",
-  "methodologyVersion": "1.1.0",
+  "schemaVersion": "1.2.0",
+  "methodologyVersion": "1.2.0",
   "ticker": "SFTBY",
   "yahooSymbol": "SFTBY",
   "name": "SoftBank Group ADR",
   "wrapperType": "adr",
   "denominatorType": "adr-equivalent-market-cap",
   "confidence": "high",
-  "note": "No Anthropic. OpenAI is Vision Fund 2 preferred.",
+  "note": "OpenAI preferred and common. Approximately 13% is pro forma after the full investment program; it includes the scheduled October 1 $10B tranche, not current funded ownership.",
   "shareCount": {
-    "value": 5698923701,
-    "asOf": "2026-03-31",
+    "value": 5699049389,
+    "issued": 5711848120,
+    "treasury": 12798731,
+    "asOf": "2026-06-30",
     "unit": "ordinary",
-    "note": "Issued 5,711,848,120 − treasury 12,924,419."
+    "note": "Q1 financial report cover: issued less treasury."
   },
   "adrRatio": {
     "ordinary": 1,
@@ -20,11 +22,11 @@
     "asOf": "2026-03-31",
     "note": "Citi ORD:DR is 1:2 — each SFTBY ADR is ½ of one 9984.T share."
   },
-  "sharesNote": "Issuer-equivalent ADR shares (2× Tokyo common). Citi ORD:DR is 1:2 — each SFTBY ADR is ½ of one 9984.T share. Tokyo common 5,698,923,701 (issued 5,711,848,120 − treasury 12,924,419) as of 2026-03-31. OTC ADR prints ~½ the USD-converted 9984.T price, so 2× common × ADR quote ≈ full-issuer cap.",
+  "sharesNote": "5,699,049,389 ordinary outstanding × 2 = 11,398,098,778 ADS-equivalent (Citi ORD:DR 1:2).",
   "security": {
-    "label": "VF2 Pfd",
+    "label": "VF2 equity",
     "linear": true,
-    "footnote": "OpenAI is Vision Fund 2 preferred; SoftBank ~13% at $64.6B (2026-02-27 release)."
+    "footnote": "OpenAI preferred and common. Approximately 13% is pro forma after the full investment program; it includes the scheduled October 1 $10B tranche, not current funded ownership."
   },
   "navNote": {
     "summary": "NAV discount",
@@ -32,36 +34,87 @@
   },
   "sources": [
     {
-      "fields": ["shareCount"],
+      "fields": [
+        "shareCount"
+      ],
       "sourceClass": "primary",
-      "issuer": "SoftBank Group Corp.",
-      "documentDate": "2026-03-31",
-      "asOf": "2026-03-31",
-      "note": "Tokyo common outstanding net of treasury."
+      "url": "https://group.softbank/media/Project/sbg/sbg/pdf/ir/financials/financial_reports/financial-report_q1fy2026_01_en.pdf",
+      "measurementDate": "2026-06-30",
+      "publicationDate": "2026-08-06",
+      "asOf": "2026-06-30",
+      "section": "Cover — number of shares",
+      "note": "Issued 5,711,848,120 less treasury 12,798,731."
     },
     {
-      "fields": ["adrRatio"],
+      "fields": [
+        "adrRatio"
+      ],
       "sourceClass": "primary",
-      "issuer": "Citibank, N.A.",
-      "documentDate": "2026-03-31",
-      "note": "ORD:DR 1:2."
+      "url": "https://depositaryreceipts.citi.com/adr/guides/bookPdf.aspx?cusip=83404D109&effectDt=2025-12-17&secId=SFTBY",
+      "measurementDate": "2025-12-17",
+      "publicationDate": "2025-12-17",
+      "asOf": "2026-06-30",
+      "section": "Ratio (ORD:DR)",
+      "note": "Citi Books Close/Open Notice for SFTBY: ORD:DR 1:2."
     }
   ],
   "anthropic": null,
   "openai": {
     "basis": "pro-forma",
-    "holdingSecurity": "preferred",
+    "holdingSecurity": "mixed",
     "ownershipPct": 0.13,
-    "ownershipAsOf": "2026-02-27",
-    "confidence": "high",
+    "ownershipAsOf": "2026-07-31",
+    "confidence": "medium",
     "sources": [
       {
-        "fields": ["ownershipPct"],
+        "fields": [
+          "ownershipPct",
+          "fundedCostApproxUsd",
+          "fairValueApproxUsd",
+          "holdingSecurity"
+        ],
         "sourceClass": "primary",
-        "issuer": "SoftBank Group Corp.",
-        "documentDate": "2026-02-27",
-        "asOf": "2026-02-27",
-        "note": "~13% upon completion of the investment program ($64.6B by 2026-10-01), not current funded ownership. ~$55B in as of Aug 2026; last $10B tranche due 2026-10-01."
+        "url": "https://group.softbank/media/Project/sbg/sbg/pdf/ir/presentations/2026/investor-svf_q1fy2026_01_en.pdf",
+        "measurementDate": "2026-07-31",
+        "publicationDate": "2026-08-06",
+        "asOf": "2026-07-31",
+        "section": "Slide 10",
+        "note": "Rounded $55B cost / $100B value. Approximately 13% includes the planned October tranche."
+      },
+      {
+        "fields": [
+          "fundingEvents",
+          "programCostUsd",
+          "status"
+        ],
+        "sourceClass": "primary",
+        "url": "https://group.softbank/media/Project/sbg/sbg/pdf/ir/financials/financial_reports/financial-report_q1fy2026_01_en.pdf",
+        "measurementDate": "2026-07-31",
+        "publicationDate": "2026-08-06",
+        "asOf": "2026-07-31",
+        "section": "OpenAI investment program",
+        "note": "April and July $10B tranches completed; October $10B scheduled. Do not prorate the 13% by cost to invent current ownership."
+      }
+    ],
+    "status": "pro-forma-includes-unfunded-tranche",
+    "fundedCostApproxUsd": 55000000000,
+    "fairValueApproxUsd": 100000000000,
+    "programCostUsd": 64600000000,
+    "fundingEvents": [
+      {
+        "date": "2026-04-01",
+        "amountUsd": 10000000000,
+        "status": "completed"
+      },
+      {
+        "date": "2026-07-01",
+        "amountUsd": 10000000000,
+        "status": "completed"
+      },
+      {
+        "date": "2026-10-01",
+        "amountUsd": 10000000000,
+        "status": "scheduled"
       }
     ]
   }
