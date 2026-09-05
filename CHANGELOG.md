@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.0.0] — 2026-09-05
+
+- Align `/sftby` with the shared $852B OpenAI anchor, exact SBG ADR denominator and disclosed pro forma 13% stake. Replace cost-ratio ownership with an explicitly labeled July fair-value proxy.
+- Preserve issuer June SVF2 NAV and bridge subsequent OpenAI changes and funding. Add management-allocation sensitivity, dilution, optional tax/basis inputs and an unresolved net-debt adjustment.
+- Document September bond and SB Energy IPO announcements with evidence links; remove undated EV comparisons and misleading currency/ownership assumptions.
+- Add a $1.6T IPO preset, complete scenario links and downloads, and regressions for issuer NAV, funding offsets, `/ai` parity and every sensitivity. Clarify that `/ai` SFTBY figures are gross fund exposure.
+
 ## [0.12.0.0] — 2026-09-05
 
 - Revalue every quantified Anthropic/OpenAI leg in both Filed Holdings and Estimated Holdings, including DXYZ and SKM. Add shared company FD sliders, numeric entry, sourced sensitivity presets and reset controls.

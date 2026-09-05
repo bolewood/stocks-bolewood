@@ -7,7 +7,7 @@
   "wrapperType": "adr",
   "denominatorType": "adr-equivalent-market-cap",
   "confidence": "high",
-  "note": "OpenAI preferred and common. Approximately 13% is pro forma after the full investment program; it includes the scheduled October 1 $10B tranche, not current funded ownership.",
+  "note": "Gross SVF2 OpenAI preferred and common exposure. Approximately 13% is pro forma after the full investment program, including the scheduled October 1 $10B tranche. This is not current funded ownership or an SBG-shareholder net economic interest; management co-investment, debt and taxes are not deducted.",
   "shareCount": {
     "value": 5699049389,
     "issued": 5711848120,
@@ -24,13 +24,13 @@
   },
   "sharesNote": "5,699,049,389 ordinary outstanding × 2 = 11,398,098,778 ADS-equivalent (Citi ORD:DR 1:2).",
   "security": {
-    "label": "VF2 equity",
+    "label": "Gross SVF2 equity",
     "linear": true,
-    "footnote": "OpenAI preferred and common. Approximately 13% is pro forma after the full investment program; it includes the scheduled October 1 $10B tranche, not current funded ownership."
+    "footnote": "Gross SVF2 OpenAI preferred and common exposure. Approximately 13% is pro forma after the full investment program, including the scheduled October 1 $10B tranche. This is not current funded ownership or an SBG-shareholder net economic interest; management co-investment, debt and taxes are not deducted."
   },
   "navNote": {
-    "summary": "NAV discount",
-    "body": "NAV ¥58.3T vs market cap ¥31.46T ≈ 46% discount (pro forma 2026-08-05). Arm is ~60% of holdings (¥49.91T / ¥83.11T, SBG Q1 FY2026 data sheet 2026-06-30); Vision Funds (SVF1+SVF2+LatAm) ~28.8%; SoftBank Corp. ¥2.79T; T-Mobile adjusted to ~0 after asset-backed finance. LTV 13% against a 25% policy cap, plus a recent $40B bridge loan and $10B margin loan secured by the OpenAI stake. The high per-$100 reflects the NAV discount, not OpenAI concentration. SBG's OpenAI exposure sits partly inside SVF2 — do not double-count it against the Vision Fund line."
+    "summary": "Gross fund exposure / NAV bridge",
+    "body": "Gross exposure can exceed 100% of SBG equity value because it precedes debt and the holdco discount. June 30 issuer NAV: ¥83.11T adjusted holdings less ¥10.81T SBG adjusted net debt = ¥72.30T. Those are dated balances, not live NAV. SVF2 already includes OpenAI. Management co-investment has preferred-capital and fund-wide hurdles, so neither the 13% headline nor a flat 17.25% reduction establishes shareholder-attributable ownership. July $10B is funded; October $10B is planned. The $40B bridge is a facility limit. The August $10B SVF2 loan agreement has an SBG guarantee, cash-collateral account and OpenAI-value triggers; its net funding use is not independently reconciled here. See /sftby for the dated NAV bridge and allocation sensitivities."
   },
   "sources": [
     {
@@ -56,6 +56,20 @@
       "asOf": "2026-06-30",
       "section": "Ratio (ORD:DR)",
       "note": "Citi Books Close/Open Notice for SFTBY: ORD:DR 1:2."
+    },
+    {
+      "fields": [
+        "navNote",
+        "note",
+        "security"
+      ],
+      "sourceClass": "primary",
+      "url": "https://group.softbank/en/ir/stock/sotp",
+      "measurementDate": "2026-06-30",
+      "publicationDate": "2026-08-06",
+      "asOf": "2026-06-30",
+      "section": "Holdco NAV and financing adjustments",
+      "note": "Reported SBG share of SVF2 NAV is not the gross OpenAI fund holding."
     }
   ],
   "anthropic": null,
@@ -94,6 +108,18 @@
         "asOf": "2026-07-31",
         "section": "OpenAI investment program",
         "note": "April and July $10B tranches completed; October $10B scheduled. Do not prorate the 13% by cost to invent current ownership."
+      },
+      {
+        "fields": [
+          "ownershipPct"
+        ],
+        "sourceClass": "primary",
+        "url": "https://group.softbank/media/Project/sbg/sbg/pdf/ir/financials/financial_reports/financial-report_q1fy2026_01_en.pdf#page=65",
+        "measurementDate": "2026-06-30",
+        "publicationDate": "2026-08-06",
+        "asOf": "2026-06-30",
+        "section": "Note 14, management co-investment terms",
+        "note": "Qualifies interpretation of gross fund exposure, not the source of 13%: MgmtCo has 17.25% of SVF2 LLC Equity, with preferred capital, fund-wide hurdles and receivable offsets. Exact shareholder net allocation is not a fixed percentage of the gross stake."
       }
     ],
     "status": "pro-forma-includes-unfunded-tranche",

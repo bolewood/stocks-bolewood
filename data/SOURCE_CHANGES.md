@@ -29,3 +29,7 @@ The SEC submissions indexes for CIK 1843974 and 1867090 were checked again on Se
 ## Verification
 
 The numerical matrix tests both holdings modes and cash/pro rata/range, all 11 symbols, each valuation independently, 10% dilution, FD changes, acquisition-price changes, preserved observations, excluded PPUs, and export tampering. Fixtures freeze prices separately from dataset dates and preserve the complete ATM bridge. The application uses the same unit identities; the independent raw-data calculator checks the resolved fund arithmetic. Browser reference URLs make comparison at identical inputs explicit.
+
+## SoftBank SOTP follow-up — September 5, 2026
+
+The `/sftby` audit replaces the $840B anchor and cost-ratio ownership with the shared $852B / pro forma 13% inputs or an explicit July FV proxy. It preserves the reported SVF2 NAV and applies an incremental OpenAI bridge with a separately labeled management-allocation sensitivity. `/ai` continues to display gross fund exposure; its notes now explain why that is not shareholder net ownership. Source-linked subsequent events, unreconciled net cash flows, tax-basis uncertainty and exact equations are documented in [SFTBY_METHODOLOGY.md](./SFTBY_METHODOLOGY.md). Numerical `/ai` reference results are unchanged.

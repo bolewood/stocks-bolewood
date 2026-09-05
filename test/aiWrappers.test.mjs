@@ -328,8 +328,10 @@ test("AMZN and GOOG are non-linear; funds are Fund NAV; SFTBY has navNote", () =
   assert.equal(msft.security.label, "Equity");
   assert.equal(nvda.security.label, "Undisclosed");
   assert.equal(agix.security.label, "Fund NAV");
-  assert.match(sftby.navNote.body, /¥58\.3T/);
-  assert.match(sftby.navNote.body, /do not double-count/);
+  assert.match(sftby.navNote.body, /¥72\.30T/);
+  assert.match(sftby.navNote.body, /SVF2 already includes OpenAI/);
+  assert.match(sftby.security.footnote, /not current funded ownership/);
+  assert.match(sftby.security.footnote, /management co-investment, debt and taxes are not deducted/);
 });
 
 test("defaults are 1.0x last primary; ?anth=1000 still parses", () => {

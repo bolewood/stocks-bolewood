@@ -201,3 +201,7 @@ npm run reference -- --scenario /absolute/path/ai-scenario.json
 ```
 
 This also checks any included expected results. The independent raw-data engine and app are cross-checked for both holdings modes, all deployment endpoints, both valuations, dilution, FD and acquisition changes. Full precision is retained until display; fixtures compare 12 significant digits. Displayed cents use the same rounding for both engines.
+
+### SoftBank gross exposure versus shareholder NAV
+
+SFTBY uses SVF2’s approximately 13% pro forma **gross fund** stake. That is not a disclosed shareholder-attributable net ownership percentage. Management co-investment has preferred-capital, fund-wide hurdle and receivable terms; a flat 17.25% deduction from gross exposure is not justified. The [SoftBank SOTP methodology](./SFTBY_METHODOLOGY.md) preserves issuer NAV and exposes incremental allocation and funding sensitivities. `/ai` gross calculations do not deduct those liabilities or allocations.

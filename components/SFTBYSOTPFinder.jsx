@@ -1,1109 +1,299 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  SFTBY_SOTP_DATA as data, DEFAULT_INPUTS, computeSotp, ARM_SHARES,
+  TOKYO_SHARES, ADR_SHARES, IR_JPY_T, IR_USDJPY, jpyTToUsdB,
+  OPENAI_DEFAULT_EQUITY_B, OPENAI_OWNERSHIP_AT_COMPLETION,
+} from "../lib/sftbySotp.mjs";
+import { INPUT_LIMITS, PRESETS, writeSotpScenario } from "../lib/sftbyScenario.mjs";
+import wrapper from "../data/wrappers/SFTBY.json";
+import marks from "../data/marks.json";
 
-// SoftBank Group holdco SOTP (SFTBY / 9984)
-// One economic perimeter: IR-adjusted SBG net debt + live Arm + OpenAI stripped from SVF2.
+const fmtUsd = (n, d = 2) => Number.isFinite(n) ? n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: d, maximumFractionDigits: d }) : "—";
+const fmtUsdB = n => Number.isFinite(n) ? `${n < 0 ? "−" : ""}$${Math.abs(n).toFixed(Math.abs(n) >= 100 ? 1 : 2)}B` : "—";
+const fmtNum = (n, d = 0) => Number.isFinite(n) ? n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }) : "—";
+const fmtPct = (n, d = 1) => Number.isFinite(n) ? `${n.toFixed(d)}%` : "—";
+const fmtYenT = n => `¥${n.toFixed(2)}T`;
 
-const ADR_PER_TOKYO = 2; // 1 TSE:9984 ordinary = 2 OTCPK:SFTBY ADRs
-const TOKYO_SHARES = 5.699e9;
-const ADR_SHARES = TOKYO_SHARES * ADR_PER_TOKYO;
-const ARM_SHARES = 922_733_999; // ~86.7%; "90%" is 2023 IPO stale
-
-const IR_AS_OF = "30 Jun 2026";
-const IR_USDJPY = 162.39;
-
-const IR_JPY_T = {
-  armGross: 53.13,
-  armAbf: 3.22,
-  armAdj: 49.91,
-  svf1: 3.6,
-  svf2: 19.29,
-  latam: 1.0,
-  sbkkAdj: 2.79,
-  tmobileAdj: 0.0,
-  others: 6.51,
-  nav: 72.3,
-  sbgAdjNd: 10.81,
-  consolNibd: 22.29,
-  selfFin: 6.03,
-  otherDebtAdj: 5.45,
-};
-
-const OPENAI_CARRY_JUN30_USD_B = 89.6;
-const OPENAI_COST_CUMULATIVE_USD_B = 64.6;
-const OPENAI_COST_FUNDED_TODAY_USD_B = 54.6;
-const OPENAI_OWNERSHIP_AT_COMPLETION = 0.13;
-const OPENAI_DEFAULT_EQUITY_B = 840;
-const OPENAI_LIQ_DEFAULT = 15;
-
-const JULY_DRAW_USD_B = 10;
-const OCT_DRAW_USD_B = 10;
-
-const FISCAL_EV_USD_B = 356.87;
-const FISCAL_CONSOL_ND_USD_B = 146.78;
-const FISCAL_CASH_USD_B = 24.15;
-const ARM_COST_BASIS_USD_B = 40;
-
-const FALLBACK = { ARM: 238, SFTBY: 16.53, TOKYO: 5255, USDJPY: 159 };
-
-const jpyTToUsdB = (t, usdJpy) => (t * 1e12) / usdJpy / 1e9;
-
-const fmtUsdB = (n) => {
-  if (!Number.isFinite(n)) return "—";
-  const abs = Math.abs(n);
-  const sign = n < 0 ? "−" : "";
-  if (abs >= 100) return `${sign}$${abs.toFixed(0)}B`;
-  if (abs >= 10) return `${sign}$${abs.toFixed(1)}B`;
-  return `${sign}$${abs.toFixed(2)}B`;
-};
-
-const fmtUsd = (n, d = 2) =>
-  Number.isFinite(n)
-    ? n.toLocaleString("en-US", {
-        style: "currency",
-        currency: "USD",
-        minimumFractionDigits: d,
-        maximumFractionDigits: d,
-      })
-    : "—";
-
-const fmtYenT = (t) => `¥${Number(t).toFixed(2)}T`;
-
-const fmtPct = (n, d = 1) => (Number.isFinite(n) ? `${n.toFixed(d)}%` : "—");
-
-const fmtNum = (n, d = 2) =>
-  Number.isFinite(n)
-    ? n.toLocaleString("en-US", { maximumFractionDigits: d, minimumFractionDigits: d })
-    : "—";
-
-function currentOwnership() {
-  return (
-    OPENAI_OWNERSHIP_AT_COMPLETION *
-    (OPENAI_COST_FUNDED_TODAY_USD_B / OPENAI_COST_CUMULATIVE_USD_B)
-  );
+function Source({ href, children }) {
+  return <a href={href} target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>{children}</a>;
 }
 
-function frozenStubUsdB() {
-  const svf2Ex =
-    jpyTToUsdB(IR_JPY_T.svf2, IR_USDJPY) - OPENAI_CARRY_JUN30_USD_B;
-  return (
-    jpyTToUsdB(IR_JPY_T.svf1, IR_USDJPY) +
-    svf2Ex +
-    jpyTToUsdB(IR_JPY_T.latam, IR_USDJPY) +
-    jpyTToUsdB(IR_JPY_T.sbkkAdj, IR_USDJPY) +
-    jpyTToUsdB(IR_JPY_T.tmobileAdj, IR_USDJPY) +
-    jpyTToUsdB(IR_JPY_T.others, IR_USDJPY)
-  );
-}
-
-function computeSotp({
-  armPrice,
-  openaiEquityB,
-  openaiCase,
-  usdJpy,
-  taxPct,
-  liqHaircutPct,
-  stubMult,
-  sftbyPrice,
-}) {
-  const ownership =
-    openaiCase === "funded13"
-      ? OPENAI_OWNERSHIP_AT_COMPLETION
-      : currentOwnership();
-  const openaiCostB =
-    openaiCase === "funded13"
-      ? OPENAI_COST_CUMULATIVE_USD_B
-      : OPENAI_COST_FUNDED_TODAY_USD_B;
-
-  const armGrossB = (ARM_SHARES * armPrice) / 1e9;
-  const armAbfB = jpyTToUsdB(IR_JPY_T.armAbf, usdJpy);
-  const armNetB = armGrossB - armAbfB;
-
-  const openaiGrossB = ownership * openaiEquityB;
-  const openaiNetB = openaiGrossB * (1 - liqHaircutPct / 100);
-  const stubB = frozenStubUsdB() * stubMult;
-  const holdingsB = armNetB + openaiNetB + stubB;
-
-  const ndJun30B = jpyTToUsdB(IR_JPY_T.sbgAdjNd, usdJpy);
-  const julyB = JULY_DRAW_USD_B;
-  const octB = openaiCase === "funded13" ? OCT_DRAW_USD_B : 0;
-  const sbgNdB = ndJun30B + julyB + octB;
-
-  const taxB =
-    (taxPct / 100) *
-    (Math.max(0, armGrossB - ARM_COST_BASIS_USD_B) +
-      Math.max(0, openaiNetB - openaiCostB));
-
-  const navB = holdingsB - sbgNdB - taxB;
-  const navPerTokyo = (navB * 1e9) / TOKYO_SHARES;
-  const navPerAdr = navPerTokyo / ADR_PER_TOKYO;
-  const mcapB = (sftbyPrice * ADR_SHARES) / 1e9;
-  const discountPct = navB !== 0 ? (1 - mcapB / navB) * 100 : null;
-  const ltvPct = holdingsB > 0 ? (sbgNdB / holdingsB) * 100 : null;
-  const centsArmGross = mcapB > 0 ? (armGrossB / mcapB) * 100 : null;
-  const centsOpenaiGross = mcapB > 0 ? (openaiGrossB / mcapB) * 100 : null;
-  const residualIfMcapIsNavB = mcapB - (armNetB + stubB - sbgNdB - taxB);
-  const haircutFactor = 1 - liqHaircutPct / 100;
-  const impliedOpenaiEquityB =
-    ownership * haircutFactor > 0
-      ? residualIfMcapIsNavB / (ownership * haircutFactor)
-      : null;
-
-  return {
-    ownership,
-    armGrossB,
-    armAbfB,
-    armNetB,
-    openaiGrossB,
-    openaiNetB,
-    stubB,
-    holdingsB,
-    ndJun30B,
-    julyB,
-    octB,
-    sbgNdB,
-    taxB,
-    navB,
-    navPerTokyo,
-    navPerAdr,
-    mcapB,
-    discountPct,
-    ltvPct,
-    centsArmGross,
-    centsOpenaiGross,
-    impliedOpenaiEquityB,
-    consolNdB: jpyTToUsdB(IR_JPY_T.consolNibd, usdJpy),
+function Input({ field, label, inputs, setInput, step = 1, range, note }) {
+  const [min, max] = INPUT_LIMITS[field];
+  const update = e => {
+    if (e.target.value.trim() === "") return;
+    const n = Number(e.target.value);
+    if (Number.isFinite(n)) setInput(field, Math.max(min, Math.min(max, n)));
   };
+  return <div style={styles.controlGroup}>
+    <label htmlFor={`sftby-${field}`} style={styles.label}>{label}</label>
+    <input id={`sftby-${field}`} type="number" min={min} max={max} step={step}
+      value={inputs[field]} onChange={update} style={styles.smallInput} className="vcx-input vcx-small-input" />
+    {range && <input aria-label={`${label} slider`} type="range" min={range[0]} max={range[1]} step={step}
+      value={Math.max(range[0], Math.min(range[1], inputs[field]))} onChange={update}
+      style={{ width: "100%", marginTop: 8, accentColor: "#d97706" }} />}
+    {note && <div style={styles.note}>{note}</div>}
+  </div>;
 }
 
-export default function SFTBYSOTPFinder() {
-  const [isMobile, setIsMobile] = useState(false);
+export default function SFTBYSOTPFinder({ initialInputs = DEFAULT_INPUTS, initialScenario = "base", pinnedFields = [], reference = false }) {
+  const [inputs, setInputs] = useState(initialInputs);
+  const [activeScenario, setActiveScenario] = useState(initialScenario);
+  const [quoteState, setQuoteState] = useState(reference ? "Frozen September 4 reference quotes" : "September 4 fallback quotes");
+  const [tokyoPrice, setTokyoPrice] = useState(data.quoteSnapshot.TOKYO);
+  const [exportMessage, setExportMessage] = useState("");
+  const edited = useRef(new Set(pinnedFields));
+  const marketInputs = useRef({ armPrice: DEFAULT_INPUTS.armPrice, sftbyPrice: DEFAULT_INPUTS.sftbyPrice, usdJpy: DEFAULT_INPUTS.usdJpy });
+
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 720);
-    onResize();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
+    if (reference) return;
+    const controller = new AbortController();
+    fetch("/api/prices", { cache: "no-store", signal: controller.signal })
+      .then(r => { if (!r.ok) throw new Error("Quote fetch failed"); return r.json(); })
+      .then(result => {
+        if (result.source === "fallback") {
+          setQuoteState("Quote fetch unavailable · September 4 fallbacks or supplied inputs");
+          return;
+        }
+        const p = result.prices || {};
+        const updates = {};
+        for (const [field, ticker] of [["armPrice", "ARM"], ["sftbyPrice", "SFTBY"], ["usdJpy", "USDJPY"]]) {
+          if (Number.isFinite(p[ticker]) && p[ticker] > 0) {
+            marketInputs.current[field] = p[ticker];
+            if (!edited.current.has(field)) updates[field] = p[ticker];
+          }
+        }
+        setInputs(previous => ({ ...previous, ...updates }));
+        if (Number.isFinite(p.TOKYO9984) && p.TOKYO9984 > 0) setTokyoPrice(p.TOKYO9984);
+        const source = ({ live: "Market quotes", cache: "Cached market quotes", partial: "Mixed market / fallback quotes", fallback: "Fallback quotes" })[result.source] || "Quote status unavailable";
+        const fetched = new Date(result.asOf);
+        setQuoteState(`${source}${Number.isFinite(fetched.getTime()) ? ` · retrieved ${fetched.toISOString().slice(0, 16).replace("T", " ")} UTC` : ""}. May reflect the last close.`);
+      })
+      .catch(() => { if (!controller.signal.aborted) setQuoteState("Quote fetch unavailable · September 4 fallbacks or supplied inputs"); });
+    return () => controller.abort();
+  }, [reference]);
 
-  const [activeScenario, setActiveScenario] = useState("base");
-  const [armPrice, setArmPrice] = useState(FALLBACK.ARM);
-  const [sftbyPrice, setSftbyPrice] = useState(FALLBACK.SFTBY);
-  const [tokyoPrice, setTokyoPrice] = useState(FALLBACK.TOKYO);
-  const [usdJpy, setUsdJpy] = useState(FALLBACK.USDJPY);
-  const [openaiEquityB, setOpenaiEquityB] = useState(OPENAI_DEFAULT_EQUITY_B);
-  const [openaiCase, setOpenaiCase] = useState("current");
-  const [taxPct, setTaxPct] = useState(10);
-  const [liqHaircutPct, setLiqHaircutPct] = useState(OPENAI_LIQ_DEFAULT);
-  const [stubMult, setStubMult] = useState(1);
-  const [priceSource, setPriceSource] = useState("default");
-
-  const markCustom = () => setActiveScenario(null);
-
-  const writeScenarioUrl = (key) => {
-    const url = new URL(window.location.href);
-    if (key && key !== "base") url.searchParams.set("scenario", key);
-    else url.searchParams.delete("scenario");
-    window.history.replaceState({}, "", url);
+  const setInput = (field, value) => {
+    edited.current.add(field);
+    setInputs(previous => ({ ...previous, [field]: value }));
+    setActiveScenario(null);
+    setExportMessage("");
   };
-
-  const applyInputs = (partial, key) => {
-    if (partial.armPrice != null) setArmPrice(partial.armPrice);
-    if (partial.openaiEquityB != null) setOpenaiEquityB(partial.openaiEquityB);
-    if (partial.openaiCase != null) setOpenaiCase(partial.openaiCase);
-    if (partial.taxPct != null) setTaxPct(partial.taxPct);
-    if (partial.liqHaircutPct != null) setLiqHaircutPct(partial.liqHaircutPct);
-    if (partial.stubMult != null) setStubMult(partial.stubMult);
+  const applyPreset = key => {
+    Object.keys(INPUT_LIMITS).forEach(field => edited.current.add(field));
+    setInputs({ ...DEFAULT_INPUTS, ...marketInputs.current, ...PRESETS[key].inputs });
     setActiveScenario(key);
-    if (typeof window !== "undefined") writeScenarioUrl(key);
+    setExportMessage("");
   };
-
-  const applyBase = (liveArm) =>
-    applyInputs(
-      {
-        armPrice: liveArm ?? armPrice,
-        openaiEquityB: OPENAI_DEFAULT_EQUITY_B,
-        openaiCase: "current",
-        taxPct: 10,
-        liqHaircutPct: OPENAI_LIQ_DEFAULT,
-        stubMult: 1,
-      },
-      "base"
-    );
-  const applyFunded = () =>
-    applyInputs(
-      {
-        openaiEquityB: OPENAI_DEFAULT_EQUITY_B,
-        openaiCase: "funded13",
-        taxPct: 10,
-        liqHaircutPct: OPENAI_LIQ_DEFAULT,
-        stubMult: 1,
-      },
-      "funded13"
-    );
-  const applyBull = () =>
-    applyInputs(
-      {
-        armPrice: 300,
-        openaiEquityB: 1200,
-        openaiCase: "funded13",
-        taxPct: 0,
-        liqHaircutPct: 0,
-        stubMult: 1.1,
-      },
-      "bull"
-    );
-  const applyBear = () =>
-    applyInputs(
-      {
-        armPrice: 150,
-        openaiEquityB: 500,
-        openaiCase: "current",
-        taxPct: 25,
-        liqHaircutPct: 30,
-        stubMult: 0.7,
-      },
-      "bear"
-    );
-  const applyCore = () =>
-    applyInputs(
-      {
-        openaiEquityB: OPENAI_DEFAULT_EQUITY_B,
-        openaiCase: "current",
-        taxPct: 10,
-        liqHaircutPct: OPENAI_LIQ_DEFAULT,
-        stubMult: 0,
-      },
-      "core"
-    );
-
-  useEffect(() => {
-    const scenario = new URLSearchParams(window.location.search).get("scenario");
-    fetch("/api/prices")
-      .then((r) => r.json())
-      .then((data) => {
-        const p = data.prices || {};
-        if (p.SFTBY) setSftbyPrice(p.SFTBY);
-        if (p.TOKYO9984) setTokyoPrice(p.TOKYO9984);
-        if (p.USDJPY) setUsdJpy(p.USDJPY);
-        const liveArm = p.ARM;
-        if (liveArm) setArmPrice(liveArm);
-        setPriceSource(data.source || "fallback");
-        if (scenario === "funded13") applyFunded();
-        else if (scenario === "bull") applyBull();
-        else if (scenario === "bear") applyBear();
-        else if (scenario === "core") applyCore();
-        else applyBase(liveArm);
-      })
-      .catch(() => {
-        setPriceSource("fallback");
-        if (scenario === "funded13") applyFunded();
-        else if (scenario === "bull") applyBull();
-        else if (scenario === "bear") applyBear();
-        else if (scenario === "core") applyCore();
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const calc = useMemo(
-    () =>
-      computeSotp({
-        armPrice,
-        openaiEquityB,
-        openaiCase,
-        usdJpy,
-        taxPct,
-        liqHaircutPct,
-        stubMult,
-        sftbyPrice,
-      }),
-    [armPrice, openaiEquityB, openaiCase, usdJpy, taxPct, liqHaircutPct, stubMult, sftbyPrice]
-  );
-
-  const jun30ArmImplied =
-    (jpyTToUsdB(IR_JPY_T.armGross, IR_USDJPY) * 1e9) / ARM_SHARES;
-  const armMovePct = ((armPrice - jun30ArmImplied) / jun30ArmImplied) * 100;
-  const stale = Math.abs(armMovePct) >= 10;
-
-  const heatmapArm = [150, 180, 210, 238, 270, 300, 350];
-  const heatmapOai = [400, 500, 640, 730, 840, 1000, 1200];
-
-  const sourceBadge =
-    priceSource === "live"
-      ? { text: "● LIVE", color: "#15803d", bg: "#f0fdf4", border: "#86efac" }
-      : priceSource === "partial"
-      ? { text: "◐ PARTIAL", color: "#d97706", bg: "#fffbeb", border: "#fcd34d" }
-      : {
-          text: priceSource === "fallback" ? "○ FALLBACK" : "○ DEFAULT",
-          color: "#78716c",
-          bg: "transparent",
-          border: "#a8a29e",
-        };
-
-  const scenarios = [
-    {
-      key: "base",
-      label: "Base — current OpenAI",
-      desc: "Live Arm, $840B last-round, cost-ratio ownership, July $10B in ND, 15% private haircut, 10% tax leakage.",
-      handler: () => applyBase(),
-    },
-    {
-      key: "funded13",
-      label: "Fully funded 13%",
-      desc: "Press-case ~13% upon completion. Oct $10B is both more OpenAI equity and more SBG debt.",
-      handler: applyFunded,
-    },
-    {
-      key: "bull",
-      label: "Bull — ARM $300 / OAI $1.2T",
-      desc: "Funded 13%, 0% tax, 0% private haircut, stub +10%.",
-      handler: applyBull,
-    },
-    {
-      key: "bear",
-      label: "Bear — ARM $150 / OAI $500B",
-      desc: "Current case, 30% private haircut, 25% tax, stub 0.7×.",
-      handler: applyBear,
-    },
-    {
-      key: "core",
-      label: "Arm + OpenAI only",
-      desc: "Stub = 0. Still subtracts Arm-backed loans and SBG adjusted ND.",
-      handler: applyCore,
-    },
-  ];
-
+  const calc = useMemo(() => computeSotp(inputs), [inputs]);
+  const inputProps = { inputs, setInput };
+  const copyScenario = async () => {
+    const url = `${window.location.origin}/sftby?${writeSotpScenario(inputs)}`;
+    window.history.replaceState({}, "", url);
+    try { await navigator.clipboard.writeText(url); setExportMessage("Scenario link copied; all inputs are fixed in the link."); }
+    catch { setExportMessage("Scenario saved in the address bar. Copy its URL to share these exact inputs."); }
+  };
+  const exportScenario = () => {
+    const artifact = { calculator: "sftby-sotp", version: data.version, reviewedAt: data.reviewedAt,
+      exportedAt: new Date().toISOString(), inputs, result: calc,
+      assumptions: data, sharedWrapper: wrapper, companyMarks: marks };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(artifact, null, 2)], { type: "application/json" }));
+    const link = document.createElement("a");
+    link.href = url; link.download = "sftby-scenario.json"; link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
   const waterfall = [
-    { label: "Arm gross (live)", val: calc.armGrossB, end: false },
-    { label: "Arm-backed loans (once)", val: -calc.armAbfB, end: false },
-    { label: "OpenAI (net of haircut)", val: calc.openaiNetB, end: false },
-    { label: "Stub (SVF2 ex-OpenAI + other IR lines)", val: calc.stubB, end: false },
-    { label: "SBG adjusted ND + post-June draws", val: -calc.sbgNdB, end: false },
-    { label: "Illustrative tax leakage", val: -calc.taxB, end: false },
-    { label: "Holdco NAV", val: calc.navB, end: true },
+    ["Arm gross at selected quote", calc.armGrossB],
+    ["Arm-backed financing (deducted once)", -calc.armAbfB],
+    ["SVF2 · SBG's June NAV share, including OpenAI", calc.svf2BaseB],
+    ["Other June holdings × selected multiplier", calc.stubB],
+    ["OpenAI change from June gross FV, after liquidity discount", calc.openaiChangeB],
+    ["Estimated management allocation on positive new revaluation", -calc.managementB],
+    ["SBG adjusted net debt + funding + other adjustment", -calc.sbgNdB],
+    ["Illustrative tax leakage", -calc.taxB],
+    ["Modeled holdco NAV", calc.navB],
   ];
 
-  return (
-    <div style={styles.container} className="vcx-container sats-container">
-      <div style={styles.header}>
-        <div style={styles.eyebrow} className="vcx-eyebrow">
-          SOFTBANK GROUP · OTCPK: SFTBY · TSE: 9984 · HOLDCO SOTP
-        </div>
-        <h1 style={styles.title} className="vcx-title">
-          SFTBY <span style={styles.titleAccent}>SOTP Finder</span>
-        </h1>
-        <p style={styles.subtitle} className="vcx-subtitle">
-          A single-perimeter holding-company SOTP. Arm is marked live. OpenAI is
-          pulled out of SVF2 so it is not counted twice. Debt is SoftBank&apos;s
-          own adjusted SBG net debt, not consolidated net debt. ADR math is 1
-          Tokyo ordinary = 2 SFTBY ADRs. Research model, not SoftBank IR, not a
-          recommendation.
-        </p>
-      </div>
-
-      <div style={styles.howToBox}>
-        <div style={styles.howToTitle}>How this works in 30 seconds</div>
-        <ol style={styles.howToList}>
-          <li style={{ marginBottom: 6 }}>
-            <strong>Arm</strong> = {fmtNum(ARM_SHARES / 1e6, 1)}M shares × live
-            ARM, minus Arm-backed loans once (IR already excludes those loans
-            from adjusted ND).
-          </li>
-          <li style={{ marginBottom: 6 }}>
-            <strong>OpenAI</strong> replaces the Jun 30 carrying value inside
-            SVF2. Current case uses a cost-ratio estimate of ownership because
-            SoftBank has only disclosed ~13% upon completion of the $30B
-            follow-on. Funded-13% adds the last $10B as asset and as debt.
-          </li>
-          <li style={{ marginBottom: 6 }}>
-            <strong>Stub</strong> is SVF1 + SVF2 ex-OpenAI + LatAm + SoftBank
-            Corp. (already net of SBKK asset-backed finance) + other IR lines,
-            frozen in USD at IR FX {IR_USDJPY}.
-          </li>
-          <li>
-            <strong>NAV</strong> = those assets − SBG-adjusted ND (plus
-            post-June OpenAI draws) − an illustrative tax slider. Holdco
-            discount vs the SFTBY price is an output, never an input.
-          </li>
-        </ol>
-      </div>
-
-      <div style={stale ? styles.banner : styles.asOfBox}>
-        {stale ? (
-          <>
-            <strong>Stale composition.</strong> Holdings mix, SBKK, SVF marks, and
-            adjusted ND are as of {IR_AS_OF}. Live ARM {fmtUsd(armPrice)} is{" "}
-            {fmtPct(armMovePct, 0)} vs the IR-implied Arm price of{" "}
-            {fmtUsd(jun30ArmImplied, 0)} at {IR_AS_OF}. OpenAI, SVF, and ND have
-            not been re-cut by SoftBank for that move.
-          </>
-        ) : (
-          <>
-            <strong>IR as of {IR_AS_OF}.</strong> Holdings mix, SBKK, SVF marks,
-            and adjusted ND are quarter-end IR (USDJPY {IR_USDJPY}). Arm, SFTBY,
-            9984, and USDJPY overlay live prices on that book. 5 Aug pro forma
-            NAV ¥58.3T re-marks the June composition; it is not a live balance
-            sheet.
-          </>
-        )}
-      </div>
-
-      <div style={styles.disclaimerBox}>
-        General information only — not investment advice, not an offer, not a
-        SoftBank product. Official NAV is pre-tax and not a realizable cash
-        value. SFTBY is an unsponsored OTC ADR (wider spreads, 2-for-1). Private
-        marks (OpenAI, SVF) are estimates. Author may hold related securities.
-      </div>
-
-      <div style={styles.controls} className="vcx-controls">
-        <div style={styles.controlGroup}>
-          <label style={styles.label}>ARM price ($)</label>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <input
-              type="number"
-              step="1"
-              value={armPrice}
-              onChange={(e) => {
-                setArmPrice(parseFloat(e.target.value) || 0);
-                markCustom();
-              }}
-              style={styles.smallInput}
-              className="vcx-input vcx-small-input"
-            />
-            <span
-              style={{
-                fontSize: 10,
-                fontFamily: "monospace",
-                padding: "2px 6px",
-                border: `1px solid ${sourceBadge.border}`,
-                color: sourceBadge.color,
-                background: sourceBadge.bg,
-              }}
-            >
-              {sourceBadge.text}
-            </span>
-          </div>
-          <input
-            type="range"
-            min="80"
-            max="450"
-            step="1"
-            value={armPrice}
-            onChange={(e) => {
-              setArmPrice(parseFloat(e.target.value));
-              markCustom();
-            }}
-            style={{ width: "100%", marginTop: 8, accentColor: "#d97706" }}
-          />
-        </div>
-        <div style={styles.controlGroup}>
-          <label style={styles.label}>SFTBY ADR price ($)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={sftbyPrice}
-            onChange={(e) => {
-              setSftbyPrice(parseFloat(e.target.value) || 0);
-              markCustom();
-            }}
-            style={styles.smallInput}
-            className="vcx-input vcx-small-input"
-          />
-          <div style={styles.note}>
-            9984 ¥{fmtNum(tokyoPrice, 0)} · USDJPY {fmtNum(usdJpy, 2)} · 1 Tokyo
-            = 2 ADR
-          </div>
-        </div>
-        <div style={styles.controlGroup}>
-          <label style={styles.label}>USDJPY</label>
-          <input
-            type="number"
-            step="0.1"
-            value={usdJpy}
-            onChange={(e) => {
-              setUsdJpy(parseFloat(e.target.value) || IR_USDJPY);
-              markCustom();
-            }}
-            style={styles.smallInput}
-            className="vcx-input vcx-small-input"
-          />
-          <div style={styles.note}>
-            Re-marks yen debt and Arm loans. Stub stays at IR FX {IR_USDJPY}.
-          </div>
-        </div>
-        <div style={styles.controlGroup}>
-          <label style={styles.label}>OpenAI equity value ($B post)</label>
-          <input
-            type="number"
-            step="10"
-            value={openaiEquityB}
-            onChange={(e) => {
-              setOpenaiEquityB(parseFloat(e.target.value) || 0);
-              markCustom();
-            }}
-            style={styles.smallInput}
-            className="vcx-input vcx-small-input"
-          />
-          <input
-            type="range"
-            min="300"
-            max="1500"
-            step="10"
-            value={openaiEquityB}
-            onChange={(e) => {
-              setOpenaiEquityB(parseFloat(e.target.value));
-              markCustom();
-            }}
-            style={{ width: "100%", marginTop: 8, accentColor: "#d97706" }}
-          />
-        </div>
-      </div>
-
-      <div style={styles.controls} className="vcx-controls">
-        <div style={styles.controlGroup}>
-          <label style={styles.label}>OpenAI case</label>
-          <div style={{ display: "flex", gap: 16, marginTop: 6, flexWrap: "wrap" }}>
-            <label style={styles.radioLabel}>
-              <input
-                type="radio"
-                name="oaiCase"
-                checked={openaiCase === "current"}
-                onChange={() => {
-                  setOpenaiCase("current");
-                  markCustom();
-                }}
-                style={{ accentColor: "#d97706" }}
-              />
-              Current (cost-ratio ~{fmtPct(currentOwnership() * 100, 1)})
-            </label>
-            <label style={styles.radioLabel}>
-              <input
-                type="radio"
-                name="oaiCase"
-                checked={openaiCase === "funded13"}
-                onChange={() => {
-                  setOpenaiCase("funded13");
-                  markCustom();
-                }}
-                style={{ accentColor: "#d97706" }}
-              />
-              Fully funded 13%
-            </label>
-          </div>
-          <div style={styles.note}>
-            SoftBank has not disclosed a current %. 13% is the press figure upon
-            completing the $30B follow-on. Preferred, not common-equivalent.
-          </div>
-        </div>
-        <div style={styles.controlGroup}>
-          <label style={styles.label}>
-            OpenAI liquidity haircut ({liqHaircutPct}%)
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="40"
-            step="1"
-            value={liqHaircutPct}
-            onChange={(e) => {
-              setLiqHaircutPct(parseFloat(e.target.value));
-              markCustom();
-            }}
-            style={{ width: "100%", accentColor: "#d97706" }}
-          />
-        </div>
-        <div style={styles.controlGroup}>
-          <label style={styles.label}>Illustrative tax leakage ({taxPct}%)</label>
-          <input
-            type="range"
-            min="0"
-            max="30"
-            step="1"
-            value={taxPct}
-            onChange={(e) => {
-              setTaxPct(parseFloat(e.target.value));
-              markCustom();
-            }}
-            style={{ width: "100%", accentColor: "#d97706" }}
-          />
-          <div style={styles.note}>
-            Applied only to modeled unrealized gains (Arm vs $
-            {ARM_COST_BASIS_USD_B}B basis, OpenAI vs funded cost). Not a tax on
-            gross assets.
-          </div>
-        </div>
-        <div style={styles.controlGroup}>
-          <label style={styles.label}>Stub multiplier ({stubMult.toFixed(2)}×)</label>
-          <input
-            type="range"
-            min="0"
-            max="1.5"
-            step="0.05"
-            value={stubMult}
-            onChange={(e) => {
-              setStubMult(parseFloat(e.target.value));
-              markCustom();
-            }}
-            style={{ width: "100%", accentColor: "#d97706" }}
-          />
-        </div>
-      </div>
-
-      <div style={{ marginBottom: 32 }}>
-        <div style={styles.howToTitle}>Preset scenarios</div>
-        <div style={styles.scenarioGrid} className="sats-scenario-grid">
-          {scenarios.map(({ key, label, desc, handler }) => {
-            const on = activeScenario === key;
-            return (
-              <button
-                key={key}
-                onClick={handler}
-                style={{
-                  ...styles.scenarioCard,
-                  ...(on ? styles.scenarioCardActive : {}),
-                }}
-              >
-                {on && <span style={styles.activeDot} />}
-                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{label}</div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: on ? "#fbbf24" : "#78716c",
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {desc}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div style={styles.heroGrid} className="sats-explainer-row">
-        <div style={styles.heroCard} className="sats-summary-card">
-          <div style={styles.heroLabel}>Holdco NAV / ADR</div>
-          <div style={styles.heroValueAccent} className="vcx-gt-value-accent">
-            {fmtUsd(calc.navPerAdr)}
-          </div>
-          <div style={styles.heroSub}>
-            Tokyo NAV {fmtUsd(calc.navPerTokyo)} · SFTBY {fmtUsd(sftbyPrice)}
-          </div>
-        </div>
-        <div style={styles.heroCard} className="sats-summary-card">
-          <div style={styles.heroLabel}>Discount to NAV</div>
-          <div
-            style={{
-              ...styles.heroValue,
-              color: calc.discountPct > 0 ? "#15803d" : "#b91c1c",
-            }}
-            className="vcx-gt-value-large"
-          >
-            {fmtPct(calc.discountPct, 1)}
-          </div>
-          <div style={styles.heroSub}>
-            Mkt cap {fmtUsdB(calc.mcapB)} vs NAV {fmtUsdB(calc.navB)}
-          </div>
-        </div>
-        <div style={styles.heroCard} className="sats-summary-card">
-          <div style={styles.heroLabel}>IR-style LTV</div>
-          <div style={styles.heroValue} className="vcx-gt-value-large">
-            {fmtPct(calc.ltvPct, 1)}
-          </div>
-          <div style={styles.heroSub}>
-            SBG adj. ND {fmtUsdB(calc.sbgNdB)} / holdings {fmtUsdB(calc.holdingsB)}
-          </div>
-        </div>
-        <div style={styles.heroCard} className="sats-summary-card">
-          <div style={styles.heroLabel}>Gross look-through / $1 cap</div>
-          <div style={styles.heroValue} className="vcx-gt-value-large">
-            {fmtNum(calc.centsArmGross, 0)}¢ Arm
-          </div>
-          <div style={styles.heroSub}>
-            {fmtNum(calc.centsOpenaiGross, 0)}¢ OpenAI gross — not unencumbered
-            ownership
-          </div>
-        </div>
-        <div style={styles.heroCard} className="sats-summary-card">
-          <div style={styles.heroLabel}>Residual implied OpenAI</div>
-          <div style={styles.heroValue} className="vcx-gt-value-large">
-            {fmtUsdB(calc.impliedOpenaiEquityB)}
-          </div>
-          <div style={styles.heroSub}>
-            Equity value if market cap were holdco NAV — a residual, not a mark
-          </div>
-        </div>
-      </div>
-
-      <div style={styles.section}>
-        <div style={styles.sectionHeader} className="vcx-section-header">
-          <span style={styles.sectionNum}>01</span>
-          <h2 style={styles.sectionTitle}>Holdco waterfall</h2>
-          <span style={styles.sectionMeta} className="vcx-section-meta">
-            $ billions
-          </span>
-        </div>
-        <div style={styles.tableWrap}>
-          {waterfall.map((row) => (
-            <div
-              key={row.label}
-              style={{ ...styles.wfRow, ...(row.end ? styles.wfEnd : {}) }}
-            >
-              <div style={{ flex: 2.4 }}>{row.label}</div>
-              <div
-                style={{
-                  flex: 1,
-                  textAlign: "right",
-                  fontVariantNumeric: "tabular-nums",
-                  color: row.end ? "#1c1917" : row.val >= 0 ? "#15803d" : "#b91c1c",
-                  fontWeight: row.end ? 700 : 500,
-                }}
-              >
-                {row.end ? fmtUsdB(row.val) : `${row.val >= 0 ? "+" : ""}${fmtUsdB(row.val)}`}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div style={styles.note}>
-          Arm gross {fmtUsdB(calc.armGrossB)} at {fmtUsd(armPrice)} ×{" "}
-          {fmtNum(ARM_SHARES / 1e6, 2)}M shares. OpenAI{" "}
-          {fmtPct(calc.ownership * 100, 1)} of ${fmtNum(openaiEquityB, 0)}B, then{" "}
-          {liqHaircutPct}% private haircut. Residual OpenAI equity if market cap
-          were NAV: {fmtUsdB(calc.impliedOpenaiEquityB)} (a residual, not a
-          valuation).
-        </div>
-      </div>
-
-      <div style={styles.section}>
-        <div style={styles.sectionHeader} className="vcx-section-header">
-          <span style={styles.sectionNum}>02</span>
-          <h2 style={styles.sectionTitle}>Gross look-through vs the cap</h2>
-        </div>
-        <div style={styles.tableWrap}>
-          <div style={styles.thRow}>
-            <div style={{ flex: 2 }}>Claim</div>
-            <div style={{ flex: 1, textAlign: "right" }}>$B</div>
-            <div style={{ flex: 1, textAlign: "right" }}>per $1 of cap</div>
-          </div>
-          {[
-            ["Arm gross (no loan net)", calc.armGrossB, calc.centsArmGross],
-            ["OpenAI gross (no haircut)", calc.openaiGrossB, calc.centsOpenaiGross],
-            [
-              "Arm + OpenAI gross",
-              calc.armGrossB + calc.openaiGrossB,
-              calc.centsArmGross + calc.centsOpenaiGross,
-            ],
-          ].map(([label, usdB, cents]) => (
-            <div key={label} style={styles.tdRow}>
-              <div style={{ flex: 2 }}>{label}</div>
-              <div style={{ flex: 1, textAlign: "right" }}>{fmtUsdB(usdB)}</div>
-              <div style={{ flex: 1, textAlign: "right" }}>
-                ${fmtNum(cents / 100, 2)}
-              </div>
-            </div>
-          ))}
-          <div style={{ ...styles.tdRow, background: "#f5f5f4" }}>
-            <div style={{ flex: 2 }}>Gross two-asset exposure minus market cap</div>
-            <div style={{ flex: 1, textAlign: "right" }}>
-              {fmtUsdB(calc.armGrossB + calc.openaiGrossB - calc.mcapB)}
-            </div>
-            <div style={{ flex: 1, textAlign: "right" }}>bridge, not cash</div>
-          </div>
-        </div>
-        <div style={styles.note}>
-          Figures above $1.00 per $1 of market cap do not mean the stub, debt,
-          tax, and private-asset haircut are free. They mean gross asset
-          exposure exceeds the equity cap — which is exactly what leverage does.
-        </div>
-      </div>
-
-      <div style={styles.section}>
-        <div style={styles.sectionHeader} className="vcx-section-header">
-          <span style={styles.sectionNum}>03</span>
-          <h2 style={styles.sectionTitle}>NAV / ADR sensitivity</h2>
-          <span style={styles.sectionMeta} className="vcx-section-meta">
-            vs SFTBY {fmtUsd(sftbyPrice)}
-          </span>
-        </div>
-        <div style={{ overflowX: "auto" }} className="sats-table-scroll">
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: `120px repeat(${heatmapOai.length}, 1fr)`,
-              gap: 4,
-              minWidth: 560,
-            }}
-          >
-            <div style={styles.hmHead}>ARM \ OAI $B</div>
-            {heatmapOai.map((o) => (
-              <div key={o} style={styles.hmHead}>
-                {o}
-              </div>
-            ))}
-            {heatmapArm.map((a) => (
-              <React.Fragment key={a}>
-                <div
-                  style={{
-                    ...styles.hmRowHead,
-                    color: Math.abs(a - armPrice) < 5 ? "#d97706" : "#1c1917",
-                  }}
-                >
-                  ${a}
-                </div>
-                {heatmapOai.map((o) => {
-                  const cell = computeSotp({
-                    armPrice: a,
-                    openaiEquityB: o,
-                    openaiCase,
-                    usdJpy,
-                    taxPct,
-                    liqHaircutPct,
-                    stubMult,
-                    sftbyPrice,
-                  });
-                  const upside = cell.navPerAdr / sftbyPrice - 1;
-                  const bg =
-                    upside > 0.4
-                      ? "#bbf7d0"
-                      : upside > 0.15
-                      ? "#dcfce7"
-                      : upside > 0
-                      ? "#fef9c3"
-                      : upside > -0.15
-                      ? "#fed7aa"
-                      : "#fecaca";
-                  const active =
-                    Math.abs(a - armPrice) < 5 && Math.abs(o - openaiEquityB) < 30;
-                  return (
-                    <div
-                      key={`${a}-${o}`}
-                      title={`ARM $${a}, OpenAI $${o}B → NAV/ADR ${fmtUsd(cell.navPerAdr)}`}
-                      style={{
-                        ...styles.hmCell,
-                        background: bg,
-                        outline: active ? "2px solid #d97706" : "none",
-                      }}
-                    >
-                      {fmtUsd(cell.navPerAdr, 0)}
-                    </div>
-                  );
-                })}
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div style={styles.section} id="debt-reconciliation">
-        <div style={styles.sectionHeader} className="vcx-section-header">
-          <span style={styles.sectionNum}>04</span>
-          <h2 style={styles.sectionTitle}>Debt reconciliation (not a second NAV)</h2>
-        </div>
-        <div style={styles.warnPanel}>
-          Consolidated net debt is <strong>not comparable</strong> to this equity
-          SOTP. Pairing it with listed-equity marks double-counts SoftBank Corp.
-          operating debt, SVF fund leverage, and can double-count Arm-backed
-          loans. It belongs here as a bridge, not as a co-equal cheap / not-cheap
-          mode.
-        </div>
-        <div style={styles.tableWrap}>
-          <div style={styles.thRow}>
-            <div style={{ flex: 2.4 }}>Line</div>
-            <div style={{ flex: 1, textAlign: "right" }}>Yen (IR)</div>
-            <div style={{ flex: 1, textAlign: "right" }}>USD @ {fmtNum(usdJpy, 1)}</div>
-          </div>
-          {[
-            ["Consolidated NIBD (IR 30 Jun)", IR_JPY_T.consolNibd, calc.consolNdB],
-            [
-              "− Self-financing entities",
-              -IR_JPY_T.selfFin,
-              -jpyTToUsdB(IR_JPY_T.selfFin, usdJpy),
-            ],
-            [
-              "− Other IR adjustments (hybrids, collars, etc.)",
-              -IR_JPY_T.otherDebtAdj,
-              -jpyTToUsdB(IR_JPY_T.otherDebtAdj, usdJpy),
-            ],
-            ["= SBG adjusted ND (30 Jun)", IR_JPY_T.sbgAdjNd, calc.ndJun30B],
-            ["+ July OpenAI draw (roll-forward)", null, calc.julyB],
-            ["+ Oct OpenAI draw (if funded-13%)", null, calc.octB],
-            ["= SBG ND used in this SOTP", null, calc.sbgNdB],
-          ].map(([label, yenT, usdB]) => (
-            <div key={label} style={styles.tdRow}>
-              <div style={{ flex: 2.4 }}>{label}</div>
-              <div style={{ flex: 1, textAlign: "right" }}>
-                {yenT == null ? "—" : fmtYenT(yenT)}
-              </div>
-              <div style={{ flex: 1, textAlign: "right" }}>{fmtUsdB(usdB)}</div>
-            </div>
-          ))}
-          <div style={{ ...styles.tdRow, background: "#f5f5f4" }}>
-            <div style={{ flex: 2.4 }}>
-              Fiscal.ai consolidated ND (different date/definition)
-            </div>
-            <div style={{ flex: 1, textAlign: "right" }}>—</div>
-            <div style={{ flex: 1, textAlign: "right" }}>
-              {fmtUsdB(FISCAL_CONSOL_ND_USD_B)}
-            </div>
-          </div>
-        </div>
-        <div style={styles.note}>
-          $40B bridge is a commitment (matures 25 Mar 2027). Only the drawn
-          amount is in ND; this model adds the post-June OpenAI checks
-          explicitly rather than assuming the full $40B. IR LTV policy bands
-          (25% / 35%) use this adjusted ND, not Fiscal.ai $147B. Hybrids may be
-          50% equity in IR LTV — shown in “other adjustments,” not haircut 50%
-          again here. Arm-backed loans {fmtYenT(IR_JPY_T.armAbf)} are subtracted
-          from Arm above and are not in SBG adjusted ND.
-        </div>
-        <div style={styles.evBox}>
-          <strong>Equity cap vs EV is a different question.</strong> Fiscal.ai EV{" "}
-          {fmtUsdB(FISCAL_EV_USD_B)} uses consolidated ND{" "}
-          {fmtUsdB(FISCAL_CONSOL_ND_USD_B)} and cash {fmtUsdB(FISCAL_CASH_USD_B)}.
-          Arm+OpenAI gross {fmtUsdB(calc.armGrossB + calc.openaiGrossB)} vs that
-          EV is not the holdco SOTP. Do not mix the two.
-        </div>
-      </div>
-
-      <div style={styles.section}>
-        <div style={styles.sectionHeader} className="vcx-section-header">
-          <span style={styles.sectionNum}>05</span>
-          <h2 style={styles.sectionTitle}>Methodology</h2>
-        </div>
-        <ul style={styles.methList}>
-          <li>
-            Official NAV {IR_AS_OF}: {fmtYenT(IR_JPY_T.nav)} vs Fiscal.ai cap
-            ¥29.95T ≈ {fmtPct((1 - 29.95 / IR_JPY_T.nav) * 100, 1)} listed
-            discount. 5 Aug IR pro forma ¥58.3T re-marks the June book; it is not
-            a live balance sheet.
-          </li>
-          <li>
-            Arm ownership is the share count {fmtNum(ARM_SHARES, 0)} (~86.7%),
-            not the 2023 IPO “~90%” blurb.
-          </li>
-          <li>
-            OpenAI lives in SVF2 ({fmtYenT(IR_JPY_T.svf2)} at {IR_AS_OF}). Jun 30
-            carrying value used to strip the stub: ${OPENAI_CARRY_JUN30_USD_B}B.
-            Adding OpenAI on top of full SVF2 would double-count ~$90–110B.
-          </li>
-          <li>
-            Current ownership = 13% × (${OPENAI_COST_FUNDED_TODAY_USD_B}B / $
-            {OPENAI_COST_CUMULATIVE_USD_B}B) = {fmtPct(currentOwnership() * 100, 1)}.
-            That is a cost-ratio estimate, not a filing.
-          </li>
-          <li>
-            Holdco discount is output = 1 − market cap / model NAV. It is never
-            fed back into NAV.
-          </li>
-        </ul>
-      </div>
-
-      <div style={styles.footer}>
-        <div>
-          <strong>Sources</strong>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
-          <div>
-            • Fiscal.ai ADR:{" "}
-            <a
-              href="https://fiscal.ai/company/OTCPK-SFTB.Y"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={styles.sourceLink}
-            >
-              OTCPK-SFTB.Y
-            </a>
-            {" · "}
-            Tokyo:{" "}
-            <a
-              href="https://fiscal.ai/company/TSE-9984"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={styles.sourceLink}
-            >
-              TSE-9984
-            </a>
-          </div>
-          <div>
-            • SoftBank NAV / SOTP:{" "}
-            <a
-              href="https://group.softbank/en/ir/stock/sotp"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={styles.sourceLink}
-            >
-              group.softbank IR SOTP
-            </a>{" "}
-            ({IR_AS_OF}; USDJPY {IR_USDJPY})
-          </div>
-          <div>
-            • OpenAI follow-on (~13% upon completion of $30B):{" "}
-            <a
-              href="https://group.softbank/en/news/press/20260227"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={styles.sourceLink}
-            >
-              27 Feb 2026 press
-            </a>
-          </div>
-          <div>
-            • Citi depositary: 1 ordinary share = 2 ADRs (SFTBY). Unsponsored OTC
-            program.
-          </div>
-          <div>
-            • Morningstar equity / investment-detail PDFs (Aug 2026) for the
-            accounting-quality warning — not used as the SOTP.
-          </div>
-        </div>
-        <div
-          style={{
-            marginTop: 24,
-            fontStyle: "italic",
-            borderTop: "1px dashed #d6d3d1",
-            paddingTop: 12,
-          }}
-        >
-          Informational and educational only. Not investment advice, not an
-          offer to buy or sell securities, not affiliated with or endorsed by
-          SoftBank Group. NAV is not realizable or distributable. Private-company
-          values are estimates. Figures can be wrong. The author may hold SFTBY,
-          9984, ARM, or related securities. Do your own work.
-        </div>
-      </div>
-
-      {!isMobile && (
-        <div style={styles.stickyBar} className="vcx-sticky-bar">
-          <div style={styles.stickyInner}>
-            <div style={styles.stickyMetric}>
-              <div style={styles.stickyLabel}>NAV / ADR</div>
-              <div style={styles.stickyValueAccent}>{fmtUsd(calc.navPerAdr)}</div>
-            </div>
-            <div style={styles.stickyDivider} />
-            <div style={styles.stickyMetric}>
-              <div style={styles.stickyLabel}>Discount</div>
-              <div style={styles.stickyValue}>{fmtPct(calc.discountPct, 0)}</div>
-            </div>
-            <div style={styles.stickyDivider} />
-            <div style={styles.stickyMetric}>
-              <div style={styles.stickyLabel}>LTV</div>
-              <div style={styles.stickyValue}>{fmtPct(calc.ltvPct, 0)}</div>
-            </div>
-            <div style={styles.stickyDivider} />
-            <div style={styles.stickyMetric}>
-              <div style={styles.stickyLabel}>Gross ¢ Arm</div>
-              <div style={styles.stickyValue}>{fmtNum(calc.centsArmGross, 0)}¢</div>
-            </div>
-            <div style={styles.stickyDivider} />
-            <div style={styles.stickyMetric}>
-              <div style={styles.stickyLabel}>SFTBY</div>
-              <div style={styles.stickyValue}>{fmtUsd(sftbyPrice)}</div>
-            </div>
-          </div>
-        </div>
-      )}
+  return <div style={styles.container} className="vcx-container sats-container">
+    <div style={styles.header}>
+      <div style={styles.eyebrow} className="vcx-eyebrow">SOFTBANK GROUP · SFTBY / 9984 · HOLDCO SOTP</div>
+      <h1 style={styles.title} className="vcx-title">SFTBY <span style={styles.titleAccent}>SOTP Finder</span></h1>
+      <p style={styles.subtitle} className="vcx-subtitle">Start with SoftBank&apos;s reported holdings, revalue Arm and OpenAI, then account for funding, debt and optional discounts. The gross OpenAI exposure uses the same valuation anchor, pro forma stake and ADR share count as the <a href="/ai" style={styles.sourceLink}>AI exposure calculator</a>.</p>
     </div>
-  );
+
+    <div style={styles.asOfBox}>
+      <strong>Research checked September 5, 2026.</strong> Holdings and debt: June 30. OpenAI funded fair value: July 31. This is a mixture of dated disclosures, selected quotes and estimates, not a current reported balance sheet.
+      <div style={{ marginTop: 8 }}>{quoteState} Controls can override quotes.</div>
+    </div>
+    <div style={styles.howToBox}>
+      <div style={styles.howToTitle}>What the model assumes</div>
+      <ol style={styles.howToList}>
+        <li><strong>Arm:</strong> {fmtNum(ARM_SHARES)} disclosed shares × the selected price, less June financing.</li>
+        <li><strong>OpenAI:</strong> default {fmtPct(OPENAI_OWNERSHIP_AT_COMPLETION * 100, 0)} is SVF2&apos;s pro forma stake, including the planned October $10B. The July alternative scales the rounded $100B fund fair value; it does not invent a current ownership percentage.</li>
+        <li><strong>Shareholder NAV:</strong> preserve SBG&apos;s June SVF2 NAV and add only OpenAI&apos;s modeled change. Management co-investment is a separate sensitivity, not a flat deduction from the entire stake.</li>
+        <li><strong>Funding:</strong> add July&apos;s $10B and, in the pro forma case, October&apos;s $10B to net debt. Other cash flows need an explicit adjustment.</li>
+      </ol>
+    </div>
+
+    <div style={styles.controls} className="vcx-controls">
+      <Input {...inputProps} field="armPrice" label="ARM price ($)" step={0.01} range={[80, 450]} />
+      <Input {...inputProps} field="sftbyPrice" label="SFTBY ADR price ($)" step={0.01} note={`Tokyo quote ¥${fmtNum(tokyoPrice)}. One ordinary share = two ADRs.`} />
+      <Input {...inputProps} field="usdJpy" label="USDJPY" step={0.001} note="Converts modeled NAV to yen. June asset and debt balances stay at June FX; their current currency mix is unknown." />
+      <Input {...inputProps} field="openaiEquityB" label="OpenAI equity value ($B)" range={[0, 3000]} note={`Latest primary anchor: $${OPENAI_DEFAULT_EQUITY_B}B, March 31. $1,600B is an IPO scenario.`} />
+    </div>
+    <div style={styles.controls} className="vcx-controls">
+      <div style={styles.controlGroup}>
+        <label htmlFor="sftby-case" style={styles.label}>OpenAI holdings basis</label>
+        <select id="sftby-case" value={inputs.openaiCase} onChange={e => setInput("openaiCase", e.target.value)} className="vcx-input" style={{ ...styles.smallInput, width: "100%", fontSize: 14 }}>
+          <option value="funded13">Pro forma 13% · October included</option>
+          <option value="current">July funded fair-value proxy</option>
+        </select>
+        <div style={styles.note}>Preferred and common holdings. New preferred shares automatically convert on an IPO. Security rights and future dilution can change proceeds.</div>
+      </div>
+      <Input {...inputProps} field="dilutionPct" label="OpenAI dilution (%)" range={[0, 50]} note="Same retained-ownership convention as /ai: multiply exposure by (1 − dilution)." />
+      <Input {...inputProps} field="liqHaircutPct" label="OpenAI liquidity discount (%)" range={[0, 50]} note="Author-selected discount, not a reported fair-value adjustment." />
+      <Input {...inputProps} field="stubMult" label="Other holdings multiplier" step={0.05} range={[0, 2]} note="SVF1, LatAm, SoftBank Corp., T-Mobile and other holdings. SVF2's June base stays intact." />
+    </div>
+
+    <div style={{ marginBottom: 32 }}>
+      <div style={styles.howToTitle}>Scenarios</div>
+      <div style={styles.scenarioGrid} className="sats-scenario-grid">
+        {Object.entries(PRESETS).map(([key, preset]) => <button key={key} onClick={() => applyPreset(key)} aria-pressed={activeScenario === key}
+          style={{ ...styles.scenarioCard, ...(activeScenario === key ? styles.scenarioCardActive : {}) }}>
+          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{preset.label}</div>
+          <div style={{ fontSize: 12, lineHeight: 1.4 }}>{preset.note}</div>
+        </button>)}
+      </div>
+    </div>
+
+    <div style={styles.heroGrid} className="sats-explainer-row" data-testid="sftby-results">
+      <div style={styles.heroCard} className="sats-summary-card">
+        <div style={styles.heroLabel}>Modeled NAV / ADR</div>
+        <div style={styles.heroValueAccent} className="vcx-gt-value-accent" data-metric="navPerAdr">{fmtUsd(calc.navPerAdr)}</div>
+        <div style={styles.heroSub}>¥{fmtNum(calc.navPerTokyoYen)} per Tokyo ordinary</div>
+      </div>
+      <div style={styles.heroCard} className="sats-summary-card">
+        <div style={styles.heroLabel}>Management sensitivity / ADR</div>
+        <div style={styles.heroValue} className="vcx-gt-value-large">{fmtUsd(calc.allocationLowPerAdr)}–{fmtUsd(calc.allocationHighPerAdr)}</div>
+        <div style={styles.heroSub}>17.25% to 0% of positive post-June revaluation. Only this assumption varies; this is not a complete valuation range.</div>
+      </div>
+      <div style={styles.heroCard} className="sats-summary-card">
+        <div style={styles.heroLabel}>Discount to modeled NAV</div>
+        <div style={styles.heroValue} className="vcx-gt-value-large" data-metric="discountPct">{fmtPct(calc.discountPct)}</div>
+        <div style={styles.heroSub}>Market cap {fmtUsdB(calc.mcapB)} / NAV {fmtUsdB(calc.navB)}</div>
+      </div>
+      <div style={styles.heroCard} className="sats-summary-card">
+        <div style={styles.heroLabel}>Modeled adjusted LTV</div>
+        <div style={styles.heroValue} className="vcx-gt-value-large">{fmtPct(calc.ltvPct)}</div>
+        <div style={styles.heroSub}>{fmtUsdB(calc.sbgNdB)} net debt / {fmtUsdB(calc.holdingsB)} holdings. This is not today&apos;s reported LTV.</div>
+      </div>
+      <div style={styles.heroCard} className="sats-summary-card">
+        <div style={styles.heroLabel}>Gross OpenAI per $100 SFTBY</div>
+        <div style={styles.heroValue} className="vcx-gt-value-large" data-metric="openaiPer100">{fmtUsd(calc.centsOpenaiGross)}</div>
+        <div style={styles.heroSub}>Before management allocation, debt, tax and liquidity discounts. Pro forma mode matches /ai at identical price, valuation and dilution.</div>
+      </div>
+      <div style={styles.heroCard} className="sats-summary-card">
+        <div style={styles.heroLabel}>OpenAI value at NAV = market cap</div>
+        <div style={styles.heroValue} className="vcx-gt-value-large">{calc.impliedOpenaiEquityB == null ? "No positive solution" : fmtUsdB(calc.impliedOpenaiEquityB)}</div>
+        <div style={styles.heroSub}>{calc.impliedOpenaiEquityB == null ? calc.residualReason : "Solves this complete model, including tax and management sensitivity. It is not a market forecast."}</div>
+      </div>
+    </div>
+
+    <details style={{ ...styles.howToBox, marginBottom: 32 }}>
+      <summary style={{ cursor: "pointer", fontWeight: 700 }}>Uncertain assumptions: management allocation, tax and other net debt</summary>
+      <p style={{ lineHeight: 1.5 }}>The exact SBG shareholder allocation of OpenAI cannot be reproduced from aggregate fund disclosures. MgmtCo has 17.25% of SVF2 LLC Equity, with preferred capital, fund-wide distribution hurdles and receivable offsets. This sensitivity deducts a selected share of positive revaluation after new funding. It is an approximation; it neither removes 17.25% of gross assets nor predicts the full fund waterfall.</p>
+      <div style={styles.controls} className="vcx-controls">
+        <Input {...inputProps} field="managementPct" label="Management revaluation sensitivity (%)" step={0.25} range={[0, 17.25]} note="0–17.25% stress choices; default uses the larger deduction. No deduction for new capital or modeled losses." />
+        <Input {...inputProps} field="otherNetDebtB" label="Other net-debt change ($B)" range={[-30, 50]} note="Beyond the July/October checks. Positive subtracts NAV; negative adds NAV. Include net cash used, interest, disposals and repayments here without double counting." />
+        <Input {...inputProps} field="taxPct" label="Illustrative tax rate (%)" range={[0, 40]} note="Applied to positive modeled Arm/OpenAI gains only. Not a forecast effective tax rate or a tax on gross assets." />
+        <Input {...inputProps} field="armTaxBasisB" label="Arm tax-basis proxy ($B)" step={0.1} range={[0, 100]} note="The inherited $40B is an unverified proxy, not a disclosed tax basis. Tax defaults to zero." />
+      </div>
+      <Source href={data.management.source}>June fund terms</Source>{" · "}<Source href={data.management.scopeSource}>OpenAI program disclosure</Source>
+    </details>
+
+    <section style={styles.section}>
+      <div style={styles.sectionHeader} className="vcx-section-header"><span style={styles.sectionNum}>01</span><h2 style={styles.sectionTitle}>Holdco NAV waterfall</h2><span style={styles.sectionMeta}>$ billions</span></div>
+      <div style={styles.tableWrap}>{waterfall.map(([label, value], i) => <div key={label} style={{ ...styles.wfRow, ...(i === waterfall.length - 1 ? styles.wfEnd : {}) }}>
+        <div style={{ flex: 3 }}>{label}</div><div style={{ flex: 1, textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{fmtUsdB(value)}</div>
+      </div>)}</div>
+      <p style={styles.note}>June SVF2 already contains OpenAI. The bridge adds {fmtUsdB(calc.openaiNetB)} modeled value − ${data.openaiJune.fairValueUsdB}B June gross value = {fmtUsdB(calc.openaiChangeB)}. Incremental funding of {fmtUsdB(calc.newFundingB)} is also charged to net debt. An investment at cost does not manufacture NAV.</p>
+    </section>
+
+    <section style={styles.section}>
+      <div style={styles.sectionHeader} className="vcx-section-header"><span style={styles.sectionNum}>02</span><h2 style={styles.sectionTitle}>Why density can exceed 100%</h2></div>
+      <div style={styles.tableWrap}>
+        <div style={styles.thRow}><div style={{ flex: 2 }}>Gross fund / asset exposure</div><div style={{ flex: 1, textAlign: "right" }}>Value</div><div style={{ flex: 1, textAlign: "right" }}>Per $100 SFTBY</div></div>
+        {[["Arm, before financing", calc.armGrossB, calc.centsArmGross], ["OpenAI, before allocation and discounts", calc.openaiGrossB, calc.centsOpenaiGross]].map(([label, value, per100]) => <div key={label} style={styles.tdRow}><div style={{ flex: 2 }}>{label}</div><div style={{ flex: 1, textAlign: "right" }}>{fmtUsdB(value)}</div><div style={{ flex: 1, textAlign: "right" }}>{fmtUsd(per100)}</div></div>)}
+      </div>
+      <p style={{ fontSize: 14, lineHeight: 1.6 }}>Gross asset exposure is divided by the market value of SoftBank&apos;s equity. Borrowing and a holding-company discount can make this ratio exceed 100%. It is not cash available to shareholders. An OpenAI IPO can improve liquidity, but does not require SoftBank to sell or distribute proceeds. Arm, OpenAI and the other investments also have their own valuation risks.</p>
+    </section>
+
+    <section style={styles.section}>
+      <div style={styles.sectionHeader} className="vcx-section-header"><span style={styles.sectionNum}>03</span><h2 style={styles.sectionTitle}>NAV / ADR sensitivity</h2></div>
+      <div style={{ overflowX: "auto" }} className="sats-table-scroll">
+        <div style={{ display: "grid", gridTemplateColumns: "100px repeat(7, 1fr)", gap: 4, minWidth: 620 }}>
+          <div style={styles.hmHead}>ARM / OAI $B</div>
+          {[500, 730, 852, 1000, 1200, 1600, 2000].map(v => <div key={v} style={styles.hmHead}>{v}</div>)}
+          {[150, 200, 250, 300, 350].map(arm => <React.Fragment key={arm}>
+            <div style={styles.hmRowHead}>${arm}</div>
+            {[500, 730, 852, 1000, 1200, 1600, 2000].map(oai => {
+              const value = computeSotp({ ...inputs, armPrice: arm, openaiEquityB: oai }).navPerAdr;
+              return <div key={oai} style={{ ...styles.hmCell, background: value > inputs.sftbyPrice ? "#dcfce7" : "#fed7aa" }} title={`Arm $${arm}, OpenAI $${oai}B, other selected assumptions unchanged`}>{fmtUsd(value)}</div>;
+            })}
+          </React.Fragment>)}
+        </div>
+      </div>
+    </section>
+
+    <section style={styles.section} id="debt-reconciliation">
+      <div style={styles.sectionHeader} className="vcx-section-header"><span style={styles.sectionNum}>04</span><h2 style={styles.sectionTitle}>Debt and reporting dates</h2></div>
+      <div style={styles.tableWrap}>
+        {[
+          ["June consolidated net interest-bearing debt", jpyTToUsdB(IR_JPY_T.consolNibd)],
+          ["Less self-financing entities", -jpyTToUsdB(IR_JPY_T.selfFin)],
+          ["Less other issuer adjustments", -jpyTToUsdB(IR_JPY_T.otherDebtAdj)],
+          ["Issuer bridge rounding", jpyTToUsdB(IR_JPY_T.sbgAdjNd - (IR_JPY_T.consolNibd - IR_JPY_T.selfFin - IR_JPY_T.otherDebtAdj))],
+          ["June SBG adjusted net debt", calc.ndJun30B],
+          ["July OpenAI investment funded", calc.julyB],
+          ["October OpenAI investment (pro forma only)", calc.octB],
+          ["Other net-debt adjustment (estimate)", calc.otherNetDebtB],
+          ["Modeled adjusted net debt", calc.sbgNdB],
+        ].map(([label, value]) => <div key={label} style={styles.tdRow}><div style={{ flex: 3 }}>{label}</div><div style={{ flex: 1, textAlign: "right" }}>{fmtUsdB(value)}</div></div>)}
+      </div>
+      <p style={styles.note}>June balances use reporting USDJPY {IR_USDJPY}. The $40B bridge is a facility limit; July borrowing is included, October is planned. Arm financing is netted from Arm once. Subsidiary debt already reflected in equity values is not subtracted again. Loan proceeds retained as cash do not automatically increase net debt. Current balances, accrued financing costs and refinancing uses are not fully reconciled by the available quarter-end data.</p>
+    </section>
+
+    <section style={styles.section}>
+      <div style={styles.sectionHeader} className="vcx-section-header"><span style={styles.sectionNum}>05</span><h2 style={styles.sectionTitle}>Latest evidence and source changes</h2></div>
+      <div style={styles.tableWrap}>{data.events.map(event => <div key={event.source} style={{ ...styles.tdRow, alignItems: "start", gap: 16 }}>
+        <div style={{ flex: 1 }}><div style={{ fontSize: 11, marginBottom: 5 }}>{event.asOf}</div><Source href={event.source}>{event.title}</Source></div>
+        <div style={{ flex: 2, fontSize: 13, lineHeight: 1.5 }}>{event.note}</div>
+      </div>)}</div>
+      <p style={styles.note}>ABB robotics and DigitalBridge are planned acquisitions, not separately added June assets. Financing and acquisition announcements require both sides of the balance-sheet bridge before changing NAV. The other-net-debt control can stress unresolved funding uses; it does not replace a complete transaction model.</p>
+    </section>
+
+    <section style={styles.section}>
+      <div style={styles.sectionHeader} className="vcx-section-header"><span style={styles.sectionNum}>06</span><h2 style={styles.sectionTitle}>Sources and reproducibility</h2></div>
+      <ul style={styles.methList}>
+        <li><Source href={data.ir.source}>June 30 issuer NAV</Source>: {fmtYenT(IR_JPY_T.holdings)} holdings − {fmtYenT(IR_JPY_T.sbgAdjNd)} debt = {fmtYenT(IR_JPY_T.nav)} pre-tax. The calculator reproduces that anchor before subsequent changes. Other holdings retain June marks; their multiplier is an estimate.</li>
+        <li><Source href={data.arm.source}>Arm FY2026 20-F, May 21 ownership</Source>: {fmtNum(ARM_SHARES)} shares, approximately 86.4% at that date. The share count remains the input as Arm&apos;s share count changes.</li>
+        <li><Source href={wrapper.sources[0].url}>SBG June share count</Source>: {fmtNum(TOKYO_SHARES)} ordinary excluding treasury. <Source href={wrapper.sources[1].url}>Citi 1:2 ADR ratio</Source>: {fmtNum(ADR_SHARES)} equivalent ADRs. This is outstanding stock, not a forecast fully diluted denominator.</li>
+        <li><Source href={wrapper.openai.sources[0].url}>July 31 OpenAI fund disclosure, slide 10</Source>: rounded $55B cost / $100B fair value; approximately 13% includes the planned October tranche. <Source href="https://group.softbank/en/news/press/20260701">July $10B completion</Source>. No current ownership percentage is derived from invested dollars.</li>
+        <li><Source href="https://openai.com/index/accelerating-the-next-phase-ai/">March 31 OpenAI primary round</Source>: $852B post-money. July proxy = $100B × selected valuation / $852B; this cross-date, cross-security calibration is an estimate. Pro forma = 13% × selected valuation. Both multiply by (1 − dilution).</li>
+        <li><Source href={data.management.source}>Management program</Source>: the exact future allocation is not published as a simple per-asset percentage. The displayed range varies only the stated approximation.</li>
+        <li><Source href="https://group.softbank/en/ir/financials/annual_reports/2026/message/goto">CFO capital and acquisition plans</Source>. Investment commitments can use cash or borrowing; changes to asset ownership and financing belong together.</li>
+      </ul>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <button onClick={copyScenario} style={styles.scenarioCard}>Copy exact scenario link</button>
+        <button onClick={exportScenario} style={styles.scenarioCard}>Download inputs, results and sources</button>
+      </div>
+      {exportMessage && <p role="status" style={styles.note}>{exportMessage}</p>}
+      <p style={styles.note}><Source href="https://github.com/bolewood/stocks-bolewood/blob/main/data/SFTBY_METHODOLOGY.md">Full methodology and unresolved assumptions</Source>{" · "}<Source href="https://github.com/bolewood/stocks-bolewood/blob/main/data/sftby-sotp.json">Dated source data</Source>{" · "}<a href="/sftby?reference=sftby" style={styles.sourceLink}>Frozen reference scenario</a></p>
+    </section>
+    <div style={styles.footer}>Informational research model. NAV is an estimate of asset value, not realizable or distributable cash. Debt, private security rights, fund allocation, taxes, future dilution and investment decisions can change shareholder outcomes. The author may hold SFTBY, 9984, ARM or related securities.</div>
+  </div>;
 }
 
 const styles = {
