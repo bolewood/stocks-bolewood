@@ -1,0 +1,159 @@
+{
+  "schemaVersion": "1.2.0",
+  "methodologyVersion": "1.2.0",
+  "asOf": "2026-09-05",
+  "note": "Adjustable pre-IPO FD share-equivalent assumptions, not issuer cap tables. Bounds are sensitivity choices, not confidence intervals or proven likely outcomes.",
+  "anthropic": {
+    "defaultShares": 1580904637.8663518,
+    "lowShares": 1544132000.0,
+    "highShares": 2573553333.3333335,
+    "alternateShares": 1930165000.0,
+    "minShares": 800000000,
+    "maxShares": 3000000000,
+    "method": "Default: $965B / (DXYZ June FV / units). Different valuation methods and security classes make this a calibration proxy, not independently verified FD. Low/high: conditional SKM rounded 0.2% cross-check; rounding convention and FD definition unverified.",
+    "sources": [
+      {
+        "fields": [
+          "defaultShares"
+        ],
+        "sourceClass": "assumption",
+        "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/xslFormNPORT-P_X01/primary_doc.xml",
+        "measurementDate": "2026-06-30",
+        "publicationDate": "2026-08-28",
+        "asOf": "2026-06-30",
+        "section": "See source note",
+        "note": "Filing supplies units and FV only, not FD.",
+        "estimationMethod": "Filing supplies units and FV only, not FD."
+      },
+      {
+        "fields": [
+          "defaultShares"
+        ],
+        "sourceClass": "primary",
+        "url": "https://www.anthropic.com/news/series-h",
+        "measurementDate": "2026-05-28",
+        "publicationDate": "2026-05-28",
+        "asOf": "2026-05-28",
+        "section": "See source note",
+        "note": "$965B primary anchor."
+      },
+      {
+        "fields": [
+          "lowShares",
+          "highShares",
+          "alternateShares"
+        ],
+        "sourceClass": "assumption",
+        "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813001728",
+        "measurementDate": "2026-06-30",
+        "publicationDate": "2026-08-13",
+        "asOf": "2026-06-30",
+        "section": "See source note",
+        "note": "3,860,330 divided by conditional 0.25%, 0.15%, 0.2% cross-check.",
+        "estimationMethod": "3,860,330 divided by conditional 0.25%, 0.15%, 0.2% cross-check."
+      },
+      {
+        "fields": [
+          "minShares",
+          "maxShares"
+        ],
+        "sourceClass": "assumption",
+        "url": "https://github.com/bolewood/stocks-bolewood/blob/main/data/METHODOLOGY.md",
+        "measurementDate": "2026-09-05",
+        "publicationDate": "2026-09-05",
+        "section": "Capitalization uncertainty",
+        "estimationMethod": "Author-selected exploration limits, not evidence-backed confidence bounds.",
+        "note": "Slider limits allow sensitivity exploration."
+      }
+    ]
+  },
+  "openai": {
+    "defaultShares": 1237484749.307667,
+    "lowShares": 928113561.9807503,
+    "highShares": 1546855936.6345837,
+    "minShares": 700000000,
+    "maxShares": 2500000000,
+    "method": "Default: $852B / (DXYZ June preferred FV / units). No independent public FD cap table. Low/high are explicitly \u00b125% stress choices, not foundation or option-pool estimates.",
+    "sources": [
+      {
+        "fields": [
+          "defaultShares"
+        ],
+        "sourceClass": "assumption",
+        "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/xslFormNPORT-P_X01/primary_doc.xml",
+        "measurementDate": "2026-06-30",
+        "publicationDate": "2026-08-28",
+        "asOf": "2026-06-30",
+        "section": "See source note",
+        "note": "Preferred-unit calibration proxy, not an issuer FD disclosure.",
+        "estimationMethod": "Preferred-unit calibration proxy, not an issuer FD disclosure."
+      },
+      {
+        "fields": [
+          "defaultShares"
+        ],
+        "sourceClass": "primary",
+        "url": "https://openai.com/index/accelerating-the-next-phase-ai/",
+        "measurementDate": "2026-03-31",
+        "publicationDate": "2026-03-31",
+        "asOf": "2026-03-31",
+        "section": "See source note",
+        "note": "$852B primary anchor."
+      },
+      {
+        "fields": [
+          "lowShares",
+          "highShares",
+          "minShares",
+          "maxShares"
+        ],
+        "sourceClass": "assumption",
+        "url": "https://github.com/bolewood/stocks-bolewood/blob/main/data/METHODOLOGY.md",
+        "measurementDate": "2026-09-05",
+        "publicationDate": "2026-09-05",
+        "asOf": "2026-09-05",
+        "section": "See source note",
+        "note": "Author-selected sensitivity and UI limits.",
+        "estimationMethod": "Author-selected sensitivity and UI limits."
+      }
+    ]
+  },
+  "dxyzOpenaiEntry": {
+    "defaultPrice": 688.4933333333333,
+    "lowPrice": 516.37,
+    "highPrice": 860.6166666666667,
+    "minPrice": 100,
+    "maxPrice": 2000,
+    "method": "June preferred FV / units is an adjustable proxy for August common entry. \u00b125% stress choices are not transaction quotes. Estimated units = $150M / entry price; hold fixed as company valuation or FD changes.",
+    "sources": [
+      {
+        "fields": [
+          "defaultPrice",
+          "lowPrice",
+          "highPrice"
+        ],
+        "sourceClass": "assumption",
+        "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/xslFormNPORT-P_X01/primary_doc.xml",
+        "measurementDate": "2026-06-30",
+        "publicationDate": "2026-08-28",
+        "asOf": "2026-06-30",
+        "section": "See source note",
+        "note": "June preferred mark proxy for a different security and date; actual August units not disclosed.",
+        "estimationMethod": "June preferred mark proxy for a different security and date; actual August units not disclosed."
+      },
+      {
+        "fields": [
+          "minPrice",
+          "maxPrice"
+        ],
+        "sourceClass": "assumption",
+        "url": "https://github.com/bolewood/stocks-bolewood/blob/main/data/METHODOLOGY.md",
+        "measurementDate": "2026-09-05",
+        "publicationDate": "2026-09-05",
+        "section": "Capitalization uncertainty",
+        "estimationMethod": "Author-selected exploration limits, not evidence-backed confidence bounds.",
+        "note": "Slider limits allow sensitivity exploration."
+      }
+    ]
+  }
+}

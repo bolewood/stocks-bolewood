@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "1.1.0",
-  "methodologyVersion": "1.1.0",
+  "schemaVersion": "1.2.0",
+  "methodologyVersion": "1.2.0",
   "ticker": "GOOG",
   "yahooSymbol": "GOOG",
   "name": "Alphabet Inc.",
@@ -21,13 +21,19 @@
   },
   "sources": [
     {
-      "fields": ["shareCount"],
+      "fields": [
+        "shareCount"
+      ],
       "sourceClass": "primary",
       "issuer": "Alphabet Inc.",
       "filingType": "10-Q",
       "documentDate": "2026-06-30",
       "asOf": "2026-06-30",
-      "note": "Class A + B + C outstanding."
+      "note": "Class A + B + C outstanding.",
+      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000071/goog-20260630.htm",
+      "measurementDate": "2026-06-30",
+      "publicationDate": null,
+      "section": "See source note"
     }
   ],
   "anthropic": {
@@ -37,21 +43,36 @@
     "ownershipAsOf": "2025-03-11",
     "displayAsMax": true,
     "capPct": 0.15,
-    "confidence": "medium",
+    "confidence": "low",
     "sources": [
       {
-        "fields": ["ownershipPct", "capPct"],
+        "fields": [
+          "ownershipPct",
+          "capPct"
+        ],
         "sourceClass": "primary",
         "documentDate": "2025-03-11",
-        "note": "Court documents: ~14%, contractually hard-capped at 15%, non-voting."
+        "note": "Court docket locator only. Exact exhibit supporting the inherited historical 14% and 15% cap remains unpinned; do not label the scenario as verified current ownership.",
+        "url": "https://www.justice.gov/atr/case/us-and-plaintiff-states-v-google-llc",
+        "verificationStatus": "unverified",
+        "measurementDate": "2025-03-11",
+        "publicationDate": null,
+        "section": "See source note"
       },
       {
-        "fields": ["ownershipPct"],
+        "fields": [
+          "ownershipPct"
+        ],
         "sourceClass": "secondary",
         "documentDate": "2025-03-11",
-        "note": "NYT reporting on those court documents. 10-Q does not name Anthropic."
+        "note": "NYT reporting on those court documents. 10-Q does not name Anthropic.",
+        "url": "https://www.nytimes.com/2025/03/11/technology/google-investment-anthropic.html",
+        "measurementDate": "2025-03-11",
+        "publicationDate": null,
+        "section": "See source note"
       }
-    ]
+    ],
+    "evidenceNote": "Historical percentage from reporting; primary exhibit not yet pinned. Later dilution unknown."
   },
   "openai": null
 }

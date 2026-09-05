@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.12.0.0] — 2026-09-05
+
+- Revalue every quantified Anthropic/OpenAI leg in both Filed Holdings and Estimated Holdings, including DXYZ and SKM. Add shared company FD sliders, numeric entry, sourced sensitivity presets and reset controls.
+- Separate DXYZ June preferred units from the August $150M common purchase. Add an independent entry-price assumption, prevent ATM scaling/double counting, retain PPU exclusion and itemize the exact scenario equation.
+- Refresh SKM June shareholding and outstanding shares from DART; refresh SFTBY shares and completed/scheduled funding with explicit 13% pro forma status. Preserve VCX's June denominator date and flag inferred marks.
+- Version data/methodology 1.2.0, add source URLs, date distinctions and explicit unverified-source flags. Correct the blanket claim that all stored percentages are derived.
+- Add complete frozen scenario exports, reproducible Filed/Estimated fixtures, reference preview URLs and all-symbol sensitivity/parity regression tests. Update methodology and worked example.
+
+
 All notable changes to stocks.bolewood.com are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) with 4-digit versions (MAJOR.MINOR.PATCH.MICRO).
 

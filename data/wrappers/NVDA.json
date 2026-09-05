@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "1.1.0",
-  "methodologyVersion": "1.1.0",
+  "schemaVersion": "1.2.0",
+  "methodologyVersion": "1.2.0",
   "ticker": "NVDA",
   "yahooSymbol": "NVDA",
   "name": "NVIDIA Corporation",
@@ -19,27 +19,42 @@
   },
   "sources": [
     {
-      "fields": ["shareCount"],
+      "fields": [
+        "shareCount"
+      ],
       "sourceClass": "primary",
       "issuer": "NVIDIA Corporation",
       "filingType": "10-K",
       "documentDate": "2026-02-20",
-      "asOf": "2026-02-20"
+      "asOf": "2026-02-20",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm",
+      "note": "10-K cover, February 20 outstanding shares. Historical denominator; newer 10-Qs exist.",
+      "measurementDate": "2026-02-20",
+      "publicationDate": "2026-02-25",
+      "section": "10-K cover",
+      "accession": "0001045810-26-000021"
     }
   ],
   "anthropic": {
     "basis": "commitment",
     "holdingSecurity": "unknown",
     "commitmentAmount": 10000000000,
-    "commitmentAsOf": "2025-11",
-    "status": "up-to",
+    "commitmentAsOf": "2025-11-18",
+    "status": "partly-invested-amount-undisclosed",
     "confidence": "low",
     "sources": [
       {
-        "fields": ["commitmentAmount", "status"],
-        "sourceClass": "secondary",
-        "documentDate": "2025-11",
-        "note": "Up to $10B Anthropic commitment (Huang / Nov 2025 announcement). Not an NVDA 10-K ownership %."
+        "fields": [
+          "status",
+          "commitmentAmount"
+        ],
+        "sourceClass": "primary",
+        "url": "https://www.anthropic.com/news/microsoft-nvidia-anthropic-announce-strategic-partnerships",
+        "measurementDate": "2025-11-18",
+        "publicationDate": "2025-11-18",
+        "asOf": "2025-11-18",
+        "section": "See source note",
+        "note": "Up to $5B from Microsoft and $10B from NVIDIA. Announced commitment, no quantified ownership. Series G later says a portion was included, without allocating amounts."
       }
     ]
   },
@@ -52,20 +67,31 @@
     "confidence": "low",
     "sources": [
       {
-        "fields": ["investmentAmount"],
+        "fields": [
+          "investmentAmount"
+        ],
         "sourceClass": "primary",
         "issuer": "OpenAI",
         "documentDate": "2026-02-27",
         "asOf": "2026-02-27",
-        "note": "OpenAI round announcement: Nvidia invested $30B. Not an NVDA 10-K ownership %."
+        "note": "OpenAI round announcement: Nvidia invested $30B. Not an NVDA 10-K ownership %.",
+        "url": "https://openai.com/index/scaling-ai-for-everyone/",
+        "measurementDate": "2026-02-27",
+        "publicationDate": null,
+        "section": "See source note"
       },
       {
-        "fields": ["roundPostMoneyValuation"],
+        "fields": [
+          "roundPostMoneyValuation"
+        ],
         "sourceClass": "primary",
         "issuer": "OpenAI",
         "documentDate": "2026-03-31",
         "url": "https://openai.com/index/accelerating-the-next-phase-ai/",
-        "note": "$852B post-money."
+        "note": "$852B post-money.",
+        "measurementDate": "2026-03-31",
+        "publicationDate": null,
+        "section": "See source note"
       }
     ]
   }

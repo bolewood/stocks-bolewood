@@ -1,5 +1,6 @@
 // Canonical exposure identities. No UI, no app imports.
 // FV-equivalent % = reported fair value ÷ the company valuation that produced it.
+export { unitPrice, unitExposurePer100 } from './unitExposure.mjs';
 
 export function markById(marks, id) {
   if (!id || !marks?.companies) return null;

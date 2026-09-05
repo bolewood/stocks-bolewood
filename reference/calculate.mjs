@@ -2,12 +2,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  adsEquivalentShares,
-  impliedExposure,
-  lookThroughFiledFv,
-  lookThroughPer100,
-} from "./derive.mjs";
+import { calculateScenario, referenceRow } from "./engine.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -31,117 +26,42 @@ export function loadPublicDataset() {
     if (!byTicker[t]) throw new Error(`missing wrapper ${t}`);
     return byTicker[t];
   });
-  return { meta, marks, wrappers };
+  return { meta, marks, wrappers, capitalization: readJson("data/capitalization.json") };
 }
 
-function sharesOutstanding(raw) {
-  if (raw.filedSnapshot?.sharesOutstanding > 0) {
-    return raw.filedSnapshot.sharesOutstanding;
-  }
-  if (raw.filedSnapshot?.netAssets > 0 && raw.filedSnapshot?.navPerShare > 0) {
-    return raw.filedSnapshot.netAssets / raw.filedSnapshot.navPerShare;
-  }
-  const n = raw.shareCount?.value;
-  if (!(n > 0)) return 0;
-  if (raw.adrRatio) return adsEquivalentShares(n, raw.adrRatio);
-  return n;
-}
-
-function wrapperValue(raw, price) {
-  if (raw.denominatorType === "total-net-assets") {
-    return raw.totalNetAssets?.value || 0;
-  }
-  const shares = sharesOutstanding(raw);
-  if (!(price > 0) || !(shares > 0)) return 0;
-  return price * shares;
-}
-
-function per100(pct, ipoVal, value, dilution) {
-  if (!(pct > 0)) return 0;
-  return lookThroughPer100({
-    claimPct: pct,
-    ipoVal,
-    wrapperValue: value,
-    dilution,
-  });
-}
-
-export function rowFromData(raw, marks, fixtures) {
-  const price = fixtures.prices[raw.yahooSymbol];
-  const value = wrapperValue(raw, price);
-  const anthPct = impliedExposure(raw.anthropic, marks);
-  const oaiPct = impliedExposure(raw.openai, marks);
-  const anthPer100 =
-    raw.anthropic?.basis === "filed-units"
-      ? lookThroughFiledFv({
-          fairValue: raw.anthropic.reportedFairValue,
-          wrapperValue: value,
-        })
-      : per100(anthPct, fixtures.anthVal, value, fixtures.dilution);
-  const oaiPer100 =
-    raw.openai?.basis === "filed-units"
-      ? lookThroughFiledFv({
-          fairValue: raw.openai.reportedFairValue,
-          wrapperValue: value,
-        })
-      : per100(oaiPct, fixtures.oaiVal, value, fixtures.dilution);
-  return {
-    ticker: raw.ticker,
-    price,
-    wrapperValue: value,
-    anthBasis: raw.anthropic?.basis || null,
-    oaiBasis: raw.openai?.basis || null,
-    anthPct,
-    oaiPct,
-    anthPer100,
-    oaiPer100,
-    combinedPer100: anthPer100 + oaiPer100,
-  };
-}
+export const rowFromData = referenceRow;
 
 export function calculate(dataset = loadPublicDataset(), fixtures = readJson("reference/fixtures.json")) {
-  return {
-    schemaVersion: dataset.meta.schemaVersion,
-    methodologyVersion: dataset.meta.methodologyVersion,
-    asOf: fixtures.asOf,
-    anthVal: fixtures.anthVal,
-    oaiVal: fixtures.oaiVal,
-    dilution: fixtures.dilution,
-    rows: dataset.wrappers.map((w) => rowFromData(w, dataset.marks, fixtures)),
-  };
-}
-
-function roundForCompare(n) {
-  if (n == null || !Number.isFinite(n)) return n;
-  return Number(n.toPrecision(12));
+  return calculateScenario(dataset, fixtures);
 }
 
 export function canonicalTable(result) {
-  return {
-    ...result,
-    rows: result.rows.map((r) => ({
-      ...r,
-      wrapperValue: roundForCompare(r.wrapperValue),
-      anthPct: r.anthPct == null ? null : roundForCompare(r.anthPct),
-      oaiPct: r.oaiPct == null ? null : roundForCompare(r.oaiPct),
-      anthPer100: roundForCompare(r.anthPer100),
-      oaiPer100: roundForCompare(r.oaiPer100),
-      combinedPer100: roundForCompare(r.combinedPer100),
-    })),
-  };
+  if (typeof result === 'number') return Number.isFinite(result) ? Number(result.toPrecision(12)) : result;
+  if (Array.isArray(result)) return result.map(canonicalTable);
+  if (result && typeof result === 'object') return Object.fromEntries(Object.entries(result).map(([k,v]) => [k, canonicalTable(v)]));
+  return result;
 }
 
 const isMain =
   process.argv[1] && process.argv[1].replaceAll("\\", "/").endsWith("reference/calculate.mjs");
 if (isMain) {
-  const table = canonicalTable(calculate());
-  const expectedPath = join(ROOT, "reference/expected-results.json");
-  const expected = JSON.parse(readFileSync(expectedPath, "utf8"));
-  const got = JSON.stringify(table, null, 2) + "\n";
-  const want = JSON.stringify(expected, null, 2) + "\n";
-  if (got !== want) {
-    console.error("reference output does not match reference/expected-results.json");
-    process.exit(1);
+  if (process.argv[2] === '--scenario') {
+    const snapshot = JSON.parse(readFileSync(process.argv[3], 'utf8'));
+    if (snapshot.format !== 'ai-exposure-scenario' || snapshot.version !== '1.2.0') throw new Error('Unsupported scenario export');
+    const actual = canonicalTable(calculate(snapshot.dataset, snapshot.inputs));
+    if (snapshot.results && JSON.stringify(actual) !== JSON.stringify(canonicalTable(snapshot.results))) throw new Error('Exported results do not reproduce');
+    console.log(JSON.stringify(actual, null, 2));
+  } else {
+    const table = canonicalTable(calculate());
+    const expectedPath = join(ROOT, "reference/expected-results.json");
+    const expected = JSON.parse(readFileSync(expectedPath, "utf8"));
+    if (JSON.stringify(table) !== JSON.stringify(expected)) {
+      throw new Error("Reference output does not match reference/expected-results.json");
+    }
+    const estimated = canonicalTable(calculate(loadPublicDataset(), readJson('reference/estimated-fixtures.json')));
+    if (JSON.stringify(estimated) !== JSON.stringify(readJson('reference/estimated-expected-results.json'))) {
+      throw new Error('Estimated reference results do not match');
+    }
+    console.log(`ok ${table.rows.length} Filed Holdings + ${estimated.rows.length} Estimated Holdings rows @ dataset ${table.datasetAsOf}; frozen prices ${table.priceAsOf}`);
   }
-  console.log(`ok ${table.rows.length} rows @ ${table.asOf}`);
 }

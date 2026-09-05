@@ -7,8 +7,8 @@
   "anthVal": 965000000000,
   "oaiVal": 852000000000,
   "dilution": 0,
-  "holdingsBasis": "filed",
-  "deploy": "cash",
+  "holdingsBasis": "estimated",
+  "deploy": "range",
   "anthFdShares": 1580904637.87,
   "oaiFdShares": 1237484749.31,
   "dxyzOaiEntryPrice": 688.493333333,
@@ -253,21 +253,21 @@
     {
       "ticker": "DXYZ",
       "price": 32.84,
-      "shares": 47657338,
-      "sharesAsOf": "2026-06-30",
-      "wrapperValue": 1565066979.92,
+      "shares": 48076389.9554,
+      "sharesAsOf": "2026-09-04",
+      "wrapperValue": 1578828646.14,
       "anthBasis": "filed-units",
       "oaiBasis": "filed-units",
       "anthPct": 0.000244219664332,
-      "oaiPct": 0.0000411277795775,
-      "anthPer100": 15.0582677357,
-      "oaiPer100": 2.23893728828,
-      "anthPer100High": 15.0582677357,
-      "oaiPer100High": 2.23893728828,
-      "combinedPer100": 17.297205024,
-      "combinedPer100High": 17.297205024,
+      "oaiPct": 0.000217184117606,
+      "anthPer100": 14.9270141922,
+      "oaiPer100": 11.7201362322,
+      "anthPer100High": 14.990669471,
+      "oaiPer100High": 11.729600812,
+      "combinedPer100": 26.6471504244,
+      "combinedPer100High": 26.720270283,
       "anthUnits": 386088,
-      "oaiUnits": 50895,
+      "oaiUnits": 268762.033329,
       "anthLots": [
         {
           "id": "filed",
@@ -288,37 +288,47 @@
           "asOf": "2026-06-30",
           "evidence": "filed",
           "scenarioValue": 35040868.2
+        },
+        {
+          "id": "goanna-2026-08-13",
+          "label": "Class A Common via Goanna Capital 26E",
+          "units": 217867.033329,
+          "carryingValue": 150000000,
+          "entryPrice": 688.493333333,
+          "asOf": "2026-08-13",
+          "evidence": "estimate",
+          "scenarioValue": 150000000
         }
       ],
       "anthPps": 610.41,
       "oaiPps": 688.493333333,
       "anthSensitivity": {
-        "low": 9.25012316369,
-        "high": 15.4168719395
+        "low": 9.16949559987,
+        "high": 15.2824926664
       },
       "oaiSensitivity": {
-        "low": 1.79114983062,
-        "high": 2.98524971771
+        "low": 7.85599468717,
+        "high": 19.8493880279
       },
-      "nav": 34.3,
-      "premium": -0.0425655976676,
-      "scenarioNetAssets": 1634830252
+      "nav": 34.1498577687,
+      "premium": -0.0383561705466,
+      "scenarioNetAssets": 1641801879.01
     },
     {
       "ticker": "ARKVX",
       "price": 57.43,
       "shares": 21613728,
-      "sharesAsOf": "2026-04-30",
-      "wrapperValue": 871119657,
+      "sharesAsOf": "2026-07-31",
+      "wrapperValue": 1241276399.04,
       "anthBasis": "filed-fv-equiv",
       "oaiBasis": "filed-fv-equiv",
       "anthPct": 0.0000607465078947,
       "oaiPct": 0.0000851087183099,
-      "anthPer100": 6.72931435393,
-      "oaiPer100": 8.32407206258,
+      "anthPer100": 4.72258879358,
+      "oaiPer100": 5.84177932136,
       "anthPer100High": 6.72931435393,
       "oaiPer100High": 8.32407206258,
-      "combinedPer100": 15.0533864165,
+      "combinedPer100": 10.5643681149,
       "combinedPer100High": 15.0533864165,
       "anthUnits": null,
       "oaiUnits": null,
@@ -356,8 +366,8 @@
       "oaiPps": null,
       "anthSensitivity": null,
       "oaiSensitivity": null,
-      "nav": 21.7047620377,
-      "premium": 0.832777522782,
+      "nav": 22.2789904721,
+      "premium": 0.785538714145,
       "scenarioNetAssets": null
     }
   ]

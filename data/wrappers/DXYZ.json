@@ -1,18 +1,18 @@
 {
-  "schemaVersion": "1.1.0",
-  "methodologyVersion": "1.1.0",
+  "schemaVersion": "1.2.0",
+  "methodologyVersion": "1.2.0",
   "ticker": "DXYZ",
   "yahooSymbol": "DXYZ",
   "name": "Destiny Tech100",
   "wrapperType": "closed-end-fund",
   "denominatorType": "market-cap",
   "confidence": "medium",
-  "note": "OpenAI PPUs excluded from the scaled numerator. Confidence is MEDIUM: ATM issuance after June 30 is estimated, not filed. Subsequent $150M OpenAI purchase (2026-08-13) is cash already inside June 30 NAV, applied on ESTIMATED only. DXYZ does not mark Anthropic or OpenAI to the last primary round.",
+  "note": "Filed quantities are revalued under every scenario using adjustable, estimated company FD share counts. Estimated Holdings adds the August 13 cash-funded OpenAI lot and a separate ATM bridge. PPUs remain excluded from equity scaling.",
   "sharesNote": "FILED: 47,657,338 shares from the June 30, 2026 N-CSRS. ESTIMATED: /dxyz ATM bridge from July 1. Active ATM. Board approved an August 2026 below-NAV repurchase program, discretionary as to size and timing.",
   "security": {
     "label": "Fund NAV",
     "linear": true,
-    "footnote": "Look-through is filed units × share price, not fair value ÷ a primary-round post-money. /ai does not convert a $T IPO slider into DXYZ NAV."
+    "footnote": "Gross share-equivalent exposure assumes conversion at parity. Scenario price = company valuation × (1 − incremental IPO dilution) ÷ estimated pre-IPO FD shares. The FD denominator is not filed."
   },
   "filedSnapshot": {
     "asOf": "2026-06-30",
@@ -29,7 +29,9 @@
   },
   "sources": [
     {
-      "fields": ["filedSnapshot"],
+      "fields": [
+        "filedSnapshot"
+      ],
       "sourceClass": "primary",
       "issuer": "Destiny Tech100 Inc.",
       "filingType": "N-CSRS",
@@ -37,10 +39,15 @@
       "documentDate": "2026-06-30",
       "asOf": "2026-06-30",
       "url": "https://www.sec.gov/Archives/edgar/data/1843974/000121390026095201/ea0302101-01_ncsrs.htm",
-      "note": "Semi-annual report as of June 30, 2026, filed Aug 29, 2026. Shares 47,657,338, net assets $1,634,830,252, printed NAV $34.30, investments FV $1,640,039,144 / cost $1,347,802,540. Level 3 table: VWAP/index/recent transaction prices, not announced primaries. Subsequent event: August 2026 below-NAV share repurchase program."
+      "note": "Semi-annual report as of June 30, 2026, filed Aug 28, 2026. Shares 47,657,338, net assets $1,634,830,252, printed NAV $34.30, investments FV $1,640,039,144 / cost $1,347,802,540. Level 3 table: VWAP/index/recent transaction prices, not announced primaries. Subsequent event: August 2026 below-NAV share repurchase program.",
+      "publicationDate": "2026-08-28",
+      "measurementDate": "2026-06-30",
+      "section": "See source note"
     },
     {
-      "fields": ["filedSnapshot"],
+      "fields": [
+        "filedSnapshot"
+      ],
       "sourceClass": "primary",
       "issuer": "Destiny Tech100 Inc.",
       "filingType": "NPORT-P",
@@ -48,10 +55,15 @@
       "documentDate": "2026-06-30",
       "asOf": "2026-06-30",
       "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/primary_doc.xml",
-      "note": "June 30, 2026 NPORT-P. TNA $1,634,830,251.28. invstOrSec balance is share-equivalent units. Magnitude ANC III 386,088 units / $235,671,976.08. SpaceX I 675,675 / $115,445,830.50 = $170.86."
+      "note": "June 30, 2026 NPORT-P. TNA $1,634,830,251.28. invstOrSec balance is share-equivalent units. Magnitude ANC III 386,088 units / $235,671,976.08. SpaceX I 675,675 / $115,445,830.50 = $170.86.",
+      "publicationDate": "2026-08-28",
+      "measurementDate": "2026-06-30",
+      "section": "See source note"
     },
     {
-      "fields": ["filedSnapshot"],
+      "fields": [
+        "filedSnapshot"
+      ],
       "sourceClass": "primary",
       "issuer": "Destiny Tech100 Inc.",
       "filingType": "424B3",
@@ -59,7 +71,10 @@
       "documentDate": "2026-06-30",
       "asOf": "2026-06-30",
       "url": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm",
-      "note": "Supplement No. 1 dated Aug 28, 2026: NAV $34.30 and approximate $1.64B portfolio. Apr 1–Jun 30 ATM: 17,191,674 shares. Subsequent $150.0M OpenAI purchase on 2026-08-13."
+      "note": "Supplement No. 1 dated Aug 28, 2026: NAV $34.30 and approximate $1.64B portfolio. Apr 1–Jun 30 ATM: 17,191,674 shares. Subsequent $150.0M OpenAI purchase on 2026-08-13.",
+      "publicationDate": "2026-08-28",
+      "measurementDate": "2026-06-30",
+      "section": "See source note"
     }
   ],
   "anthropic": {
@@ -72,7 +87,11 @@
     "confidence": "high",
     "sources": [
       {
-        "fields": ["filedUnits", "reportedFairValue", "carriedInterestPct"],
+        "fields": [
+          "filedUnits",
+          "reportedFairValue",
+          "carriedInterestPct"
+        ],
         "sourceClass": "primary",
         "issuer": "Destiny Tech100 Inc.",
         "filingType": "NPORT-P",
@@ -80,10 +99,17 @@
         "documentDate": "2026-06-30",
         "asOf": "2026-06-30",
         "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/primary_doc.xml",
-        "note": "Magnitude ANC III, LLC: balance 386,088, valUSD 235,671,976.08. N-CSRS footnote (g)/(i): units are the equivalent number of Anthropic Series B preferred shares. SPV carry 0%/0%."
+        "note": "Magnitude ANC III, LLC: balance 386,088, valUSD 235,671,976.08. N-CSRS footnote (g)/(i): units are the equivalent number of Anthropic Series B preferred shares. SPV carry 0%/0%.",
+        "publicationDate": "2026-08-28",
+        "measurementDate": "2026-06-30",
+        "section": "See source note"
       },
       {
-        "fields": ["filedUnits", "reportedFairValue", "carriedInterestPct"],
+        "fields": [
+          "filedUnits",
+          "reportedFairValue",
+          "carriedInterestPct"
+        ],
         "sourceClass": "primary",
         "issuer": "Destiny Tech100 Inc.",
         "filingType": "N-CSRS",
@@ -91,9 +117,14 @@
         "documentDate": "2026-06-30",
         "asOf": "2026-06-30",
         "url": "https://www.sec.gov/Archives/edgar/data/1843974/000121390026095201/ea0302101-01_ncsrs.htm",
-        "note": "SOI: 386,088 units, cost $107,000,000, FV $235,671,976. Level 3 bucket $278,448,755 is VWAP, index prices, and recent transaction price ($589.00–$766.76, avg $651.51) — Magnitude ANC III + Goanna + OAI I. Announced primary rounds are not an input."
+        "note": "SOI: 386,088 units, cost $107,000,000, FV $235,671,976. Level 3 bucket $278,448,755 is VWAP, index prices, and recent transaction price ($589.00–$766.76, avg $651.51) — Magnitude ANC III + Goanna + OAI I. Announced primary rounds are not an input.",
+        "publicationDate": "2026-08-28",
+        "measurementDate": "2026-06-30",
+        "section": "See source note"
       }
-    ]
+    ],
+    "unitsAsOf": "2026-06-30",
+    "unitLabel": "Magnitude ANC III — Anthropic Series B preferred equivalents"
   },
   "openai": {
     "basis": "filed-units",
@@ -102,7 +133,6 @@
     "reportedFairValue": 35040868.2,
     "fairValueAsOf": "2026-06-30",
     "carriedInterestPct": 0,
-    "subsequentPurchasesUsd": 150000000,
     "confidence": "low",
     "exclusions": [
       {
@@ -114,7 +144,11 @@
     ],
     "sources": [
       {
-        "fields": ["filedUnits", "reportedFairValue", "carriedInterestPct"],
+        "fields": [
+          "filedUnits",
+          "reportedFairValue",
+          "carriedInterestPct"
+        ],
         "sourceClass": "primary",
         "issuer": "Destiny Tech100 Inc.",
         "filingType": "NPORT-P",
@@ -122,10 +156,15 @@
         "documentDate": "2026-06-30",
         "asOf": "2026-06-30",
         "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/primary_doc.xml",
-        "note": "Goanna Capital 26E LLC: balance 50,895, valUSD 35,040,868.20. Carry 0%/0%."
+        "note": "Goanna Capital 26E LLC: balance 50,895, valUSD 35,040,868.20. Carry 0%/0%.",
+        "publicationDate": "2026-08-28",
+        "measurementDate": "2026-06-30",
+        "section": "See source note"
       },
       {
-        "fields": ["exclusions"],
+        "fields": [
+          "exclusions"
+        ],
         "sourceClass": "primary",
         "issuer": "Destiny Tech100 Inc.",
         "filingType": "N-CSRS",
@@ -133,10 +172,15 @@
         "documentDate": "2026-06-30",
         "asOf": "2026-06-30",
         "url": "https://www.sec.gov/Archives/edgar/data/1843974/000121390026095201/ea0302101-01_ncsrs.htm",
-        "note": "DXYZ OAI I LLC 11,236 units, FV $7,735,911 are OpenAI Group PBC Profit Participation Units, not equity."
+        "note": "DXYZ OAI I LLC 11,236 units, FV $7,735,911 are OpenAI Group PBC Profit Participation Units, not equity.",
+        "publicationDate": "2026-08-28",
+        "measurementDate": "2026-06-30",
+        "section": "See source note"
       },
       {
-        "fields": ["subsequentPurchasesUsd"],
+        "fields": [
+          "acquisition"
+        ],
         "sourceClass": "primary",
         "issuer": "Destiny Tech100 Inc.",
         "filingType": "424B3",
@@ -144,8 +188,24 @@
         "documentDate": "2026-08-13",
         "asOf": "2026-08-13",
         "url": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm",
-        "note": "Subsequent event: additional $150.0M into Goanna Capital 26E (OpenAI Class A Common) on 2026-08-13, funded from existing cash. Applied on ESTIMATED only."
+        "note": "Subsequent event: additional $150.0M into Goanna Capital 26E (OpenAI Class A Common) on 2026-08-13, funded from existing cash. Applied on ESTIMATED only.",
+        "publicationDate": "2026-08-28",
+        "measurementDate": "2026-08-13",
+        "section": "See source note"
       }
-    ]
+    ],
+    "unitsAsOf": "2026-06-30",
+    "unitLabel": "Goanna Capital 26E — June Series C preferred equivalents",
+    "acquisition": {
+      "id": "goanna-2026-08-13",
+      "date": "2026-08-13",
+      "publicationDate": "2026-08-28",
+      "costUsd": 150000000,
+      "security": "Class A Common via Goanna Capital 26E",
+      "funding": "existing-cash",
+      "unitsDisclosed": false,
+      "entryPriceModel": "dxyz-openai-august-entry",
+      "note": "Purchase cost is filed; acquired units and entry price are not disclosed. Different security from the June preferred lot; parity and the June mark as entry-price proxy are assumptions."
+    }
   }
 }

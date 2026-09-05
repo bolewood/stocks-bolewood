@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "1.1.0",
-  "methodologyVersion": "1.1.0",
+  "schemaVersion": "1.2.0",
+  "methodologyVersion": "1.2.0",
   "ticker": "MSFT",
   "yahooSymbol": "MSFT",
   "name": "Microsoft Corporation",
@@ -19,28 +19,42 @@
   },
   "sources": [
     {
-      "fields": ["shareCount"],
+      "fields": [
+        "shareCount"
+      ],
       "sourceClass": "primary",
       "issuer": "Microsoft Corporation",
       "filingType": "10-Q",
       "documentDate": "2026-03-31",
-      "asOf": "2026-04-23"
+      "asOf": "2026-04-23",
+      "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526191507/msft-20260331.htm",
+      "measurementDate": "2026-04-23",
+      "publicationDate": "2026-04-29",
+      "section": "See source note"
     }
   ],
   "anthropic": {
     "basis": "commitment",
     "holdingSecurity": "unknown",
-    "commitmentAsOf": "2025-11",
-    "status": "undisclosed-percentage",
+    "commitmentAsOf": "2025-11-18",
+    "status": "partly-invested-amount-undisclosed",
     "confidence": "low",
     "sources": [
       {
-        "fields": ["status"],
-        "sourceClass": "secondary",
-        "documentDate": "2025-11",
-        "note": "Capital committed to Anthropic; ownership percentage not disclosed. No primary issuer filing states a percentage."
+        "fields": [
+          "status",
+          "commitmentAmount"
+        ],
+        "sourceClass": "primary",
+        "url": "https://www.anthropic.com/news/microsoft-nvidia-anthropic-announce-strategic-partnerships",
+        "measurementDate": "2025-11-18",
+        "publicationDate": "2025-11-18",
+        "asOf": "2025-11-18",
+        "section": "See source note",
+        "note": "Up to $5B from Microsoft and $10B from NVIDIA. Announced commitment, no quantified ownership. Series G later says a portion was included, without allocating amounts."
       }
-    ]
+    ],
+    "commitmentAmount": 5000000000
   },
   "openai": {
     "basis": "disclosed",
@@ -50,13 +64,19 @@
     "confidence": "high",
     "sources": [
       {
-        "fields": ["ownershipPct"],
+        "fields": [
+          "ownershipPct"
+        ],
         "sourceClass": "primary",
         "issuer": "Microsoft Corporation",
         "filingType": "10-Q",
         "documentDate": "2026-03-31",
         "asOf": "2026-03-31",
-        "note": "~27% of OpenAI as-converted, equity method."
+        "note": "~27% of OpenAI as-converted, equity method.",
+        "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526191507/msft-20260331.htm",
+        "measurementDate": "2026-03-31",
+        "publicationDate": "2026-04-29",
+        "section": "See source note"
       }
     ]
   }

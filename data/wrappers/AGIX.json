@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "1.1.0",
-  "methodologyVersion": "1.1.0",
+  "schemaVersion": "1.2.0",
+  "methodologyVersion": "1.2.0",
   "ticker": "AGIX",
   "yahooSymbol": "AGIX",
   "name": "KraneShares Public-Private AI ETF",
@@ -21,11 +21,19 @@
   },
   "sources": [
     {
-      "fields": ["shareCount"],
+      "fields": [
+        "shareCount"
+      ],
       "sourceClass": "primary",
       "issuer": "KraneShares",
       "documentDate": "2026-08-18",
-      "asOf": "2026-08-18"
+      "asOf": "2026-08-18",
+      "url": "https://kraneshares.com/etf/agix/",
+      "verificationStatus": "unverified",
+      "note": " Issuer locator is live; dated snapshot/exact filing still needs archival verification.",
+      "measurementDate": "2026-08-18",
+      "publicationDate": null,
+      "section": "See source note"
     }
   ],
   "anthropic": {
@@ -38,19 +46,31 @@
     "confidence": "high",
     "sources": [
       {
-        "fields": ["reportedFairValue"],
+        "fields": [
+          "reportedFairValue"
+        ],
         "sourceClass": "primary",
         "issuer": "KraneShares",
         "documentDate": "2026-08-18",
         "asOf": "2026-08-18",
-        "note": "Holdings page: Anthropic PBC $12,926,025 (1.92% of NAV). NAV weight has printed ~1.9–2.8% (Mar 31 report 2.7%; Jul 31 blog 2.82%)."
+        "note": "Holdings page: Anthropic PBC $12,926,025 (1.92% of NAV). NAV weight has printed ~1.9–2.8% (Mar 31 report 2.7%; Jul 31 blog 2.82%). Issuer locator is live; dated snapshot/exact filing still needs archival verification.",
+        "url": "https://kraneshares.com/etf/agix/",
+        "verificationStatus": "unverified",
+        "measurementDate": "2026-08-18",
+        "publicationDate": null,
+        "section": "See source note"
       },
       {
-        "fields": ["measurementCompanyMark"],
+        "fields": [
+          "measurementCompanyMark"
+        ],
         "sourceClass": "primary",
         "issuer": "Anthropic",
         "documentDate": "2026-05-28",
-        "url": "https://www.anthropic.com/news/series-h"
+        "url": "https://www.anthropic.com/news/series-h",
+        "measurementDate": "2026-05-28",
+        "publicationDate": null,
+        "section": "See source note"
       }
     ]
   },

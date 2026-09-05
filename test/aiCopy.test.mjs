@@ -50,7 +50,7 @@ test("open-data callout sits above Sources & footnotes with a two-line audit pro
   assert.equal(lines.length, 2);
   assert.match(lines[0], /github\.com\/bolewood\/stocks-bolewood/);
   assert.match(lines[0], /npm run reference/);
-  assert.match(lines[1], /derived \(not stored\)/);
+  assert.match(lines[1], /scenario outputs are derived/);
   assert.match(lines[1], /expected-results\.json/);
 });
 

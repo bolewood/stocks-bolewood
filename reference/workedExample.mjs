@@ -1,7 +1,4 @@
-import {
-  impliedExposure,
-  lookThroughFiledFv,
-} from "./derive.mjs";
+import { unitPrice } from './unitExposure.mjs';
 import { loadPublicDataset, readJson, rowFromData } from "./calculate.mjs";
 
 function fmtUsd(n) {
@@ -60,13 +57,12 @@ export function dxyzAnthropicWorkedExample(
   if (!raw?.anthropic) throw new Error("DXYZ Anthropic leg missing from data/");
   const row = rowFromData(raw, dataset.marks, fixtures);
   const leg = raw.anthropic;
-  const exposure = impliedExposure(leg, dataset.marks);
+  const exposure = row.anthPct;
   const shares = row.wrapperValue / row.price;
   const markPerUnit = leg.filedUnits > 0 ? leg.reportedFairValue / leg.filedUnits : null;
-  const per100 = lookThroughFiledFv({
-    fairValue: leg.reportedFairValue,
-    wrapperValue: row.wrapperValue,
-  });
+  const per100 = row.anthPer100;
+  const fdShares = fixtures.anthFdShares;
+  const scenarioPps = unitPrice({ valuation: fixtures.anthVal, fdShares, dilution: fixtures.dilution });
   const navSens = leg.filedUnits / shares;
   const filing = raw.filedSnapshot?.filingType || "filing";
   return {
@@ -78,6 +74,8 @@ export function dxyzAnthropicWorkedExample(
     filedUnits: leg.filedUnits,
     markPerUnit,
     impliedExposure: exposure,
+    fdShares,
+    scenarioPps,
     shares,
     price: row.price,
     wrapperValue: row.wrapperValue,
@@ -106,14 +104,16 @@ basis:                    ${ex.basis}
 filedUnits:               ${col(ex.unitsLabel)}
 reportedFairValue:        ${col(ex.fvLabel)} (as of ${ex.fairValueAsOf}, ${ex.filingType})
 → markPerUnit:            ${col(ex.markLabel)} (computed, not stored)
-→ impliedExposure:        none — no public fully diluted share count
+→ estimated FD shares:    ${fmtShares(ex.fdShares)} (adjustable calibration proxy, not filed)
+→ scenario price:         ${fmtPrice(ex.scenarioPps)} = valuation × (1 − dilution) ÷ estimated FD shares
+→ scenario exposure:      ${(ex.impliedExposure * 100).toPrecision(8)}% (units ÷ estimated FD shares)
 
 ΔNAV per $1 PPS:          ${col(ex.navSensLabel)} (${ex.unitsLabel} ÷ ${ex.sharesLabel})
 denominator:              ${col(ex.denomLabel)} (market-cap: ${ex.sharesLabel} sh × ${ex.priceLabel})
 
-${ex.fvLabel} ÷ ${ex.denomLabel} × $100  =  ${ex.per100Label} per $100
+${ex.unitsLabel} × ${fmtPrice(ex.scenarioPps)} ÷ ${ex.denomLabel} × $100  =  ${ex.per100Label} per $100
 \`\`\`
 
-*(${ex.priceLabel} from \`reference/fixtures.json\` — frozen for reproducibility, not a live quote. The $T IPO slider does not apply to this row.)*
+*(${ex.priceLabel} from \`reference/fixtures.json\` — frozen prices dated August 19 with the September 5 dataset, not a historical backtest. Filed Holdings; both valuation and FD controls revalue this row. Display digits are rounded; calculation uses full precision.)*
 <!-- END GENERATED: worked-example -->`;
 }

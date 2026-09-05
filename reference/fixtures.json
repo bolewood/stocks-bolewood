@@ -1,6 +1,6 @@
 {
-  "asOf": "2026-08-19",
-  "note": "Frozen prices for reproducibility only. Not live quotes and not part of the public data/ dataset — live market data stays a runtime input.",
+  "asOf": "2026-09-05",
+  "note": "Historical frozen price inputs dated August 19 combined with the September 5 dataset. This is not a knowable-as-of August 19 backtest. Other fixtures cover Estimated Holdings and frozen ATM bridge.",
   "anthVal": 965000000000,
   "oaiVal": 852000000000,
   "dilution": 0,
@@ -16,5 +16,11 @@
     "DXYZ": 32.84,
     "ARKVX": 57.43,
     "VCX": 39.78
-  }
+  },
+  "priceAsOf": "2026-08-19",
+  "holdingsBasis": "filed",
+  "deploy": "cash",
+  "anthFdShares": 1580904637.8663518,
+  "oaiFdShares": 1237484749.307667,
+  "dxyzOaiEntryPrice": 688.4933333333333
 }

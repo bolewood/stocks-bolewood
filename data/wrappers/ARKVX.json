@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "1.1.0",
-  "methodologyVersion": "1.1.0",
+  "schemaVersion": "1.2.0",
+  "methodologyVersion": "1.2.0",
   "ticker": "ARKVX",
   "yahooSymbol": "ARKVX",
   "name": "ARK Venture Fund",
@@ -28,21 +28,34 @@
   },
   "sources": [
     {
-      "fields": ["totalNetAssets"],
+      "fields": [
+        "totalNetAssets"
+      ],
       "sourceClass": "primary",
       "issuer": "ARK Venture Fund",
       "filingType": "NPORT-EX",
       "documentDate": "2026-04-30",
       "asOf": "2026-04-30",
-      "note": "Net Assets–100.0% $871,119,657. Same schedule as the holdings FVs."
+      "note": "Net Assets–100.0% $871,119,657. Same schedule as the holdings FVs.",
+      "url": "https://assets.ark-funds.com/media-12243148-2a3e-4996-9763-260f93905eb9/867a89f5-7ecf-4628-8f53-99b9abfaa571/ARK%20Venture%20Fund%20Schedule%20Of%20Investments%2004.30.26.pdf",
+      "measurementDate": "2026-04-30",
+      "publicationDate": null,
+      "section": "Schedule of investments pp. 4–6"
     },
     {
-      "fields": ["shareCount"],
+      "fields": [
+        "shareCount"
+      ],
       "sourceClass": "primary",
       "issuer": "ARK Invest",
       "documentDate": "2026-07-31",
       "asOf": "2026-07-31",
-      "note": "Published Class D shares outstanding."
+      "note": "Published Class D shares outstanding. Issuer locator is live; dated snapshot/exact filing still needs archival verification.",
+      "url": "https://www.ark-funds.com/reports-venture",
+      "verificationStatus": "unverified",
+      "measurementDate": "2026-07-31",
+      "publicationDate": null,
+      "section": "See source note"
     }
   ],
   "anthropic": {
@@ -55,21 +68,35 @@
     "confidence": "medium",
     "sources": [
       {
-        "fields": ["reportedFairValue"],
+        "fields": [
+          "reportedFairValue"
+        ],
         "sourceClass": "primary",
         "issuer": "ARK Venture Fund",
         "filingType": "NPORT-EX",
         "documentDate": "2026-04-30",
         "asOf": "2026-04-30",
-        "note": "Anthropic, Inc. Series C-1 $23,083,673. Same schedule TNA $871,119,657."
+        "note": "Anthropic, Inc. Series C-1 $23,083,673. Same schedule TNA $871,119,657.",
+        "url": "https://assets.ark-funds.com/media-12243148-2a3e-4996-9763-260f93905eb9/867a89f5-7ecf-4628-8f53-99b9abfaa571/ARK%20Venture%20Fund%20Schedule%20Of%20Investments%2004.30.26.pdf",
+        "measurementDate": "2026-04-30",
+        "publicationDate": null,
+        "section": "Schedule of investments pp. 4–6"
       },
       {
-        "fields": ["measurementCompanyMark"],
-        "sourceClass": "primary",
+        "fields": [
+          "measurementCompanyMark"
+        ],
+        "sourceClass": "assumption",
         "issuer": "ARK Venture Fund",
         "filingType": "NPORT-EX",
         "documentDate": "2026-04-30",
-        "asOf": "2026-02-12"
+        "asOf": "2026-02-12",
+        "url": "https://assets.ark-funds.com/media-12243148-2a3e-4996-9763-260f93905eb9/867a89f5-7ecf-4628-8f53-99b9abfaa571/ARK%20Venture%20Fund%20Schedule%20Of%20Investments%2004.30.26.pdf",
+        "note": "Measurement-valuation matching is a modeling assumption, not a filed cap table.",
+        "measurementDate": "2026-02-12",
+        "publicationDate": null,
+        "section": "See source note",
+        "estimationMethod": "Associate the April fund mark with the February Series G valuation. The schedule supplies FV but does not disclose this company-wide valuation."
       }
     ]
   },
@@ -82,27 +109,51 @@
     "measurementMarkAsOf": "2026-03-31",
     "confidence": "medium",
     "components": [
-      { "label": "OpenAI lot", "amount": 7321148 },
-      { "label": "OpenAI lot", "amount": 11205221 },
-      { "label": "OpenAI lot", "amount": 49999651 },
-      { "label": "SPV", "amount": 3986608 }
+      {
+        "label": "OpenAI lot",
+        "amount": 7321148
+      },
+      {
+        "label": "OpenAI lot",
+        "amount": 11205221
+      },
+      {
+        "label": "OpenAI lot",
+        "amount": 49999651
+      },
+      {
+        "label": "SPV",
+        "amount": 3986608
+      }
     ],
     "sources": [
       {
-        "fields": ["reportedFairValue", "components"],
+        "fields": [
+          "reportedFairValue",
+          "components"
+        ],
         "sourceClass": "primary",
         "issuer": "ARK Venture Fund",
         "filingType": "NPORT-EX",
         "documentDate": "2026-04-30",
         "asOf": "2026-04-30",
-        "note": "OpenAI lots $7,321,148 + $11,205,221 + $49,999,651 + SPV $3,986,608 = $72,512,628."
+        "note": "OpenAI lots $7,321,148 + $11,205,221 + $49,999,651 + SPV $3,986,608 = $72,512,628.",
+        "url": "https://assets.ark-funds.com/media-12243148-2a3e-4996-9763-260f93905eb9/867a89f5-7ecf-4628-8f53-99b9abfaa571/ARK%20Venture%20Fund%20Schedule%20Of%20Investments%2004.30.26.pdf",
+        "measurementDate": "2026-04-30",
+        "publicationDate": null,
+        "section": "Schedule of investments pp. 4–6"
       },
       {
-        "fields": ["measurementCompanyMark"],
+        "fields": [
+          "measurementCompanyMark"
+        ],
         "sourceClass": "primary",
         "issuer": "OpenAI",
         "documentDate": "2026-03-31",
-        "url": "https://openai.com/index/accelerating-the-next-phase-ai/"
+        "url": "https://openai.com/index/accelerating-the-next-phase-ai/",
+        "measurementDate": "2026-03-31",
+        "publicationDate": null,
+        "section": "See source note"
       }
     ]
   }

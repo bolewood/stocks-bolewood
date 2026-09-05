@@ -1,7 +1,7 @@
 {
-  "schemaVersion": "1.1.0",
-  "methodologyVersion": "1.1.0",
-  "asOf": "2026-08-19",
+  "schemaVersion": "1.2.0",
+  "methodologyVersion": "1.2.0",
+  "asOf": "2026-09-05",
   "lastPrimary": {
     "anthropic": "anthropic-series-h",
     "openai": "openai-mar-2026"
@@ -17,12 +17,17 @@
           "closed": "2026-02-12",
           "sources": [
             {
-              "fields": ["postMoney", "closed"],
+              "fields": [
+                "postMoney",
+                "closed"
+              ],
               "sourceClass": "primary",
-              "issuer": "Zoom Communications, Inc.",
-              "filingType": "10-Q",
-              "documentDate": "2026-04-30",
-              "note": "ZM carrying value marked to the Feb 12, 2026 ~$380B round."
+              "url": "https://www.anthropic.com/news/anthropic-raises-30-billion-series-g-funding-380-billion-post-money-valuation",
+              "measurementDate": "2026-02-12",
+              "publicationDate": "2026-02-12",
+              "asOf": "2026-02-12",
+              "section": "See source note",
+              "note": "Series G issuer announcement."
             }
           ]
         },
@@ -33,12 +38,18 @@
           "closed": "2026-05-28",
           "sources": [
             {
-              "fields": ["postMoney", "closed"],
+              "fields": [
+                "postMoney",
+                "closed"
+              ],
               "sourceClass": "primary",
               "issuer": "Anthropic",
               "documentDate": "2026-05-28",
               "url": "https://www.anthropic.com/news/series-h",
-              "note": "Anthropic newsroom Series H close."
+              "note": "Anthropic newsroom Series H close.",
+              "measurementDate": "2026-05-28",
+              "publicationDate": "2026-05-28",
+              "section": "Financing announcement or measurement assumption"
             }
           ]
         },
@@ -49,7 +60,9 @@
           "closed": "2026-06-30",
           "sources": [
             {
-              "fields": ["postMoney"],
+              "fields": [
+                "postMoney"
+              ],
               "sourceClass": "secondary",
               "issuer": "Fundrise Innovation Fund",
               "filingType": "NPORT-P",
@@ -57,7 +70,10 @@
               "documentDate": "2026-06-30",
               "asOf": "2026-06-30",
               "url": "https://www.sec.gov/Archives/edgar/data/1867090/000186709026000109/xslFormNPORT-P_X01/primary_doc.xml",
-              "note": "Series G $380B × 2.2729709, the common multiple on VCX's remaining Anthropic lots (SaxeCap Advisors VIII and AI Access 12) from the March 31 NPORT to the June 30 NPORT. Not a disclosed Anthropic round."
+              "note": "Series G $380B × 2.2729709, the common multiple on VCX's remaining Anthropic lots (SaxeCap Advisors VIII and AI Access 12) from the March 31 NPORT to the June 30 NPORT. Not a disclosed Anthropic round.",
+              "measurementDate": "2026-06-30",
+              "publicationDate": "2026-06-30",
+              "section": "Financing announcement or measurement assumption"
             }
           ]
         }
@@ -72,11 +88,21 @@
           "postMoney": 850000000000,
           "sources": [
             {
-              "fields": ["postMoney"],
-              "sourceClass": "secondary",
-              "note": "Fund fair-value marks around the Feb 2026 ~$850B print (Hiive ~$851B). Used only as the measurement mark for FVs dated to that print, not as a last-primary anchor."
+              "fields": [
+                "postMoney"
+              ],
+              "sourceClass": "assumption",
+              "url": "https://www.sec.gov/Archives/edgar/data/1867090/000186709026000109/04400.htm",
+              "measurementDate": "2026-02",
+              "publicationDate": null,
+              "asOf": "2026-02",
+              "section": "See source note",
+              "note": "Unverified inherited $850B measurement assumption. Filing corroborates unchanged lot values, not the company valuation. The cited historical Hiive print is not archived.",
+              "estimationMethod": "Retained measurement sensitivity assumption; not a documented financing round.",
+              "verificationStatus": "unverified"
             }
-          ]
+          ],
+          "closed": "2026-02"
         },
         {
           "id": "openai-mar-2026",
@@ -85,12 +111,18 @@
           "closed": "2026-03-31",
           "sources": [
             {
-              "fields": ["postMoney", "closed"],
+              "fields": [
+                "postMoney",
+                "closed"
+              ],
               "sourceClass": "primary",
               "issuer": "OpenAI",
               "documentDate": "2026-03-31",
               "url": "https://openai.com/index/accelerating-the-next-phase-ai/",
-              "note": "$852B post-money, $122B committed. OpenAI newsroom 2026-03-31."
+              "note": "$852B post-money, $122B committed. OpenAI newsroom 2026-03-31.",
+              "measurementDate": "2026-03-31",
+              "publicationDate": "2026-03-31",
+              "section": "Financing announcement or measurement assumption"
             }
           ]
         }

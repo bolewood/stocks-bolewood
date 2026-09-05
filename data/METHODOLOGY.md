@@ -1,6 +1,6 @@
 # Methodology
 
-`schemaVersion` **1.1.0** · `methodologyVersion` **1.1.0** · as of 2026-08-30
+`schemaVersion` **1.2.0** · `methodologyVersion` **1.2.0** · as of 2026-09-05
 
 This dataset estimates Anthropic and OpenAI **exposure** in public wrappers. Exposure is not always legal ownership. Each leg declares a `basis` so those cases are not flattened into one number.
 
@@ -79,11 +79,11 @@ The scenario sliders then apply that **same percentage** to a user-chosen IPO va
 
 We hold that equivalent percentage constant when applying scenario valuations. This is a convention, not a claim of legal ownership. It may diverge from realized economics because of liquidation preferences, conversion mechanics, SPV-level economics, manager valuation methodology, and other security-specific terms.
 
-This identity does **not** apply to `filed-units`. DXYZ Anthropic and OpenAI equity are filed unit counts. Per $100 is `reportedFairValue × 100 / wrapper market cap` and does not move with the $T IPO slider, because converting a company valuation into a share price requires a fully diluted share count that is not public.
+For `filed-units`, scenario exposure is units divided by the selected estimated pre-IPO FD share count. That ratio stays fixed as valuation changes and changes inversely with FD. Filed unit marks remain historical observations.
 
 ## Filed units
 
-**Filed-units exposure** is a fund's NPORT `balance` (share-equivalent units of the underlying company) and `valUSD`. Mark per unit is computed as `valUSD / units`. It is never stored next to those inputs.
+**Filed-units exposure** starts from a filed quantity of underlying or share-equivalent securities. A USD mark per unit, when available, is computed as `valUSD / units`. SKM's KRW book value remains in KRW and is not used as a USD mark.
 
 - DXYZ Anthropic: 386,088 Magnitude ANC III units, $235,671,976.08, 0% carry. `ΔNAV/share = 386,088 ÷ 47,657,338 = $0.008101` per $1 of Anthropic share price.
 - DXYZ OpenAI equity: 50,895 Goanna Capital 26E units, $35,040,868.20, 0% carry. PPUs (11,236 units, $7,735,911.09) are excluded from this identity.
@@ -99,7 +99,7 @@ SpaceX units underwent a 5:1 Unit Parity restatement between March 31 and June 3
 | --- | --- |
 | `disclosed` / `pro-forma` / `historical` | A stated ownership percentage |
 | `filed-fv-equiv` | Reported fair value ÷ measurement mark |
-| `filed-units` | Filed share-equivalent units × price; no company-ownership % |
+| `filed-units` | Filed units × scenario price; estimated equivalent stake = units / selected FD shares |
 | `carrying-value-equiv` | Reported carrying value ÷ measurement mark |
 | `round-implied` | Dollars invested ÷ round post-money |
 | `commitment` | An amount or status with **no** percentage |
@@ -116,7 +116,7 @@ SpaceX units underwent a 5:1 Unit Parity restatement between March 31 and June 3
 | Unlisted interval fund (ARKVX) | Total net assets from the same holdings schedule, not a synthetic share count |
 | Listed closed-end fund | Market cap, even when the fund also reports NAV (the premium is shown separately) |
 
-SKM: ordinary shares from the 20-F, ADS ratio 5/9, ADS-equivalent = ordinary × 9/5. SFTBY: Tokyo common × 2 for the 1:2 ADR.
+SKM: ordinary shares from the June 30 DART half-year report, ADS ratio 5/9, ADS-equivalent = ordinary × 9/5. SFTBY: Tokyo common × 2 for the 1:2 ADR.
 
 ## ATM issuance bridge (DXYZ)
 
@@ -140,10 +140,64 @@ DXYZ and ARKVX raised capital after the holdings print. Until the next N-PORT, i
 
 ## Exclusions
 
-**DXYZ OAI I PPUs** (11,236 units, $7,735,911.09 on the June 30 NPORT) are **not equity** per the N-CSR and are **excluded from IPO scaling**. Only Goanna Capital 26E (50,895 units) is treated as OpenAI equity exposure. The Aug 13 $150M additional Goanna purchase is applied on ESTIMATED only (cash already inside June 30 NAV).
+**DXYZ OAI I PPUs** (11,236 units, $7,735,911.09 on the June 30 NPORT) are **not equity** per the N-CSR and are **excluded from IPO scaling**. June Goanna Series C has 50,895 units; the August Class A Common purchase is a separate estimated-unit lot. The Aug 13 $150M additional Goanna purchase is applied on ESTIMATED only (cash already inside June 30 NAV).
 
 Amazon's $100B AWS commitments are not equity.
 
 ## What is not modeled
 
 Taxes, liquidation preferences, conversion terms, anti-dilution, transfer restrictions, lockups, future financing, and — except for DXYZ SpaceX SPVs on `/dxyz` — carried interest. Gross scenario estimates, not NAV, liquidation value, expected proceeds, or price targets. DXYZ private marks are not last-primary-round marks.
+
+## Holdings modes and valuation scenarios (v1.2)
+
+**Filed Holdings** fixes fund quantities and wrapper denominators to filed snapshots. **Estimated Holdings** adds known subsequent purchases and explicitly modeled ATM/inflow assumptions. Both modes revalue every quantified exposure under both company valuation sliders. They select holdings; they do not switch valuation sensitivity off. Strategic rows retain their individual historical, pro forma, round-implied or other basis in either mode. In particular SoftBank's 13% is not current funded ownership.
+
+```
+scenario company price = post-IPO equity valuation × (1 − incremental IPO dilution) / pre-IPO FD shares
+scenario holding value = equivalent units × scenario company price
+scenario equivalent stake = equivalent units / pre-IPO FD shares
+per $100 = scenario holding value / wrapper denominator × 100
+```
+
+FD denominators are shared by DXYZ and SKM for Anthropic. Existing percentage/FV-equivalent legs retain their own sourced or implied percentage; changing FD does not overwrite that independent basis. Valuation and incremental dilution affect all quantified legs. No ownership is invented for null/undisclosed stakes or unallocated commitments. Preferred/common conversion at parity is a gross modeling convention, not a guarantee of identical realizable economics.
+
+### Capitalization uncertainty
+
+`data/capitalization.json` holds dated, sourced assumptions. Neither company has a verified complete public FD cap table in this dataset. Defaults use full-precision DXYZ June unit marks paired with the last primary anchors. This is a calibration proxy across different dates, securities and valuation methods, not independent confirmation of a cap table.
+
+| Company | Low preset | Recommended calibration | High preset | Interpretation |
+| --- | ---: | ---: | ---: | --- |
+| Anthropic | 1,544.132M | 1,580.904638M | 2,573.553333M | Low/high are conditional cross-checks from SKM's rounded 0.2%, assuming nearest 0.1 percentage-point rounding and a compatible ownership definition |
+| OpenAI | 928.113562M | 1,237.484749M | 1,546.855937M | Low/high are author-selected ±25% stress choices; no claim about foundation equity or option-pool size |
+
+SKM's 3,860,330 / 0.2% midpoint gives another 1,930.165M reference, **not** an upper bound. The unsupported 1,322M/NPM preset in the proposed plan is omitted. Slider limits are exploration limits, not confidence bounds. The UI labels the separate FD/entry-price sensitivity range; the main table's deployment range covers cash versus pro rata deployment only.
+
+Sources: [DXYZ June N-PORT](https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/xslFormNPORT-P_X01/primary_doc.xml), [Anthropic Series H](https://www.anthropic.com/news/series-h), [OpenAI March primary](https://openai.com/index/accelerating-the-next-phase-ai/), [SKM DART](https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813001728).
+
+### August OpenAI lot and cash reconciliation
+
+The [August 28 supplement](https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm) reports a $150M August 13 purchase of Class A Common through Goanna Capital 26E, funded from existing cash. It does not report acquired units or entry price. The independent entry-price control defaults to June preferred FV / units = $688.4933333333333; approximate acquired units = **217,867.033328815**. Low/high entry-price presets are ±25% stress assumptions, not transaction evidence. The June preferred lot and August common lot remain distinct.
+
+Acquired units = purchase cost / selected acquisition entry price. They do not change when current valuation, FD count, IPO dilution or ATM assumptions change. Pro rata ATM deployment adds its own assumed-unit lot based on the old filed book; it never scales the known August purchase. Known purchase inclusion is independent of ATM history availability. With no bridge available, Estimated Holdings retains filed wrapper shares and still includes the August acquisition.
+
+The purchase exchanges cash for equity within existing assets. Modeled assets = baseline/ATM assets + scenario equity value − the carrying amounts already included in baseline/ATM assets. Do not add $150M again. The result is a partial revaluation, not reported NAV or a full portfolio valuation. PPUs stay in historical NAV and are excluded from equity scaling.
+
+### Provenance and unresolved observations
+
+Every source record has a measurement date (day or month precision) and a URL or SEC accession. Publication dates are separate and may be null when not pinned; no fictional day is inserted. `sourceClass: assumption` requires an estimation method. A source URL is a locator, not automatic proof: `verificationStatus: unverified` explicitly flags inherited observations whose exact historical source remains unpinned. Schema validation checks structure; it cannot verify that a webpage supports a fact.
+
+GOOG's historical court exhibit, AGIX's August 18 archive and ARKVX's July 31 Class D archive remain unpinned. VCX's $850B OpenAI measurement valuation is an unverified inherited assumption; its June fair value is filed. VCX's Anthropic valuation is inferred from remaining-lot changes, not a disclosed financing. The unchanged June share-count date is retained in Estimated Holdings. The table flags mixed/estimated evidence; see `data/SOURCE_CHANGES.md` for primary evidence and outstanding gaps.
+
+### Frozen reproduction
+
+`npm run reference` verifies Filed Holdings (`fixtures.json` / `expected-results.json`) and Estimated Holdings (`estimated-fixtures.json` / `estimated-expected-results.json`). Frozen prices dated August 19 are intentionally separate from dataset availability on September 5. These fixtures are not a backtest of what was knowable August 19.
+
+Open `/ai?reference=filed` or `/ai?reference=estimated` to load those same frozen prices, quantities, FD/entry assumptions and bridge without live polling. Sliders remain interactive. Ordinary links preserve assumptions using `anthFd`/`oaiFd` in millions, `oaiEntry` in dollars and `holdings=filed|estimated`; legacy `basis` links still parse. Ordinary links do not freeze quotes or history.
+
+Copy/export scenario JSON embeds the versioned raw dataset, all numerical controls, prices, quote metadata and the resolved ATM bridge plus available input history. The bridge is a frozen numerical runtime input to the offline calculator; it is not silently rebuilt from a later history snapshot. To reproduce an export:
+
+```
+npm run reference -- --scenario /absolute/path/ai-scenario.json
+```
+
+This also checks any included expected results. The independent raw-data engine and app are cross-checked for both holdings modes, all deployment endpoints, both valuations, dilution, FD and acquisition changes. Full precision is retained until display; fixtures compare 12 significant digits. Displayed cents use the same rounding for both engines.
