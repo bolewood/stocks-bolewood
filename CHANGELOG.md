@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.13.0.1] — 2026-09-05
+
+- Disable SFTBY controls until client calculation handlers attach, preventing an early slider movement from leaving stale server-rendered results.
+
 ## [0.13.0.0] — 2026-09-05
 
 - Align `/sftby` with the shared $852B OpenAI anchor, exact SBG ADR denominator and disclosed pro forma 13% stake. Replace cost-ratio ownership with an explicitly labeled July fair-value proxy.
