@@ -31,7 +31,7 @@ import {
   AUGUST_OPENAI_SOURCE,
 } from "../lib/dxyzHoldings.mjs";
 import { SHARE_DENOMINATED, DOLLAR_DENOMINATED, OTHER_HOLDINGS, calculateDxyzNav } from "../lib/dxyzNav.mjs";
-import { CAPITALIZATION, DEFAULT_DXYZ_OAI_ENTRY_PRICE } from "../reference/unitExposure.mjs";
+import { CAPITALIZATION, DEFAULT_DXYZ_OAI_ENTRY_PRICE, unitPrice } from "../reference/unitExposure.mjs";
 import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 
 // DXYZ NAV Finder
@@ -63,6 +63,12 @@ const fmt$exact = (n) =>
 const fmtNum = (n) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(n);
 
 const fmtM = (n) => `${(n / 1_000_000).toFixed(2)}M`;
+
+const formatEvT = (dollars) => {
+  const t = dollars / 1e12;
+  if (!Number.isFinite(t)) return "";
+  return String(Number(t.toFixed(3)));
+};
 
 const CONF_COLORS = {
   FILED: { color: "#15803d", background: "#f0fdf4", border: "#15803d" },
@@ -138,10 +144,30 @@ export default function DXYZNAVFinder() {
   const [otherMOICs, setOtherMOICs] = useState(
     OTHER_HOLDINGS.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {})
   );
+  const [evDrafts, setEvDrafts] = useState({});
 
   const updatePPS = (name, val) => {
     if (name === "SpaceX") spcxFollowLive.current = false;
+    setEvDrafts((prev) => {
+      if (!(name in prev)) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
     setPpsOverrides((prev) => ({ ...prev, [name]: val }));
+    setActiveScenario(null);
+  };
+
+  const updateImpliedEV = (name, trillionStr) => {
+    const row = SHARE_DENOMINATED.find((p) => p.name === name);
+    if (!row?.fdShares) return;
+    setEvDrafts((prev) => ({ ...prev, [name]: trillionStr }));
+    const t = parseFloat(trillionStr);
+    if (!Number.isFinite(t) || t < 0) return;
+    setPpsOverrides((prev) => ({
+      ...prev,
+      [name]: unitPrice({ valuation: t * 1e12, fdShares: row.fdShares }),
+    }));
     setActiveScenario(null);
   };
 
@@ -169,6 +195,7 @@ export default function DXYZNAVFinder() {
 
   const resetToMark = () => {
     spcxFollowLive.current = true;
+    setEvDrafts({});
     setPpsOverrides(
       SHARE_DENOMINATED.reduce((acc, p) => ({
         ...acc,
@@ -184,6 +211,7 @@ export default function DXYZNAVFinder() {
   const restoreJuneSnapshot = () => {
     resetToMark();
     spcxFollowLive.current = false;
+    setEvDrafts({});
     setPpsOverrides(Object.fromEntries(SHARE_DENOMINATED.map(p => [p.name, p.mark_pps_1231])));
     setDxyzShares(DXYZ_SHARES_OUTSTANDING_M);
     setIncludeAugust(false);
@@ -193,6 +221,7 @@ export default function DXYZNAVFinder() {
 
   const applyAggressive = () => {
     spcxFollowLive.current = false;
+    setEvDrafts({});
     setPpsOverrides({
       "SpaceX": 142,
       "Anthropic": Number((2 * markPerUnit(ANTHROPIC_SPV)).toFixed(2)),
@@ -223,6 +252,7 @@ export default function DXYZNAVFinder() {
 
   const applyDream = () => {
     spcxFollowLive.current = false;
+    setEvDrafts({});
     setPpsOverrides({
       "SpaceX": 284,
       "Anthropic": Number((4 * markPerUnit(ANTHROPIC_SPV)).toFixed(2)),
@@ -392,7 +422,7 @@ export default function DXYZNAVFinder() {
         <div style={styles.howToTitle}>How this works</div>
         <ol style={styles.howToList}>
           <li style={{ marginBottom: 6 }}>The fund holds share-equivalent units (Box 1) and other SPVs (Box 2). Anthropic is a $/share input: {ANTHROPIC_SPV.units.toLocaleString("en-US")} units, so ΔNAV/share = ${ANTHROPIC_NAV_SENS.toFixed(6)} per $1 of Anthropic price.</li>
-          <li style={{ marginBottom: 6 }}>Update price-per-share for Box 1 and MOIC for Box 2. Private-price defaults are the June 30, 2026 marks. Subsequent purchases through August 13 are included by default; their cash cost is deducted once.</li>
+          <li style={{ marginBottom: 6 }}>Update price-per-share for Box 1 (or implied EV ($T) for Anthropic and OpenAI) and MOIC for Box 2. Private-price defaults are the June 30, 2026 marks. Subsequent purchases through August 13 are included by default; their cash cost is deducted once.</li>
           <li style={{ marginBottom: 6 }}>SpaceX uses the live Yahoo SPCX quote with per-SPV carried interest (MWAM 10%; others 0%). June 30 units are already post 5-for-1 Unit Parity.</li>
           <li style={{ marginBottom: 6 }}>The ATM Issuance Bridge estimates share issuance since June 30 (default: Calibrated Estimate). April 1–June 30 sales of 17,191,674 shares are already in the filed baseline — the ATM toggle only controls issuance. Use Restore June 30 snapshot for the original filed holdings and marks.</li>
           <li>The bottom bar shows the implied premium vs. the current DXYZ market price.</li>
@@ -742,24 +772,26 @@ export default function DXYZNAVFinder() {
         <div style={styles.sectionHeader} className="vcx-section-header">
           <span style={styles.sectionNum}>01</span>
           <h2 style={styles.sectionTitle}>Positions valued by share price</h2>
-          <span style={styles.sectionMeta} className="vcx-section-meta">Edit PPS to mark each position to current market</span>
+          <span style={styles.sectionMeta} className="vcx-section-meta">Edit PPS or implied EV ($T) — Anthropic/OpenAI EV uses estimated FD from /ai</span>
         </div>
 
         <div style={styles.tableWrap}>
           <div style={styles.tableHeaderRow} className="vcx-table-header">
-            <div style={{ ...styles.th, flex: "2.2" }}>Company</div>
-            <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>Shares (K)</div>
-            <div style={{ ...styles.th, flex: "1.4", textAlign: "right" }}>Your PPS ($)</div>
-            <div style={{ ...styles.th, flex: "1.4", textAlign: "right" }}>Position Value</div>
-            <div style={{ ...styles.th, flex: "1.2", textAlign: "right" }}>$/DXYZ share</div>
-            <div style={{ ...styles.th, flex: "1.0", textAlign: "right" }}>¢ per $1</div>
+            <div style={{ ...styles.th, flex: "2.0" }}>Company</div>
+            <div style={{ ...styles.th, flex: "1.1", textAlign: "right" }}>Shares (K)</div>
+            <div style={{ ...styles.th, flex: "1.3", textAlign: "right" }}>Your PPS ($)</div>
+            <div style={{ ...styles.th, flex: "1.3", textAlign: "right" }}>Implied EV ($T)</div>
+            <div style={{ ...styles.th, flex: "1.3", textAlign: "right" }}>Position Value</div>
+            <div style={{ ...styles.th, flex: "1.1", textAlign: "right" }}>$/DXYZ share</div>
+            <div style={{ ...styles.th, flex: "0.9", textAlign: "right" }}>¢ per $1</div>
           </div>
 
           {calc.shareRows.map((r) => {
             const delta = ((r.pps - r.mark_pps_1231) / r.mark_pps_1231) * 100;
+            const evName = r.inputName || r.name;
             return (
               <div key={r.name} data-position={r.name} style={styles.tr} className="vcx-row">
-                <div style={{ ...styles.td, flex: "2.2" }}>
+                <div style={{ ...styles.td, flex: "2.0" }}>
                   <div style={styles.companyName}>
                     {r.name} {r.estimated && <ConfBadge level="ESTIMATED" />}
                     {r.yahooSymbol ? (
@@ -768,16 +800,16 @@ export default function DXYZNAVFinder() {
                   </div>
                   <div style={styles.companyNote}>{r.note}</div>
                 </div>
-                <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Shares (K)">
+                <div style={{ ...styles.td, flex: "1.1", textAlign: "right", fontVariantNumeric: "tabular-nums" }} data-label="Shares (K)">
                   {fmtNum(r.shares_k)}
                 </div>
-                <div style={{ ...styles.td, flex: "1.4", textAlign: "right" }} className="vcx-pps-cell" data-label="Your PPS ($)">
+                <div style={{ ...styles.td, flex: "1.3", textAlign: "right" }} className="vcx-pps-cell" data-label="Your PPS ($)">
                   <input
                     type="number"
                     step="any"
                     min="0" aria-label={`${r.name} price per share`}
-                    value={ppsOverrides[r.inputName || r.name]}
-                    onChange={(e) => updatePPS(r.inputName || r.name, e.target.value)}
+                    value={ppsOverrides[evName]}
+                    onChange={(e) => updatePPS(evName, e.target.value)}
                     style={styles.ppsInput}
                     className="vcx-input"
                   />
@@ -788,31 +820,55 @@ export default function DXYZNAVFinder() {
                   )}
                   {r.yahooSymbol === SPCX_YAHOO_SYMBOL &&
                   liveSpcx != null &&
-                  Math.abs(Number(ppsOverrides[r.inputName || r.name]) - liveSpcx) < 0.005 ? (
+                  Math.abs(Number(ppsOverrides[evName]) - liveSpcx) < 0.005 ? (
                     <div style={{ ...styles.delta, color: "#15803d" }}>● LIVE {r.yahooSymbol}</div>
                   ) : null}
                 </div>
-                <div style={{ ...styles.td, flex: "1.4", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 500 }} data-label="Position Value">
+                <div style={{ ...styles.td, flex: "1.3", textAlign: "right" }} className="vcx-pps-cell" data-label="Implied EV ($T)">
+                  {r.fdShares > 0 ? (
+                    <>
+                      <input
+                        type="number"
+                        step="0.001"
+                        min="0"
+                        aria-label={`${r.name} implied enterprise value in trillions`}
+                        value={evDrafts[r.name] ?? formatEvT(r.companyValue)}
+                        onChange={(e) => updateImpliedEV(r.name, e.target.value)}
+                        onBlur={() => setEvDrafts((prev) => {
+                          if (!(r.name in prev)) return prev;
+                          const next = { ...prev };
+                          delete next[r.name];
+                          return next;
+                        })}
+                        style={styles.ppsInput}
+                        className="vcx-input"
+                      />
+                      <div style={styles.delta}>est. FD</div>
+                    </>
+                  ) : null}
+                </div>
+                <div style={{ ...styles.td, flex: "1.3", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 500 }} data-label="Position Value">
                   {fmt$(r.positionValue)}
                 </div>
-                <div style={{ ...styles.td, flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "#d97706", fontWeight: 600 }} data-label="$/DXYZ share">
+                <div style={{ ...styles.td, flex: "1.1", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "#d97706", fontWeight: 600 }} data-label="$/DXYZ share">
                   ${r.navPerShare.toFixed(2)}
                 </div>
-                <div style={{ ...styles.td, flex: "1.0", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "#1c1917", fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", fontSize: "12px" }} data-label="¢ per $1">
+                <div style={{ ...styles.td, flex: "0.9", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "#1c1917", fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", fontSize: "12px" }} data-label="¢ per $1">
                   {dxyzPrice > 0 ? (r.navPerShare / dxyzPrice * 100).toFixed(1) + "¢" : "—"}
                 </div>
               </div>
             );
           })}
           <div style={styles.subtotalRow} className="vcx-subtotal">
-            <div style={{ flex: "2.2" }}>Subtotal — share-marked</div>
-            <div style={{ flex: "1.2" }} />
-            <div style={{ flex: "1.4" }} />
-            <div style={{ flex: "1.4", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{fmt$(calc.shareTotal)}</div>
-            <div style={{ flex: "1.2", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+            <div style={{ flex: "2.0" }}>Subtotal — share-marked</div>
+            <div style={{ flex: "1.1" }} />
+            <div style={{ flex: "1.3" }} />
+            <div style={{ flex: "1.3" }} />
+            <div style={{ flex: "1.3", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{fmt$(calc.shareTotal)}</div>
+            <div style={{ flex: "1.1", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
               ${(calc.shareTotal / (dxyzShares * 1_000_000)).toFixed(2)}
             </div>
-            <div style={{ flex: "1.0", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+            <div style={{ flex: "0.9", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
               {dxyzPrice > 0 ? ((calc.shareTotal / (dxyzShares * 1_000_000)) / dxyzPrice * 100).toFixed(1) + "¢" : "—"}
             </div>
           </div>
@@ -996,6 +1052,7 @@ export default function DXYZNAVFinder() {
       <div style={styles.footer}>
         <div><strong>Changelog:</strong></div>
         <div style={{ marginBottom: "16px" }}>
+          • <strong>September 16, 2026</strong> — Anthropic and OpenAI Box 1 rows now show implied enterprise value ($T) from PPS × the same estimated FD denominator as /ai. Type 1.2 to mark OpenAI at $1.2T; a new primary may issue shares this identity does not model.<br />
           • <strong>September 5, 2026</strong> — August OpenAI units now use the shared AI Per $ model with adjustable entry price. Both OpenAI equity lots respond to PPS; purchase costs reduce cash once. Fluidstack and Boom subsequent purchases are held at cost. June snapshot remains reproducible.<br />
           • <strong>August 30, 2026</strong> — Baseline rolled to the June 30, 2026 N-CSRS (filed Aug 28) and NPORT-P. Filed shares 47,657,338, net assets $1,634,830,252, printed NAV $34.30. Anthropic, OpenAI equity, and SpaceX move to filed unit counts with per-SPV carry. ATM remaining capacity is no longer shown as a leftover $1B. August 2026 below-NAV repurchase program noted beside the ATM.<br />
           • <strong>August 28, 2026</strong> — Baseline rolled to the Aug 28 424B3 (Supplement No. 1): NAV $34.30 and ~$1.64B portfolio as of June 30, 2026. Anthropic 14.4% ($236.2M), OpenAI equity 2.1% ($34.4M), SpaceX 10.5%. Filed Q2 ATM of 17,191,674 shares is inside the baseline; the issuance bridge now estimates only from July 1. Stated ATM wavg $34.25 does not reconcile to stated net proceeds $715.4M — both stored as printed. Subsequent $150M OpenAI purchase (Aug 13) is a mix shift from cash already in June 30 NAV.<br />
@@ -1017,6 +1074,7 @@ export default function DXYZNAVFinder() {
         <div>• <strong>ATM capacity:</strong> Original $1B shelf (File 333-278734) through 2025 and Q1. New shelf {NEW_SHELF.fileNumber} (effective {NEW_SHELF.filedDate}) authorizes an <strong>indeterminate</strong> amount — there is no filed remaining-capacity dollar figure. Post–June 30 simulation uses the May 26 424B5 $1B illustration as a modeling cap only. Jefferies commission up to 3.0%.</div>
         <div>• <strong>Share repurchase:</strong> In {SHARE_REPURCHASE.approved} the Board approved repurchases of common stock at prices below then-current NAV, discretionary as to size and timing (<a href={SHARE_REPURCHASE.url} target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSRS subsequent events</a>). Presented next to the open ATM; neither is treated as dominant.</div>
         <div>• <strong>Post-June 30 Issuance (estimated):</strong> Modeled daily from July 1 as a fixed share of Yahoo Finance trading volume (calibrated from filed Q2 shares ÷ Apr–Jun volume), issuing only on days above rolling pro forma NAV. Estimated, not company reported.</div>
+        <div>• <strong>Implied EV:</strong> Anthropic and OpenAI PPS × estimated fully diluted shares from <code>data/capitalization.json</code> (same defaults as /ai: $965B and $852B last primaries ÷ June DXYZ unit marks). Dilution is 0 on this page. This is not a filed cap table. A new primary may issue shares the identity does not model.</div>
         <div>• <strong>Subsequent events (mix shift, not new ATM):</strong> Aug 13 $150.0M additional Goanna Capital 26E (OpenAI Class A Common); Jul 16 $15.0M Magnitude FSTK / Fluidstack Series B; Aug 4 $4.0M Boom SAFE. When subsequent purchases are enabled, all $169M of costs are deducted from cash. August OpenAI uses estimated units and the same scenario PPS as June equity; Fluidstack and the new Boom SAFE are held at cost. Boom Series B-2 ($1.74M FV) is already on the June 30 schedule.</div>
       </div>
 
