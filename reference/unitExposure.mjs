@@ -13,6 +13,15 @@ export function unitPrice({ valuation, fdShares, dilution = 0 }) {
   return valuation * (1 - dilution) / fdShares;
 }
 
+// Inverse of unitPrice at dilution 0: implied post-money on the selected FD
+// denominator. A new primary may issue shares this identity does not model.
+export function impliedValuation({ pps, fdShares }) {
+  if (!Number.isFinite(pps) || pps < 0 || !Number.isFinite(fdShares) || fdShares <= 0) {
+    throw new Error('Implied valuation requires finite nonnegative price and positive FD shares');
+  }
+  return pps * fdShares;
+}
+
 export function unitExposurePer100({ units, fdShares, valuation, wrapperValue, dilution = 0 }) {
   if (!Number.isFinite(units) || units < 0 || !(wrapperValue > 0)) throw new Error('Invalid units or wrapper denominator');
   return units * unitPrice({ valuation, fdShares, dilution }) * 100 / wrapperValue;

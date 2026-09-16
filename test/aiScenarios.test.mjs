@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { calculate, loadPublicDataset, readJson } from '../reference/calculate.mjs';
 import { createScenarioExport } from '../reference/engine.mjs';
-import { unitPrice, unitExposurePer100, CAPITALIZATION } from '../reference/unitExposure.mjs';
+import { unitPrice, impliedValuation, unitExposurePer100, CAPITALIZATION } from '../reference/unitExposure.mjs';
 import { WRAPPERS, parseScenarioSearch, serializeScenarioSearch } from '../lib/aiWrappers.mjs';
 import { fundRowMetrics, resolveFund } from '../lib/aiFundBasis.mjs';
 import { validateCapitalization, validateWrapper } from '../data/schema/validate.mjs';
@@ -60,8 +60,10 @@ for (const holdingsBasis of ['filed','estimated']) for (const deploy of ['cash',
 
 test('Hand-computed synthetic quantities detect wrong denominator or double dilution', () => {
   assert.equal(unitPrice({valuation:1000,fdShares:100,dilution:.1}),9);
+  assert.equal(impliedValuation({pps:unitPrice({valuation:1000,fdShares:100}),fdShares:100}),1000);
   assert.equal(unitExposurePer100({units:2,valuation:1000,fdShares:100,wrapperValue:200,dilution:.1}),9);
   for(const n of [0,-1,NaN,Infinity]) assert.throws(()=>unitPrice({valuation:1000,fdShares:n}));
+  for(const n of [0,-1,NaN,Infinity]) assert.throws(()=>impliedValuation({pps:1,fdShares:n}));
 });
 
 test('FD changes inversely revalue DXYZ and SKM; August acquisition is independent', () => {

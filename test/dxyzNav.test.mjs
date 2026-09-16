@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { calculateDxyzNav } from '../lib/dxyzNav.mjs';
-import { DEFAULT_DXYZ_OAI_ENTRY_PRICE } from '../reference/unitExposure.mjs';
-import { CAPITALIZATION, unitPrice } from '../reference/unitExposure.mjs';
+import { CAPITALIZATION, DEFAULT_DXYZ_OAI_ENTRY_PRICE, DEFAULT_ANTH_FD_SHARES, DEFAULT_OAI_FD_SHARES, impliedValuation, unitPrice } from '../reference/unitExposure.mjs';
 import { FILED, computeAtmBridge } from '../lib/dxyzAtm.mjs';
 import { MONEY_MARKET, OPENAI_PPU_SPV, OTHER_SUBSEQUENT_PURCHASES } from '../lib/dxyzHoldings.mjs';
 import { WRAPPERS } from '../lib/loadAiData.mjs';
@@ -89,4 +88,25 @@ test('ATM and wrapper share-count changes do not create additional August units 
 test('invalid acquisition prices and wrapper share counts cannot create infinite NAV', () => {
   for (const entryPrice of [0, -1, Infinity, NaN]) assert.throws(() => calculateDxyzNav({ entryPrice }));
   for (const dxyzShares of [0, -1, Infinity, NaN]) assert.throws(() => calculateDxyzNav({ dxyzShares }));
+});
+
+test('impliedValuation inverts unitPrice at dilution 0; June marks recover last-primary EV', () => {
+  const near = (actual, expected) => assert.ok(Math.abs(actual - expected) / expected < 1e-12, `${actual} != ${expected}`);
+  const headline = 1.2e12;
+  const pps = unitPrice({ valuation: headline, fdShares: DEFAULT_OAI_FD_SHARES });
+  near(impliedValuation({ pps, fdShares: DEFAULT_OAI_FD_SHARES }), headline);
+  near(impliedValuation({
+    pps: unitPrice({ valuation: 965e9, fdShares: DEFAULT_ANTH_FD_SHARES }),
+    fdShares: DEFAULT_ANTH_FD_SHARES,
+  }), 965e9);
+  for (const n of [0, -1, NaN, Infinity]) assert.throws(() => impliedValuation({ pps: 1, fdShares: n }));
+  const june = calculateDxyzNav({ includeAugust: false });
+  near(position(june, 'Anthropic').companyValue, 965e9);
+  near(position(june, 'OpenAI').companyValue, 852e9);
+  const marked = calculateDxyzNav({ ppsOverrides: { OpenAI: pps } });
+  near(position(marked, 'OpenAI').companyValue, headline);
+  close(position(marked, 'OpenAI').pps, pps);
+  close(position(marked, 'OpenAI — August purchase').pps, pps);
+  assert.ok(position(marked, 'OpenAI — August purchase').companyValue == null);
+  assert.ok(position(june, 'SpaceX').companyValue == null);
 });

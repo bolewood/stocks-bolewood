@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.13.2.0] — 2026-09-16
+
+- Add an implied enterprise-value ($T) input on the DXYZ NAV calculator for Anthropic and OpenAI, inverted from share price × the same estimated FD denominator as `/ai`, so a headline like $1.2T OpenAI can be marked without converting to PPS by hand.
+
 ## [0.13.1.0] — 2026-09-05
 
 - Connect DXYZ NAV to the shared AI exposure holdings and August OpenAI unit model. Both equity lots respond to price; an adjustable entry-price estimate determines the undisclosed August quantity.
