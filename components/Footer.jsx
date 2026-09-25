@@ -41,6 +41,10 @@ export default function Footer() {
               AI Per $
             </Link>
             <span style={styles.sep}>·</span>
+            <Link href="/muse" style={styles.link}>
+              Muse
+            </Link>
+            <span style={styles.sep}>·</span>
             <Link href="/about" style={styles.link}>
               About
             </Link>

@@ -317,6 +317,29 @@ a {
     display: inline-block;
   }
 
+  .muse-wrap {
+    padding: 24px 16px 0 !important;
+  }
+  .muse-wrap h1 {
+    font-size: 40px !important;
+  }
+  .muse-results {
+    position: sticky;
+    top: 88px;
+    z-index: 40;
+    background: #fefdf8;
+    grid-template-columns: 1fr 1fr !important;
+    padding-bottom: 8px;
+  }
+  .muse-slider-grid,
+  .muse-two,
+  .muse-tiles {
+    grid-template-columns: 1fr !important;
+  }
+  .muse-presets button {
+    width: 100%;
+  }
+
   /* Private Tape */
   .private-tape-container {
     padding: 24px 16px 0 !important;
@@ -329,5 +352,18 @@ a {
   }
   .private-tape-metric-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+@media print {
+  header, footer, .muse-controls, .muse-presets {
+    display: none !important;
+  }
+  .muse-wrap {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+  .muse-results {
+    position: static !important;
   }
 }

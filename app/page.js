@@ -44,6 +44,14 @@ const tools = [
     tag: "OTCPK: SFTBY",
   },
   {
+    slug: "/muse",
+    name: "Muse Compute Split",
+    status: "live",
+    description:
+      "Who pays and who collects if Meta subsidizes Muse at scale. Token burn, VM persistence, and explicit sliders for Graviton, EC2 overflow, and Bedrock.",
+    tag: "META × AMZN",
+  },
+  {
     slug: "/ai",
     name: "Pre-IPO Anthropic and OpenAI per $100",
     status: "live",

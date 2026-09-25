@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.14.0.0] — 2026-09-25
+
+- Add `/muse`, a static research calculator for Meta Muse compute: token burn, duty-cycle versus always-on VMs, and explicit assumptions for Graviton, EC2 overflow, and Bedrock.
+
 ## [0.13.2.0] — 2026-09-16
 
 - Add an implied enterprise-value ($T) input on the DXYZ NAV calculator for Anthropic and OpenAI, inverted from share price × the same estimated FD denominator as `/ai`, so a headline like $1.2T OpenAI can be marked without converting to PPS by hand.

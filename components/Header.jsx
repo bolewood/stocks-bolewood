@@ -14,6 +14,7 @@ export default function Header() {
     { href: "/echo", label: "ECHO" },
     { href: "/sftby", label: "SFTBY" },
     { href: "/ai", label: "AI Per $" },
+    { href: "/muse", label: "Muse" },
     { href: "/about", label: "About" },
   ];
 
