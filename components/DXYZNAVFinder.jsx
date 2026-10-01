@@ -33,6 +33,7 @@ import {
 import { SHARE_DENOMINATED, DOLLAR_DENOMINATED, OTHER_HOLDINGS, calculateDxyzNav } from "../lib/dxyzNav.mjs";
 import { CAPITALIZATION, DEFAULT_DXYZ_OAI_ENTRY_PRICE, unitPrice } from "../reference/unitExposure.mjs";
 import { startJsonPoll } from "../lib/pollLivePrices.mjs";
+import DXYZChartWall from "./DXYZChartWall";
 
 // DXYZ NAV Finder
 // Source: Destiny Tech100 N-CSRS and NPORT-P as of June 30, 2026 (filed
@@ -428,6 +429,8 @@ export default function DXYZNAVFinder() {
           <li>The bottom bar shows the implied premium vs. the current DXYZ market price.</li>
         </ol>
       </div>
+
+      <DXYZChartWall />
 
       <div style={styles.controls} className="vcx-controls">
         <div style={styles.controlGroup}>
@@ -1052,6 +1055,7 @@ export default function DXYZNAVFinder() {
       <div style={styles.footer}>
         <div><strong>Changelog:</strong></div>
         <div style={{ marginBottom: "16px" }}>
+          • <strong>October 1, 2026</strong> — Added a collapsed holdings chart wall: default-mark treemap and Notice.co two-year charts captured that day. The tiles do not follow the PPS sliders.<br />
           • <strong>September 16, 2026</strong> — Anthropic and OpenAI Box 1 rows now show implied enterprise value ($T) from PPS × the same estimated FD denominator as /ai. Type 1.2 to mark OpenAI at $1.2T; a new primary may issue shares this identity does not model.<br />
           • <strong>September 5, 2026</strong> — August OpenAI units now use the shared AI Per $ model with adjustable entry price. Both OpenAI equity lots respond to PPS; purchase costs reduce cash once. Fluidstack and Boom subsequent purchases are held at cost. June snapshot remains reproducible.<br />
           • <strong>August 30, 2026</strong> — Baseline rolled to the June 30, 2026 N-CSRS (filed Aug 28) and NPORT-P. Filed shares 47,657,338, net assets $1,634,830,252, printed NAV $34.30. Anthropic, OpenAI equity, and SpaceX move to filed unit counts with per-SPV carry. ATM remaining capacity is no longer shown as a leftover $1B. August 2026 below-NAV repurchase program noted beside the ATM.<br />

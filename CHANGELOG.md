@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.14.1.0] — 2026-10-01
+
+- Add a collapsed holdings chart wall on `/dxyz`: default-mark treemap and Notice.co two-year charts captured Oct 1, 2026. The tiles do not follow the PPS sliders.
+
 ## [0.14.0.0] — 2026-09-25
 
 - Add `/muse`, a static research calculator for Meta Muse compute: token burn, duty-cycle versus always-on VMs, and explicit assumptions for Graviton, EC2 overflow, and Bedrock.
