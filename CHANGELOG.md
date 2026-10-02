@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.15.0.2] — 2026-10-02
+
+- Overhaul `/book` UX: instant company search, overlapping holdings toggle, inline lot & valuation inspector, contained 2D sticky table scrolling, collapsible fund overview deck with live pricing pills, and shareable look-through basket calculator.
+
 ## [0.15.0.1] — 2026-10-02
 
 - Let `/book` use the full viewport on wide screens, and keep the fund column headers pinned under the site nav while the company list scrolls.

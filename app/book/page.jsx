@@ -6,7 +6,7 @@ import { disclosureSentence } from "@/lib/disclosure.mjs";
 import disclosure from "@/data/disclosure.json";
 
 const DESCRIPTION =
-  "Reported portfolio weights for Destiny Tech100 and the Fundrise Innovation Fund, and the reported fair value of each company per $100 of the fund's market price.";
+  "Reported portfolio weights and fair values per $100 across pre-IPO funds including Destiny Tech100 (DXYZ), Fundrise Innovation Fund (VCX), ARK Venture Fund (ARKVX), Robinhood Ventures (RVI), and other private-market vehicles.";
 
 export const metadata = {
   title: "Private Book",

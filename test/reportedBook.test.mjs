@@ -243,6 +243,12 @@ test("query strings cannot override a filed weight", () => {
   assert.equal(byFund.sort, "DXYZ");
   assert.equal(byFund.dir, "asc");
   assert.equal(serializeBookSearch(byFund), "?sort=dxyz&dir=asc");
+
+  const withFilters = parseBookSearch("?q=space&overlap=1&b_dxyz=5000&b_vcx=2500", { tickers: ["DXYZ", "VCX"] });
+  assert.equal(withFilters.q, "space");
+  assert.equal(withFilters.overlap, true);
+  assert.deepEqual(withFilters.basket, { DXYZ: 5000, VCX: 2500 });
+  assert.equal(serializeBookSearch(withFilters), "?q=space&overlap=1&b_dxyz=5000&b_vcx=2500");
 });
 
 test("company rows sort A–Z within a section, and a fund column keeps blanks last", () => {
