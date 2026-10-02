@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-08-19",
-  "tickers": ["DXYZ", "SKM", "ZM", "AMZN", "GOOG", "NVDA"],
+  "asOf": "2026-10-02",
+  "tickers": ["DXYZ", "SKM", "ZM", "AMZN", "GOOG", "NVDA", "NSLR", "PWRL"],
   "notes": "The DXYZ exposure includes options. Positions are subject to change without notice."
 }

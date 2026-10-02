@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.15.0.3] — 2026-10-02
+
+- Update position disclosures to October 2, 2026, adding long positions in NSLR and PWRL.
+
 ## [0.15.0.2] — 2026-10-02
 
 - Overhaul `/book` UX: instant company search, overlapping holdings toggle, inline lot & valuation inspector, contained 2D sticky table scrolling, collapsible fund overview deck with live pricing pills, and shareable look-through basket calculator.
