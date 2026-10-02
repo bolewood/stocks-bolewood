@@ -1,10 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { useLayoutEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
 export default function Header() {
   const pathname = usePathname();
+  const headerRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const el = headerRef.current;
+    if (!el) return undefined;
+    const apply = () => {
+      document.documentElement.style.setProperty("--site-header-h", `${el.offsetHeight}px`);
+    };
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const links = [
     { href: "/", label: "Home" },
@@ -20,7 +34,7 @@ export default function Header() {
   ];
 
   return (
-    <header style={styles.header}>
+    <header ref={headerRef} style={styles.header}>
       <div style={styles.inner} className="site-header-inner">
         <Link href="/" style={styles.brand}>
           <span style={styles.brandName}>stocks.bolewood.com</span>

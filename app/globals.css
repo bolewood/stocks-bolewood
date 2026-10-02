@@ -72,6 +72,47 @@ a {
   margin: 8px 0 20px;
 }
 
+/* Wide screens: the book is a comparison table, so it uses the viewport
+   instead of the 1180px reading column used by the calculators. */
+@media (min-width: 1100px) {
+  .book-page,
+  body:has(.book-page) .site-header-inner,
+  body:has(.book-page) .site-footer-inner {
+    max-width: none !important;
+  }
+}
+
+.book-scroll {
+  overflow-x: auto;
+}
+
+/* Once the table fits, drop the horizontal scroller. A scroll container
+   would keep the fund headers from sticking to the page. */
+@media (min-width: 1280px) {
+  .book-scroll {
+    overflow: visible;
+  }
+}
+
+.book-table thead th {
+  position: sticky;
+  top: var(--site-header-h, 53px);
+  z-index: 4;
+  background: #fefdf8;
+  box-shadow: inset 0 -1px 0 #e7e5e4;
+}
+
+.book-table thead th:first-child {
+  left: 0;
+  z-index: 6;
+}
+
+.book-table tbody th[scope="row"] {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+
 @media (max-width: 720px) {
   .book-page {
     padding: 24px 16px 64px !important;

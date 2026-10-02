@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.15.0.1] — 2026-10-02
+
+- Let `/book` use the full viewport on wide screens, and keep the fund column headers pinned under the site nav while the company list scrolls.
+
 ## [0.15.0.0] — 2026-10-02
 
 - Add `/book`, a company-by-fund matrix of reported NAV weights for DXYZ, RVI, BOT, NSLR, VCX, ARKVX, PIIVX, and PWRL. Dollars per $100 use the live price over the last reported NAV. RVII stays off until a post-IPO percent of net assets exists.

@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer style={styles.footer}>
-      <div style={styles.inner}>
+      <div style={styles.inner} className="site-footer-inner">
         <div style={styles.disclosure}>
           This site is for informational and educational purposes only. It does
           not constitute investment advice, an offer to buy or sell securities,

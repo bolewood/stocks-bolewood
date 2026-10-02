@@ -359,7 +359,7 @@ export default function PrivateBook({ companyMap, snapshots, disclosure }) {
       </div>
 
       <div style={styles.scroll} className="book-scroll">
-        <table style={styles.table}>
+        <table style={styles.table} className="book-table">
           <thead>
             <tr>
               <th style={styles.companyHead} aria-sort={ariaSort("name", sort, dir)}>
@@ -747,8 +747,8 @@ const styles = {
     padding: "6px 10px",
   },
   caption: { fontSize: 13, lineHeight: 1.5, color: "#57534e", margin: "8px 0 16px", maxWidth: 760 },
-  scroll: { overflowX: "auto", marginBottom: 28 },
-  table: { width: "100%", minWidth: 1280, borderCollapse: "collapse" },
+  scroll: { marginBottom: 28 },
+  table: { width: "100%", minWidth: 1160, borderCollapse: "collapse", tableLayout: "fixed" },
   corner: { width: 200 },
   cardHead: {
     textAlign: "left",
@@ -763,10 +763,9 @@ const styles = {
     letterSpacing: "0.12em",
     textTransform: "uppercase",
     color: "#78716c",
-    padding: "8px 12px 8px 0",
+    width: 280,
+    padding: "10px 16px 10px 0",
     borderBottom: "1px solid #e7e5e4",
-    position: "sticky",
-    left: 0,
     background: "#fefdf8",
   },
   viewHead: {
@@ -776,8 +775,9 @@ const styles = {
     letterSpacing: "0.12em",
     textTransform: "uppercase",
     color: "#78716c",
-    padding: "8px 0",
+    padding: "10px 8px",
     borderBottom: "1px solid #e7e5e4",
+    background: "#fefdf8",
   },
   sortBtn: {
     display: "inline-flex",
@@ -803,6 +803,8 @@ const styles = {
     alignItems: "center",
     gap: 4,
     color: "#a8a29e",
+    whiteSpace: "nowrap",
+    letterSpacing: "0.04em",
   },
   sortMark: { fontSize: 10 },
   section: {
