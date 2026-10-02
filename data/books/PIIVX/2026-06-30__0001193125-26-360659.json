@@ -1,0 +1,913 @@
+{
+  "schemaVersion": "1.0.0",
+  "ticker": "PIIVX",
+  "name": "The Private Shares Fund",
+  "vehicleType": "interval-fund",
+  "yahooSymbol": "PIIVX",
+  "premiumMode": "none",
+  "weightBasis": "net-assets",
+  "measurementDate": "2026-06-30",
+  "publicationDate": "2026-08-21",
+  "accession": "0001193125-26-360659",
+  "netAssets": 1536563954.67,
+  "note": "June 30, 2026 N-PORT for the whole fund. Quoted line is Class I (PIIVX); Classes A (PRIVX) and L (PRLVX) share this book. Interval fund, so there is no market premium and dollars per $100 equal the NAV weight. SPVs invested in SpaceX or Databricks are summed onto that company. The residual is other assets less liabilities.",
+  "sources": [
+    {
+      "fields": [
+        "netAssets",
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "url": "https://www.sec.gov/Archives/edgar/data/1557265/000119312526360659/primary_doc.xml",
+      "accession": "0001193125-26-360659",
+      "measurementDate": "2026-06-30",
+      "publicationDate": "2026-08-21",
+      "section": "N-PORT holdings"
+    }
+  ],
+  "lines": [
+    {
+      "companyId": "equipmentshare-com",
+      "fairValue": 18191280.04,
+      "role": "holding",
+      "label": "EquipmentShare.com, Inc., Class A"
+    },
+    {
+      "companyId": "eruditus-learning-solutions",
+      "fairValue": 4369086.72,
+      "role": "holding",
+      "label": "GSV ERS LP (INVESTED IN ERUDITUS LEARNING SOLUTIONS PTE., LTD. COMMON STOCK)"
+    },
+    {
+      "companyId": "motive-technologies",
+      "fairValue": 6291028.83,
+      "role": "holding",
+      "label": "MOTIVE TECHNOLOGIES SERIES E PREFERRED"
+    },
+    {
+      "companyId": "motive-technologies",
+      "fairValue": 18937550.94,
+      "role": "holding",
+      "label": "MOTIVE TECHNOLOGIES SERIES F PREFERRED"
+    },
+    {
+      "companyId": "kraken",
+      "fairValue": 6467750.46,
+      "role": "holding",
+      "label": "KRAKEN COMMON SHARES"
+    },
+    {
+      "companyId": "kraken",
+      "fairValue": 16118048.7,
+      "role": "holding",
+      "label": "KRAKEN PREFERRED A SHARES"
+    },
+    {
+      "companyId": "kraken",
+      "fairValue": 4118490,
+      "role": "holding",
+      "label": "KRAKEN SERIES SEED"
+    },
+    {
+      "companyId": "loadsmart",
+      "fairValue": 8310000,
+      "role": "holding",
+      "label": "LOADSMART SERIES D PREFERRED"
+    },
+    {
+      "companyId": "neutron-holdings-inc-4-5-7-2027-conv",
+      "fairValue": 1787866.76,
+      "role": "holding",
+      "label": "NEUTRON HOLDINGS, Inc. 4% 5/7/2027 CONV"
+    },
+    {
+      "companyId": "neutron-holdings-inc-var-10-29-2026-conv",
+      "fairValue": 23292875.55,
+      "role": "holding",
+      "label": "NEUTRON HOLDINGS, Inc. VAR 10/29/2026 CONV"
+    },
+    {
+      "companyId": "neutron-holdings",
+      "fairValue": 37785.48,
+      "role": "holding",
+      "label": "NEUTRON HOLDINGS, Inc. WARRANTS"
+    },
+    {
+      "companyId": "neutron-holdings",
+      "fairValue": 767050,
+      "role": "holding",
+      "label": "NEUTRON HOLDINGS, Inc. PREFERRED D SHARES"
+    },
+    {
+      "companyId": "lookout",
+      "fairValue": 7532714.8,
+      "role": "holding",
+      "label": "LOOKOUT,, Inc. COMMON SHARES"
+    },
+    {
+      "companyId": "lookout",
+      "fairValue": 822120,
+      "role": "holding",
+      "label": "LOOKOUT, Inc."
+    },
+    {
+      "companyId": "masterclass",
+      "fairValue": 834192,
+      "role": "holding",
+      "label": "MASTERCLASS SERIES 1 PREFERRED SHARES"
+    },
+    {
+      "companyId": "cubefabs",
+      "fairValue": 19023484.64,
+      "role": "holding",
+      "label": "CUBEFABS, INC. COMMON SHARES"
+    },
+    {
+      "companyId": "cubefabs-inc-5-4-25-2025",
+      "fairValue": 4173612.03,
+      "role": "holding",
+      "label": "CUBEFABS, INC. 5% 4/25/2025"
+    },
+    {
+      "companyId": "cubefabs",
+      "fairValue": 613941.54,
+      "role": "holding",
+      "label": "CUBEFABS, INC. SERIES E"
+    },
+    {
+      "companyId": "tanium",
+      "fairValue": 4960000,
+      "role": "holding",
+      "label": "TANIUM COMMON SHARES"
+    },
+    {
+      "companyId": "true-anomaly",
+      "fairValue": 14999975.91,
+      "role": "holding",
+      "label": "True Anomaly, Inc. PREFERRED SERIES D"
+    },
+    {
+      "companyId": "trax",
+      "fairValue": 0,
+      "role": "holding",
+      "label": "Trax Ltd. COMMON SHARES"
+    },
+    {
+      "companyId": "trax-ltd-pre-ipo",
+      "fairValue": 0,
+      "role": "holding",
+      "label": "Trax Ltd. PRE IPO SHARES"
+    },
+    {
+      "companyId": "trusper",
+      "fairValue": 184854.42,
+      "role": "holding",
+      "label": "TRUSPER INC. (D.B.A. MUSELY)"
+    },
+    {
+      "companyId": "tradeshift-12-7-31-2026",
+      "fairValue": 2227052.7,
+      "role": "holding",
+      "label": "TRADESHIFT 12% 7/31/2026"
+    },
+    {
+      "companyId": "tradeshift-holdings-inc-0-9-13-2027",
+      "fairValue": 500000,
+      "role": "holding",
+      "label": "TRADESHIFT HOLDINGS,, Inc., 0% 9/13/2027"
+    },
+    {
+      "companyId": "tradeshift",
+      "fairValue": 115279.34,
+      "role": "holding",
+      "label": "TRADESHIFT WARRANTS"
+    },
+    {
+      "companyId": "tradeshift",
+      "fairValue": 230558.68,
+      "role": "holding",
+      "label": "TRADESHIFT WARRANTS"
+    },
+    {
+      "companyId": "tradeshift",
+      "fairValue": 115279.34,
+      "role": "holding",
+      "label": "TRADESHIFT WARRANTS"
+    },
+    {
+      "companyId": "tradeshift",
+      "fairValue": 38589278.46,
+      "role": "holding",
+      "label": "TRADESHIFT PREFERRED SERIES 3"
+    },
+    {
+      "companyId": "turo-pref-d1-turo-pref-d1",
+      "fairValue": 6767066.35,
+      "role": "holding",
+      "label": "TURO PREF D1 TURO PREF D1"
+    },
+    {
+      "companyId": "upgrade",
+      "fairValue": 10938525.11,
+      "role": "holding",
+      "label": "UPGRADE, Inc. COMMON SHARES"
+    },
+    {
+      "companyId": "upgrade",
+      "fairValue": 19337304,
+      "role": "holding",
+      "label": "UPGRADE, Inc. PREFERRED SERIES C-1"
+    },
+    {
+      "companyId": "verbit",
+      "fairValue": 97662,
+      "role": "holding",
+      "label": "VERBIT PREFERRED SERIES A"
+    },
+    {
+      "companyId": "verbit",
+      "fairValue": 642641.4,
+      "role": "holding",
+      "label": "VERBIT PREFERRED SERIES B"
+    },
+    {
+      "companyId": "verbit",
+      "fairValue": 3720261.6,
+      "role": "holding",
+      "label": "VERBIT PREFERRED SERIES E-1"
+    },
+    {
+      "companyId": "verbit",
+      "fairValue": 133250,
+      "role": "holding",
+      "label": "VERBIT PREFERRED SERIES SEED 2"
+    },
+    {
+      "companyId": "xplore",
+      "fairValue": 1250000.93,
+      "role": "holding",
+      "label": "XPLORE, Inc. Series A1 Preferred"
+    },
+    {
+      "companyId": "zocdoc",
+      "fairValue": 1281336,
+      "role": "holding",
+      "label": "ZOCDOC COMMON"
+    },
+    {
+      "companyId": "zocdoc",
+      "fairValue": 735000,
+      "role": "holding",
+      "label": "ZOCDOC PREFERRED A"
+    },
+    {
+      "companyId": "automation-anywhere",
+      "fairValue": 2095305.94,
+      "role": "holding",
+      "label": "AUTOMATION ANYWHERE COMMON SHARES"
+    },
+    {
+      "companyId": "axiom-space",
+      "fairValue": 726233.26,
+      "role": "holding",
+      "label": "AXIOM SPACE COMMON SHARES"
+    },
+    {
+      "companyId": "axiom-space",
+      "fairValue": 3998626.42,
+      "role": "holding",
+      "label": "AXIOM SPACE PREFERRED B"
+    },
+    {
+      "companyId": "axiom-space",
+      "fairValue": 13493518.19,
+      "role": "holding",
+      "label": "AXIOM SPACE PREFERRED C1"
+    },
+    {
+      "companyId": "axiom-space",
+      "fairValue": 19999957.61,
+      "role": "holding",
+      "label": "AXIOM SPACE SERIES D PREFERRED"
+    },
+    {
+      "companyId": "axiom-space-founder-a",
+      "fairValue": 1622111.23,
+      "role": "holding",
+      "label": "AXIOM SPACE FOUNDER A PREFERRED"
+    },
+    {
+      "companyId": "axiom-space-founder-b",
+      "fairValue": 1317942.11,
+      "role": "holding",
+      "label": "AXIOM SPACE FOUNDER B PREFERRED"
+    },
+    {
+      "companyId": "ayar-labs",
+      "fairValue": 11999986.81,
+      "role": "holding",
+      "label": "AYAR LABS, INC. SERIES E"
+    },
+    {
+      "companyId": "brain",
+      "fairValue": 12896250,
+      "role": "holding",
+      "label": "BRAIN Corp. COMMON SHARES"
+    },
+    {
+      "companyId": "beta-technologies",
+      "fairValue": 12529234.5,
+      "role": "holding",
+      "label": "Beta Technologies, Inc., Class A"
+    },
+    {
+      "companyId": "betterment",
+      "fairValue": 22829148,
+      "role": "holding",
+      "label": "BETTERMENT COMMON SHARES"
+    },
+    {
+      "companyId": "betterment-perferred",
+      "fairValue": 4985830.8,
+      "role": "holding",
+      "label": "BETTERMENT PERFERRED SERIES F"
+    },
+    {
+      "companyId": "cerebras",
+      "fairValue": 44573269,
+      "role": "holding",
+      "label": "Cerebras Systems, Inc., Class A"
+    },
+    {
+      "companyId": "checkr",
+      "fairValue": 1860000,
+      "role": "holding",
+      "label": "CHECKR PREFERRED A-1"
+    },
+    {
+      "companyId": "cibo-technologies",
+      "fairValue": 2869830.86,
+      "role": "holding",
+      "label": "STAGE 1 GROWTH FUND, LLC, SERIES CiBO (INVESTED IN CIBO TECHNOLOGIES, INC., PREFERRED SERIES C1)"
+    },
+    {
+      "companyId": "click-therapeutics-c",
+      "fairValue": 6553400,
+      "role": "holding",
+      "label": "CLICK THERAPEUTICS C COMMON SHARES"
+    },
+    {
+      "companyId": "click-therapeutics",
+      "fairValue": 393774.15,
+      "role": "holding",
+      "label": "CLICK THERAPEUTICS PREFERRED A"
+    },
+    {
+      "companyId": "clearmotion",
+      "fairValue": 515649.83,
+      "role": "holding",
+      "label": "CLEARMOTION PREFERRED A-3"
+    },
+    {
+      "companyId": "clearmotion",
+      "fairValue": 3217919.91,
+      "role": "holding",
+      "label": "CLEARMOTION PREFERRED A-4"
+    },
+    {
+      "companyId": "clearmotion",
+      "fairValue": 617214.38,
+      "role": "holding",
+      "label": "CLEARMOTION PREFERRED B"
+    },
+    {
+      "companyId": "color-health",
+      "fairValue": 1740785.28,
+      "role": "holding",
+      "label": "COLOR HEALTH COMMON SHARES"
+    },
+    {
+      "companyId": "cohere-technologies",
+      "fairValue": 2015706.91,
+      "role": "holding",
+      "label": "COHERE TECHNOLOGIES PREFERRED SERIES D-1"
+    },
+    {
+      "companyId": "cohere-technologies",
+      "fairValue": 2783333.98,
+      "role": "holding",
+      "label": "COHERE TECHNOLOGIES PREFERRED SERIES D-2"
+    },
+    {
+      "companyId": "devoted-health",
+      "fairValue": 599940,
+      "role": "holding",
+      "label": "DEVOTED HEALTH PREFERRED E SHARES"
+    },
+    {
+      "companyId": "devoted-health-prime",
+      "fairValue": 2999970,
+      "role": "holding",
+      "label": "DEVOTED HEALTH Prime Preferred shar"
+    },
+    {
+      "companyId": "epic-games",
+      "fairValue": 9570129.92,
+      "role": "holding",
+      "label": "EPIC GAMES COMMON SHARES"
+    },
+    {
+      "companyId": "impossible-foods",
+      "fairValue": 559872,
+      "role": "holding",
+      "label": "IMPOSSIBLE FOODS COMMON SHARES"
+    },
+    {
+      "companyId": "impossible-foods",
+      "fairValue": 1444000,
+      "role": "holding",
+      "label": "IMPOSSIBLE FOODS SERIES E-1 PREFERRED"
+    },
+    {
+      "companyId": "impossible-foods",
+      "fairValue": 1307501,
+      "role": "holding",
+      "label": "KHOSLA VENTURES IFSPV II-B, LLC (INVESTED IN IMPOSSIBLE FOODS, INC., 74.2% PREFERRED SERIES H-1 AND 25.8% PREFERRED SERIES H-2)"
+    },
+    {
+      "companyId": "inrix",
+      "fairValue": 0,
+      "role": "holding",
+      "label": "INRIX, Inc.. CLASS C"
+    },
+    {
+      "companyId": "stage-1-growth-fund",
+      "fairValue": 3704251.1,
+      "role": "holding",
+      "label": "STAGE 1 GROWTH FUND, LLC, SERIES INVAIO (INVAIO SCIENCES, INC., PREFERRED SERIES C)"
+    },
+    {
+      "companyId": "knight-jv",
+      "fairValue": 2438899.57,
+      "role": "holding",
+      "label": "Knight JV"
+    },
+    {
+      "companyId": "motive-technologies",
+      "fairValue": 9310288.68,
+      "role": "holding",
+      "label": "MOTIVE TECHNOLOGIES COMMON SHARES"
+    },
+    {
+      "companyId": "motive-technologies-18-5-20-32",
+      "fairValue": 3600000,
+      "role": "holding",
+      "label": "Motive Technologies 18% 5/20/32"
+    },
+    {
+      "companyId": "motive-technologies",
+      "fairValue": 1251577.49,
+      "role": "holding",
+      "label": "MOTIVE TECHNOLOGIES SERIES E PREFERRED"
+    },
+    {
+      "companyId": "motive-technologies",
+      "fairValue": 3767566.35,
+      "role": "holding",
+      "label": "MOTIVE TECHNOLOGIES SERIES F PREFERRED"
+    },
+    {
+      "companyId": "flexport",
+      "fairValue": 292420.1,
+      "role": "holding",
+      "label": "FLEXPORT, Inc. SERIES B-1"
+    },
+    {
+      "companyId": "flexport",
+      "fairValue": 436196.64,
+      "role": "holding",
+      "label": "FLEXPORT, Inc. SERIES D-3"
+    },
+    {
+      "companyId": "fundbox",
+      "fairValue": 4580131.84,
+      "role": "holding",
+      "label": "FUNDBOX SHARES"
+    },
+    {
+      "companyId": "fundbox",
+      "fairValue": 6271266.06,
+      "role": "holding",
+      "label": "FUNDBOX PREFERRED"
+    },
+    {
+      "companyId": "1661",
+      "fairValue": 1761360,
+      "role": "holding",
+      "label": "IRVING INVESTORS PRIVATES OSC XXXVIII, LLC (INVESTED IN 1661, INC. (D.B.A GOAT), 15% CS, 13% PS A-1, 0% PS A-5, 17% PS A-7, 27% PS B, and 28% PS C)"
+    },
+    {
+      "companyId": "grubmarket",
+      "fairValue": 11865590.01,
+      "role": "holding",
+      "label": "GRUBMARKET, INC. PREFERRED D SHARES"
+    },
+    {
+      "companyId": "excalibur-aggregator",
+      "fairValue": 0,
+      "role": "holding",
+      "label": "EXCALIBUR AGGREGATOR COMMON SHARES"
+    },
+    {
+      "companyId": "excalibur-aggregator",
+      "fairValue": 0,
+      "role": "holding",
+      "label": "EXCALIBUR AGGREGATOR SERIES A"
+    },
+    {
+      "companyId": "excalibur-combined",
+      "fairValue": 193857,
+      "role": "holding",
+      "label": "EXCALIBUR COMBINED CLASS A"
+    },
+    {
+      "companyId": "learneo",
+      "fairValue": 2548800,
+      "role": "holding",
+      "label": "LEARNEO,, Inc. COMMON SHARES"
+    },
+    {
+      "companyId": "farmers-business",
+      "fairValue": 111125,
+      "role": "holding",
+      "label": "FARMERS BUSINESS COMMON"
+    },
+    {
+      "companyId": "farmers-business-15-9-28-25",
+      "fairValue": 350000,
+      "role": "holding",
+      "label": "FARMERS BUSINESS 15% 9/28/25"
+    },
+    {
+      "companyId": "collective-health",
+      "fairValue": 2234042.16,
+      "role": "holding",
+      "label": "COLLECTIVE HEALTH PREFERRED SERIES F"
+    },
+    {
+      "companyId": "consensys",
+      "fairValue": 10219468.5,
+      "role": "holding",
+      "label": "CONSENSYS COMMON SHARES"
+    },
+    {
+      "companyId": "consensys-software",
+      "fairValue": 3676283.02,
+      "role": "holding",
+      "label": "PARAFI PRIVATE OPPORTUNITIES, LLC - SERIES J (INVESTED IN CONSENSYS SOFTWARE, INC., PREFERRED SERIES D)"
+    },
+    {
+      "companyId": "content-square-sas",
+      "fairValue": 5074686,
+      "role": "holding",
+      "label": "CONTENT SQUARE SAS COMMON SHARES"
+    },
+    {
+      "companyId": "farmers-business-network",
+      "fairValue": 2699566.4,
+      "role": "holding",
+      "label": "FARMERS BUSINESS NETWORK PREFERRED"
+    },
+    {
+      "companyId": "flexport",
+      "fairValue": 2255841.53,
+      "role": "holding",
+      "label": "FLEXPORT, Inc. COMMON SHARES"
+    },
+    {
+      "companyId": "content-square-sas",
+      "fairValue": 2548437.78,
+      "role": "holding",
+      "label": "CONTENT SQUARE SAS SERIES F PREFERRED"
+    },
+    {
+      "companyId": "carbon",
+      "fairValue": 320849.7,
+      "role": "holding",
+      "label": "CARBON, INC. COMMON SHARES"
+    },
+    {
+      "companyId": "crusoe",
+      "fairValue": 6084840.66,
+      "role": "holding",
+      "label": "MC VALOR SUMMIT 2.0 L.P. (INVESTED IN CRUSOE, PREFERRED SERIES E)"
+    },
+    {
+      "companyId": "contrast-security",
+      "fairValue": 176562.5,
+      "role": "holding",
+      "label": "CONTRAST SECURITY COMMON SHARES"
+    },
+    {
+      "companyId": "flexport",
+      "fairValue": 2430891.35,
+      "role": "holding",
+      "label": "FLEXPORT, Inc. SERIES A"
+    },
+    {
+      "companyId": "grub1z199",
+      "fairValue": 40943772.51,
+      "role": "holding",
+      "label": "GRUB1Z199"
+    },
+    {
+      "companyId": "grub2z198",
+      "fairValue": 18778690.34,
+      "role": "holding",
+      "label": "GRUB2Z198"
+    },
+    {
+      "companyId": "grubmarket",
+      "fairValue": 1999997.31,
+      "role": "holding",
+      "label": "GRUBMARKET PREFERRED H SHARES"
+    },
+    {
+      "companyId": "contrast-security",
+      "fairValue": 4681104.1,
+      "role": "holding",
+      "label": "CONTRAST SECURITY PREFERRED SERIES A"
+    },
+    {
+      "companyId": "contrast-security",
+      "fairValue": 6579967.4,
+      "role": "holding",
+      "label": "CONTRAST SECURITY PREFERRED SERIES C"
+    },
+    {
+      "companyId": "databricks",
+      "fairValue": 34706160,
+      "role": "holding",
+      "label": "TIGER GLOBAL PIP 12-1, LLC (INVESTED IN DATABRICKS, INC., PREFERRED SERIES G)"
+    },
+    {
+      "companyId": "discord",
+      "fairValue": 12814710,
+      "role": "holding",
+      "label": "DISCORD COMMON SHARES"
+    },
+    {
+      "companyId": "hydrow",
+      "fairValue": 453521.92,
+      "role": "holding",
+      "label": "HYDROW COMMON SHARES"
+    },
+    {
+      "companyId": "cubefabs",
+      "fairValue": 22600210.08,
+      "role": "holding",
+      "label": "CUBEFABS, INC. PREFERRED SERIES F-2"
+    },
+    {
+      "companyId": "docker",
+      "fairValue": 13750,
+      "role": "holding",
+      "label": "DOCKER COMMON COMMON SHARES"
+    },
+    {
+      "companyId": "domino-data-labs",
+      "fairValue": 5412000,
+      "role": "holding",
+      "label": "DOMINO DATA LABS COMMON SHARES"
+    },
+    {
+      "companyId": "northgate-growth-fund-iii",
+      "fairValue": 6190557,
+      "role": "holding",
+      "label": "NORTHGATE GROWTH FUND III"
+    },
+    {
+      "companyId": "ocrolus",
+      "fairValue": 2967473.79,
+      "role": "holding",
+      "label": "KVC SELECT, LLC (INVESTED IN OCROLUS, INC., PREFERRED SERIES C)"
+    },
+    {
+      "companyId": "dremio",
+      "fairValue": 4630417,
+      "role": "holding",
+      "label": "KVC SELECT, LLC (INVESTED IN DREMIO CORP., 26.2% COMMON STOCK AND 73.8% PREFERRED SERIES E)"
+    },
+    {
+      "companyId": "dataminr",
+      "fairValue": 17141709.89,
+      "role": "holding",
+      "label": "DATAMINR COMMON SHARES"
+    },
+    {
+      "companyId": "dataminr-10-02-28-2030",
+      "fairValue": 1000000,
+      "role": "holding",
+      "label": "Dataminr 10% 02/28/2030"
+    },
+    {
+      "companyId": "openx-openx",
+      "fairValue": 3363184.52,
+      "role": "holding",
+      "label": "OPENX OPENX COMMON"
+    },
+    {
+      "companyId": "tebra-technologies",
+      "fairValue": 342848.63,
+      "role": "holding",
+      "label": "TEBRA TECHNOLOGIES COMMON SHARES"
+    },
+    {
+      "companyId": "tebra-technologies",
+      "fairValue": 223419,
+      "role": "holding",
+      "label": "TEBRA TECHNOLOGIES SERIES SEED 2"
+    },
+    {
+      "companyId": "prometheus-industries",
+      "fairValue": 18999960,
+      "role": "holding",
+      "label": "MARE LIBERUM MATTERS REINDUSTRIALIZATION FUND, LLC (INVESTED IN PROMETHEUS INDUSTRIES INC. PREFERRED B)"
+    },
+    {
+      "companyId": "radian-aerospace-10-8-29-26",
+      "fairValue": 400000,
+      "role": "holding",
+      "label": "Radian Aerospace 10% 8/29/26"
+    },
+    {
+      "companyId": "radian-aerospace",
+      "fairValue": 519458.29,
+      "role": "holding",
+      "label": "Radian Aerospace WARRANTS"
+    },
+    {
+      "companyId": "radian-aerospace",
+      "fairValue": 2599398.08,
+      "role": "holding",
+      "label": "RADIAN AEROSPACE SERIES SEED 2"
+    },
+    {
+      "companyId": "ripple",
+      "fairValue": 15380100,
+      "role": "holding",
+      "label": "RIPPLE COMMON SHARES"
+    },
+    {
+      "companyId": "relativity-space",
+      "fairValue": 51882.51,
+      "role": "holding",
+      "label": "RELATIVITY SPACE COMMON SHARES"
+    },
+    {
+      "companyId": "relativity-space-1a",
+      "fairValue": 4999998.16,
+      "role": "holding",
+      "label": "RELATIVITY SPACE 1A Preferred shares"
+    },
+    {
+      "companyId": "relativity-space",
+      "fairValue": 9999000,
+      "role": "holding",
+      "label": "RELATIVITY SPACE Preferred Z"
+    },
+    {
+      "companyId": "roofstock",
+      "fairValue": 494928.59,
+      "role": "holding",
+      "label": "ROOFSTOCK COMMON SHARES"
+    },
+    {
+      "companyId": "roofstock",
+      "fairValue": 6162428.18,
+      "role": "holding",
+      "label": "ROOFSTOCK SERIES E PREFERRED SHARES"
+    },
+    {
+      "companyId": "sb-technology-f",
+      "fairValue": 24999961.9,
+      "role": "holding",
+      "label": "SB TECHNOLOGY F SHARES"
+    },
+    {
+      "companyId": "saronic-technologies",
+      "fairValue": 3799979.81,
+      "role": "holding",
+      "label": "IRONARC OPPORTUNITIES XXI, LP (INVESTED IN SARONIC TECHNOLOGIES, PREFERRED SERIES D)"
+    },
+    {
+      "companyId": "money-market",
+      "fairValue": 236756470.75,
+      "role": "cash",
+      "label": "UMB Money Market II Special"
+    },
+    {
+      "companyId": "snyk",
+      "fairValue": 3235905.68,
+      "role": "holding",
+      "label": "SNYK Ltd. COMMON SHARES"
+    },
+    {
+      "companyId": "spacex",
+      "fairValue": 307829919,
+      "role": "holding",
+      "label": "Space Exploration Technologies Corp., Class A"
+    },
+    {
+      "companyId": "tealium",
+      "fairValue": 3048000,
+      "role": "holding",
+      "label": "TEALIUM COMMON SHARES"
+    },
+    {
+      "companyId": "thoughtspot",
+      "fairValue": 3517287.9,
+      "role": "holding",
+      "label": "THOUGHTSPOT COMMON COMMON SHARES"
+    },
+    {
+      "companyId": "tmgcore-inc-4-8-30-28",
+      "fairValue": 10485546.63,
+      "role": "holding",
+      "label": "TMGCORE, Inc. 4% 8/30/28"
+    },
+    {
+      "companyId": "nextroll",
+      "fairValue": 12119316.48,
+      "role": "holding",
+      "label": "NEXTROLL COMMON SHARES"
+    },
+    {
+      "companyId": "arctic-wolf",
+      "fairValue": 28954934.47,
+      "role": "holding",
+      "label": "ARCTIC WOLF COMMON SHARES"
+    },
+    {
+      "companyId": "dataminr",
+      "fairValue": 604600,
+      "role": "holding",
+      "label": "DATAMINR SERIES A"
+    },
+    {
+      "companyId": "dataminr",
+      "fairValue": 2645004.08,
+      "role": "holding",
+      "label": "DATAMINR SERIES B"
+    },
+    {
+      "companyId": "dataminr",
+      "fairValue": 17725965.1,
+      "role": "holding",
+      "label": "DATAMINR SERIES C"
+    },
+    {
+      "companyId": "devoted-health",
+      "fairValue": 11999880,
+      "role": "holding",
+      "label": "DEVOTED HEALTH COMMON SHARES"
+    },
+    {
+      "companyId": "discord",
+      "fairValue": 3182759,
+      "role": "holding",
+      "label": "ARTIST EDGE PARTNERS IV, LP (INVESTED IN DISCORD, INC. COMMON STOCK)"
+    },
+    {
+      "companyId": "spacex",
+      "fairValue": 32728233,
+      "role": "holding",
+      "label": "HOF CAPITAL WH STRATEGIC OPPORTUNITIES FUND, LP (INVESTED IN SPACEX, COMMON)"
+    },
+    {
+      "companyId": "spacex",
+      "fairValue": 5239422,
+      "role": "holding",
+      "label": "MVP OPPORTUNITY FUND VI LLC, SERIES 24G (INVESTED IN SPACEX, COMMON)"
+    },
+    {
+      "companyId": "spacex",
+      "fairValue": 18013770,
+      "role": "holding",
+      "label": "SC JAL, LLC (INVESTED IN SPACEX, COMMON)"
+    },
+    {
+      "companyId": "prometheus-industries",
+      "fairValue": 24950243,
+      "role": "holding",
+      "label": "FVP DIGITAL FUTURE FUND II, LP (INVESTED IN PROMETHEUS INDUSTRIES INC. PREFERRED B)"
+    },
+    {
+      "companyId": "other-net-assets",
+      "fairValue": 9440662.31,
+      "role": "residual",
+      "label": "Other assets less liabilities",
+      "note": "N-PORT investment fair values sum short of reported net assets by this amount."
+    }
+  ]
+}

@@ -25,6 +25,10 @@ export default function Footer() {
               DXYZ
             </Link>
             <span style={styles.sep}>·</span>
+            <Link href="/book" style={styles.link}>
+              Book
+            </Link>
+            <span style={styles.sep}>·</span>
             <Link href="/private-tape" style={styles.link}>
               Private Tape
             </Link>

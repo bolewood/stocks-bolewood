@@ -1,6 +1,7 @@
 export const SCHEMA_VERSION = "1.2.0";
 export const METHODOLOGY_VERSION = "1.2.0";
 export const PRIVATE_TAPE_SCHEMA_VERSION = "1.0.0";
+export const BOOK_SCHEMA_VERSION = "1.0.0";
 
 export const BASES = [
   "disclosed",
@@ -361,4 +362,156 @@ export function validatePrivateTapeConfig(config) {
 export function secondaryOnly(leg) {
   if (!leg?.sources?.length) return false;
   return !hasPrimary(leg.sources);
+}
+
+export const BOOK_VEHICLE_TYPES = ["closed-end-fund", "interval-fund", "bdc", "etf"];
+export const BOOK_WEIGHT_BASES = ["net-assets", "reported-portfolio"];
+export const BOOK_PREMIUM_MODES = ["market", "none"];
+export const BOOK_LINE_ROLES = ["holding", "other", "cash", "liability", "residual"];
+export const BOOK_VALUATIONS = ["filed", "cost", "practical-expedient"];
+export const BOOK_RECONCILE_TOLERANCE = 0.05;
+
+const COMPANY_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export function validateCompanies(config) {
+  const path = "companies";
+  if (config?.schemaVersion !== BOOK_SCHEMA_VERSION) {
+    fail(path, `schemaVersion must be ${BOOK_SCHEMA_VERSION}`);
+  }
+  if (!config.companies || typeof config.companies !== "object") {
+    fail(path, "companies object required");
+  }
+  for (const [id, company] of Object.entries(config.companies)) {
+    const item = `${path}.${id}`;
+    if (!COMPANY_ID.test(id)) fail(item, "id must be kebab-case");
+    if (!company || typeof company.name !== "string" || company.name.length === 0) {
+      fail(item, "name required");
+    }
+    if (company.successor != null && !COMPANY_ID.test(company.successor)) {
+      fail(item, "successor must be a company id");
+    }
+    if (company.publicTicker != null && typeof company.publicTicker !== "string") {
+      fail(item, "publicTicker must be a string");
+    }
+  }
+  for (const [id, company] of Object.entries(config.companies)) {
+    if (!company.successor) continue;
+    if (!config.companies[company.successor]) {
+      fail(`${path}.${id}`, `unknown successor ${company.successor}`);
+    }
+    const seen = new Set();
+    let cur = id;
+    while (config.companies[cur]?.successor) {
+      if (seen.has(cur)) fail(`${path}.${id}`, "successor cycle");
+      seen.add(cur);
+      cur = config.companies[cur].successor;
+    }
+  }
+}
+
+export function validateBook(book, { companies } = {}) {
+  const path = book?.ticker || "book";
+  if (book?.schemaVersion !== BOOK_SCHEMA_VERSION) {
+    fail(path, `schemaVersion must be ${BOOK_SCHEMA_VERSION}`);
+  }
+  if (!book.ticker || !book.name || !book.yahooSymbol) {
+    fail(path, "ticker, name, and yahooSymbol required");
+  }
+  if (!BOOK_VEHICLE_TYPES.includes(book.vehicleType)) {
+    fail(path, `unknown vehicleType ${book.vehicleType}`);
+  }
+  if (!BOOK_WEIGHT_BASES.includes(book.weightBasis)) {
+    fail(path, `unknown weightBasis ${book.weightBasis}`);
+  }
+  if (!BOOK_PREMIUM_MODES.includes(book.premiumMode)) {
+    fail(path, `unknown premiumMode ${book.premiumMode}`);
+  }
+  if (book.vehicleType === "interval-fund" && book.premiumMode === "market") {
+    fail(path, "interval-fund premiumMode must be none; class NAV is not a market premium");
+  }
+  if (!isIsoDateKey(book.measurementDate)) fail(path, "measurementDate required");
+  if (!isIsoDateKey(book.publicationDate)) fail(path, "publicationDate required");
+  const hasAccession = /^\d{10}-\d{2}-\d{6}$/.test(book.accession || "");
+  if (!hasAccession) {
+    const sourced = (book.sources || []).some((src) => src.sourceClass === "primary" && isHttpUrl(src.url));
+    if (!sourced || !/^[a-z0-9-]+$/.test(book.sourceId || "")) {
+      fail(path, "accession required, or a primary source URL plus sourceId");
+    }
+  }
+  if (book.navAsOf != null && !isIsoDateKey(book.navAsOf)) fail(path, "invalid navAsOf");
+  if (book.unknownDilution != null && typeof book.unknownDilution !== "boolean") {
+    fail(path, "unknownDilution must be boolean");
+  }
+  if (book.unknownDilution && !book.dilutionNote) {
+    fail(path, "dilutionNote required when dilution after the report is unknown");
+  }
+  if (Object.prototype.hasOwnProperty.call(book, "weight") || Object.prototype.hasOwnProperty.call(book, "impliedExposure")) {
+    fail(path, "weight is computed from dollars or a reported percent, never stored on the snapshot");
+  }
+  if (!Array.isArray(book.sources) || book.sources.length === 0) fail(path, "sources[] required");
+  book.sources.forEach((src, i) => validateSource(src, `${path}.sources[${i}]`));
+  if (!hasPrimary(book.sources)) fail(path, "at least one primary source required");
+  if (!Array.isArray(book.lines) || book.lines.length === 0) fail(path, "lines[] required");
+
+  if (book.weightBasis === "net-assets") {
+    if (!(book.netAssets > 0)) fail(path, "netAssets required");
+    if (book.premiumMode === "market") {
+      if (!(book.navPerShare > 0)) fail(path, "navPerShare required");
+      if (!(book.sharesOutstanding > 0)) fail(path, "sharesOutstanding required");
+      const implied = book.navPerShare * book.sharesOutstanding;
+      if (Math.abs(implied - book.netAssets) / book.netAssets > 0.002) {
+        fail(path, "navPerShare × shares diverges from net assets by more than 0.2%");
+      }
+    } else if (book.navPerShare != null || book.sharesOutstanding != null) {
+      fail(path, "a fund priced at NAV does not store a per-share NAV beside total net assets");
+    }
+    let sum = 0;
+    for (const [i, line] of book.lines.entries()) {
+      validateBookLine(line, `${path}.lines[${i}]`, book, companies);
+      sum += line.fairValue;
+    }
+    if (Math.abs(sum - book.netAssets) > BOOK_RECONCILE_TOLERANCE) {
+      fail(path, `lines sum ${sum} must equal net assets ${book.netAssets}`);
+    }
+  } else {
+    if (book.navPerShare != null || book.netAssets != null) {
+      fail(path, "reported-portfolio snapshots do not carry a NAV; dollars per $100 stay withheld");
+    }
+    if (book.premiumMode !== "none") {
+      fail(path, "reported-portfolio premiumMode must be none");
+    }
+    for (const [i, line] of book.lines.entries()) {
+      validateBookLine(line, `${path}.lines[${i}]`, book, companies);
+    }
+  }
+}
+
+function validateBookLine(line, path, book, companies) {
+  if (!line || typeof line !== "object") fail(path, "line must be an object");
+  if (!COMPANY_ID.test(line.companyId || "")) fail(path, "companyId required");
+  if (companies && !companies.companies?.[line.companyId]) {
+    fail(path, `unknown company ${line.companyId}`);
+  }
+  if (!BOOK_LINE_ROLES.includes(line.role)) fail(path, `unknown role ${line.role}`);
+  if (line.valuation != null && !BOOK_VALUATIONS.includes(line.valuation)) {
+    fail(path, `unknown valuation ${line.valuation}`);
+  }
+  if ((line.valuation === "cost" || line.valuation === "practical-expedient") && !line.note) {
+    fail(path, `${line.valuation} lines need a note`);
+  }
+  for (const banned of ["weight", "impliedExposure", "reportedWeightOfNav"]) {
+    if (Object.prototype.hasOwnProperty.call(line, banned)) {
+      fail(path, `${banned} is computed, not stored`);
+    }
+  }
+  const hasFair = Object.prototype.hasOwnProperty.call(line, "fairValue");
+  const hasReported = Object.prototype.hasOwnProperty.call(line, "reportedWeight");
+  if (hasFair && hasReported) fail(path, "a line cannot carry both fairValue and reportedWeight");
+  if (book.weightBasis === "net-assets") {
+    if (!hasFair || !Number.isFinite(line.fairValue)) fail(path, "fairValue required");
+    if (hasReported) fail(path, "net-assets lines store dollars, not a reported percent");
+  } else {
+    if (!hasReported || !Number.isFinite(line.reportedWeight)) fail(path, "reportedWeight required");
+    if (hasFair) fail(path, "reported-portfolio lines do not store dollars");
+  }
 }

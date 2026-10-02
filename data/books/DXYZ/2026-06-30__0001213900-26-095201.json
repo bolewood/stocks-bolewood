@@ -1,0 +1,189 @@
+{
+  "schemaVersion": "1.0.0",
+  "ticker": "DXYZ",
+  "name": "Destiny Tech100",
+  "vehicleType": "closed-end-fund",
+  "yahooSymbol": "DXYZ",
+  "premiumMode": "market",
+  "weightBasis": "net-assets",
+  "measurementDate": "2026-06-30",
+  "publicationDate": "2026-08-28",
+  "accession": "0001213900-26-095201",
+  "navAsOf": "2026-06-30",
+  "navPerShare": 34.3,
+  "netAssets": 1634830252,
+  "sharesOutstanding": 47657338,
+  "unknownDilution": false,
+  "note": "June 30, 2026 N-CSRS net assets and printed NAV of $34.30. Line items are this site's June 30 ledger. The N-PORT total net assets figure is $0.72 lower and is not added to this book.",
+  "sources": [
+    {
+      "fields": [
+        "netAssets",
+        "navPerShare",
+        "sharesOutstanding",
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "issuer": "Destiny Tech100 Inc.",
+      "filingType": "N-CSRS",
+      "accession": "0001213900-26-095201",
+      "url": "https://www.sec.gov/Archives/edgar/data/1843974/000121390026095201/ea0302101-01_ncsrs.htm",
+      "measurementDate": "2026-06-30",
+      "publicationDate": "2026-08-28",
+      "section": "Statement of assets and schedule of investments"
+    },
+    {
+      "fields": [
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "issuer": "Destiny Tech100 Inc.",
+      "filingType": "NPORT-P",
+      "accession": "0000894189-26-024246",
+      "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/primary_doc.xml",
+      "measurementDate": "2026-06-30",
+      "publicationDate": "2026-08-28",
+      "section": "Schedule of portfolio investments",
+      "note": "Cent-level SPV fair values. N-PORT total net assets is $0.72 lower than the N-CSRS and is not added to this book."
+    }
+  ],
+  "lines": [
+    {
+      "companyId": "anthropic",
+      "fairValue": 235671976.08,
+      "role": "holding",
+      "label": "Magnitude ANC III, LLC",
+      "note": "Magnitude ANC III. Filed fair value. 0% carry is already inside that figure."
+    },
+    {
+      "companyId": "openai",
+      "fairValue": 35040868.2,
+      "role": "holding",
+      "label": "Goanna Capital 26E LLC",
+      "note": "June equity via Goanna Capital 26E. Profit participation units are a separate row."
+    },
+    {
+      "companyId": "spacex",
+      "fairValue": 173061169.35,
+      "role": "holding",
+      "label": "DXYZ SpaceX I, MWAM VC SpaceX-II, Snowpoint Growth 2.6",
+      "note": "Sum of the three filed SPV fair values. Not the live SPCX quote. Carry is inside the filed figure."
+    },
+    {
+      "companyId": "revolut",
+      "fairValue": 16630994,
+      "role": "holding",
+      "note": "Common stock (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "discord",
+      "fairValue": 788018,
+      "role": "holding",
+      "note": "Common 10,690 + Series G 13,110 (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "klarna",
+      "fairValue": 747342,
+      "role": "holding",
+      "note": "Common stock (N-CSRS 6/30). Class B carried at $0."
+    },
+    {
+      "companyId": "chime",
+      "fairValue": 1244877,
+      "role": "holding",
+      "note": "Chime Financial Inc. common (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "flexport",
+      "fairValue": 85800,
+      "role": "holding",
+      "note": "Common stock (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "openevidence",
+      "fairValue": 34933663,
+      "role": "holding",
+      "note": "SP21Z Opportunities LLC (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "shield-ai",
+      "fairValue": 30125568,
+      "role": "holding",
+      "note": "Snowpoint Growth 2.5, LLC (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "databricks",
+      "fairValue": 19601078,
+      "role": "holding",
+      "note": "DA-1125 Gaingels + MCTC Series L (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "chaos",
+      "fairValue": 15712254,
+      "role": "holding",
+      "note": "WH Strategic Opportunities Fund V (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "hermeus",
+      "fairValue": 14999999,
+      "role": "holding",
+      "note": "Series C preferred (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "beast",
+      "fairValue": 14999990,
+      "role": "holding",
+      "note": "Series C preferred (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "mercury",
+      "fairValue": 14999987,
+      "role": "holding",
+      "note": "Series D preferred (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "tenstorrent",
+      "fairValue": 12500000,
+      "role": "holding",
+      "note": "Prive Tens convertible note (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "skild",
+      "fairValue": 11074127,
+      "role": "holding",
+      "note": "Series C preferred (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "ferox",
+      "fairValue": 11263273,
+      "role": "holding",
+      "note": "Hexagon Master LLC Series 1 (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "openai-ppu",
+      "fairValue": 7735911.09,
+      "role": "holding",
+      "note": "DXYZ OAI I profit participation units — not equity; in NAV, excluded from /ai IPO scaling",
+      "label": "DXYZ OAI I LLC"
+    },
+    {
+      "companyId": "money-market",
+      "fairValue": 939712701,
+      "role": "cash",
+      "label": "First American Treasury Obligations",
+      "note": "57.48% of June 30 net assets."
+    },
+    {
+      "companyId": "unitemized",
+      "fairValue": 49109548.28,
+      "role": "residual",
+      "note": "Residual of June 30 investments after the named lines, so the column sums to net assets. Includes Boom Series B-2, cited as about $1.74M fair value on the N-CSRS. That lot is not itemized here, so June 30 has no separate Boom row."
+    },
+    {
+      "companyId": "other-net-assets",
+      "fairValue": -5208892,
+      "role": "liability",
+      "note": "Other assets less liabilities on the N-CSRS. Investments minus net assets."
+    }
+  ]
+}

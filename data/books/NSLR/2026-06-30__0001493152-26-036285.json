@@ -1,0 +1,338 @@
+{
+  "schemaVersion": "1.0.0",
+  "ticker": "NSLR",
+  "name": "Neostellar Capital",
+  "vehicleType": "bdc",
+  "yahooSymbol": "NSLR",
+  "premiumMode": "market",
+  "weightBasis": "net-assets",
+  "measurementDate": "2026-06-30",
+  "publicationDate": "2026-08-06",
+  "accession": "0001493152-26-036285",
+  "navAsOf": "2026-06-30",
+  "navPerShare": 13.44,
+  "netAssets": 355856986,
+  "sharesOutstanding": 26473222,
+  "unknownDilution": false,
+  "note": "June 30, 2026 10-Q schedule. Formerly SuRo Capital (SSSS). Portfolio fair value is 114% of net assets because the BDC is levered; the negative residual is debt and other liabilities net of cash. Positions carried at zero are omitted. OpenAI is the ARK Type One fund interest, whose only asset is OpenAI preferred.",
+  "sources": [
+    {
+      "fields": [
+        "netAssets",
+        "navPerShare",
+        "sharesOutstanding",
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "url": "https://www.sec.gov/Archives/edgar/data/1509470/000149315226036285/form10-q.htm",
+      "accession": "0001493152-26-036285",
+      "measurementDate": "2026-06-30",
+      "publicationDate": "2026-08-06",
+      "section": "Condensed consolidated schedule of investments"
+    }
+  ],
+  "lines": [
+    {
+      "companyId": "whoop",
+      "fairValue": 149338617,
+      "role": "holding",
+      "label": "Series C preferred",
+      "note": "Fitness technology."
+    },
+    {
+      "companyId": "whoop",
+      "fairValue": 1428560,
+      "role": "holding",
+      "label": "Series G-2 preferred"
+    },
+    {
+      "companyId": "openai",
+      "fairValue": 59302645,
+      "role": "holding",
+      "label": "ARK Type One Deep Ventures Fund LLC",
+      "note": "Class A interest is solely invested in OpenAI Global Series A-2 preferred. A fund interest, not a direct share count."
+    },
+    {
+      "companyId": "vast-data",
+      "fairValue": 34001149,
+      "role": "holding",
+      "label": "IH10, LLC",
+      "note": "Sole portfolio asset is VAST Data Series B preferred, held through an SPV."
+    },
+    {
+      "companyId": "tensorwave",
+      "fairValue": 5200000,
+      "role": "holding",
+      "label": "Magnetar Opportunity Class A",
+      "note": "SPV invested in TensorWave preferred."
+    },
+    {
+      "companyId": "tensorwave",
+      "fairValue": 15000000,
+      "role": "holding",
+      "label": "Magnetar Opportunity Class B",
+      "note": "SPV invested in TensorWave preferred."
+    },
+    {
+      "companyId": "blink-health",
+      "fairValue": 7499992,
+      "role": "holding",
+      "label": "Series A preferred"
+    },
+    {
+      "companyId": "blink-health",
+      "fairValue": 9613523,
+      "role": "holding",
+      "label": "Series C preferred"
+    },
+    {
+      "companyId": "coreweave",
+      "fairValue": 15367670,
+      "role": "holding",
+      "label": "CW Opportunity 2 LP",
+      "note": "SPV invested in CoreWeave common. Public stock. Distributions already taken; about 55.9% of the position remained at June 30."
+    },
+    {
+      "companyId": "canva",
+      "fairValue": 15432563,
+      "role": "holding",
+      "label": "Common shares"
+    },
+    {
+      "companyId": "learneo",
+      "fairValue": 5369287,
+      "role": "holding",
+      "label": "Series A preferred",
+      "note": "Formerly Course Hero."
+    },
+    {
+      "companyId": "learneo",
+      "fairValue": 9999971,
+      "role": "holding",
+      "label": "Series C preferred"
+    },
+    {
+      "companyId": "locus-robotics",
+      "fairValue": 12347909,
+      "role": "holding",
+      "label": "Series F preferred"
+    },
+    {
+      "companyId": "liquid-death",
+      "fairValue": 9999996,
+      "role": "holding",
+      "label": "Series F-1 preferred"
+    },
+    {
+      "companyId": "liquid-death",
+      "fairValue": 250000,
+      "role": "holding",
+      "label": "Series F convertible note"
+    },
+    {
+      "companyId": "clickhouse",
+      "fairValue": 9471170,
+      "role": "holding",
+      "label": "Series A preferred"
+    },
+    {
+      "companyId": "hearth",
+      "fairValue": 3405588,
+      "role": "holding",
+      "label": "Series B-1 preferred"
+    },
+    {
+      "companyId": "hearth",
+      "fairValue": 3405593,
+      "role": "holding",
+      "label": "Series B-2 preferred"
+    },
+    {
+      "companyId": "hearth",
+      "fairValue": 516502,
+      "role": "holding",
+      "label": "Series B-3 preferred"
+    },
+    {
+      "companyId": "hearth",
+      "fairValue": 486511,
+      "role": "holding",
+      "label": "Series B-4 preferred"
+    },
+    {
+      "companyId": "plaid",
+      "fairValue": 6922679,
+      "role": "holding",
+      "label": "Common shares",
+      "note": "Held through 1789 Capital Nirvana II LP."
+    },
+    {
+      "companyId": "fourkites",
+      "fairValue": 3435624,
+      "role": "holding",
+      "label": "Common shares"
+    },
+    {
+      "companyId": "edge-markets",
+      "fairValue": 3201961,
+      "role": "holding",
+      "label": "Series Seed preferred"
+    },
+    {
+      "companyId": "payjoy",
+      "fairValue": 2499758,
+      "role": "holding",
+      "label": "Series C preferred"
+    },
+    {
+      "companyId": "payjoy",
+      "fairValue": 500000,
+      "role": "holding",
+      "label": "SAFE"
+    },
+    {
+      "companyId": "true-global-ventures",
+      "fairValue": 2884437,
+      "role": "holding",
+      "label": "LP interest",
+      "note": "Venture fund, not a single company."
+    },
+    {
+      "companyId": "lime",
+      "fairValue": 1534100,
+      "role": "holding",
+      "label": "Junior preferred Series 1-D"
+    },
+    {
+      "companyId": "lime",
+      "fairValue": 942275,
+      "role": "holding",
+      "label": "Junior preferred convertible note"
+    },
+    {
+      "companyId": "lime",
+      "fairValue": 55275,
+      "role": "holding",
+      "label": "Common warrants"
+    },
+    {
+      "companyId": "xpoint",
+      "fairValue": 220201,
+      "role": "holding",
+      "label": "Series A-1 preferred"
+    },
+    {
+      "companyId": "xpoint",
+      "fairValue": 1593789,
+      "role": "holding",
+      "label": "Series A-1 warrants"
+    },
+    {
+      "companyId": "xpoint",
+      "fairValue": 564568,
+      "role": "holding",
+      "label": "Series A warrants"
+    },
+    {
+      "companyId": "prophet-exchange",
+      "fairValue": 2038422,
+      "role": "holding",
+      "label": "Series B-IV preferred"
+    },
+    {
+      "companyId": "grabagun",
+      "fairValue": 1031972,
+      "role": "holding",
+      "label": "Common shares",
+      "note": "Level 1 or 2."
+    },
+    {
+      "companyId": "grabagun",
+      "fairValue": 361346,
+      "role": "holding",
+      "label": "Warrants"
+    },
+    {
+      "companyId": "varo",
+      "fairValue": 1079266,
+      "role": "holding",
+      "label": "Common shares"
+    },
+    {
+      "companyId": "second-avenue",
+      "fairValue": 403890,
+      "role": "holding",
+      "label": "Series A preferred"
+    },
+    {
+      "companyId": "skillsoft",
+      "fairValue": 254297,
+      "role": "holding",
+      "label": "Common shares",
+      "note": "Level 1 or 2."
+    },
+    {
+      "companyId": "huntress",
+      "fairValue": 225000,
+      "role": "holding",
+      "label": "Common shares"
+    },
+    {
+      "companyId": "orchard",
+      "fairValue": 80800,
+      "role": "holding",
+      "label": "Series E-1 preferred",
+      "note": "Common shares from the converted SAFE are carried at zero and omitted."
+    },
+    {
+      "companyId": "publicsquare",
+      "fairValue": 71841,
+      "role": "holding",
+      "label": "Warrants"
+    },
+    {
+      "companyId": "aventine",
+      "fairValue": 31250,
+      "role": "holding",
+      "label": "Common shares"
+    },
+    {
+      "companyId": "kinetiq",
+      "fairValue": 11737,
+      "role": "holding",
+      "label": "Class A common"
+    },
+    {
+      "companyId": "stormwind",
+      "fairValue": 470135,
+      "role": "holding",
+      "label": "Series D preferred",
+      "note": "Affiliate investment."
+    },
+    {
+      "companyId": "stormwind",
+      "fairValue": 5011521,
+      "role": "holding",
+      "label": "Series C preferred"
+    },
+    {
+      "companyId": "stormwind",
+      "fairValue": 2864058,
+      "role": "holding",
+      "label": "Series B preferred"
+    },
+    {
+      "companyId": "stormwind",
+      "fairValue": 124253,
+      "role": "holding",
+      "label": "Series A preferred"
+    },
+    {
+      "companyId": "other-net-assets",
+      "fairValue": -49994715,
+      "role": "liability",
+      "label": "Debt and other liabilities, net of cash",
+      "note": "Net assets minus portfolio fair value. The portfolio is larger than net assets because of borrowings."
+    }
+  ]
+}

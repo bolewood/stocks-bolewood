@@ -1,0 +1,225 @@
+{
+  "schemaVersion": "1.0.0",
+  "ticker": "DXYZ",
+  "name": "Destiny Tech100",
+  "vehicleType": "closed-end-fund",
+  "yahooSymbol": "DXYZ",
+  "premiumMode": "market",
+  "weightBasis": "net-assets",
+  "measurementDate": "2026-08-13",
+  "publicationDate": "2026-08-28",
+  "accession": "0001575872-26-000624",
+  "navAsOf": "2026-06-30",
+  "navPerShare": 34.3,
+  "netAssets": 1634830252,
+  "sharesOutstanding": 47657338,
+  "unknownDilution": true,
+  "note": "June 30 book after the cash-funded purchases in the August 28, 2026 424B3. OpenAI, Fluidstack, and the Boom SAFE are at filed cost. Printed NAV stays $34.30 because no new NAV was struck. This file replaces the June 30 book as the current view. It does not get added to it.",
+  "sources": [
+    {
+      "fields": [
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "issuer": "Destiny Tech100 Inc.",
+      "filingType": "424B3",
+      "accession": "0001575872-26-000624",
+      "url": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm",
+      "measurementDate": "2026-08-13",
+      "publicationDate": "2026-08-28",
+      "section": "Portfolio deployment update"
+    },
+    {
+      "fields": [
+        "lines"
+      ],
+      "sourceClass": "assumption",
+      "accession": "0001575872-26-000624",
+      "url": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm",
+      "measurementDate": "2026-08-13",
+      "publicationDate": "2026-08-28",
+      "estimationMethod": "OpenAI, Fluidstack, and the Boom SAFE are carried at the filed purchase cost. The 424B3 does not disclose a fair value or a unit count. June 30 NAV per share is carried forward because the purchases were funded from cash and no new NAV was struck.",
+      "section": "Portfolio deployment update"
+    },
+    {
+      "fields": [
+        "netAssets",
+        "navPerShare",
+        "sharesOutstanding",
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "issuer": "Destiny Tech100 Inc.",
+      "filingType": "N-CSRS",
+      "accession": "0001213900-26-095201",
+      "url": "https://www.sec.gov/Archives/edgar/data/1843974/000121390026095201/ea0302101-01_ncsrs.htm",
+      "measurementDate": "2026-06-30",
+      "publicationDate": "2026-08-28",
+      "section": "Statement of assets and schedule of investments"
+    }
+  ],
+  "lines": [
+    {
+      "companyId": "anthropic",
+      "fairValue": 235671976.08,
+      "role": "holding",
+      "label": "Magnitude ANC III, LLC",
+      "note": "Magnitude ANC III. Filed fair value. 0% carry is already inside that figure."
+    },
+    {
+      "companyId": "openai",
+      "fairValue": 35040868.2,
+      "role": "holding",
+      "label": "Goanna Capital 26E LLC",
+      "note": "June equity via Goanna Capital 26E. Profit participation units are a separate row."
+    },
+    {
+      "companyId": "openai",
+      "fairValue": 150000000,
+      "role": "holding",
+      "label": "Goanna Capital 26E — August 13",
+      "valuation": "cost",
+      "note": "August 13, 2026 Class A common. Filed cost $150,000,000. Units were not disclosed, so this row stays at cost rather than a scenario price."
+    },
+    {
+      "companyId": "spacex",
+      "fairValue": 173061169.35,
+      "role": "holding",
+      "label": "DXYZ SpaceX I, MWAM VC SpaceX-II, Snowpoint Growth 2.6",
+      "note": "Sum of the three filed SPV fair values. Not the live SPCX quote. Carry is inside the filed figure."
+    },
+    {
+      "companyId": "revolut",
+      "fairValue": 16630994,
+      "role": "holding",
+      "note": "Common stock (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "discord",
+      "fairValue": 788018,
+      "role": "holding",
+      "note": "Common 10,690 + Series G 13,110 (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "klarna",
+      "fairValue": 747342,
+      "role": "holding",
+      "note": "Common stock (N-CSRS 6/30). Class B carried at $0."
+    },
+    {
+      "companyId": "chime",
+      "fairValue": 1244877,
+      "role": "holding",
+      "note": "Chime Financial Inc. common (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "flexport",
+      "fairValue": 85800,
+      "role": "holding",
+      "note": "Common stock (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "openevidence",
+      "fairValue": 34933663,
+      "role": "holding",
+      "note": "SP21Z Opportunities LLC (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "shield-ai",
+      "fairValue": 30125568,
+      "role": "holding",
+      "note": "Snowpoint Growth 2.5, LLC (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "databricks",
+      "fairValue": 19601078,
+      "role": "holding",
+      "note": "DA-1125 Gaingels + MCTC Series L (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "chaos",
+      "fairValue": 15712254,
+      "role": "holding",
+      "note": "WH Strategic Opportunities Fund V (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "hermeus",
+      "fairValue": 14999999,
+      "role": "holding",
+      "note": "Series C preferred (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "beast",
+      "fairValue": 14999990,
+      "role": "holding",
+      "note": "Series C preferred (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "mercury",
+      "fairValue": 14999987,
+      "role": "holding",
+      "note": "Series D preferred (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "tenstorrent",
+      "fairValue": 12500000,
+      "role": "holding",
+      "note": "Prive Tens convertible note (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "skild",
+      "fairValue": 11074127,
+      "role": "holding",
+      "note": "Series C preferred (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "ferox",
+      "fairValue": 11263273,
+      "role": "holding",
+      "note": "Hexagon Master LLC Series 1 (N-CSRS 6/30)"
+    },
+    {
+      "companyId": "openai-ppu",
+      "fairValue": 7735911.09,
+      "role": "holding",
+      "note": "DXYZ OAI I profit participation units — not equity; in NAV, excluded from /ai IPO scaling",
+      "label": "DXYZ OAI I LLC"
+    },
+    {
+      "companyId": "money-market",
+      "fairValue": 770712701,
+      "role": "cash",
+      "label": "First American Treasury Obligations",
+      "note": "June 30 money market less $169M of cash-funded purchases in the August 28, 2026 424B3. ATM proceeds after June 30 are not included."
+    },
+    {
+      "companyId": "unitemized",
+      "fairValue": 49109548.28,
+      "role": "residual",
+      "note": "Residual of June 30 investments after the named lines, so the column sums to net assets. Includes Boom Series B-2, cited as about $1.74M fair value on the N-CSRS. That lot is not itemized here, so June 30 has no separate Boom row."
+    },
+    {
+      "companyId": "other-net-assets",
+      "fairValue": -5208892,
+      "role": "liability",
+      "note": "Other assets less liabilities on the N-CSRS. Investments minus net assets."
+    },
+    {
+      "companyId": "fluidstack",
+      "fairValue": 15000000,
+      "role": "holding",
+      "label": "Magnitude FSTK — July 16",
+      "valuation": "cost",
+      "note": "July 16, 2026 Series B preferred. Filed cost $15,000,000. No later fair value was disclosed."
+    },
+    {
+      "companyId": "boom",
+      "fairValue": 4000000,
+      "role": "holding",
+      "label": "August 4 SAFE",
+      "valuation": "cost",
+      "note": "August 4, 2026 SAFE at the filed cost of $4,000,000. The June Series B-2 remains inside the unitemized residual. This line is the new SAFE only."
+    }
+  ],
+  "dilutionNote": "Share count and NAV per share are still the June 30 figures. ATM issuance after June 30 is not in these weights. Cash raised in that issuance is unknown, so per-share exposure may be lower than this column."
+}

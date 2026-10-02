@@ -1,0 +1,142 @@
+{
+  "schemaVersion": "1.0.0",
+  "ticker": "BOT",
+  "name": "RoboStrategy",
+  "vehicleType": "closed-end-fund",
+  "yahooSymbol": "BOT",
+  "premiumMode": "market",
+  "weightBasis": "net-assets",
+  "measurementDate": "2026-08-31",
+  "publicationDate": "2026-09-02",
+  "sourceId": "monthly-nav",
+  "navAsOf": "2026-08-31",
+  "navPerShare": 11.35,
+  "netAssets": 276675605.73,
+  "sharesOutstanding": 24376705,
+  "unknownDilution": false,
+  "note": "August 31, 2026 monthly portfolio. Weights are the issuer's percent of net assets, published to one decimal. Dollars are that percent times net assets of $276,675,605.73. The one-cent rounding remainder sits in Standard Bots. NAV per share $11.35.",
+  "sources": [
+    {
+      "fields": [
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "url": "https://robostrategy.co/portfolio",
+      "measurementDate": "2026-08-31",
+      "publicationDate": "2026-09-02",
+      "section": "Portfolio diversification"
+    },
+    {
+      "fields": [
+        "netAssets",
+        "navPerShare"
+      ],
+      "sourceClass": "primary",
+      "url": "https://www.globenewswire.com/news-release/2026/09/02/3355546/0/en/robostrategy-inc-updates-net-asset-value-as-of-august-31-2026.html",
+      "measurementDate": "2026-08-31",
+      "publicationDate": "2026-09-02",
+      "section": "NAV release"
+    }
+  ],
+  "lines": [
+    {
+      "companyId": "standard-bots",
+      "fairValue": 86876140.19,
+      "role": "holding",
+      "label": "Standard Bots"
+    },
+    {
+      "companyId": "dyna",
+      "fairValue": 41224665.25,
+      "role": "holding",
+      "label": "Dyna Robotics"
+    },
+    {
+      "companyId": "apptronik",
+      "fairValue": 39287936.01,
+      "role": "holding",
+      "label": "Apptronik"
+    },
+    {
+      "companyId": "figure",
+      "fairValue": 38181233.59,
+      "role": "holding",
+      "label": "Figure AI"
+    },
+    {
+      "companyId": "dexmate",
+      "fairValue": 25454155.73,
+      "role": "holding",
+      "label": "Dexmate",
+      "note": "August 31 portfolio page places 9.2% next to Dexmate. The July 31 filing had Dexmate at 9.3%."
+    },
+    {
+      "companyId": "maven-robotics",
+      "fairValue": 24900804.52,
+      "role": "holding",
+      "label": "Maven Robotics",
+      "note": "August 31 portfolio page places 9.0% next to Maven Robotics. The July 31 filing showed a confidential general-purpose position at 9.1% and did not use this name."
+    },
+    {
+      "companyId": "path-robotics",
+      "fairValue": 6086863.33,
+      "role": "holding",
+      "label": "Path Robotics"
+    },
+    {
+      "companyId": "prometheus",
+      "fairValue": 3596782.87,
+      "role": "holding",
+      "label": "Project Prometheus",
+      "note": "Prometheus Industries via RoboStrategy Prometheus LLC. Same issuer as the PWRL Prometheus line."
+    },
+    {
+      "companyId": "eccentric",
+      "fairValue": 3043431.66,
+      "role": "holding",
+      "label": "Eccentric Machines"
+    },
+    {
+      "companyId": "rek",
+      "fairValue": 2490080.45,
+      "role": "holding",
+      "label": "REK"
+    },
+    {
+      "companyId": "gmi-cloud",
+      "fairValue": 2213404.85,
+      "role": "holding",
+      "label": "GMI Cloud"
+    },
+    {
+      "companyId": "coco",
+      "fairValue": 1383378.03,
+      "role": "holding",
+      "label": "Coco Robotics"
+    },
+    {
+      "companyId": "nox-metals",
+      "fairValue": 830026.82,
+      "role": "holding",
+      "label": "Nox Metals"
+    },
+    {
+      "companyId": "endiatx",
+      "fairValue": 553351.21,
+      "role": "holding",
+      "label": "Endiatx"
+    },
+    {
+      "companyId": "allonic",
+      "fairValue": 276675.61,
+      "role": "holding",
+      "label": "Allonic"
+    },
+    {
+      "companyId": "purple-rhombus",
+      "fairValue": 276675.61,
+      "role": "holding",
+      "label": "Purple Rhombus"
+    }
+  ]
+}

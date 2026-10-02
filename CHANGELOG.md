@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.15.0.0] — 2026-10-02
+
+- Add `/book`, a company-by-fund matrix of reported NAV weights for DXYZ, RVI, BOT, NSLR, VCX, ARKVX, PIIVX, and PWRL. Dollars per $100 use the live price over the last reported NAV. RVII stays off until a post-IPO percent of net assets exists.
+
 ## [0.14.1.0] — 2026-10-01
 
 - Add a collapsed holdings chart wall on `/dxyz`: default-mark treemap and Notice.co two-year charts captured Oct 1, 2026. The tiles do not follow the PPS sliders.

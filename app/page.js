@@ -12,6 +12,14 @@ const tools = [
     tag: "NYSE: VCX",
   },
   {
+    slug: "/book",
+    name: "Private Book",
+    status: "live",
+    description:
+      "Reported weights for Destiny Tech100 and the Fundrise Innovation Fund. See the premium to the last published NAV, and how much of each company $100 of the stock buys.",
+    tag: "DXYZ · VCX",
+  },
+  {
     slug: "/dxyz",
     name: "DXYZ NAV Finder",
     status: "live",

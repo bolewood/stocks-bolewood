@@ -1,0 +1,166 @@
+{
+  "schemaVersion": "1.0.0",
+  "ticker": "PWRL",
+  "name": "Powerlaw Corp.",
+  "vehicleType": "closed-end-fund",
+  "yahooSymbol": "PWRL",
+  "premiumMode": "market",
+  "weightBasis": "net-assets",
+  "measurementDate": "2026-06-30",
+  "publicationDate": "2026-07-15",
+  "accession": "0001213900-26-078110",
+  "navAsOf": "2026-06-30",
+  "navPerShare": 16.21,
+  "netAssets": 700922533,
+  "sharesOutstanding": 43240132,
+  "unknownDilution": false,
+  "note": "June 30, 2026 portfolio schedule in the July 15, 2026 prospectus supplement. Named fair values are 79.36% of net assets. The residual is other net assets. NAV per share $16.21 is the June 30 headline; the share count is net assets divided by that print.",
+  "sources": [
+    {
+      "fields": [
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "url": "https://www.sec.gov/Archives/edgar/data/2052053/000121390026078110/ea0298066-01_424b3.htm",
+      "accession": "0001213900-26-078110",
+      "measurementDate": "2026-06-30",
+      "publicationDate": "2026-07-15",
+      "section": "Current portfolio"
+    },
+    {
+      "fields": [
+        "netAssets",
+        "navPerShare"
+      ],
+      "sourceClass": "primary",
+      "url": "https://www.businesswire.com/news/home/20260715699795/en/Powerlaw-Corp.-Nasdaq-PWRL-Announces-Prometheus-and-Shield-AI-as-Newest-Holdings-Files-Updated-Schedule-of-Investments",
+      "measurementDate": "2026-06-30",
+      "publicationDate": "2026-07-15",
+      "section": "June 30 NAV",
+      "note": "Headline NAV $700.9 million and $16.21 per share. Net assets used here are $700,922,533 so the schedule's 79.36% equals the named fair values."
+    }
+  ],
+  "lines": [
+    {
+      "companyId": "canva",
+      "fairValue": 6569802,
+      "role": "holding",
+      "label": "Canva common via SPV"
+    },
+    {
+      "companyId": "colossal",
+      "fairValue": 33341710,
+      "role": "holding",
+      "label": "Colossal Biosciences common"
+    },
+    {
+      "companyId": "databricks",
+      "fairValue": 20845090,
+      "role": "holding",
+      "label": "Databricks preferred via SPV"
+    },
+    {
+      "companyId": "deel",
+      "fairValue": 29982768,
+      "role": "holding",
+      "label": "Deel preferred"
+    },
+    {
+      "companyId": "figma",
+      "fairValue": 1166805,
+      "role": "holding",
+      "label": "Figma Class A common"
+    },
+    {
+      "companyId": "kalshi",
+      "fairValue": 37869836,
+      "role": "holding",
+      "label": "Kalshi via SPV"
+    },
+    {
+      "companyId": "mercor",
+      "fairValue": 19994611,
+      "role": "holding",
+      "label": "Mercor Series C via SPV"
+    },
+    {
+      "companyId": "openai",
+      "fairValue": 46924979,
+      "role": "holding",
+      "label": "OpenAI Class A common via SPV"
+    },
+    {
+      "companyId": "kraken",
+      "fairValue": 37174413,
+      "role": "holding",
+      "label": "Payward (Kraken)"
+    },
+    {
+      "companyId": "rippling",
+      "fairValue": 4950178,
+      "role": "holding",
+      "label": "People Center (Rippling) via SPV"
+    },
+    {
+      "companyId": "perplexity",
+      "fairValue": 8000201,
+      "role": "holding",
+      "label": "Perplexity Series E via SPV"
+    },
+    {
+      "companyId": "prometheus",
+      "fairValue": 15725000,
+      "role": "holding",
+      "label": "Prometheus Series B via SPV"
+    },
+    {
+      "companyId": "saronic",
+      "fairValue": 8057344,
+      "role": "holding",
+      "label": "Saronic preferred via SPV"
+    },
+    {
+      "companyId": "shield-ai",
+      "fairValue": 25070000,
+      "role": "holding",
+      "label": "Shield AI Series G via SPV"
+    },
+    {
+      "companyId": "spacex",
+      "fairValue": 189523047,
+      "role": "holding",
+      "label": "SpaceX Class A common via SPV"
+    },
+    {
+      "companyId": "stripe",
+      "fairValue": 25316550,
+      "role": "holding",
+      "label": "Stripe Class B common"
+    },
+    {
+      "companyId": "tether",
+      "fairValue": 19999621,
+      "role": "holding",
+      "label": "Tether common via SPV"
+    },
+    {
+      "companyId": "vast-data",
+      "fairValue": 25374633,
+      "role": "holding",
+      "label": "Vast Data via SPV"
+    },
+    {
+      "companyId": "waymo",
+      "fairValue": 360000,
+      "role": "holding",
+      "label": "Waymo forward contract"
+    },
+    {
+      "companyId": "other-net-assets",
+      "fairValue": 144675945,
+      "role": "residual",
+      "label": "Other net assets",
+      "note": "20.64% of June 30 net assets. Not a portfolio company."
+    }
+  ]
+}

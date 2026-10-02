@@ -1,0 +1,140 @@
+{
+  "schemaVersion": "1.0.0",
+  "ticker": "RVI",
+  "name": "Robinhood Ventures Fund I",
+  "vehicleType": "closed-end-fund",
+  "yahooSymbol": "RVI",
+  "premiumMode": "market",
+  "weightBasis": "net-assets",
+  "measurementDate": "2026-06-30",
+  "publicationDate": "2026-08-21",
+  "accession": "0000894189-26-022643",
+  "navAsOf": "2026-06-30",
+  "navPerShare": 25.02,
+  "netAssets": 681768890,
+  "sharesOutstanding": 27248956,
+  "unknownDilution": false,
+  "note": "June 30, 2026 schedule of investments. Net assets $681,768,890. Printed NAV $25.02. Share count is net assets divided by that printed NAV, rounded.",
+  "sources": [
+    {
+      "fields": [
+        "netAssets",
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "url": "https://cdn.robinhood.com/app_assets/rhv/updates/rvi_schedule_of_investments_6.30.26.pdf",
+      "accession": "0000894189-26-022643",
+      "measurementDate": "2026-06-30",
+      "publicationDate": "2026-08-21",
+      "section": "Schedule of investments"
+    },
+    {
+      "fields": [
+        "navPerShare"
+      ],
+      "sourceClass": "primary",
+      "url": "https://robinhood.com/us/en/ventures/rvi/",
+      "measurementDate": "2026-06-30",
+      "publicationDate": "2026-08-21",
+      "section": "Fund I breakdown"
+    }
+  ],
+  "lines": [
+    {
+      "companyId": "spacex",
+      "fairValue": 8543000,
+      "role": "holding",
+      "label": "Class A common, public"
+    },
+    {
+      "companyId": "canva",
+      "fairValue": 24999928,
+      "role": "holding",
+      "label": "Class A common"
+    },
+    {
+      "companyId": "openai",
+      "fairValue": 74998784,
+      "role": "holding",
+      "label": "Class A common"
+    },
+    {
+      "companyId": "ramp",
+      "fairValue": 13848240,
+      "role": "holding",
+      "label": "Class A common"
+    },
+    {
+      "companyId": "revolut",
+      "fairValue": 49816304,
+      "role": "holding",
+      "label": "Ordinary shares"
+    },
+    {
+      "companyId": "stripe",
+      "fairValue": 29537046,
+      "role": "holding",
+      "label": "Class B common"
+    },
+    {
+      "companyId": "oura",
+      "fairValue": 24813322,
+      "role": "holding",
+      "label": "Series E preferred"
+    },
+    {
+      "companyId": "airwallex",
+      "fairValue": 32077467,
+      "role": "holding",
+      "label": "Series G preferred"
+    },
+    {
+      "companyId": "ramp",
+      "fairValue": 19485000,
+      "role": "holding",
+      "label": "Series E-3 preferred"
+    },
+    {
+      "companyId": "boom",
+      "fairValue": 26962628,
+      "role": "holding",
+      "label": "Series B-1 preferred"
+    },
+    {
+      "companyId": "databricks",
+      "fairValue": 33589866,
+      "role": "holding",
+      "label": "Series K preferred"
+    },
+    {
+      "companyId": "databricks",
+      "fairValue": 53036662,
+      "role": "holding",
+      "label": "Series L preferred"
+    },
+    {
+      "companyId": "elevenlabs",
+      "fairValue": 20000872,
+      "role": "holding",
+      "label": "Series D-1 preferred"
+    },
+    {
+      "companyId": "mercor",
+      "fairValue": 53448150,
+      "role": "holding",
+      "label": "Series C preferred"
+    },
+    {
+      "companyId": "money-market",
+      "fairValue": 220087936,
+      "role": "cash",
+      "label": "First American Government Obligations Fund"
+    },
+    {
+      "companyId": "other-net-assets",
+      "fairValue": -3476315,
+      "role": "liability",
+      "label": "Liabilities less other assets"
+    }
+  ]
+}

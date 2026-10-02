@@ -1,0 +1,289 @@
+{
+  "schemaVersion": "1.0.0",
+  "ticker": "VCX",
+  "name": "Fundrise Innovation Fund",
+  "vehicleType": "closed-end-fund",
+  "yahooSymbol": "VCX",
+  "premiumMode": "market",
+  "weightBasis": "net-assets",
+  "measurementDate": "2026-06-30",
+  "publicationDate": "2026-08-28",
+  "accession": "0001867090-26-000109",
+  "navAsOf": "2026-06-30",
+  "navPerShare": 21.70476203768022,
+  "netAssets": 776968361.92,
+  "sharesOutstanding": 35797138,
+  "unknownDilution": false,
+  "note": "June 30, 2026 N-PORT-P net assets. Dollars are the lots used by the VCX NAV page, including the plug that forces the column to sum to net assets. Share count is the March 31 N-CSR/A figure, unchanged because April–June sales and redemptions were zero.",
+  "sources": [
+    {
+      "fields": [
+        "netAssets",
+        "navPerShare",
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "issuer": "Fundrise Innovation Fund",
+      "filingType": "NPORT-P",
+      "accession": "0001867090-26-000109",
+      "url": "https://www.sec.gov/Archives/edgar/data/1867090/000186709026000109/xslFormNPORT-P_X01/primary_doc.xml",
+      "measurementDate": "2026-06-30",
+      "publicationDate": "2026-08-28",
+      "section": "Schedule of investments"
+    },
+    {
+      "fields": [
+        "sharesOutstanding"
+      ],
+      "sourceClass": "primary",
+      "issuer": "Fundrise Innovation Fund",
+      "filingType": "N-CSR/A",
+      "accession": "0001999371-26-011950",
+      "measurementDate": "2026-03-31",
+      "publicationDate": null,
+      "section": "Share count carried forward after zero second-quarter flows"
+    }
+  ],
+  "lines": [
+    {
+      "companyId": "databricks",
+      "fairValue": 23256000,
+      "role": "holding",
+      "label": "Common stock",
+      "note": "Direct common. The SPV is a separate line."
+    },
+    {
+      "companyId": "ramp",
+      "fairValue": 36987960,
+      "role": "holding",
+      "label": "Series A-2, C-1, and common",
+      "note": "Marked to $120 in the June 30 N-PORT."
+    },
+    {
+      "companyId": "flock",
+      "fairValue": 24179907,
+      "role": "holding",
+      "label": "Class B, A, A-1 SAFE, and C"
+    },
+    {
+      "companyId": "epic-games",
+      "fairValue": 19179610,
+      "role": "holding",
+      "label": "Common"
+    },
+    {
+      "companyId": "fivetran",
+      "fairValue": 15000018,
+      "role": "holding",
+      "label": "Series D preferred",
+      "note": "Was dbt Labs. The merger closed after March 31. Same company as the dbt-labs alias."
+    },
+    {
+      "companyId": "vanta",
+      "fairValue": 10115608.02,
+      "role": "holding",
+      "label": "Series B-1 preferred"
+    },
+    {
+      "companyId": "canva",
+      "fairValue": 9598642.34,
+      "role": "holding",
+      "label": "Common"
+    },
+    {
+      "companyId": "loyal",
+      "fairValue": 9999989.719999999,
+      "role": "holding",
+      "label": "Series C preferred"
+    },
+    {
+      "companyId": "anduril",
+      "fairValue": 5246199,
+      "role": "holding",
+      "label": "Series Seed preferred",
+      "note": "Direct preferred only. The CIV is a separate line."
+    },
+    {
+      "companyId": "erebor",
+      "fairValue": 4999920.01,
+      "role": "holding",
+      "label": "Preferred"
+    },
+    {
+      "companyId": "handshake",
+      "fairValue": 3415350,
+      "role": "holding",
+      "label": "Series C and D preferred"
+    },
+    {
+      "companyId": "intercom",
+      "fairValue": 2801633,
+      "role": "holding",
+      "label": "Common and Series A preferred"
+    },
+    {
+      "companyId": "anyscale",
+      "fairValue": 2493722.96,
+      "role": "holding",
+      "label": "Common"
+    },
+    {
+      "companyId": "hightouch",
+      "fairValue": 1286692.1,
+      "role": "holding",
+      "label": "Common and Series C preferred"
+    },
+    {
+      "companyId": "stripe",
+      "fairValue": 617652,
+      "role": "holding",
+      "label": "Common"
+    },
+    {
+      "companyId": "figure",
+      "fairValue": 9999989.75,
+      "role": "holding",
+      "label": "Figure AI",
+      "note": "New June 30 position."
+    },
+    {
+      "companyId": "anthropic",
+      "fairValue": 173628474,
+      "role": "holding",
+      "label": "SaxeCap Advisors VIII and AI Access 12",
+      "note": "Co-investment vehicles. Filed fair value, not a share count."
+    },
+    {
+      "companyId": "openai",
+      "fairValue": 84162466,
+      "role": "holding",
+      "label": "Quiet OA Access and HOF Capital AP Growth",
+      "note": "Co-investment vehicles. Filed fair value, not a share count."
+    },
+    {
+      "companyId": "databricks",
+      "fairValue": 72479780,
+      "role": "holding",
+      "label": "AI Growth GRT, LLC",
+      "valuation": "practical-expedient",
+      "note": "Partnership NAV practical expedient, not a look-through to Databricks shares."
+    },
+    {
+      "companyId": "anduril",
+      "fairValue": 21578178,
+      "role": "holding",
+      "label": "8VC ANSE SPV",
+      "note": "Co-investment vehicle, separate from the Series Seed line."
+    },
+    {
+      "companyId": "spacex",
+      "fairValue": 33086011,
+      "role": "holding",
+      "label": "SP Private Investments XIII",
+      "note": "5,100 units. Filed SPV fair value, not the live SPCX quote."
+    },
+    {
+      "companyId": "ai-llm",
+      "fairValue": 23105000,
+      "role": "holding",
+      "label": "AI-LLM, LLC",
+      "note": "Filing describes a top-10 LLM provider. Not mapped to Anthropic or OpenAI."
+    },
+    {
+      "companyId": "fluidstack",
+      "fairValue": 19312500,
+      "role": "holding",
+      "label": "FSTK FR, LP"
+    },
+    {
+      "companyId": "prometheus",
+      "fairValue": 15000000,
+      "role": "holding",
+      "label": "RWL AI, LLC"
+    },
+    {
+      "companyId": "cmbs",
+      "fairValue": 65925325.24999999,
+      "role": "other",
+      "note": "Eight data-center CMBS lots"
+    },
+    {
+      "companyId": "jpm-treasury",
+      "fairValue": 41695512.29,
+      "role": "cash",
+      "note": "On the schedule of investments"
+    },
+    {
+      "companyId": "cash-unscheduled",
+      "fairValue": 60828531.65,
+      "role": "cash",
+      "note": "NPORT Item B.2.f cash, separate from the JPM money-market line."
+    },
+    {
+      "companyId": "reverse-repo",
+      "fairValue": -30532497.3,
+      "role": "liability",
+      "note": "Five Barclays reverse repos against the CMBS collateral."
+    },
+    {
+      "companyId": "inspectify",
+      "fairValue": 5999965.01,
+      "role": "holding",
+      "note": "Series A-5 preferred and a SAFE."
+    },
+    {
+      "companyId": "theory-ventures",
+      "fairValue": 5696275,
+      "role": "holding",
+      "note": "10.0% promissory note maturing April 28, 2033."
+    },
+    {
+      "companyId": "rhino",
+      "fairValue": 1414783.16,
+      "role": "holding",
+      "note": "Series P, D-1A, and D-1."
+    },
+    {
+      "companyId": "immuta",
+      "fairValue": 1021600,
+      "role": "holding",
+      "note": "Common."
+    },
+    {
+      "companyId": "ditto",
+      "fairValue": 999992.78,
+      "role": "holding",
+      "note": "Series B."
+    },
+    {
+      "companyId": "omni",
+      "fairValue": 1219917,
+      "role": "holding",
+      "note": "Series B-1."
+    },
+    {
+      "companyId": "risotto",
+      "fairValue": 500431.43,
+      "role": "holding",
+      "note": "Seed 2 and Seed 1."
+    },
+    {
+      "companyId": "luminos",
+      "fairValue": 363711.45999999996,
+      "role": "holding",
+      "note": "Seed 2 and Seed 1."
+    },
+    {
+      "companyId": "gumloop",
+      "fairValue": 67225,
+      "role": "holding",
+      "note": "Series A-2."
+    },
+    {
+      "companyId": "other-assets",
+      "fairValue": 236286.29,
+      "role": "residual",
+      "note": "Plug so the itemized lots equal N-PORT net assets of $776,968,361.92."
+    }
+  ]
+}
