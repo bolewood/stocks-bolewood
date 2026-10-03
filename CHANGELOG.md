@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.15.2.0] — 2026-10-03
+
+- Expand 2-year secondary trend pulse on `/book` to 69 private holdings (adding CoreWeave, Plaid, ElevenLabs, Zipline, Oura, Crusoe, Deel, Replit, Ripple, Relativity Space, Vanta, Fivetran, Liquid Death, Arctic Wolf, Betterment, Tanium, Upgrade, Checkr, Automation Anywhere, Locus Robotics, Path Robotics, Ayar Labs, Tradeshift, EquipmentShare, TensorWave, Radiant Industries, Learneo, Flock Safety, and Standard Bots).
+
 ## [0.15.1.0] — 2026-10-03
 
 - Add 2-year secondary trend pulse to `/book`: compact SVG sparklines, color-coded performance badges, sort by 2Y move, and expandable inline Notice.co chart showcase cards across 40 core private holdings.
