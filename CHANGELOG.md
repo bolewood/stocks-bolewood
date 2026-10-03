@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.15.3.0] — 2026-10-03
+
+- Expand 2-year secondary trend pulse on `/book` to 98 private holdings (adding Figma, Waymo, Consensys, Devoted Health, BETA Technologies, True Anomaly, GrubMarket, Docker, MasterClass, Lime, Intercom, Anyscale, Color Health, Freenome, Securitize, Hightouch, Immuta, Carbon, Varo Money, Brain Corp, Contrast Security, Fundbox, Outrider, Zocdoc, Tealium, Ocrolus, Collective Health, Farmers Business Network, and Manna Drone Delivery).
+
 ## [0.15.2.0] — 2026-10-03
 
 - Expand 2-year secondary trend pulse on `/book` to 69 private holdings (adding CoreWeave, Plaid, ElevenLabs, Zipline, Oura, Crusoe, Deel, Replit, Ripple, Relativity Space, Vanta, Fivetran, Liquid Death, Arctic Wolf, Betterment, Tanium, Upgrade, Checkr, Automation Anywhere, Locus Robotics, Path Robotics, Ayar Labs, Tradeshift, EquipmentShare, TensorWave, Radiant Industries, Learneo, Flock Safety, and Standard Bots).
