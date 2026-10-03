@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.15.1.0] — 2026-10-03
+
+- Add 2-year secondary trend pulse to `/book`: compact SVG sparklines, color-coded performance badges, sort by 2Y move, and expandable inline Notice.co chart showcase cards across 40 core private holdings.
+
 ## [0.15.0.3] — 2026-10-02
 
 - Update position disclosures to October 2, 2026, adding long positions in NSLR and PWRL.

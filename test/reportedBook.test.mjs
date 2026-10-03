@@ -44,9 +44,13 @@ function weight(snapshot, companyId) {
 
 test("book filenames carry the measurement date and accession or source id", () => {
   const bookRoot = join(import.meta.dirname, "..", "data", "books");
-  const files = readdirSync(bookRoot).flatMap((ticker) =>
-    readdirSync(join(bookRoot, ticker)).map((file) => basename(file))
-  );
+  const files = readdirSync(bookRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .flatMap((entry) =>
+      readdirSync(join(bookRoot, entry.name))
+        .filter((file) => file.endsWith(".json"))
+        .map((file) => basename(file))
+    );
   assert.equal(files.length, snapshots.length);
   for (const file of files) {
     assert.match(file, /^\d{4}-\d{2}-\d{2}__(?:\d{10}-\d{2}-\d{6}|[a-z0-9-]+)\.json$/);
@@ -282,6 +286,25 @@ test("company rows sort A–Z within a section, and a fund column keeps blanks l
     sortBookRows(rows, { key: "DXYZ", dir: "asc", view: "nav", funds }).map((row) => row.id),
     ["openai", "anthropic", "boom", "cash"]
   );
+  const secondaryTrends = {
+    companies: {
+      openai: { twoYearChange: 249.98 },
+      anthropic: { twoYearChange: 2035.82 },
+      boom: { twoYearChange: -97.55 },
+    },
+  };
+  assert.deepEqual(
+    sortBookRows(rows, { key: "trend", dir: "desc", secondaryTrends }).map((row) => row.id),
+    ["anthropic", "openai", "boom", "cash"]
+  );
+  assert.deepEqual(
+    sortBookRows(rows, { key: "trend", dir: "asc", secondaryTrends }).map((row) => row.id),
+    ["boom", "openai", "anthropic", "cash"]
+  );
+  const byTrend = parseBookSearch("?sort=trend", { tickers: ["DXYZ", "VCX"] });
+  assert.equal(byTrend.sort, "trend");
+  assert.equal(byTrend.dir, "desc");
+  assert.equal(serializeBookSearch(byTrend), "?sort=trend");
 });
 
 test("new fund columns reconcile, and a portfolio-mix book stays out of dollars per $100", () => {

@@ -158,6 +158,93 @@ function SortMark({ active, dir }) {
   );
 }
 
+function trendTierStyle(tier) {
+  switch (tier) {
+    case "surging":
+      return {
+        badgeBg: "#dcfce7",
+        badgeColor: "#15803d",
+        stroke: "#16a34a",
+        label: "Surging",
+      };
+    case "strong":
+      return {
+        badgeBg: "#f0fdf4",
+        badgeColor: "#166534",
+        stroke: "#22c55e",
+        label: "Strong",
+      };
+    case "flat":
+      return {
+        badgeBg: "#f5f5f4",
+        badgeColor: "#57534e",
+        stroke: "#78716c",
+        label: "Flat",
+      };
+    case "lagging":
+      return {
+        badgeBg: "#ffedd5",
+        badgeColor: "#c2410c",
+        stroke: "#ea580c",
+        label: "Lagging",
+      };
+    case "distressed":
+      return {
+        badgeBg: "#fee2e2",
+        badgeColor: "#991b1b",
+        stroke: "#dc2626",
+        label: "Distressed",
+      };
+    default:
+      return {
+        badgeBg: "#f5f5f4",
+        badgeColor: "#78716c",
+        stroke: "#a8a29e",
+        label: "—",
+      };
+  }
+}
+
+function Sparkline({ points = [], stroke = "#16a34a" }) {
+  if (!points || points.length < 2) return null;
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const range = max - min;
+  const width = 42;
+  const height = 14;
+  const padX = 2;
+  const padY = 2;
+  const drawW = width - padX * 2;
+  const drawH = height - padY * 2;
+  const coords = points.map((val, idx) => {
+    const x = padX + (idx / (points.length - 1)) * drawW;
+    const y = range === 0 ? height / 2 : padY + drawH - ((val - min) / range) * drawH;
+    return [x, y];
+  });
+  const pointsStr = coords.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const [lastX, lastY] = coords[coords.length - 1];
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      style={{ display: "block", flexShrink: 0 }}
+      aria-hidden="true"
+    >
+      <polyline
+        points={pointsStr}
+        fill="none"
+        stroke={stroke}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx={lastX.toFixed(1)} cy={lastY.toFixed(1)} r="2" fill={stroke} />
+    </svg>
+  );
+}
+
 function roleFor(id, funds) {
   const roles = funds
     .map((fund) => fund.positions.get(id)?.role)
@@ -166,7 +253,7 @@ function roleFor(id, funds) {
   return roles[0] || "holding";
 }
 
-export default function PrivateBook({ companyMap, snapshots, disclosure }) {
+export default function PrivateBook({ companyMap, snapshots, disclosure, secondaryTrends = null }) {
   const tickers = useMemo(() => orderedTickers(snapshots), [snapshots]);
   const search = useSyncExternalStore(subscribeToBookUrl, () => window.location.search, () => "");
   const parsed = useMemo(() => parseBookSearch(search, { tickers }), [search, tickers]);
@@ -253,8 +340,8 @@ export default function PrivateBook({ companyMap, snapshots, disclosure }) {
       note: companyMap[id]?.note || "",
       role: roleFor(id, funds),
     }));
-    return sortBookRows(built, { key: sort, dir, view, funds });
-  }, [funds, companyMap, sort, dir, view]);
+    return sortBookRows(built, { key: sort, dir, view, funds, secondaryTrends });
+  }, [funds, companyMap, sort, dir, view, secondaryTrends]);
 
   const overlappingCount = useMemo(() => {
     let count = 0;
@@ -577,6 +664,35 @@ export default function PrivateBook({ companyMap, snapshots, disclosure }) {
                   <SortMark active={sort === "name"} dir={dir} />
                 </button>
               </th>
+              {secondaryTrends ? (
+                <th
+                  style={{
+                    ...styles.trendHead,
+                    ...(sort === "trend" ? styles.trendHeadSorted : {}),
+                  }}
+                  aria-sort={ariaSort("trend", sort, dir)}
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleSort("trend")}
+                    style={{ ...styles.sortBtn, ...styles.sortBtnTrend }}
+                    title={`Sort by Notice.co 2-year secondary price move (${dir === "desc" ? "highest first" : "lowest first"})`}
+                  >
+                    <div style={styles.headerTrendTitle}>
+                      <span
+                        style={{
+                          fontWeight: sort === "trend" ? 700 : 600,
+                          color: sort === "trend" ? "#d97706" : "inherit",
+                        }}
+                      >
+                        2Y Pulse
+                      </span>
+                      <SortMark active={sort === "trend"} dir={dir} />
+                    </div>
+                    <div style={styles.headerTrendSub}>Notice.co</div>
+                  </button>
+                </th>
+              ) : null}
               {funds.map((fund) => {
                 const isSorted = sort === fund.ticker;
                 const isMarket = fund.snapshot.premiumMode === "market";
@@ -631,7 +747,7 @@ export default function PrivateBook({ companyMap, snapshots, disclosure }) {
           <tbody>
             {displayRows.length === 0 ? (
               <tr>
-                <td colSpan={1 + funds.length} style={styles.emptyCell}>
+                <td colSpan={(secondaryTrends ? 2 : 1) + funds.length} style={styles.emptyCell}>
                   No companies match your search.{" "}
                   <button type="button" onClick={clearAllFilters} style={styles.textBtn}>
                     Clear filters
@@ -646,7 +762,7 @@ export default function PrivateBook({ companyMap, snapshots, disclosure }) {
                 <Fragment key={row.id}>
                   {row.divider ? (
                     <tr>
-                      <td colSpan={1 + funds.length} style={styles.section}>
+                      <td colSpan={(secondaryTrends ? 2 : 1) + funds.length} style={styles.section}>
                         {ROLE_LABEL[row.role]}
                       </td>
                     </tr>
@@ -680,6 +796,50 @@ export default function PrivateBook({ companyMap, snapshots, disclosure }) {
                         <span style={styles.companyNameText}>{row.name}</span>
                       </button>
                     </th>
+                    {secondaryTrends ? (
+                      (() => {
+                        const trend = secondaryTrends.companies?.[row.id];
+                        const tStyle = trend ? trendTierStyle(trend.tier) : null;
+                        const isSortedCol = sort === "trend";
+                        return (
+                          <td
+                            key="secondary-trend"
+                            style={{
+                              ...styles.trendCell,
+                              background: selected
+                                ? "#fffbeb"
+                                : isSortedCol
+                                ? "#faf8f5"
+                                : "transparent",
+                            }}
+                            title={
+                              trend
+                                ? `${row.name}: ${trend.twoYearChange >= 0 ? "+" : ""}${trend.twoYearChange.toFixed(1)}% 2Y on Notice.co (Est. $${trend.latestPrice} · ${trend.impliedValuation} EV). Click row for full chart.`
+                                : `${row.name}: No Notice.co 2Y chart in current snapshot`
+                            }
+                          >
+                            {trend ? (
+                              <div style={styles.trendCellContent}>
+                                <Sparkline points={trend.sparkline} stroke={tStyle.stroke} />
+                                <span
+                                  style={{
+                                    ...styles.trendBadge,
+                                    backgroundColor: tStyle.badgeBg,
+                                    color: tStyle.badgeColor,
+                                  }}
+                                >
+                                  {trend.twoYearChange >= 0 ? "+" : ""}
+                                  {trend.twoYearChange.toFixed(0)}%
+                                  {trend.caveat ? "*" : ""}
+                                </span>
+                              </div>
+                            ) : (
+                              <div style={styles.trendEmpty}>—</div>
+                            )}
+                          </td>
+                        );
+                      })()
+                    ) : null}
                     {funds.map((fund) => {
                       const position = fund.positions.get(row.id);
                       const metrics = positionMetrics(position, fund.snapshot, fund.price);
@@ -717,7 +877,7 @@ export default function PrivateBook({ companyMap, snapshots, disclosure }) {
                   {/* Inline Lot Inspector / Detail Panel */}
                   {selected ? (
                     <tr style={styles.expandedRow}>
-                      <td colSpan={1 + funds.length} style={styles.expandedCell}>
+                      <td colSpan={(secondaryTrends ? 2 : 1) + funds.length} style={styles.expandedCell}>
                         <div style={styles.inlineDetailCard}>
                           <div style={styles.inlineHeader}>
                             <div style={styles.inlineTitleBlock}>
@@ -743,6 +903,102 @@ export default function PrivateBook({ companyMap, snapshots, disclosure }) {
                               ✕ Close details
                             </button>
                           </div>
+
+                          {/* Notice.co Secondary Trend Showcase */}
+                          {secondaryTrends && secondaryTrends.companies?.[row.id] ? (
+                            (() => {
+                              const trend = secondaryTrends.companies[row.id];
+                              const tStyle = trendTierStyle(trend.tier);
+                              return (
+                                <div style={styles.secondaryShowcase}>
+                                  <div style={styles.secondaryMetaCol}>
+                                    <div style={styles.secondaryKickerRow}>
+                                      <span style={styles.secondaryKicker}>Notice.co Secondary Tape</span>
+                                      <span
+                                        style={{
+                                          ...styles.secondaryTierBadge,
+                                          backgroundColor: tStyle.badgeBg,
+                                          color: tStyle.badgeColor,
+                                        }}
+                                      >
+                                        {tStyle.label}
+                                      </span>
+                                    </div>
+                                    <div style={styles.secondaryHeadlineRow}>
+                                      <span style={styles.secondaryPriceLarge}>
+                                        ${trend.latestPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                                      </span>
+                                      <span
+                                        style={{
+                                          ...styles.secondaryPillLarge,
+                                          backgroundColor: tStyle.badgeBg,
+                                          color: tStyle.badgeColor,
+                                        }}
+                                      >
+                                        {trend.twoYearChange >= 0 ? "+" : ""}
+                                        {trend.twoYearChange.toLocaleString("en-US", { maximumFractionDigits: 1 })}% 2Y
+                                      </span>
+                                    </div>
+
+                                    <div style={styles.secondaryFactGrid}>
+                                      <div style={styles.secondaryFactItem}>
+                                        <span style={styles.secondaryFactLabel}>Implied EV</span>
+                                        <span style={styles.secondaryFactVal}>{trend.impliedValuation}</span>
+                                      </div>
+                                      <div style={styles.secondaryFactItem}>
+                                        <span style={styles.secondaryFactLabel}>2Y Low / High</span>
+                                        <span style={styles.secondaryFactVal}>
+                                          ${Math.min(...trend.sparkline).toFixed(1)} – ${Math.max(...trend.sparkline).toFixed(1)}
+                                        </span>
+                                      </div>
+                                      <div style={styles.secondaryFactItem}>
+                                        <span style={styles.secondaryFactLabel}>Snapshot Date</span>
+                                        <span style={styles.secondaryFactVal}>{secondaryTrends.asOf || "Oct 1, 2026"}</span>
+                                      </div>
+                                    </div>
+
+                                    {trend.caveat ? (
+                                      <div style={styles.secondaryCaveatAlert}>
+                                        <span style={styles.secondaryAlertIcon}>⚠️</span>
+                                        <div>
+                                          <b>Basis Warning:</b> {trend.caveat}
+                                        </div>
+                                      </div>
+                                    ) : trend.note ? (
+                                      <div style={styles.secondaryNoteBox}>
+                                        <span style={styles.secondaryNoteIcon}>ℹ️</span>
+                                        <div>{trend.note}</div>
+                                      </div>
+                                    ) : null}
+
+                                    <p style={styles.secondaryDisclaimer}>
+                                      Notice.co secondary prices are indicative algorithmic estimates from private secondary trades, tender offers, and reference data. They are not fund marks, guaranteed bids, or ASC 820 fair values.
+                                    </p>
+                                  </div>
+
+                                  <div style={styles.secondaryChartCol}>
+                                    <div style={styles.secondaryChartFrame}>
+                                      <img
+                                        src={trend.chartImage}
+                                        alt={`${row.name} 2-year secondary price chart from Notice.co`}
+                                        style={styles.secondaryChartImg}
+                                        loading="lazy"
+                                      />
+                                      <div style={styles.secondaryChartCaption}>
+                                        Notice.co 2Y Historical Trajectory · Snapshot captured Oct 1, 2026
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })()
+                          ) : secondaryTrends ? (
+                            <div style={styles.secondaryNoTapeBox}>
+                              <span style={styles.secondaryNoTapeKicker}>Notice.co Secondary Tape:</span> No 2-year secondary chart snapshot tracked for {row.name}. High-frequency secondary coverage is currently available for 18 core pre-IPO positions.
+                            </div>
+                          ) : null}
+
+                          <div style={styles.inlineFundHeading}>Reported Fund Holdings &amp; Lots</div>
 
                           <div style={styles.inlineRankGrid}>
                             {focusRows
@@ -1370,7 +1626,7 @@ const styles = {
 
   /* Table styling */
   scroll: { marginBottom: 32 },
-  table: { width: "100%", minWidth: 1160, borderCollapse: "collapse", tableLayout: "fixed" },
+  table: { width: "100%", minWidth: 1240, borderCollapse: "collapse", tableLayout: "fixed" },
   companyHead: {
     textAlign: "left",
     fontFamily: "var(--font-mono), monospace",
@@ -1378,10 +1634,41 @@ const styles = {
     letterSpacing: "0.12em",
     textTransform: "uppercase",
     color: "#78716c",
-    width: 280,
+    width: 250,
     padding: "10px 16px",
     borderBottom: "1px solid #e7e5e4",
     background: "#fefdf8",
+  },
+  trendHead: {
+    textAlign: "left",
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: 11,
+    letterSpacing: "0.08em",
+    color: "#78716c",
+    padding: "8px 10px",
+    borderBottom: "1px solid #e7e5e4",
+    background: "#fefdf8",
+    width: 115,
+  },
+  trendHeadSorted: {
+    background: "#fef9ee",
+  },
+  sortBtnTrend: {
+    width: "100%",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: 3,
+  },
+  headerTrendTitle: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+    fontSize: 13,
+  },
+  headerTrendSub: {
+    fontSize: 10,
+    color: "#a8a29e",
+    fontWeight: 400,
   },
   viewHead: {
     textAlign: "right",
@@ -1480,6 +1767,31 @@ const styles = {
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
   },
+  trendCell: {
+    padding: "8px 10px",
+    borderBottom: "1px solid #f5f5f4",
+    verticalAlign: "middle",
+  },
+  trendCellContent: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+  },
+  trendBadge: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: 10,
+    fontWeight: 700,
+    padding: "1px 5px",
+    borderRadius: 4,
+    fontVariantNumeric: "tabular-nums",
+    whiteSpace: "nowrap",
+  },
+  trendEmpty: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: 13,
+    color: "#d6d3d1",
+    paddingLeft: 4,
+  },
   valueCell: {
     textAlign: "right",
     padding: "8px 10px",
@@ -1542,6 +1854,171 @@ const styles = {
     border: "1px solid #e7e5e4",
     color: "#78716c",
     cursor: "pointer",
+  },
+  secondaryShowcase: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gap: 16,
+    padding: 16,
+    background: "#fff",
+    border: "1px solid #e7e5e4",
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: "center",
+  },
+  secondaryMetaCol: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+  },
+  secondaryKickerRow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  secondaryKicker: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: 11,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    color: "#78716c",
+    fontWeight: 600,
+  },
+  secondaryTierBadge: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: "0.06em",
+    padding: "2px 7px",
+    borderRadius: 999,
+    textTransform: "uppercase",
+  },
+  secondaryHeadlineRow: {
+    display: "flex",
+    alignItems: "baseline",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+  secondaryPriceLarge: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: 22,
+    fontWeight: 800,
+    color: "#1c1917",
+  },
+  secondaryPillLarge: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: 13,
+    fontWeight: 700,
+    padding: "2px 8px",
+    borderRadius: 6,
+  },
+  secondaryFactGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: 8,
+    padding: "8px 0",
+    borderTop: "1px solid #f5f5f4",
+    borderBottom: "1px solid #f5f5f4",
+  },
+  secondaryFactItem: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 2,
+  },
+  secondaryFactLabel: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: 10,
+    color: "#a8a29e",
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+  },
+  secondaryFactVal: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: 12,
+    fontWeight: 600,
+    color: "#1c1917",
+  },
+  secondaryCaveatAlert: {
+    display: "flex",
+    gap: 8,
+    alignItems: "flex-start",
+    fontSize: 11,
+    lineHeight: 1.45,
+    color: "#991b1b",
+    background: "#fef2f2",
+    border: "1px solid #fecaca",
+    borderRadius: 6,
+    padding: "8px 10px",
+  },
+  secondaryNoteBox: {
+    display: "flex",
+    gap: 8,
+    alignItems: "flex-start",
+    fontSize: 11,
+    lineHeight: 1.45,
+    color: "#57534e",
+    background: "#fbfbfa",
+    border: "1px solid #f0ede6",
+    borderRadius: 6,
+    padding: "6px 10px",
+  },
+  secondaryAlertIcon: { fontSize: 13, flexShrink: 0 },
+  secondaryNoteIcon: { fontSize: 13, flexShrink: 0 },
+  secondaryDisclaimer: {
+    fontSize: 11,
+    lineHeight: 1.4,
+    color: "#78716c",
+    margin: 0,
+    fontStyle: "italic",
+  },
+  secondaryChartCol: {
+    minWidth: 0,
+  },
+  secondaryChartFrame: {
+    background: "#fff",
+    border: "1px solid #e7e5e4",
+    borderRadius: 8,
+    overflow: "hidden",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+  },
+  secondaryChartImg: {
+    display: "block",
+    width: "100%",
+    height: "auto",
+    aspectRatio: "763 / 308",
+    objectFit: "cover",
+  },
+  secondaryChartCaption: {
+    padding: "6px 10px",
+    background: "#fafaf9",
+    borderTop: "1px solid #f0ede6",
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: 10,
+    color: "#a8a29e",
+    textAlign: "right",
+  },
+  secondaryNoTapeBox: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: 11,
+    color: "#78716c",
+    background: "#fafaf9",
+    border: "1px dashed #e7e5e4",
+    borderRadius: 6,
+    padding: "8px 12px",
+    marginBottom: 16,
+  },
+  secondaryNoTapeKicker: {
+    fontWeight: 600,
+    color: "#57534e",
+  },
+  inlineFundHeading: {
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: 11,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    color: "#78716c",
+    fontWeight: 600,
+    marginBottom: 10,
   },
   inlineRankGrid: {
     display: "grid",

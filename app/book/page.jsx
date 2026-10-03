@@ -1,7 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PrivateBook from "@/components/PrivateBook";
-import { loadBookSnapshots, loadCompanies } from "@/lib/loadBooks.mjs";
+import { loadBookSnapshots, loadCompanies, loadSecondaryTrends } from "@/lib/loadBooks.mjs";
 import { disclosureSentence } from "@/lib/disclosure.mjs";
 import disclosure from "@/data/disclosure.json";
 
@@ -21,12 +21,14 @@ export const metadata = {
 export default function BookPage() {
   const companies = loadCompanies();
   const snapshots = loadBookSnapshots(companies);
+  const secondaryTrends = loadSecondaryTrends();
   return (
     <>
       <Header />
       <PrivateBook
         companyMap={companies.companies}
         snapshots={snapshots}
+        secondaryTrends={secondaryTrends}
         disclosure={disclosureSentence(disclosure)}
       />
       <Footer />
