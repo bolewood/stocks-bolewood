@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.15.5.0] — 2026-10-03
+
+- Expand 2-year secondary trend pulse on `/book` to 119 private holdings (adding high-concentration holdings Dyna Robotics, Maven Robotics, CubeFabs, Saronic, FourKites, Rippling, and Tempus AI).
+
 ## [0.15.4.0] — 2026-10-03
 
 - Expand 2-year secondary trend pulse on `/book` to 112 private holdings (adding ClickHouse, Lookout, NextRoll, Blink Health, Hydra Host, Lucra, Iambic Therapeutics, PayJoy, Alamar Biosciences, CIBO Technologies, Omni, Ditto, Hydrow, and Click Therapeutics).

@@ -2431,6 +2431,160 @@
       "impliedValuation": "n/a",
       "note": "Prescription digital therapeutics: software-based treatments for smartphones, tested in clinical studies.",
       "caveat": "Two step re-marks (~$1.7 to ~$5 in early 2025 and ~$2.4 to ~$6.3 in early 2026) drive most of the gain; Notice shows no implied valuation or market cap."
+    },
+    "dyna": {
+      "name": "Dyna Robotics",
+      "twoYearChange": 318.44,
+      "tier": "surging",
+      "sparkline": [
+        5.17,
+        4.96,
+        4.54,
+        4.33,
+        25.14,
+        26.73,
+        25.88,
+        23.93,
+        21.44,
+        21.65
+      ],
+      "chartImage": "/dxyz-charts/dyna.jpg",
+      "latestPrice": 21.65,
+      "impliedValuation": "n/a",
+      "note": "Robotics foundation-model company building AI that lets robots perform manipulation and other physical tasks.",
+      "caveat": "Series starts about 2 months into the window; one step re-mark in early 2026 (~$4.5 to ~$25) drives nearly all of the gain, and it has drifted down ~15% since the ~$28 peak; Notice shows no implied valuation or market cap."
+    },
+    "maven-robotics": {
+      "name": "Maven Robotics",
+      "twoYearChange": 344.82,
+      "tier": "surging",
+      "sparkline": [
+        2.96,
+        2.65,
+        2.2,
+        2.48,
+        2.42,
+        2.37,
+        2.2,
+        2.17,
+        12.99,
+        13.16
+      ],
+      "chartImage": "/dxyz-charts/maven-robotics.jpg",
+      "latestPrice": 13.16,
+      "impliedValuation": "n/a",
+      "note": "Builds robot hardware, software and AI for autonomous industrial robots, working toward general-purpose robots.",
+      "caveat": "Flat around $2-3 for nearly the whole window, then a single step re-mark in mid-2026 (~$2.1 to ~$14); Notice shows no implied valuation or market cap."
+    },
+    "cubefabs": {
+      "name": "CubeFabs",
+      "twoYearChange": 54.97,
+      "tier": "strong",
+      "sparkline": [
+        87.13,
+        78.73,
+        68.83,
+        82.4,
+        103.89,
+        108.98,
+        132.72,
+        175.41,
+        122.54,
+        135.03
+      ],
+      "chartImage": "/dxyz-charts/cubefabs.jpg",
+      "latestPrice": 135.03,
+      "impliedValuation": "n/a",
+      "note": "Modular semiconductor micro-factories and AI software for process control (formerly Nanotronics Imaging).",
+      "caveat": "Peaked near ~$180 in spring 2026 before a pullback to ~$120 and a partial recovery; Notice shows no implied valuation or market cap."
+    },
+    "saronic": {
+      "name": "Saronic",
+      "twoYearChange": 410.08,
+      "tier": "surging",
+      "sparkline": [
+        5.41,
+        5.79,
+        14.67,
+        20.09,
+        17.99,
+        19.23,
+        27.61,
+        29.52,
+        27.91,
+        27.62
+      ],
+      "chartImage": "/dxyz-charts/saronic.jpg",
+      "latestPrice": 27.62,
+      "impliedValuation": "$9.30B",
+      "note": "Designs and builds autonomous unmanned surface vessels (USVs) for defense customers.",
+      "caveat": "Driven by step re-marks (~$6 to ~$15 in early 2025, ~$16 to ~$22 in late 2025 and ~$21 to ~$30 in early 2026); peaked near ~$33."
+    },
+    "fourkites": {
+      "name": "FourKites",
+      "twoYearChange": -43.8,
+      "tier": "lagging",
+      "sparkline": [
+        10.44,
+        11.59,
+        8.88,
+        10.05,
+        9.99,
+        8.72,
+        6.44,
+        6.01,
+        5.78,
+        5.87
+      ],
+      "chartImage": "/dxyz-charts/fourkites.jpg",
+      "latestPrice": 5.87,
+      "impliedValuation": "$488.97M",
+      "note": "Supply chain visibility and execution platform for shippers and logistics providers.",
+      "caveat": "-43.80% sits close to the lagging/distressed boundary (-50%); the slide has been steady since early 2026, flattening near ~$6 recently."
+    },
+    "rippling": {
+      "name": "Rippling",
+      "twoYearChange": 7.73,
+      "tier": "flat",
+      "sparkline": [
+        43.41,
+        50.23,
+        40.3,
+        54.98,
+        52.98,
+        50.23,
+        36.23,
+        39.08,
+        46.06,
+        46.77
+      ],
+      "chartImage": "/dxyz-charts/rippling.jpg",
+      "latestPrice": 46.77,
+      "impliedValuation": "$15.11B",
+      "note": "Workforce management software covering HR, payroll, IT and spend in one platform.",
+      "caveat": "Range-bound between about $35 and $57 over the whole window, ending only modestly above its start."
+    },
+    "tempus-ai": {
+      "name": "Tempus AI",
+      "twoYearChange": 55.25,
+      "tier": "strong",
+      "sparkline": [
+        49.36,
+        36.16,
+        47.57,
+        64.52,
+        78.94,
+        63.73,
+        47.89,
+        49.95,
+        77.99,
+        76.63
+      ],
+      "chartImage": "/dxyz-charts/tempus-ai.jpg",
+      "latestPrice": 76.63,
+      "impliedValuation": "$13.91B",
+      "note": "Healthcare technology company focused on precision medicine, genomic testing and clinical data.",
+      "caveat": "Already publicly traded (Notice shows an Exit marker); the series is a real market price, not private re-marks, and is highly volatile (range roughly $32-$103)."
     }
   }
 }
