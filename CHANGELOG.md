@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.15.4.0] — 2026-10-03
+
+- Expand 2-year secondary trend pulse on `/book` to 112 private holdings (adding ClickHouse, Lookout, NextRoll, Blink Health, Hydra Host, Lucra, Iambic Therapeutics, PayJoy, Alamar Biosciences, CIBO Technologies, Omni, Ditto, Hydrow, and Click Therapeutics).
+
 ## [0.15.3.0] — 2026-10-03
 
 - Expand 2-year secondary trend pulse on `/book` to 98 private holdings (adding Figma, Waymo, Consensys, Devoted Health, BETA Technologies, True Anomaly, GrubMarket, Docker, MasterClass, Lime, Intercom, Anyscale, Color Health, Freenome, Securitize, Hightouch, Immuta, Carbon, Varo Money, Brain Corp, Contrast Security, Fundbox, Outrider, Zocdoc, Tealium, Ocrolus, Collective Health, Farmers Business Network, and Manna Drone Delivery).
