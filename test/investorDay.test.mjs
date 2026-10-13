@@ -1,15 +1,21 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  averageDailyVolume,
+  averageHourlyNotional,
   bracketMidpointT,
   etMidnightMs,
   expectedCloseT,
   gammaLeg,
   kalshiCandleMid,
   kalshiQuote,
+  notionalSince,
+  priorDailyNorm,
   trailingReturn,
   unusualMoveBand,
   valueAtOrBefore,
+  volumeBand,
+  volumeRatio,
 } from "../lib/investorDay.mjs";
 
 test("bracket midpoints, including open-ended tails", () => {
@@ -83,4 +89,43 @@ test("unusual-move bands and trailing 15m return", () => {
 test("midnight ET is the start of the ET calendar day", () => {
   // 2026-10-14 13:00 UTC is 09:00 EDT → midnight EDT is 04:00 UTC.
   assert.equal(etMidnightMs(Date.UTC(2026, 9, 14, 13)), Date.UTC(2026, 9, 14, 4));
+});
+
+test("24h volume norm excludes the trailing 24h from its own baseline", () => {
+  // 7-day total 1300 with 400 in the last 24h → prior six days average 150.
+  assert.equal(priorDailyNorm(400, 1300), 150);
+  assert.ok(Math.abs(volumeRatio(400, priorDailyNorm(400, 1300)) - 400 / 150) < 1e-12);
+  assert.equal(priorDailyNorm(400, 400), null, "no prior volume → no norm");
+  assert.equal(priorDailyNorm(null, 1300), null);
+});
+
+test("volume bands", () => {
+  assert.equal(volumeBand(0.5), "quiet");
+  assert.equal(volumeBand(1), "normal");
+  assert.equal(volumeBand(2), "busy");
+  assert.equal(volumeBand(4), "heavy");
+  assert.equal(volumeBand(null), null);
+  assert.equal(volumeRatio(5, 0), null);
+});
+
+test("perp notional: last-hour sum and average hourly norm", () => {
+  const h = 60 * 60 * 1000;
+  const candles = [0, 1, 2, 3].map((i) => ({
+    startMs: i * h,
+    endMs: (i + 1) * h,
+    close: 2000,
+    volume: i + 1,
+  }));
+  assert.equal(notionalSince(candles, 2 * h), (3 + 4) * 2000);
+  assert.equal(averageHourlyNotional(candles), ((1 + 2 + 3 + 4) * 2000) / 4);
+});
+
+test("average daily volume skips today and empty days", () => {
+  const days = [
+    { date: "2026-10-09", volume: 100 },
+    { date: "2026-10-12", volume: null },
+    { date: "2026-10-12", volume: 300 },
+    { date: "2026-10-13", volume: 999 },
+  ];
+  assert.deepEqual(averageDailyVolume(days, "2026-10-13"), { average: 200, n: 2 });
 });

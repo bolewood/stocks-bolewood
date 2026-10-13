@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { startJsonPoll } from "../lib/pollLivePrices.mjs";
-import { INVESTOR_DAY_POLL_MS } from "../lib/investorDay.mjs";
+import { INVESTOR_DAY_POLL_MS, volumeBand as volumeBandOf } from "../lib/investorDay.mjs";
 import {
   disclosureAgeLabel,
   disclosureSentence,
@@ -24,6 +24,14 @@ const BANDS = {
   something: { label: "Something's up", color: "#be123c", bg: "#ffe4e6" },
 };
 const METER_MAX_SIGMA = 5;
+
+const VOLUME_STYLE = {
+  quiet: { label: "Quiet", color: "#57534e", bg: "#f5f5f4" },
+  normal: { label: "Normal", color: "#15803d", bg: "#dcfce7" },
+  busy: { label: "Busy", color: "#b45309", bg: "#fef3c7" },
+  heavy: { label: "Heavy", color: "#be123c", bg: "#ffe4e6" },
+};
+const VOLUME_MAX_RATIO = 5;
 
 function signColor(n) {
   if (!Number.isFinite(n) || Math.abs(n) < 1e-6) return FLAT;
@@ -193,6 +201,59 @@ function UnusualMeter({ unusual }) {
   );
 }
 
+function fmtVolume(n, unit) {
+  if (!Number.isFinite(n)) return "—";
+  const abs = Math.abs(n);
+  const text =
+    abs >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : abs >= 1e3 ? `${(n / 1e3).toFixed(1)}k` : n.toFixed(0);
+  return unit === "usd" ? `$${text}` : `${text} contracts`;
+}
+
+function VolumePanel({ rows }) {
+  if (!rows?.length) return <div style={styles.muted}>Volume unavailable.</div>;
+  return (
+    <div>
+      {rows.map((r) => {
+        const band = VOLUME_STYLE[r.band] ?? null;
+        const pos = Number.isFinite(r.ratio) ? Math.min(r.ratio, VOLUME_MAX_RATIO) / VOLUME_MAX_RATIO : null;
+        return (
+          <div key={r.key} style={styles.volRow}>
+            <div style={styles.volHead}>
+              <div style={{ minWidth: 0 }}>
+                <span style={styles.volVenue}>{r.venue}</span> {r.label}
+              </div>
+              <div style={styles.volRatioWrap}>
+                <strong style={{ ...styles.volRatio, color: band?.color ?? FLAT }}>
+                  {Number.isFinite(r.ratio) ? `${r.ratio.toFixed(1)}×` : "—"}
+                </strong>
+                {band ? (
+                  <span style={{ ...styles.bandPill, fontSize: "10px", color: band.color, background: band.bg }}>
+                    {band.label}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+            <div style={styles.volTrack}>
+              <div style={{ ...styles.volNormalMark, left: `${(1 / VOLUME_MAX_RATIO) * 100}%` }} />
+              {pos != null ? (
+                <div style={{ ...styles.volFill, width: `${pos * 100}%`, background: band?.color ?? FLAT }} />
+              ) : null}
+            </div>
+            <div style={styles.volMeta}>
+              {fmtVolume(r.current, r.unit)} vs normal {fmtVolume(r.normal, r.unit)} · {r.window}
+            </div>
+          </div>
+        );
+      })}
+      <div style={styles.footnote}>
+        Each row compares a venue against its own history, so the windows differ and the rows are not
+        blended. Tick at 1× = normal. Quiet &lt;0.75× · Normal 0.75–1.5× · Busy 1.5–3× · Heavy &gt;3×.
+        24h norms use the six days before the trailing 24h so today is not in its own baseline.
+      </div>
+    </div>
+  );
+}
+
 function ProxyTable({ rows, control, sessionOpen }) {
   const all = [...(rows || []), ...(control ? [{ ...control, isControl: true }] : [])];
   return (
@@ -204,6 +265,7 @@ function ProxyTable({ rows, control, sessionOpen }) {
         <div style={styles.cNum}>Since 9:30</div>
         <div style={styles.cNum}>Day vs QQQ</div>
         <div style={styles.cNum}>9:30 vs QQQ</div>
+        <div style={styles.cNum}>Vol / 20d avg day</div>
       </div>
       {all.map((row) => {
         const heldTicker = row.heldAs ?? row.ticker;
@@ -237,6 +299,17 @@ function ProxyTable({ rows, control, sessionOpen }) {
             </div>
             <div style={{ ...styles.cNum, color: signColor(row.excessSinceOpen) }} data-label="9:30 vs QQQ">
               {row.isControl ? "" : fmtPct(row.excessSinceOpen)}
+            </div>
+            <div
+              style={{ ...styles.cNum, color: VOLUME_STYLE[volumeBandOf(row.volumeOfAvgDay)]?.color ?? FLAT }}
+              data-label="Vol / 20d avg day"
+              title={Number.isFinite(row.volume) ? `${row.volume.toLocaleString()} shares vs ${Math.round(row.avgDailyVolume ?? 0).toLocaleString()} avg` : undefined}
+            >
+              {sessionOpen === false
+                ? "pre-open"
+                : Number.isFinite(row.volumeOfAvgDay)
+                  ? `${Math.round(row.volumeOfAvgDay * 100)}%`
+                  : "—"}
             </div>
           </div>
         );
@@ -389,10 +462,17 @@ export default function InvestorDayTape() {
       </div>
 
       <section style={styles.panel}>
+        <h2 style={styles.h2}>Volume vs normal</h2>
+        <div style={styles.panelSub}>Per venue, each against its own recent history</div>
+        <VolumePanel rows={data?.volume?.rows} />
+      </section>
+
+      <section style={styles.panel}>
         <h2 style={styles.h2}>Public proxies</h2>
         <div style={styles.panelSub}>
           Yahoo Finance · “vs QQQ” is the simple difference from QQQ over the same window.
-          HELD marks a position disclosed above.
+          HELD marks a position disclosed above. Volume is today&apos;s shares as a share of a
+          20-day average full day, not projected, so it climbs through the session.
         </div>
         <ProxyTable rows={data?.proxies?.rows} control={data?.proxies?.control} sessionOpen={sessionOpen} />
       </section>
@@ -469,9 +549,18 @@ const styles = {
   extraLegs: { borderTop: `1px solid ${RULE}`, marginTop: "16px", paddingTop: "12px" },
   extraRow: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px", fontSize: "13px", padding: "4px 0" },
   extraValue: { whiteSpace: "nowrap" },
+  volRow: { padding: "10px 0", borderBottom: `1px solid ${RULE}` },
+  volHead: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", fontSize: "14px" },
+  volVenue: { fontFamily: MONO, fontSize: "10px", letterSpacing: "0.08em", color: MUTED, textTransform: "uppercase", marginRight: "6px" },
+  volRatioWrap: { display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 },
+  volRatio: { fontFamily: MONO, fontSize: "15px", fontVariantNumeric: "tabular-nums" },
+  volTrack: { position: "relative", height: "8px", background: "#f5f5f4", marginTop: "8px" },
+  volFill: { position: "absolute", top: 0, bottom: 0, left: 0 },
+  volNormalMark: { position: "absolute", top: "-3px", bottom: "-3px", width: "2px", marginLeft: "-1px", background: INK, zIndex: 1 },
+  volMeta: { fontFamily: MONO, fontSize: "10.5px", color: MUTED, marginTop: "6px" },
   table: { borderTop: `1px solid ${RULE}`, overflowX: "auto" },
-  tableHeader: { display: "flex", fontFamily: MONO, fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", color: MUTED, padding: "8px 0", borderBottom: `1px solid ${RULE}`, minWidth: "640px" },
-  tableRow: { display: "flex", alignItems: "center", padding: "8px 0", borderBottom: `1px solid ${RULE}`, minWidth: "640px" },
+  tableHeader: { display: "flex", fontFamily: MONO, fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", color: MUTED, padding: "8px 0", borderBottom: `1px solid ${RULE}`, minWidth: "720px" },
+  tableRow: { display: "flex", alignItems: "center", padding: "8px 0", borderBottom: `1px solid ${RULE}`, minWidth: "720px" },
   cTicker: { flex: "2 1 0", minWidth: 0 },
   cNum: { flex: "1 1 0", textAlign: "right", fontFamily: MONO, fontSize: "13px", fontVariantNumeric: "tabular-nums" },
   ticker: { fontFamily: MONO, fontWeight: 700, fontSize: "13px" },

@@ -21,6 +21,8 @@ import {
   PERP_COINS,
   POLYMARKET_SLUGS,
   PROXIES,
+  averageDailyVolume,
+  averageHourlyNotional,
   bracketMidpointT,
   etMidnightMs,
   expectedCloseT,
@@ -30,11 +32,15 @@ import {
   kalshiQuote,
   num,
   openAtOrAfter,
+  notionalSince,
   pctChange,
+  priorDailyNorm,
   simpleReturns,
   stdev,
   unusualMove,
   valueAtOrBefore,
+  volumeBand,
+  volumeRatio,
 } from "../../../lib/investorDay.mjs";
 
 export const dynamic = "force-dynamic";
@@ -128,6 +134,7 @@ async function fetchCandles(coin, interval, startMs, endMs) {
       endMs: Number(row.T) + 1,
       open: num(row.o),
       close: num(row.c),
+      volume: num(row.v) ?? 0,
     }))
     .filter((row) => row.startMs > 0 && row.open > 0 && row.close > 0)
     .sort((a, b) => a.startMs - b.startMs);
@@ -165,18 +172,23 @@ async function fetchKalshiMarket(ticker) {
   return data.market;
 }
 
-async function fetchKalshiBaseline({ series, ticker }, atMs) {
+// Hourly candles for the trailing 7 days: the mid at or before atMs (00:00
+// ET) and total contract volume for the 7-day norm.
+async function fetchKalshiBaseline({ series, ticker }, atMs, now) {
   const qs = new URLSearchParams({
-    start_ts: String(Math.floor((atMs - DAY_MS) / 1000)),
-    end_ts: String(Math.floor(atMs / 1000)),
+    start_ts: String(Math.floor((now - 7 * DAY_MS) / 1000)),
+    end_ts: String(Math.floor(now / 1000)),
     period_interval: "60",
   });
   const data = await getJson(
     `${KALSHI_BASE}/series/${series}/markets/${ticker}/candlesticks?${qs}`
   );
-  const candles = (data?.candlesticks || [])
-    .map((c) => ({ t: Number(c.end_period_ts) * 1000, p: kalshiCandleMid(c) }));
-  return valueAtOrBefore(candles, atMs)?.p ?? null;
+  const raw = data?.candlesticks || [];
+  const candles = raw.map((c) => ({ t: Number(c.end_period_ts) * 1000, p: kalshiCandleMid(c) }));
+  return {
+    mid: valueAtOrBefore(candles, atMs)?.p ?? null,
+    volume7d: raw.reduce((sum, c) => sum + (num(c.volume_fp) ?? 0), 0),
+  };
 }
 
 // ---- Yahoo ---------------------------------------------------------------
@@ -212,6 +224,7 @@ async function fetchYahooIntraday(ticker) {
         price: quote.price,
         quoteAsOf: quote.quoteAsOf,
         previousClose: num(meta.chartPreviousClose ?? meta.previousClose),
+        volume: num(meta.regularMarketVolume),
         open,
         regularStartMs,
       };
@@ -220,6 +233,68 @@ async function fetchYahooIntraday(ticker) {
     }
   }
   throw new Error(`no usable chart for ${ticker}`);
+}
+
+// ---- Proxy average daily volume, cached for the ET day -------------------
+// Separate from the 5m/1d call: chartPreviousClose differs on longer ranges.
+
+async function fetchYahooDailyVolumes(ticker) {
+  const path = `v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=1mo`;
+  for (const host of YAHOO_CHART_HOSTS) {
+    try {
+      const response = await fetch(`https://${host}/${path}`, {
+        headers: YAHOO_CHART_HEADERS,
+        cache: "no-store",
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+      if (!response.ok) continue;
+      const result = (await response.json())?.chart?.result?.[0];
+      if (result?.meta?.symbol !== ticker) continue;
+      const volumes = result.indicators?.quote?.[0]?.volume || [];
+      return (result.timestamp || []).map((t, i) => ({
+        date: etDateKey(t * 1000),
+        volume: num(volumes[i]),
+      }));
+    } catch {
+      continue;
+    }
+  }
+  throw new Error(`no usable daily volume for ${ticker}`);
+}
+
+const DAILY_VOLUME_RETRY_MS = 60 * 1000;
+let dailyVolumeEntry = null;
+let dailyVolumeInFlight = null;
+
+async function loadAverageVolumes(today, now, errors) {
+  const fresh =
+    dailyVolumeEntry?.today === today &&
+    (!dailyVolumeEntry.errors.length || now - dailyVolumeEntry.writtenAt < DAILY_VOLUME_RETRY_MS);
+  if (!fresh && !dailyVolumeInFlight) {
+    dailyVolumeInFlight = (async () => {
+      const localErrors = [];
+      const rows = await mapLimit(PROXY_TICKERS, YAHOO_FETCH_CONCURRENCY, (t) =>
+        fetchYahooDailyVolumes(t).catch((err) => {
+          localErrors.push(`Yahoo ${t} daily volume: ${err.message}`);
+          return null;
+        })
+      );
+      const averages = Object.fromEntries(
+        PROXY_TICKERS.map((t, i) => [
+          t,
+          averageDailyVolume(rows[i], today) ??
+            (dailyVolumeEntry?.today === today ? dailyVolumeEntry.averages[t] : null),
+        ])
+      );
+      dailyVolumeEntry = { today, writtenAt: now, averages, errors: localErrors };
+      return dailyVolumeEntry;
+    })().finally(() => {
+      dailyVolumeInFlight = null;
+    });
+  }
+  const entry = dailyVolumeInFlight ? await dailyVolumeInFlight : dailyVolumeEntry;
+  errors.push(...entry.errors);
+  return entry.averages;
 }
 
 // ---- Proxy quotes, cached 60s -------------------------------------------
@@ -280,15 +355,19 @@ async function loadBaselines({ midnightMs, tokenIds, now, errors }) {
       localErrors)
     ),
     mapLimit(KALSHI_MARKETS, 3, (m) =>
-      capture(`Kalshi ${m.ticker} candles`, () => fetchKalshiBaseline(m, midnightMs), localErrors)
+      capture(`Kalshi ${m.ticker} candles`, () => fetchKalshiBaseline(m, midnightMs, now), localErrors)
     ),
   ]);
   const returns = simpleReturns(candles15m.map((c) => c.close));
   const value = {
     sigma15m: stdev(returns),
     sigmaN: returns.length,
+    anthAvgHourNotional: averageHourlyNotional(candles15m),
     polymarket: Object.fromEntries(tokenIds.map((id, i) => [id, polymarket[i]])),
-    kalshi: Object.fromEntries(KALSHI_MARKETS.map((m, i) => [m.ticker, kalshi[i]])),
+    kalshi: Object.fromEntries(KALSHI_MARKETS.map((m, i) => [m.ticker, kalshi[i]?.mid ?? null])),
+    kalshiVolume7d: Object.fromEntries(
+      KALSHI_MARKETS.map((m, i) => [m.ticker, kalshi[i]?.volume7d ?? null])
+    ),
   };
   errors.push(...localErrors);
   baselineEntry = {
@@ -320,6 +399,8 @@ async function fetchLive(prev) {
   const openMs = marketOpenMs(today);
   const sessionOpen = isNyseSessionDate(today) && now >= openMs;
 
+  // Memoized per ET day; started first so a cold isolate fetches it in parallel.
+  const averageVolumesPromise = loadAverageVolumes(today, now, errors);
   const [perps, candles5m, events, kalshiMarkets, proxyQuotes] = await Promise.all([
     capture("Hyperliquid metaAndAssetCtxs", fetchPerpContexts, errors),
     capture("Hyperliquid io:ANTH 5m", () =>
@@ -335,6 +416,7 @@ async function fetchLive(prev) {
     ),
     loadProxyQuotes(now, errors),
   ]);
+  const averageVolumes = await averageVolumesPromise;
 
   // Polymarket legs
   const brackets = (events.closingCap?.markets || [])
@@ -390,6 +472,13 @@ async function fetchLive(prev) {
       sinceOpenPct: sessionToday ? pctChange(q.open, q.price) : null,
       sessionDate: q.regularStartMs ? etDateKey(q.regularStartMs) : null,
       quoteAsOf: q.quoteAsOf,
+      // Share of a 20-day average day, no intraday projection (volume is
+      // U-shaped, so a linear pace overstates the morning).
+      volume: printedToday ? q.volume : null,
+      avgDailyVolume: averageVolumes[ticker]?.average ?? null,
+      volumeOfAvgDay: printedToday
+        ? volumeRatio(q.volume, averageVolumes[ticker]?.average)
+        : null,
     };
   };
   const control = shape(MARKET_CONTROL, { note: "Invesco QQQ (market control)" });
@@ -419,6 +508,49 @@ async function fetchLive(prev) {
       change: quote.mid != null && baseline != null ? quote.mid - baseline : null,
     };
   });
+
+  // Volume vs normal: one row per venue, each with its own window.
+  const pmVolumeRow = (key, label, source) => {
+    const v24 = num(source?.volume24hr);
+    const normal = priorDailyNorm(v24, num(source?.volume1wk));
+    const ratio = volumeRatio(v24, normal);
+    return { key, venue: "Polymarket", label, window: "24h vs prior 6-day avg", unit: "usd", current: v24, normal, ratio, band: volumeBand(ratio) };
+  };
+  const anthHourNotional = notionalSince(candles5m, now - 60 * 60 * 1000);
+  const anthRatio = candles5m.length
+    ? volumeRatio(anthHourNotional, baselines.anthAvgHourNotional)
+    : null;
+  const volumeRows = [
+    {
+      key: "anthPerp",
+      venue: "Hyperliquid",
+      label: "io:ANTH perp notional",
+      window: "last 60 min vs 30-day avg hour",
+      unit: "usd",
+      current: candles5m.length ? anthHourNotional : null,
+      normal: baselines.anthAvgHourNotional,
+      ratio: anthRatio,
+      band: volumeBand(anthRatio),
+    },
+    pmVolumeRow("pmClosingCap", "Closing-cap brackets (event)", events.closingCap),
+    pmVolumeRow("pmIpoBy", "IPO-by dates (event)", events.ipoBy),
+    pmVolumeRow("pmBestModel", "Best model end of Oct: Anthropic", findMarket(events.bestModel, "Anthropic")),
+    ...kalshi.map((k) => {
+      const normal = priorDailyNorm(k.volume24h, baselines.kalshiVolume7d[k.ticker]);
+      const ratio = volumeRatio(k.volume24h, normal);
+      return {
+        key: `kalshi:${k.ticker}`,
+        venue: "Kalshi",
+        label: k.label,
+        window: "24h vs prior 6-day avg",
+        unit: "contracts",
+        current: k.volume24h ?? null,
+        normal,
+        ratio,
+        band: volumeBand(ratio),
+      };
+    }),
+  ];
 
   const payload = {
     asOf: new Date(now).toISOString(),
@@ -463,6 +595,7 @@ async function fetchLive(prev) {
       vsOpenai,
     },
     kalshi,
+    volume: { rows: volumeRows },
     proxies: { rows: proxies, control },
     errors,
   };

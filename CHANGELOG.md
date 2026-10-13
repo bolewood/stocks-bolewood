@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.16.1.0] — 2026-10-13
+
+- `/investor-day`: add a static 1200×630 share card (`opengraph-image` / `twitter-image`, Fraunces + JetBrains Mono, OFL fonts in `assets/og/`). Previously the page had no `og:image`.
+- `/investor-day`: add "Volume vs normal" — per-venue relative volume with each row's own window (io:ANTH last 60 min vs 30-day avg hour; Polymarket and Kalshi 24h vs the prior six-day average, excluding today from its own norm) — and a proxy column showing today's volume as a share of a 20-day average day.
+
 ## [0.16.0.0] — 2026-10-13
 
 - Add `/investor-day`: live Anthropic Investor Day tape with Hyperliquid io:ANTH implied valuation (since 00:00 ET / 9:30 open, 5m sparkline), Polymarket and Kalshi scoreboard tiles, the 9-bracket first-day closing-cap chart with 00:00 ET ghost bars and a probability-weighted expected close, an io:ANTH unusual-move volatility gauge (15m return vs trailing 30-day σ), and public proxies vs QQQ with HELD pills and the dated disclosure.
