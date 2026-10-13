@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.16.0.0] — 2026-10-13
+
+- Add `/investor-day`: live Anthropic Investor Day tape with Hyperliquid io:ANTH implied valuation (since 00:00 ET / 9:30 open, 5m sparkline), Polymarket and Kalshi scoreboard tiles, the 9-bracket first-day closing-cap chart with 00:00 ET ghost bars and a probability-weighted expected close, an io:ANTH unusual-move volatility gauge (15m return vs trailing 30-day σ), and public proxies vs QQQ with HELD pills and the dated disclosure.
+- Add `/api/investor-day` (15s CDN cache; Yahoo proxy quotes held 60s; midnight-ET baselines cached 10 min).
+- `startJsonPoll` gains an opt-in `pauseWhenHidden` that skips interval ticks in background tabs.
+
 ## [0.15.5.0] — 2026-10-03
 
 - Expand 2-year secondary trend pulse on `/book` to 119 private holdings (adding high-concentration holdings Dyna Robotics, Maven Robotics, CubeFabs, Saronic, FourKites, Rippling, and Tempus AI).
