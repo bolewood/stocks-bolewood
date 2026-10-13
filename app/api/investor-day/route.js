@@ -19,11 +19,13 @@ import {
   KALSHI_MARKETS,
   MARKET_CONTROL,
   PERP_COINS,
+  HYPERLIQUID_URLS,
   POLYMARKET_SLUGS,
   PROXIES,
   averageDailyVolume,
   averageHourlyNotional,
   bracketMidpointT,
+  createLastGood,
   etMidnightMs,
   expectedCloseT,
   findMarket,
@@ -34,6 +36,7 @@ import {
   openAtOrAfter,
   notionalSince,
   pctChange,
+  polymarketUrl,
   priorDailyNorm,
   simpleReturns,
   stdev,
@@ -53,6 +56,8 @@ const BASELINE_TTL_MS = 10 * 60 * 1000;
 const BASELINE_PARTIAL_TTL_MS = 60 * 1000;
 const SIGMA_LOOKBACK_DAYS = 30;
 const FETCH_TIMEOUT_MS = 8000;
+
+const keepLastGood = createLastGood();
 
 const cache = createLiveQuoteCache({ ttlMs: LIVE_TTL_MS, failureTtlMs: LIVE_TTL_MS });
 
@@ -401,7 +406,7 @@ async function fetchLive(prev) {
 
   // Memoized per ET day; started first so a cold isolate fetches it in parallel.
   const averageVolumesPromise = loadAverageVolumes(today, now, errors);
-  const [perps, candles5m, events, kalshiMarkets, proxyQuotes] = await Promise.all([
+  const [perps, rawCandles5m, rawEvents, rawKalshiMarkets, proxyQuotes] = await Promise.all([
     capture("Hyperliquid metaAndAssetCtxs", fetchPerpContexts, errors),
     capture("Hyperliquid io:ANTH 5m", () =>
       fetchCandles(PERP_COINS.anthropic, "5m", midnightMs - 60 * 60 * 1000, now), errors, []),
@@ -417,6 +422,20 @@ async function fetchLive(prev) {
     loadProxyQuotes(now, errors),
   ]);
   const averageVolumes = await averageVolumesPromise;
+
+  // A venue that failed this tick keeps its last good value (errors still
+  // list the failure; `reused` names what was carried forward).
+  const reused = [];
+  const candles5m = keepLastGood("Hyperliquid io:ANTH 5m candles", rawCandles5m, now, reused);
+  const events = Object.fromEntries(
+    Object.entries(POLYMARKET_SLUGS).map(([key, slug]) => [
+      key,
+      keepLastGood(`Polymarket ${slug}`, rawEvents[key], now, reused),
+    ])
+  );
+  const kalshiMarkets = KALSHI_MARKETS.map((m, i) =>
+    keepLastGood(`Kalshi ${m.ticker}`, rawKalshiMarkets[i], now, reused)
+  );
 
   // Polymarket legs
   const brackets = (events.closingCap?.markets || [])
@@ -481,9 +500,9 @@ async function fetchLive(prev) {
         : null,
     };
   };
-  const control = shape(MARKET_CONTROL, { note: "Invesco QQQ (market control)" });
+  const control = shape(MARKET_CONTROL, { note: "Invesco QQQ", role: "Market control" });
   const proxies = PROXIES.map((p) => {
-    const row = shape(p.ticker, { heldAs: p.heldAs ?? null, note: p.note });
+    const row = shape(p.ticker, { heldAs: p.heldAs ?? null, note: p.note, role: p.role, onAi: p.onAi });
     return {
       ...row,
       excessDay:
@@ -510,11 +529,11 @@ async function fetchLive(prev) {
   });
 
   // Volume vs normal: one row per venue, each with its own window.
-  const pmVolumeRow = (key, label, source) => {
+  const pmVolumeRow = (key, label, source, slug) => {
     const v24 = num(source?.volume24hr);
     const normal = priorDailyNorm(v24, num(source?.volume1wk));
     const ratio = volumeRatio(v24, normal);
-    return { key, venue: "Polymarket", label, window: "24h vs prior 6-day avg", unit: "usd", current: v24, normal, ratio, band: volumeBand(ratio) };
+    return { key, venue: "Polymarket", label, url: polymarketUrl(slug), window: "24h vs prior 6-day avg", unit: "usd", current: v24, normal, ratio, band: volumeBand(ratio) };
   };
   const anthHourNotional = notionalSince(candles5m, now - 60 * 60 * 1000);
   const anthRatio = candles5m.length
@@ -525,6 +544,7 @@ async function fetchLive(prev) {
       key: "anthPerp",
       venue: "Hyperliquid",
       label: "io:ANTH perp notional",
+      url: HYPERLIQUID_URLS.anthropic,
       window: "last 60 min vs 30-day avg hour",
       unit: "usd",
       current: candles5m.length ? anthHourNotional : null,
@@ -532,9 +552,9 @@ async function fetchLive(prev) {
       ratio: anthRatio,
       band: volumeBand(anthRatio),
     },
-    pmVolumeRow("pmClosingCap", "Closing-cap brackets (event)", events.closingCap),
-    pmVolumeRow("pmIpoBy", "IPO-by dates (event)", events.ipoBy),
-    pmVolumeRow("pmBestModel", "Best model end of Oct: Anthropic", findMarket(events.bestModel, "Anthropic")),
+    pmVolumeRow("pmClosingCap", "Closing-cap brackets (event)", events.closingCap, POLYMARKET_SLUGS.closingCap),
+    pmVolumeRow("pmIpoBy", "IPO-by dates (event)", events.ipoBy, POLYMARKET_SLUGS.ipoBy),
+    pmVolumeRow("pmBestModel", "Best model end of Oct: Anthropic", findMarket(events.bestModel, "Anthropic"), POLYMARKET_SLUGS.bestModel),
     ...kalshi.map((k) => {
       const normal = priorDailyNorm(k.volume24h, baselines.kalshiVolume7d[k.ticker]);
       const ratio = volumeRatio(k.volume24h, normal);
@@ -542,6 +562,7 @@ async function fetchLive(prev) {
         key: `kalshi:${k.ticker}`,
         venue: "Kalshi",
         label: k.label,
+        url: k.url,
         window: "24h vs prior 6-day avg",
         unit: "contracts",
         current: k.volume24h ?? null,
@@ -572,7 +593,9 @@ async function fetchLive(prev) {
             changeSinceOpen: pctChange(openPx, anthropic.markPx),
             sparkline,
             unusual: {
-              ...unusualMove(candles5m, baselines.sigma15m),
+              // Latest trade close, not markPx: sigma is built from trade
+              // closes, and the mark/trade basis would otherwise read as a move.
+              ...unusualMove(candles5m, baselines.sigma15m, { now, sinceMs: midnightMs }),
               sigmaN: baselines.sigmaN,
               lookbackDays: SIGMA_LOOKBACK_DAYS,
             },
@@ -596,17 +619,24 @@ async function fetchLive(prev) {
     },
     kalshi,
     volume: { rows: volumeRows },
+    reused,
     proxies: { rows: proxies, control },
     errors,
   };
 
+  // Without io:ANTH, keep serving the last good payload but say so: mark it
+  // stale and carry this attempt's errors, never relabel it "live".
   const ok = !!anthropic;
-  return { ok: ok || !!prev, payload: ok ? payload : prev ?? payload };
+  if (ok) return { ok: true, payload };
+  if (prev) return { ok: true, payload: { ...prev, source: "stale", errors } };
+  return { ok: false, payload };
 }
 
 export async function GET() {
   const { payload, servedFromCache, reason } = await cache.load(Date.now(), fetchLive);
   const source =
-    servedFromCache && (reason === "ttl" || reason === "coalesced") ? "cache" : payload.source;
+    servedFromCache && (reason === "ttl" || reason === "coalesced") && payload.source !== "stale"
+      ? "cache"
+      : payload.source;
   return NextResponse.json({ ...payload, source }, { headers: INVESTOR_DAY_HEADERS });
 }

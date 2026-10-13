@@ -445,3 +445,32 @@ a {
     position: static !important;
   }
 }
+
+/* /investor-day: tiles and charts that link out to their source market */
+.investor-day-link-card {
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.investor-day-link-card:hover {
+  border-color: #a8a29e !important;
+  box-shadow: 0 1px 0 #d6d3d1;
+}
+.investor-day-link-card:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Header between the mobile breakpoint and full desktop: wrap the nav onto
+   its own line instead of squeezing labels into the brand. */
+@media (min-width: 721px) and (max-width: 1180px) {
+  .site-header-inner {
+    flex-wrap: wrap !important;
+    gap: 8px 24px !important;
+  }
+  .site-header-nav {
+    flex-wrap: wrap !important;
+    gap: 6px 20px !important;
+  }
+}
+.site-header-nav a {
+  white-space: nowrap;
+}

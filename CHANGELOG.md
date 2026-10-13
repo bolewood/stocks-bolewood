@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.16.2.0] — 2026-10-13
+
+- Update position disclosures to October 13, 2026, adding a direct long position in Anthropic through an SPV; `/investor-day` marks the hero valuation HELD (SPV).
+- `/investor-day`: link every number to its source market (Hyperliquid io:ANTH/io:OAI, the four Polymarket events, the three Kalshi event pages, Yahoo quotes); the hero sparkline, bracket chart, and tiles are clickable.
+- `/investor-day`: Kalshi IPO tiles say "IPO confirmed" (S-1 effective, priced, or ticker assigned), which differs from Polymarket's "open for trading"; the expected-close tile says it is conditional on an IPO with normalized brackets.
+- `/investor-day`: the unusual-move meter uses a rolling window (mark vs 15 minutes ago), shows a signed σ, and keeps "Peak today" so earlier spikes stay visible.
+- `/investor-day`: proxy rows explain each name's Anthropic link (from `data/wrappers`) and link to `/ai`; a pre-open banner explains the empty day columns before 9:30 ET.
+- `/api/investor-day` marks a last-good payload `stale` (with the current errors) when Hyperliquid fails, instead of re-serving it as `live`.
+- `/investor-day`: a caveat under the hero that io:ANTH is a thin perp mark (live open interest and volume), not a priced round.
+- `/investor-day`: drop LAZR from the proxies (no Anthropic position in this site's data).
+- `/api/investor-day`: a venue that fails one refresh keeps its last good value for up to 30 minutes, flagged in a new `reused` field and in the status line, instead of blanking.
+- Temporary highlighted "Investor Day" link in the site nav; the header nav now wraps cleanly between 721px and 1180px.
+
 ## [0.16.1.0] — 2026-10-13
 
 - `/investor-day`: add a static 1200×630 share card (`opengraph-image` / `twitter-image`, Fraunces + JetBrains Mono, OFL fonts in `assets/og/`). Previously the page had no `og:image`.

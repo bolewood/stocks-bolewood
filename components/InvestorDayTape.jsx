@@ -2,7 +2,16 @@
 
 import React, { useEffect, useState } from "react";
 import { startJsonPoll } from "../lib/pollLivePrices.mjs";
-import { INVESTOR_DAY_POLL_MS, volumeBand as volumeBandOf } from "../lib/investorDay.mjs";
+import {
+  HYPERLIQUID_URLS,
+  INVESTOR_DAY_POLL_MS,
+  KALSHI_CONFIRMED_RULE,
+  KALSHI_MARKETS,
+  POLYMARKET_SLUGS,
+  polymarketUrl,
+  volumeBand as volumeBandOf,
+  yahooQuoteUrl,
+} from "../lib/investorDay.mjs";
 import {
   disclosureAgeLabel,
   disclosureSentence,
@@ -124,16 +133,92 @@ function Sparkline({ points, baseline }) {
   );
 }
 
-function Tile({ eyebrow, value, change, changeLabel, sub }) {
+function Ext({ href, children, style, label }) {
   return (
-    <div style={styles.tile}>
-      <div style={styles.tileEyebrow}>{eyebrow}</div>
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ ...styles.extLink, ...style }}
+      aria-label={label}
+      title={label}
+    >
+      {children}
+    </a>
+  );
+}
+
+// The author's direct Anthropic stake is disclosed in prose, not as a ticker.
+const HOLDS_ANTHROPIC_SPV = /Anthropic through an SPV/.test(disclosure.notes);
+
+const KALSHI_URL = Object.fromEntries(KALSHI_MARKETS.map((m) => [m.key, m.url]));
+const PM_URL = Object.fromEntries(
+  Object.entries(POLYMARKET_SLUGS).map(([k, slug]) => [k, polymarketUrl(slug)])
+);
+
+const SOURCE_LINKS = [
+  { venue: "Hyperliquid", links: [["io:ANTH", HYPERLIQUID_URLS.anthropic], ["io:OAI", HYPERLIQUID_URLS.openai]] },
+  {
+    venue: "Polymarket",
+    links: [
+      ["Closing cap", PM_URL.closingCap],
+      ["IPO by", PM_URL.ipoBy],
+      ["Best model Oct", PM_URL.bestModel],
+      ["vs OpenAI", PM_URL.vsOpenai],
+    ],
+  },
+  {
+    venue: "Kalshi",
+    links: [
+      ["IPO 2026", KALSHI_URL.ipoBefore2027],
+      ["IPO date", KALSHI_URL.confirmedByDec1],
+      ["Best AI Oct", KALSHI_URL.bestModelOct],
+    ],
+  },
+];
+
+function SourceStrip() {
+  return (
+    <nav style={styles.sourceStrip} aria-label="Source markets">
+      {SOURCE_LINKS.map((group) => (
+        <span key={group.venue} style={styles.sourceGroup}>
+          <span style={styles.sourceVenue}>{group.venue}</span>
+          {group.links.map(([text, href]) => (
+            <Ext key={href} href={href} style={styles.sourceLink} label={`${group.venue}: ${text} (opens in a new tab)`}>
+              {text} ↗
+            </Ext>
+          ))}
+        </span>
+      ))}
+    </nav>
+  );
+}
+
+function Tile({ eyebrow, value, change, changeLabel, sub, href }) {
+  const body = (
+    <>
+      <div style={styles.tileEyebrow}>
+        {eyebrow}
+        {href ? " ↗" : ""}
+      </div>
       <div style={styles.tileValue}>{value}</div>
       <div style={{ ...styles.tileChange, color: signColor(change?.n) }}>
         {change?.text ?? "—"} <span style={styles.tileChangeLabel}>{changeLabel}</span>
       </div>
       {sub ? <div style={styles.tileSub}>{sub}</div> : null}
-    </div>
+    </>
+  );
+  if (!href) return <div style={styles.tile}>{body}</div>;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ ...styles.tile, ...styles.tileLink }}
+      className="investor-day-link-card"
+    >
+      {body}
+    </a>
   );
 }
 
@@ -169,15 +254,23 @@ function BracketChart({ brackets, noIpo }) {
   );
 }
 
+function fmtSigma(z) {
+  if (!Number.isFinite(z)) return "—";
+  const sign = z > 0 ? "+" : z < 0 ? "−" : "";
+  return `${sign}${Math.abs(z).toFixed(1)}σ`;
+}
+
 function UnusualMeter({ unusual }) {
   const sigmas = unusual?.sigmas;
   const band = BANDS[unusual?.band] ?? null;
-  const pos = Number.isFinite(sigmas) ? Math.min(sigmas, METER_MAX_SIGMA) / METER_MAX_SIGMA : null;
+  const pos = Number.isFinite(sigmas) ? Math.min(Math.abs(sigmas), METER_MAX_SIGMA) / METER_MAX_SIGMA : null;
+  const peak = unusual?.peak;
+  const peakBand = BANDS[peak?.band] ?? null;
   return (
     <div>
       <div style={styles.meterHead}>
         <div style={{ ...styles.meterValue, color: band?.color ?? FLAT }}>
-          {Number.isFinite(sigmas) ? `${sigmas.toFixed(1)}σ` : "—"}
+          {fmtSigma(sigmas)}
         </div>
         {band ? (
           <span style={{ ...styles.bandPill, color: band.color, background: band.bg }}>{band.label}</span>
@@ -192,9 +285,20 @@ function UnusualMeter({ unusual }) {
       <div style={styles.meterScale}>
         <span>0σ</span><span>1.5σ</span><span>3σ</span><span>{METER_MAX_SIGMA}σ+</span>
       </div>
+      <div style={styles.peakLine}>
+        Peak today:{" "}
+        {peak ? (
+          <strong style={{ color: peakBand?.color ?? FLAT }}>
+            {fmtSigma(peak.sigmas)} at {fmtEt(peak.atMs).replace(/:\d\d (?=[AP]M)/, " ")} ET
+          </strong>
+        ) : (
+          "—"
+        )}{" "}
+        <span style={{ color: MUTED }}>(largest rolling 15-minute move since 00:00 ET)</span>
+      </div>
       <div style={styles.footnote}>
-        Volatility gauge, not a signal. |15-minute io:ANTH return| ({fmtPct(unusual?.current, 3)})
-        ÷ the standard deviation of 15-minute returns over the trailing {unusual?.lookbackDays ?? 30} days
+        Volatility gauge, not a signal. io:ANTH mark vs its price 15 minutes ago ({fmtPct(unusual?.current, 3)}),
+        rolling, ÷ the standard deviation of 15-minute returns over the trailing {unusual?.lookbackDays ?? 30} days
         ({fmtPct(unusual?.sigma15m, 3)}, n={unusual?.sigmaN ?? "—"}). Calm &lt;1.5σ · Moving 1.5–3σ · Something&apos;s up &gt;3σ.
       </div>
     </div>
@@ -220,7 +324,14 @@ function VolumePanel({ rows }) {
           <div key={r.key} style={styles.volRow}>
             <div style={styles.volHead}>
               <div style={{ minWidth: 0 }}>
-                <span style={styles.volVenue}>{r.venue}</span> {r.label}
+                <span style={styles.volVenue}>{r.venue}</span>{" "}
+                {r.url ? (
+                  <Ext href={r.url} label={`${r.label} on ${r.venue} (opens in a new tab)`}>
+                    {r.label} ↗
+                  </Ext>
+                ) : (
+                  r.label
+                )}
               </div>
               <div style={styles.volRatioWrap}>
                 <strong style={{ ...styles.volRatio, color: band?.color ?? FLAT }}>
@@ -258,6 +369,12 @@ function ProxyTable({ rows, control, sessionOpen }) {
   const all = [...(rows || []), ...(control ? [{ ...control, isControl: true }] : [])];
   return (
     <div style={styles.table}>
+      {sessionOpen === false ? (
+        <div style={styles.preOpenBanner}>
+          NYSE opens at 9:30 ET. Day, since-open and volume columns fill in at the open; last
+          prices are the prior session&apos;s close.
+        </div>
+      ) : null}
       <div style={styles.tableHeader} className="vcx-table-header">
         <div style={styles.cTicker}>Ticker</div>
         <div style={styles.cNum}>Last</div>
@@ -273,7 +390,9 @@ function ProxyTable({ rows, control, sessionOpen }) {
         return (
           <div key={row.ticker} style={styles.tableRow} className="vcx-row">
             <div style={styles.cTicker}>
-              <span style={styles.ticker}>{row.ticker}</span>
+              <Ext href={yahooQuoteUrl(row.ticker)} style={styles.ticker} label={`${row.ticker} on Yahoo Finance (opens in a new tab)`}>
+                {row.ticker}
+              </Ext>
               {held ? (
                 <>
                   <span style={styles.heldSep}>·</span>
@@ -284,6 +403,17 @@ function ProxyTable({ rows, control, sessionOpen }) {
               ) : null}
               {row.isControl ? <span style={styles.controlPill}>CONTROL</span> : null}
               <div style={styles.tickerNote}>{row.note}</div>
+              {row.role ? (
+                <div style={styles.tickerRole}>
+                  {row.onAi ? (
+                    <a href="/ai" style={styles.extLink} title="Look-through exposure per $100 on /ai">
+                      {row.role} →
+                    </a>
+                  ) : (
+                    row.role
+                  )}
+                </div>
+              ) : null}
             </div>
             <div style={styles.cNum} data-label="Last">
               {Number.isFinite(row.price) ? `$${row.price.toFixed(2)}` : "—"}
@@ -359,19 +489,39 @@ export default function InvestorDayTape() {
       </p>
 
       <div style={styles.statusRow}>
-        <span style={{ ...styles.statusChip, ...(data?.errors?.length ? styles.statusWarn : {}) }}>
+        <span
+          style={{
+            ...styles.statusChip,
+            ...(data?.errors?.length || data?.source === "stale" ? styles.statusWarn : {}),
+          }}
+        >
           {data ? (data.source || "live").toUpperCase() : error ? "OFFLINE" : "LOADING"}
         </span>
         <span style={styles.statusText}>
           {data ? `as of ${fmtEt(Date.parse(data.asOf))} ET · refreshes every 15s` : "Fetching four venues…"}
           {error && lastFetch ? " · last refresh failed, showing previous data" : ""}
+          {data?.source === "stale" ? " · Hyperliquid unavailable, showing last good data" : ""}
+          {data?.source !== "stale" && data?.reused?.length
+            ? ` · last good data for ${data.reused.join(", ")}`
+            : ""}
         </span>
       </div>
+      <SourceStrip />
 
       <section style={styles.hero}>
         <div style={styles.heroTop}>
           <div>
-            <div style={styles.sectionEyebrow}>IMPLIED ANTHROPIC VALUATION · HYPERLIQUID io:ANTH</div>
+            <div style={styles.sectionEyebrow}>
+              IMPLIED ANTHROPIC VALUATION ·{" "}
+              <Ext href={HYPERLIQUID_URLS.anthropic} label="io:ANTH on Hyperliquid (opens in a new tab)">
+                HYPERLIQUID io:ANTH ↗
+              </Ext>
+              {HOLDS_ANTHROPIC_SPV ? (
+                <span style={styles.heldPill} title={disclosureSentence(disclosure)}>
+                  HELD (SPV)
+                </span>
+              ) : null}
+            </div>
             <div style={styles.heroValue}>{fmtTFromB(anth?.markPx)}</div>
           </div>
           <div style={styles.heroChanges}>
@@ -389,12 +539,27 @@ export default function InvestorDayTape() {
             </div>
           </div>
         </div>
-        <Sparkline points={anth?.sparkline} baseline={anth?.midnightPx} />
+        <a
+          href={HYPERLIQUID_URLS.anthropic}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={styles.chartLink}
+          className="investor-day-link-card"
+          title="Open io:ANTH on Hyperliquid"
+        >
+          <Sparkline points={anth?.sparkline} baseline={anth?.midnightPx} />
+        </a>
         <div style={styles.heroMeta}>
           Mark {anth?.markPx?.toFixed(1) ?? "—"} ($B) · 24h {fmtPct(anth?.change24h)} · OI{" "}
           {fmtUsdCompact(anth?.openInterestUsd)} · 24h volume {fmtUsdCompact(anth?.dayNtlVlm)} · funding{" "}
           {Number.isFinite(anth?.funding) ? `${(anth.funding * 100).toFixed(4)}%/h` : "—"}
           {oai ? ` · io:OAI ${fmtTFromB(oai.markPx)} (${fmtPct(oai.change24h)} 24h)` : ""}
+        </div>
+        <div style={styles.heroCaveat}>
+          A perpetual-futures mark, not a priced round or a tender. With{" "}
+          {fmtUsdCompact(anth?.openInterestUsd)} of open interest and{" "}
+          {fmtUsdCompact(anth?.dayNtlVlm)} of daily volume, a few million dollars of flow can move this
+          number and the meter below.
         </div>
       </section>
 
@@ -404,21 +569,29 @@ export default function InvestorDayTape() {
           value={fmtT(pm?.expectedClose?.valueT)}
           change={{ n: pm?.expectedClose?.changeT, text: fmtDeltaB(pm?.expectedClose?.changeT) }}
           changeLabel="since 00:00 ET"
-          sub="Probability-weighted bracket midpoints"
+          sub="Conditional on IPO by 2027 · normalized brackets, “No IPO” excluded"
+          href={PM_URL.closingCap}
         />
         <Tile
           eyebrow="POLYMARKET · IPO BY NOV 30"
           value={fmtProb(nov30?.price)}
           change={{ n: nov30?.change, text: fmtPp(nov30?.change) }}
           changeLabel="since 00:00 ET"
-          sub={pm?.ipoBy?.filter((l) => l !== nov30).map((l) => `${l.key.replace(", 2026", "")} ${fmtProb(l.price)}`).join(" · ")}
+          sub={[
+            "Listed and open for trading by the date",
+            ...(pm?.ipoBy || [])
+              .filter((l) => l !== nov30)
+              .map((l) => `${l.key.replace(", 2026", "")} ${fmtProb(l.price)}`),
+          ].join(" · ")}
+          href={PM_URL.ipoBy}
         />
         <Tile
-          eyebrow="KALSHI · IPO BEFORE 2027"
+          eyebrow="KALSHI · IPO CONFIRMED BEFORE 2027"
           value={fmtProb(kalshi2027?.mid)}
           change={{ n: kalshi2027?.change, text: fmtPp(kalshi2027?.change) }}
           changeLabel="since 00:00 ET"
-          sub={kalshi2027 ? `Bid ${fmtProb(kalshi2027.bid)} / ask ${fmtProb(kalshi2027.ask)} · mid shown` : null}
+          sub={`${KALSHI_CONFIRMED_RULE}, not first trade${kalshi2027 ? ` · bid ${fmtProb(kalshi2027.bid)} / ask ${fmtProb(kalshi2027.ask)}, mid shown` : ""}`}
+          href={KALSHI_URL.ipoBefore2027}
         />
         <Tile
           eyebrow="POLYMARKET · BEST MODEL END OF OCT"
@@ -429,14 +602,28 @@ export default function InvestorDayTape() {
             const k = kalshi.find((x) => x.key === "bestModelOct");
             return k ? `Kalshi “Claude” ${fmtProb(k.mid)} (${fmtPp(k.change)})` : null;
           })()}
+          href={PM_URL.bestModel}
         />
       </section>
 
       <div style={styles.twoCol} className="investor-day-two-col">
         <section style={styles.panel}>
           <h2 style={styles.h2}>First-day closing market cap</h2>
-          <div style={styles.panelSub}>Polymarket · 9 brackets</div>
-          <BracketChart brackets={pm?.brackets} noIpo={pm?.noIpo} />
+          <div style={styles.panelSub}>
+            <Ext href={PM_URL.closingCap} label="Closing-cap brackets on Polymarket (opens in a new tab)">
+              Polymarket · 9 brackets ↗
+            </Ext>
+          </div>
+          <a
+            href={PM_URL.closingCap}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={styles.chartLink}
+            className="investor-day-link-card"
+            title="Open the closing-cap brackets on Polymarket"
+          >
+            <BracketChart brackets={pm?.brackets} noIpo={pm?.noIpo} />
+          </a>
         </section>
         <section style={styles.panel}>
           <h2 style={styles.h2}>Unusual move meter</h2>
@@ -444,14 +631,18 @@ export default function InvestorDayTape() {
           <UnusualMeter unusual={anth?.unusual} />
           <div style={styles.extraLegs}>
             <div style={styles.extraRow}>
-              <span>Polymarket: Anthropic &gt; OpenAI valuation on Dec 31</span>
+              <Ext href={PM_URL.vsOpenai} label="Anthropic vs OpenAI on Polymarket (opens in a new tab)">
+                Polymarket: Anthropic &gt; OpenAI valuation on Dec 31 ↗
+              </Ext>
               <strong style={styles.extraValue}>{fmtProb(pm?.vsOpenai?.price)}</strong>
             </div>
             {kalshi
-              .filter((k) => k.key === "announceByDec1")
+              .filter((k) => k.key === "confirmedByDec1")
               .map((k) => (
                 <div key={k.key} style={styles.extraRow}>
-                  <span>Kalshi: {k.label}</span>
+                  <Ext href={k.url} label={`${k.label} on Kalshi (opens in a new tab)`}>
+                    Kalshi: {k.label} ↗
+                  </Ext>
                   <strong style={styles.extraValue}>
                     {fmtProb(k.mid)} <span style={{ color: signColor(k.change), fontWeight: 500 }}>{fmtPp(k.change)}</span>
                   </strong>
@@ -470,10 +661,13 @@ export default function InvestorDayTape() {
       <section style={styles.panel}>
         <h2 style={styles.h2}>Public proxies</h2>
         <div style={styles.panelSub}>
-          Yahoo Finance · “vs QQQ” is the simple difference from QQQ over the same window.
+          Yahoo Finance (tickers link to quotes) · “vs QQQ” is the simple difference from QQQ over the same window.
           HELD marks a position disclosed above. Volume is today&apos;s shares as a share of a
           20-day average full day, not projected, so it climbs through the session.
         </div>
+        <a href="/ai" style={styles.aiCta}>
+          Model Anthropic and OpenAI exposure per $100 at any IPO valuation on the AI Per $100 look-through →
+        </a>
         <ProxyTable rows={data?.proxies?.rows} control={data?.proxies?.control} sessionOpen={sessionOpen} />
       </section>
 
@@ -549,6 +743,18 @@ const styles = {
   extraLegs: { borderTop: `1px solid ${RULE}`, marginTop: "16px", paddingTop: "12px" },
   extraRow: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px", fontSize: "13px", padding: "4px 0" },
   extraValue: { whiteSpace: "nowrap" },
+  extLink: { color: "inherit", textDecoration: "underline", textDecorationColor: "#d6d3d1", textUnderlineOffset: "3px" },
+  tileLink: { display: "block", color: "inherit", textDecoration: "none" },
+  chartLink: { display: "block", color: "inherit", textDecoration: "none", cursor: "pointer" },
+  sourceStrip: { display: "flex", flexWrap: "wrap", gap: "6px 18px", fontFamily: MONO, fontSize: "11px", color: MUTED, marginBottom: "20px" },
+  sourceGroup: { display: "inline-flex", flexWrap: "wrap", gap: "4px 10px", alignItems: "baseline" },
+  sourceVenue: { fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "#44403c", fontWeight: 600 },
+  sourceLink: { color: "#1d4ed8" },
+  heroCaveat: { fontSize: "12.5px", lineHeight: 1.5, color: "#44403c", marginTop: "8px", maxWidth: "760px" },
+  peakLine: { fontFamily: MONO, fontSize: "12px", marginTop: "12px" },
+  preOpenBanner: { fontFamily: MONO, fontSize: "11.5px", background: "#fef3c7", color: "#78350f", padding: "8px 10px", margin: "10px 0" },
+  tickerRole: { fontSize: "11.5px", color: "#44403c", marginTop: "2px" },
+  aiCta: { display: "inline-block", fontFamily: MONO, fontSize: "12px", color: "#1d4ed8", margin: "0 0 12px", textDecoration: "underline", textUnderlineOffset: "3px" },
   volRow: { padding: "10px 0", borderBottom: `1px solid ${RULE}` },
   volHead: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", fontSize: "14px" },
   volVenue: { fontFamily: MONO, fontSize: "10px", letterSpacing: "0.08em", color: MUTED, textTransform: "uppercase", marginRight: "6px" },

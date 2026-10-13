@@ -4,6 +4,7 @@ import {
   averageDailyVolume,
   averageHourlyNotional,
   bracketMidpointT,
+  createLastGood,
   etMidnightMs,
   expectedCloseT,
   gammaLeg,
@@ -12,6 +13,7 @@ import {
   notionalSince,
   priorDailyNorm,
   trailingReturn,
+  unusualMove,
   unusualMoveBand,
   valueAtOrBefore,
   volumeBand,
@@ -128,4 +130,35 @@ test("average daily volume skips today and empty days", () => {
     { date: "2026-10-13", volume: 999 },
   ];
   assert.deepEqual(averageDailyVolume(days, "2026-10-13"), { average: 200, n: 2 });
+});
+
+test("unusual move: rolling window vs the mark, signed sigma, and today's peak", () => {
+  const m = 60_000;
+  // 5m candles from 00:00; a +2.6% spike lands in the candle ending at 00:30, then fades.
+  const closes = [100, 100, 100, 100, 100, 102.6, 102.5, 102.4, 102.4, 102.4];
+  const candles = closes.map((close, i) => ({ startMs: i * 5 * m, endMs: (i + 1) * 5 * m, open: close, close }));
+  const sigma = 0.01;
+  const now = 50 * m + 2 * m; // two minutes into the next candle
+  const out = unusualMove(candles, sigma, { markPx: 102.0, now, sinceMs: 0 });
+  // Mark 102.0 vs the close at or before 00:37 → candle ending 00:35 (102.5).
+  assert.equal(out.fromMs, 35 * m);
+  assert.ok(out.sigmas < 0, "signed: the mark is below 15 minutes ago");
+  assert.equal(out.band, "calm");
+  // Peak: 102.6 at 00:30 vs 100 at 00:15 → +2.6σ.
+  assert.equal(out.peak.atMs, 30 * m);
+  assert.ok(Math.abs(out.peak.sigmas - 2.6) < 1e-9);
+  assert.equal(out.peak.band, "moving");
+});
+
+test("last-good carries a failed venue forward for up to 30 minutes, flagged", () => {
+  const keep = createLastGood();
+  const m = 60_000;
+  assert.deepEqual(keep("pm", { p: 1 }, 0, []), { p: 1 });
+  const reused = [];
+  assert.deepEqual(keep("pm", null, 10 * m, reused), { p: 1 });
+  assert.deepEqual(reused, ["pm"]);
+  assert.deepEqual(keep("candles", [], 0, []), [], "nothing stored yet → stays empty");
+  const late = [];
+  assert.equal(keep("pm", null, 31 * m, late), null, "too old → blank, not stale data");
+  assert.deepEqual(late, []);
 });

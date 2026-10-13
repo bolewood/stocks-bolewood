@@ -25,6 +25,8 @@ export default function Header() {
     { href: "/vcx", label: "VCX" },
     { href: "/dxyz", label: "DXYZ" },
     { href: "/book", label: "Book" },
+    // Temporary: Anthropic Investor Day (Oct 14, 2026). Remove after the event.
+    { href: "/investor-day", label: "Investor Day", highlight: true },
     { href: "/private-tape", label: "Private Tape" },
     { href: "/echo", label: "ECHO" },
     { href: "/sftby", label: "SFTBY" },
@@ -40,7 +42,7 @@ export default function Header() {
           <span style={styles.brandName}>stocks.bolewood.com</span>
         </Link>
         <nav style={styles.nav} className="site-header-nav">
-          {links.map(({ href, label }) => {
+          {links.map(({ href, label, highlight }) => {
             const isActive =
               href === "/"
                 ? pathname === "/"
@@ -51,6 +53,7 @@ export default function Header() {
                 href={href}
                 style={{
                   ...styles.link,
+                  ...(highlight ? styles.linkHighlight : {}),
                   ...(isActive ? styles.linkActive : {}),
                 }}
               >
@@ -105,6 +108,11 @@ const styles = {
     textDecoration: "none",
     padding: "4px 0",
     transition: "color 0.15s ease",
+  },
+  linkHighlight: {
+    color: "#14532d",
+    background: "#dcfce7",
+    padding: "2px 6px",
   },
   linkActive: {
     color: "#d97706",
