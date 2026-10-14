@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.16.4.0] — 2026-10-14
+
+- `/investor-day`: "Sigma through the day" moves to its own full-width section (taller on wide screens) instead of the half-width meter panel.
+- `/investor-day`: 15-minute echoes are no longer counted. A rolling return whose base sits inside an earlier opposite-sign ≥3σ run, and that is under 3σ against the pre-spike level, is drawn hollow and excluded from minutes at ≥3σ, breaches, and the largest move (`echoMinutes` reports how many). A reversal that overshoots the pre-spike level still counts.
+
 ## [0.16.3.0] — 2026-10-14
 
 - `/investor-day`: add "Sigma through the day" under the unusual-move meter — the rolling 15-minute io:ANTH move at every 1m close since 00:00 ET in units of the 30-day 15-minute σ (fixed ±5σ, meter-colored bands, 9:30 ET marker, tappable ≥3σ dots), a 1m close chart on the same x-axis, and a summary of minutes at ≥3σ, breaches, and the largest move.
