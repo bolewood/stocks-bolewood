@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 import {
   HYPERLIQUID_URLS,
@@ -365,6 +365,207 @@ function VolumePanel({ rows }) {
   );
 }
 
+// ---- Sigma through the day -------------------------------------------------
+
+const SIGMA_Y_MAX = 5;
+const SIGMA_BREACH = 3;
+
+function useWidth(fallback = 320) {
+  const ref = useRef(null);
+  const [width, setWidth] = useState(fallback);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const apply = () => setWidth(Math.max(240, Math.round(el.clientWidth)));
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  return [ref, width];
+}
+
+function fmtHourEt(ms) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  })
+    .format(new Date(ms))
+    .replace(":00", "")
+    .replace(" ", "");
+}
+
+function SigmaSummaryLine({ summary }) {
+  if (!summary) return null;
+  const l = summary.largest;
+  return (
+    <div style={styles.sigmaSummary}>
+      <span>
+        <strong>{summary.minutes}</strong> min at ≥{summary.threshold}σ
+      </span>
+      <span>
+        <strong>{summary.breaches}</strong> {summary.breaches === 1 ? "breach" : "breaches"}
+      </span>
+      <span>
+        Largest{" "}
+        {l ? (
+          <strong style={{ color: BANDS[unusualBandOf(Math.abs(l.sigma))]?.color ?? FLAT }}>
+            {fmtSigma(l.sigma)} ({fmtPct(l.ret)}) at {fmtHourEt(l.t)} ET
+          </strong>
+        ) : (
+          "—"
+        )}
+      </span>
+    </div>
+  );
+}
+
+function unusualBandOf(abs) {
+  if (!Number.isFinite(abs)) return null;
+  if (abs < 1.5) return "calm";
+  if (abs <= 3) return "moving";
+  return "something";
+}
+
+function SigmaCharts({ series, summary, x0, openMs }) {
+  const [wrapRef, width] = useWidth();
+  const [active, setActive] = useState(null);
+  // The measured wrapper always renders, so the width observer attaches on
+  // mount even while data is still loading.
+  if (!series?.length) {
+    return (
+      <div ref={wrapRef} style={styles.sigmaWrap}>
+        <div style={styles.sparkEmpty}>Waiting for 1m candles since 00:00 ET</div>
+      </div>
+    );
+  }
+  const pad = { l: 34, r: 8, t: 8, b: 4 };
+  const h = 180;
+  const markH = 72;
+  const axisH = 18;
+  const x1 = series[series.length - 1].t;
+  const start = Math.min(x0 ?? series[0].t, series[0].t);
+  const sx = (t) => pad.l + ((t - start) / Math.max(1, x1 - start)) * (width - pad.l - pad.r);
+  const sy = (z) => {
+    const c = Math.max(-SIGMA_Y_MAX, Math.min(SIGMA_Y_MAX, z));
+    return pad.t + ((SIGMA_Y_MAX - c) / (2 * SIGMA_Y_MAX)) * (h - pad.t - pad.b);
+  };
+  const line = series.map((p, i) => `${i ? "L" : "M"}${sx(p.t).toFixed(1)},${sy(p.sigma).toFixed(1)}`).join("");
+  const marks = series.map((p) => p.mark).filter(Number.isFinite);
+  const m0 = Math.min(...marks);
+  const m1 = Math.max(...marks);
+  const my = (v) => 6 + ((m1 - v) / Math.max(1e-9, m1 - m0)) * (markH - 12);
+  const markLine = series
+    .filter((p) => Number.isFinite(p.mark))
+    .map((p, i) => `${i ? "L" : "M"}${sx(p.t).toFixed(1)},${my(p.mark).toFixed(1)}`)
+    .join("");
+  const breaches = series.filter((p) => Math.abs(p.sigma) >= SIGMA_BREACH);
+  const showOpen = openMs != null && openMs >= start && openMs <= x1;
+
+  // x0 is 00:00 ET, so stepping whole hours from it lands on ET hours.
+  const hour = 60 * 60 * 1000;
+  const step = width < 420 ? 6 * hour : 3 * hour;
+  const etTicks = [];
+  for (let t = (x0 ?? start) + step; t <= x1; t += step) etTicks.push(t);
+
+  const band = (lo, hi, fill) => (
+    <rect x={pad.l} width={width - pad.l - pad.r} y={sy(hi)} height={Math.max(0, sy(lo) - sy(hi))} fill={fill} />
+  );
+  // Taps fire a synthetic mouseenter before click, so click must open (not
+  // toggle); mouseleave / blur close it.
+  const pick = (p) => setActive(p);
+
+  return (
+    <div ref={wrapRef} style={styles.sigmaWrap}>
+      <SigmaSummaryLine summary={summary} />
+      <div style={{ position: "relative" }}>
+        <svg width={width} height={h} role="img" aria-label="io:ANTH rolling 15-minute move in sigma since midnight ET" style={styles.sigmaSvg}>
+          {band(-SIGMA_Y_MAX, -SIGMA_BREACH, BANDS.something.bg)}
+          {band(-SIGMA_BREACH, -1.5, BANDS.moving.bg)}
+          {band(-1.5, 1.5, BANDS.calm.bg)}
+          {band(1.5, SIGMA_BREACH, BANDS.moving.bg)}
+          {band(SIGMA_BREACH, SIGMA_Y_MAX, BANDS.something.bg)}
+          {[-5, -3, -1.5, 0, 1.5, 3, 5].map((z) => (
+            <g key={z}>
+              <line x1={pad.l} x2={width - pad.r} y1={sy(z)} y2={sy(z)} stroke={z === 0 ? "#a8a29e" : "#e7e5e4"} strokeWidth="1" />
+              <text x={pad.l - 4} y={sy(z) + 3} textAnchor="end" style={styles.axisText}>
+                {z > 0 ? `+${z}` : z}σ
+              </text>
+            </g>
+          ))}
+          {showOpen ? (
+            <g>
+              <line x1={sx(openMs)} x2={sx(openMs)} y1={pad.t} y2={h - pad.b} stroke={INK} strokeDasharray="3 3" strokeWidth="1" />
+              {/* Flip the label left of the marker when it sits near the right edge. */}
+              <text
+                x={sx(openMs) + (sx(openMs) > width - 70 ? -4 : 4)}
+                y={pad.t + 10}
+                textAnchor={sx(openMs) > width - 70 ? "end" : "start"}
+                style={styles.axisText}
+              >
+                9:30 open
+              </text>
+            </g>
+          ) : null}
+          <path d={line} fill="none" stroke={INK} strokeWidth="1.5" />
+          {breaches.map((p) => (
+            <g
+              key={p.t}
+              tabIndex={0}
+              role="button"
+              aria-label={`${fmtHourEt(p.t)} ET, ${fmtSigma(p.sigma)}, ${fmtPct(p.ret)}, close ${p.mark}`}
+              onMouseEnter={() => setActive(p)}
+              onMouseLeave={() => setActive(null)}
+              onFocus={() => setActive(p)}
+              onBlur={() => setActive(null)}
+              onClick={() => pick(p)}
+              style={{ cursor: "pointer", outline: "none" }}
+            >
+              <circle cx={sx(p.t)} cy={sy(p.sigma)} r="9" fill="transparent" />
+              <circle cx={sx(p.t)} cy={sy(p.sigma)} r={active?.t === p.t ? 4.5 : 3} fill={BANDS.something.color} stroke="#fff" strokeWidth="1" />
+            </g>
+          ))}
+        </svg>
+        {active ? (
+          <div
+            style={{
+              ...styles.sigmaTip,
+              left: Math.min(Math.max(sx(active.t) - 80, 0), width - 160),
+              top: active.sigma >= 0 ? sy(active.sigma) + 12 : Math.max(0, sy(active.sigma) - 74),
+            }}
+            role="status"
+          >
+            <div style={styles.sigmaTipTime}>{fmtEt(active.t)} ET</div>
+            <div>
+              <strong style={{ color: BANDS.something.color }}>{fmtSigma(active.sigma)}</strong> · {fmtPct(active.ret)} in 15m
+            </div>
+            <div>1m close {active.mark?.toFixed(1)} ($B)</div>
+          </div>
+        ) : null}
+      </div>
+      <div style={styles.markLabel}>
+        io:ANTH 1m close ($B) · {m1.toFixed(0)} high · {m0.toFixed(0)} low
+      </div>
+      <svg width={width} height={markH + axisH} role="img" aria-label="io:ANTH 1-minute close since midnight ET" style={styles.sigmaSvg}>
+        <rect x={pad.l} width={width - pad.l - pad.r} y={0} height={markH} fill="#fafaf9" />
+        {showOpen ? (
+          <line x1={sx(openMs)} x2={sx(openMs)} y1={0} y2={markH} stroke={INK} strokeDasharray="3 3" strokeWidth="1" />
+        ) : null}
+        <path d={markLine} fill="none" stroke="#2563eb" strokeWidth="1.5" />
+        {etTicks
+          .filter((t) => t >= start && t <= x1)
+          .map((t) => (
+            <text key={t} x={sx(t)} y={markH + 13} textAnchor="middle" style={styles.axisText}>
+              {fmtHourEt(t)}
+            </text>
+          ))}
+      </svg>
+    </div>
+  );
+}
+
 function ProxyTable({ rows, control, sessionOpen }) {
   const all = [...(rows || []), ...(control ? [{ ...control, isControl: true }] : [])];
   return (
@@ -629,6 +830,17 @@ export default function InvestorDayTape() {
           <h2 style={styles.h2}>Unusual move meter</h2>
           <div style={styles.panelSub}>io:ANTH 15-minute move vs its own 30-day volatility</div>
           <UnusualMeter unusual={anth?.unusual} />
+          <h3 style={styles.h3}>Sigma through the day</h3>
+          <div style={styles.panelSub}>
+            Rolling 15-minute io:ANTH move at every minute since 00:00 ET, in units of the 30-day
+            15-minute σ. Dots mark ≥3σ; hover or tap for details.
+          </div>
+          <SigmaCharts
+            series={data?.sigmaSeries}
+            summary={data?.sigmaSummary}
+            x0={data?.baselines?.midnightMs}
+            openMs={data?.baselines?.sessionOpen ? data?.baselines?.openMs : null}
+          />
           <div style={styles.extraLegs}>
             <div style={styles.extraRow}>
               <Ext href={PM_URL.vsOpenai} label="Anthropic vs OpenAI on Polymarket (opens in a new tab)">
@@ -751,6 +963,14 @@ const styles = {
   sourceVenue: { fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "#44403c", fontWeight: 600 },
   sourceLink: { color: "#1d4ed8" },
   heroCaveat: { fontSize: "12.5px", lineHeight: 1.5, color: "#44403c", marginTop: "8px", maxWidth: "760px" },
+  h3: { fontSize: "16px", fontWeight: 500, margin: "20px 0 2px", borderTop: `1px solid ${RULE}`, paddingTop: "16px" },
+  sigmaWrap: { width: "100%", minWidth: 0 },
+  sigmaSvg: { display: "block", overflow: "visible" },
+  sigmaSummary: { display: "flex", flexWrap: "wrap", gap: "4px 16px", fontFamily: MONO, fontSize: "12px", marginBottom: "8px" },
+  axisText: { fontFamily: MONO, fontSize: "9.5px", fill: MUTED },
+  sigmaTip: { position: "absolute", width: "160px", background: INK, color: "#fafaf9", fontFamily: MONO, fontSize: "11px", lineHeight: 1.5, padding: "6px 8px", pointerEvents: "none", zIndex: 5 },
+  sigmaTipTime: { color: "#d6d3d1" },
+  markLabel: { fontFamily: MONO, fontSize: "10.5px", color: MUTED, margin: "10px 0 4px" },
   peakLine: { fontFamily: MONO, fontSize: "12px", marginTop: "12px" },
   preOpenBanner: { fontFamily: MONO, fontSize: "11.5px", background: "#fef3c7", color: "#78350f", padding: "8px 10px", margin: "10px 0" },
   tickerRole: { fontSize: "11.5px", color: "#44403c", marginTop: "2px" },

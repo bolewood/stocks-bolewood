@@ -162,3 +162,23 @@ test("last-good carries a failed venue forward for up to 30 minutes, flagged", (
   assert.equal(keep("pm", null, 31 * m, late), null, "too old → blank, not stale data");
   assert.deepEqual(late, []);
 });
+
+test("sigma series: rolling 15m at each 1m close, then runs counted as breaches", async () => {
+  const { sigmaSeriesFromCandles, sigmaSummary } = await import("../lib/investorDay.mjs");
+  const m = 60_000;
+  // 80 one-minute candles: a +4% level shift at 00:20, then back down at 00:50.
+  // Each shift reads as ≥3σ for the 15 minutes it stays inside the window.
+  const closes = Array.from({ length: 80 }, (_, i) => (i >= 20 && i < 50 ? 104 : 100));
+  const candles = closes.map((close, i) => ({ startMs: i * m, endMs: (i + 1) * m, open: close, close }));
+  const series = sigmaSeriesFromCandles(candles, 0.01, 0);
+  // First point needs a close 15 minutes earlier: candle ending 00:16 vs 00:01.
+  assert.equal(series[0].t, 16 * m);
+  const up = series.find((p) => p.t === 21 * m);
+  assert.deepEqual(up, { t: 21 * m, sigma: 4, ret: 0.04, mark: 104 });
+  const s = sigmaSummary(series);
+  assert.equal(s.breaches, 2, "two separate runs");
+  assert.equal(s.minutes, 30, "15 minutes per shift");
+  assert.equal(s.largest.t, 21 * m, "first of the +4σ minutes");
+  assert.ok(series.some((p) => p.t === 51 * m && p.sigma < -3), "the drop back reads negative");
+  assert.deepEqual(sigmaSeriesFromCandles(candles, 0, 0), [], "no σ baseline → empty");
+});

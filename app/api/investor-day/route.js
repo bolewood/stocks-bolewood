@@ -38,9 +38,12 @@ import {
   pctChange,
   polymarketUrl,
   priorDailyNorm,
+  sigmaSeriesFromCandles,
+  sigmaSummary,
   simpleReturns,
   stdev,
   unusualMove,
+  unusualMoveBand,
   valueAtOrBefore,
   volumeBand,
   volumeRatio,
@@ -406,10 +409,13 @@ async function fetchLive(prev) {
 
   // Memoized per ET day; started first so a cold isolate fetches it in parallel.
   const averageVolumesPromise = loadAverageVolumes(today, now, errors);
-  const [perps, rawCandles5m, rawEvents, rawKalshiMarkets, proxyQuotes] = await Promise.all([
+  const [perps, rawCandles5m, rawCandles1m, rawEvents, rawKalshiMarkets, proxyQuotes] = await Promise.all([
     capture("Hyperliquid metaAndAssetCtxs", fetchPerpContexts, errors),
     capture("Hyperliquid io:ANTH 5m", () =>
       fetchCandles(PERP_COINS.anthropic, "5m", midnightMs - 60 * 60 * 1000, now), errors, []),
+    // From 23:45 so the 00:00 point has a 15-minute-old close to compare.
+    capture("Hyperliquid io:ANTH 1m", () =>
+      fetchCandles(PERP_COINS.anthropic, "1m", midnightMs - 15 * 60 * 1000, now), errors, []),
     Promise.all(
       Object.entries(POLYMARKET_SLUGS).map(async ([key, slug]) => [
         key,
@@ -427,6 +433,7 @@ async function fetchLive(prev) {
   // list the failure; `reused` names what was carried forward).
   const reused = [];
   const candles5m = keepLastGood("Hyperliquid io:ANTH 5m candles", rawCandles5m, now, reused);
+  const candles1m = keepLastGood("Hyperliquid io:ANTH 1m candles", rawCandles1m, now, reused);
   const events = Object.fromEntries(
     Object.entries(POLYMARKET_SLUGS).map(([key, slug]) => [
       key,
@@ -573,6 +580,31 @@ async function fetchLive(prev) {
     }),
   ];
 
+  // Sigma through the day: the meter's current reading and "peak today" come
+  // from this same 1m series so the meter and the chart cannot disagree.
+  const sigmaSeries = sigmaSeriesFromCandles(candles1m, baselines.sigma15m, midnightMs);
+  const sigmaStats = sigmaSummary(sigmaSeries);
+  const fallbackUnusual = unusualMove(candles5m, baselines.sigma15m, { now, sinceMs: midnightMs });
+  const lastSigma = sigmaSeries[sigmaSeries.length - 1] ?? null;
+  const unusual = lastSigma
+    ? {
+        current: lastSigma.ret,
+        fromMs: lastSigma.t - 15 * 60 * 1000,
+        toMs: lastSigma.t,
+        sigma15m: baselines.sigma15m,
+        sigmas: lastSigma.sigma,
+        band: unusualMoveBand(Math.abs(lastSigma.sigma)),
+        peak: sigmaStats.largest
+          ? {
+              sigmas: sigmaStats.largest.sigma,
+              atMs: sigmaStats.largest.t,
+              band: unusualMoveBand(Math.abs(sigmaStats.largest.sigma)),
+            }
+          : null,
+        resolution: "1m",
+      }
+    : { ...fallbackUnusual, resolution: "5m" };
+
   const payload = {
     asOf: new Date(now).toISOString(),
     source: errors.length ? "partial" : "live",
@@ -595,7 +627,7 @@ async function fetchLive(prev) {
             unusual: {
               // Latest trade close, not markPx: sigma is built from trade
               // closes, and the mark/trade basis would otherwise read as a move.
-              ...unusualMove(candles5m, baselines.sigma15m, { now, sinceMs: midnightMs }),
+              ...unusual,
               sigmaN: baselines.sigmaN,
               lookbackDays: SIGMA_LOOKBACK_DAYS,
             },
@@ -619,6 +651,8 @@ async function fetchLive(prev) {
     },
     kalshi,
     volume: { rows: volumeRows },
+    sigmaSeries,
+    sigmaSummary: sigmaStats,
     reused,
     proxies: { rows: proxies, control },
     errors,
