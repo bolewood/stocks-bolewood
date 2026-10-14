@@ -182,3 +182,38 @@ test("sigma series: rolling 15m at each 1m close, then runs counted as breaches"
   assert.ok(series.some((p) => p.t === 51 * m && p.sigma < -3), "the drop back reads negative");
   assert.deepEqual(sigmaSeriesFromCandles(candles, 0, 0), [], "no σ baseline → empty");
 });
+
+test("echoes: a reverting spike counts once; an overshooting reversal still counts", async () => {
+  const { sigmaSeriesFromCandles, markSigmaEchoes, sigmaSummary } = await import("../lib/investorDay.mjs");
+  const m = 60_000;
+  const build = (closes) =>
+    closes.map((close, i) => ({ startMs: i * m, endMs: (i + 1) * m, open: close, close }));
+  const sigma = 0.01;
+
+  // One-minute spike to 104 that reverts to 100: the raw series shows a −3.8σ
+  // echo 15 minutes later.
+  const spike = Array.from({ length: 50 }, (_, i) => (i === 20 ? 104 : 100));
+  const raw = sigmaSeriesFromCandles(build(spike), sigma, 0);
+  assert.equal(sigmaSummary(raw).breaches, 2, "unflagged: double-counted");
+  const flagged = markSigmaEchoes(raw, sigma);
+  const echo = flagged.find((p) => p.t === 36 * m);
+  assert.equal(echo.echo, 21 * m, "echo points at the original spike");
+  const s = sigmaSummary(flagged);
+  assert.equal(s.breaches, 1);
+  assert.equal(s.minutes, 1);
+  assert.equal(s.echoMinutes, 1);
+  assert.equal(s.largest.t, 21 * m, "largest is the spike, not its echo");
+
+  // Spike to 104, then a real drop to 96: still −4% below the pre-spike 100,
+  // so the down run is a genuine move, not an echo.
+  const crash = Array.from({ length: 50 }, (_, i) => (i === 20 ? 104 : i >= 25 ? 96 : 100));
+  const c = sigmaSummary(markSigmaEchoes(sigmaSeriesFromCandles(build(crash), sigma, 0), sigma));
+  assert.equal(c.echoMinutes, 0);
+  assert.equal(c.breaches, 2);
+
+  // Level shifts 30 minutes apart (base outside the earlier run): not echoes.
+  const shifts = Array.from({ length: 80 }, (_, i) => (i >= 20 && i < 50 ? 104 : 100));
+  const l = sigmaSummary(markSigmaEchoes(sigmaSeriesFromCandles(build(shifts), sigma, 0), sigma));
+  assert.equal(l.breaches, 2);
+  assert.equal(l.echoMinutes, 0);
+});

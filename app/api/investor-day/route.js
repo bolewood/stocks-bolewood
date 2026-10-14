@@ -38,6 +38,7 @@ import {
   pctChange,
   polymarketUrl,
   priorDailyNorm,
+  markSigmaEchoes,
   sigmaSeriesFromCandles,
   sigmaSummary,
   simpleReturns,
@@ -582,7 +583,10 @@ async function fetchLive(prev) {
 
   // Sigma through the day: the meter's current reading and "peak today" come
   // from this same 1m series so the meter and the chart cannot disagree.
-  const sigmaSeries = sigmaSeriesFromCandles(candles1m, baselines.sigma15m, midnightMs);
+  const sigmaSeries = markSigmaEchoes(
+    sigmaSeriesFromCandles(candles1m, baselines.sigma15m, midnightMs),
+    baselines.sigma15m
+  );
   const sigmaStats = sigmaSummary(sigmaSeries);
   const fallbackUnusual = unusualMove(candles5m, baselines.sigma15m, { now, sinceMs: midnightMs });
   const lastSigma = sigmaSeries[sigmaSeries.length - 1] ?? null;

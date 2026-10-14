@@ -408,6 +408,11 @@ function SigmaSummaryLine({ summary }) {
       <span>
         <strong>{summary.breaches}</strong> {summary.breaches === 1 ? "breach" : "breaches"}
       </span>
+      {summary.echoMinutes ? (
+        <span style={{ color: MUTED }}>
+          {summary.echoMinutes} echo {summary.echoMinutes === 1 ? "minute" : "minutes"} not counted
+        </span>
+      ) : null}
       <span>
         Largest{" "}
         {l ? (
@@ -442,8 +447,8 @@ function SigmaCharts({ series, summary, x0, openMs }) {
     );
   }
   const pad = { l: 34, r: 8, t: 8, b: 4 };
-  const h = 180;
-  const markH = 72;
+  const h = width >= 700 ? 240 : 180;
+  const markH = width >= 700 ? 88 : 72;
   const axisH = 18;
   const x1 = series[series.length - 1].t;
   const start = Math.min(x0 ?? series[0].t, series[0].t);
@@ -515,7 +520,7 @@ function SigmaCharts({ series, summary, x0, openMs }) {
               key={p.t}
               tabIndex={0}
               role="button"
-              aria-label={`${fmtHourEt(p.t)} ET, ${fmtSigma(p.sigma)}, ${fmtPct(p.ret)}, close ${p.mark}`}
+              aria-label={`${fmtHourEt(p.t)} ET, ${fmtSigma(p.sigma)}, ${fmtPct(p.ret)}, close ${p.mark}${p.echo ? ", echo, not counted" : ""}`}
               onMouseEnter={() => setActive(p)}
               onMouseLeave={() => setActive(null)}
               onFocus={() => setActive(p)}
@@ -524,7 +529,14 @@ function SigmaCharts({ series, summary, x0, openMs }) {
               style={{ cursor: "pointer", outline: "none" }}
             >
               <circle cx={sx(p.t)} cy={sy(p.sigma)} r="9" fill="transparent" />
-              <circle cx={sx(p.t)} cy={sy(p.sigma)} r={active?.t === p.t ? 4.5 : 3} fill={BANDS.something.color} stroke="#fff" strokeWidth="1" />
+              <circle
+                cx={sx(p.t)}
+                cy={sy(p.sigma)}
+                r={active?.t === p.t ? 4.5 : 3}
+                fill={p.echo ? "#fff" : BANDS.something.color}
+                stroke={p.echo ? MUTED : "#fff"}
+                strokeWidth={p.echo ? 1.5 : 1}
+              />
             </g>
           ))}
         </svg>
@@ -533,7 +545,7 @@ function SigmaCharts({ series, summary, x0, openMs }) {
             style={{
               ...styles.sigmaTip,
               left: Math.min(Math.max(sx(active.t) - 80, 0), width - 160),
-              top: active.sigma >= 0 ? sy(active.sigma) + 12 : Math.max(0, sy(active.sigma) - 74),
+              top: active.sigma >= 0 ? sy(active.sigma) + 12 : Math.max(0, sy(active.sigma) - (active.echo ? 92 : 74)),
             }}
             role="status"
           >
@@ -542,6 +554,9 @@ function SigmaCharts({ series, summary, x0, openMs }) {
               <strong style={{ color: BANDS.something.color }}>{fmtSigma(active.sigma)}</strong> · {fmtPct(active.ret)} in 15m
             </div>
             <div>1m close {active.mark?.toFixed(1)} ($B)</div>
+            {active.echo ? (
+              <div style={styles.sigmaTipTime}>Echo of the {fmtHourEt(active.echo)} move · not counted</div>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -830,19 +845,6 @@ export default function InvestorDayTape() {
           <h2 style={styles.h2}>Unusual move meter</h2>
           <div style={styles.panelSub}>io:ANTH 15-minute move vs its own 30-day volatility</div>
           <UnusualMeter unusual={anth?.unusual} />
-          <h3 style={styles.h3}>Sigma through the day</h3>
-          <div style={styles.panelSub}>
-            Rolling 15-minute io:ANTH move at every minute since 00:00 ET, in units of the 30-day
-            15-minute σ. Dots mark ≥3σ; hover or tap for details. A move that reverses within 15
-            minutes shows again with the opposite sign 15 minutes later, so one spike can count as
-            two breaches.
-          </div>
-          <SigmaCharts
-            series={data?.sigmaSeries}
-            summary={data?.sigmaSummary}
-            x0={data?.baselines?.midnightMs}
-            openMs={data?.baselines?.sessionOpen ? data?.baselines?.openMs : null}
-          />
           <div style={styles.extraLegs}>
             <div style={styles.extraRow}>
               <Ext href={PM_URL.vsOpenai} label="Anthropic vs OpenAI on Polymarket (opens in a new tab)">
@@ -865,6 +867,22 @@ export default function InvestorDayTape() {
           </div>
         </section>
       </div>
+
+      <section style={styles.panel}>
+        <h2 style={styles.h2}>Sigma through the day</h2>
+        <div style={styles.panelSub}>
+          Rolling 15-minute io:ANTH move at every minute since 00:00 ET, in units of the 30-day
+          15-minute σ. Dots mark ≥3σ; hover or tap for details. A move that reverses within 15
+          minutes shows again with the opposite sign 15 minutes later; those echoes are drawn hollow
+          and not counted.
+        </div>
+        <SigmaCharts
+          series={data?.sigmaSeries}
+          summary={data?.sigmaSummary}
+          x0={data?.baselines?.midnightMs}
+          openMs={data?.baselines?.sessionOpen ? data?.baselines?.openMs : null}
+        />
+      </section>
 
       <section style={styles.panel}>
         <h2 style={styles.h2}>Volume vs normal</h2>
