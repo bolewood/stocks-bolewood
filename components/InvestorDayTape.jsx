@@ -833,7 +833,9 @@ export default function InvestorDayTape() {
           <h3 style={styles.h3}>Sigma through the day</h3>
           <div style={styles.panelSub}>
             Rolling 15-minute io:ANTH move at every minute since 00:00 ET, in units of the 30-day
-            15-minute σ. Dots mark ≥3σ; hover or tap for details.
+            15-minute σ. Dots mark ≥3σ; hover or tap for details. A move that reverses within 15
+            minutes shows again with the opposite sign 15 minutes later, so one spike can count as
+            two breaches.
           </div>
           <SigmaCharts
             series={data?.sigmaSeries}
