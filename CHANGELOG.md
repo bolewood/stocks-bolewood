@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.16.3.0] — 2026-10-14
+
+- `/investor-day`: add "Sigma through the day" under the unusual-move meter — the rolling 15-minute io:ANTH move at every 1m close since 00:00 ET in units of the 30-day 15-minute σ (fixed ±5σ, meter-colored bands, 9:30 ET marker, tappable ≥3σ dots), a 1m close chart on the same x-axis, and a summary of minutes at ≥3σ, breaches, and the largest move.
+- `/api/investor-day`: return `sigmaSeries` `{t, sigma, ret, mark}` and `sigmaSummary`; the meter's current σ and "peak today" now come from the same 1m series.
+
 ## [0.16.2.0] — 2026-10-13
 
 - Update position disclosures to October 13, 2026, adding a direct long position in Anthropic through an SPV; `/investor-day` marks the hero valuation HELD (SPV).
