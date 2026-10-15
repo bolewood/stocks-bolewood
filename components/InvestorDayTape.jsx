@@ -1035,7 +1035,7 @@ export default function InvestorDayTape() {
       <div style={styles.disclosureDateRow}>
         <span style={styles.disclosureDate}>Disclosure date: {formatLongDate(disclosure.asOf)}</span>
         {disclosureAge != null && disclosureAge > 7 ? (
-          <span style={styles.disclosureWarn}>Disclosure is {disclosureAge} days old — refresh data/disclosure.json</span>
+          <span style={styles.disclosureWarn}>Disclosure is {disclosureAge} days old; positions may have changed</span>
         ) : null}
       </div>
 
