@@ -5,6 +5,9 @@ import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 import {
   HYPERLIQUID_URLS,
   INVESTOR_DAY_POLL_MS,
+  etDateStartMs,
+  etDayStarts,
+  investorDayDerived,
   KALSHI_CONFIRMED_RULE,
   KALSHI_MARKETS,
   POLYMARKET_SLUGS,
@@ -13,11 +16,14 @@ import {
   yahooQuoteUrl,
 } from "../lib/investorDay.mjs";
 import {
+  disclosureAgeDays,
   disclosureAgeLabel,
+  formatLongDate,
   disclosureSentence,
   isHeldTicker,
 } from "../lib/disclosure.mjs";
 import disclosure from "../data/disclosure.json";
+import ipoTape from "../data/anthropic-investor-day.json";
 
 const MONO = "var(--font-mono), 'JetBrains Mono', monospace";
 const UP = "#15803d";
@@ -260,16 +266,50 @@ function fmtSigma(z) {
   return `${sign}${Math.abs(z).toFixed(1)}σ`;
 }
 
+function fmtShortDate(ms) {
+  return new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" }).format(
+    new Date(ms)
+  );
+}
+
+// "2026-10-01" → "Oct 1" with no timezone shift (Date.parse would read UTC
+// midnight, which is the previous evening in ET).
+function fmtDateKeyShort(dateKey) {
+  const [y, m, d] = String(dateKey).split("-").map(Number);
+  return new Intl.DateTimeFormat("en-US", { timeZone: "UTC", month: "short", day: "numeric" }).format(
+    new Date(Date.UTC(y, m - 1, d))
+  );
+}
+
+function rankPhrase(rank) {
+  if (!rank) return "rank unavailable";
+  if (rank.largest) return "largest 15-min move in the record";
+  return `larger than ${rank.pct.toFixed(1)}% of 15-min moves`;
+}
+
 function UnusualMeter({ unusual }) {
   const sigmas = unusual?.sigmas;
   const band = BANDS[unusual?.band] ?? null;
   const pos = Number.isFinite(sigmas) ? Math.min(Math.abs(sigmas), METER_MAX_SIGMA) / METER_MAX_SIGMA : null;
   const peak = unusual?.peak;
   const peakBand = BANDS[peak?.band] ?? null;
+  const rank = unusual?.rank;
+  const since = rank?.sinceMs ? fmtShortDate(rank.sinceMs) : null;
   return (
     <div>
+      <div style={{ ...styles.rankHeadline, color: band?.color ?? FLAT }}>
+        {fmtPct(unusual?.current)}
+        <span style={styles.rankText}>
+          {" "}
+          · {rankPhrase(rank)}
+        </span>
+      </div>
+      <div style={styles.rankSub}>
+        Share of all {rank?.n?.toLocaleString() ?? "—"} fifteen-minute io:ANTH moves
+        {since ? ` since ${since}` : ""} that were smaller.
+      </div>
       <div style={styles.meterHead}>
-        <div style={{ ...styles.meterValue, color: band?.color ?? FLAT }}>
+        <div style={{ ...styles.meterValueSmall, color: band?.color ?? FLAT }}>
           {fmtSigma(sigmas)}
         </div>
         {band ? (
@@ -291,14 +331,18 @@ function UnusualMeter({ unusual }) {
           <strong style={{ color: peakBand?.color ?? FLAT }}>
             {fmtSigma(peak.sigmas)} at {fmtEt(peak.atMs).replace(/:\d\d (?=[AP]M)/, " ")} ET
           </strong>
-        ) : (
-          "—"
-        )}{" "}
+        ) : null}
+        {peak && unusual?.peakRank ? (
+          <span style={{ color: MUTED }}> · {rankPhrase(unusual.peakRank)}</span>
+        ) : null}
+        {!peak ? "—" : null}{" "}
         <span style={{ color: MUTED }}>(largest rolling 15-minute move since 00:00 ET)</span>
       </div>
       <div style={styles.footnote}>
-        Volatility gauge, not a signal. io:ANTH mark vs its price 15 minutes ago ({fmtPct(unusual?.current, 3)}),
-        rolling, ÷ the standard deviation of 15-minute returns over the trailing {unusual?.lookbackDays ?? 30} days
+        Volatility gauge, not a signal. The latest io:ANTH 1-minute close vs 15 minutes earlier
+        ({fmtPct(unusual?.current, 3)}). The rank compares its size with every 15-minute move in
+        Hyperliquid&apos;s available history (the latest ~5,000 candles, so the start date moves forward).
+        σ divides the move by the standard deviation of 15-minute returns over the trailing {unusual?.lookbackDays ?? 30} days
         ({fmtPct(unusual?.sigma15m, 3)}, n={unusual?.sigmaN ?? "—"}). Calm &lt;1.5σ · Moving 1.5–3σ · Something&apos;s up &gt;3σ.
       </div>
     </div>
@@ -397,7 +441,7 @@ function fmtHourEt(ms) {
     .replace(" ", "");
 }
 
-function SigmaSummaryLine({ summary }) {
+function SigmaSummaryLine({ summary, multi = false }) {
   if (!summary) return null;
   const l = summary.largest;
   return (
@@ -417,7 +461,8 @@ function SigmaSummaryLine({ summary }) {
         Largest{" "}
         {l ? (
           <strong style={{ color: BANDS[unusualBandOf(Math.abs(l.sigma))]?.color ?? FLAT }}>
-            {fmtSigma(l.sigma)} ({fmtPct(l.ret)}) at {fmtHourEt(l.t)} ET
+            {fmtSigma(l.sigma)} ({fmtPct(l.ret)}) at {multi ? `${fmtShortDate(l.t)}, ` : ""}
+            {fmtHourEt(l.t)} ET
           </strong>
         ) : (
           "—"
@@ -434,7 +479,7 @@ function unusualBandOf(abs) {
   return "something";
 }
 
-function SigmaCharts({ series, summary, x0, openMs }) {
+function SigmaCharts({ series, summary, x0, openMs, multi = false, events = [], resolution = "1m" }) {
   const [wrapRef, width] = useWidth();
   const [active, setActive] = useState(null);
   // The measured wrapper always renders, so the width observer attaches on
@@ -442,7 +487,9 @@ function SigmaCharts({ series, summary, x0, openMs }) {
   if (!series?.length) {
     return (
       <div ref={wrapRef} style={styles.sigmaWrap}>
-        <div style={styles.sparkEmpty}>Waiting for 1m candles since 00:00 ET</div>
+        <div style={styles.sparkEmpty}>
+          {multi ? "Waiting for candles since Oct 14" : "Waiting for 1m candles since 00:00 ET"}
+        </div>
       </div>
     );
   }
@@ -469,11 +516,56 @@ function SigmaCharts({ series, summary, x0, openMs }) {
   const breaches = series.filter((p) => Math.abs(p.sigma) >= SIGMA_BREACH);
   const showOpen = openMs != null && openMs >= start && openMs <= x1;
 
-  // x0 is 00:00 ET, so stepping whole hours from it lands on ET hours.
+  // Today: whole hours from 00:00 ET. Multi-day: each ET midnight, computed
+  // per date so ticks survive the Nov 1 DST change.
   const hour = 60 * 60 * 1000;
   const step = width < 420 ? 6 * hour : 3 * hour;
-  const etTicks = [];
-  for (let t = (x0 ?? start) + step; t <= x1; t += step) etTicks.push(t);
+  let etTicks = [];
+  if (multi) {
+    const days = etDayStarts(start, x1);
+    const every = Math.max(1, Math.ceil(days.length / Math.max(1, Math.floor(width / 64))));
+    etTicks = days.filter((_, i) => i % every === 0);
+  } else {
+    for (let t = (x0 ?? start) + step; t <= x1; t += step) etTicks.push(t);
+  }
+  const tickLabel = (t) => (multi ? fmtShortDate(t) : fmtHourEt(t));
+  // Event markers inside the visible range only.
+  // Narrow screens drop the "(Oct 14)" suffix so labels don't run into the axis.
+  const visibleEvents = (events || [])
+    .map((ev) => (width < 520 ? { ...ev, label: ev.label.replace(/\s*\([^)]*\)$/, "") } : ev))
+    .map((ev) =>
+      ev.kind === "date"
+        ? { ...ev, a: Math.max(start, ev.startMs), b: Math.min(x1, ev.endMs) }
+        : { ...ev, a: ev.atMs, b: ev.atMs }
+    )
+    .filter((ev) => ev.b >= start && ev.a <= x1 && ev.b >= ev.a);
+  const eventMarks = (height, withLabels) =>
+    visibleEvents.map((ev, i) =>
+      ev.kind === "date" ? (
+        <g key={ev.key}>
+          <rect x={sx(ev.a)} width={Math.max(2, sx(ev.b) - sx(ev.a))} y={0} height={height} fill={EVENT_BAND} />
+          {withLabels ? (
+            <text x={sx(ev.a) + 4} y={height - 6} style={styles.eventText}>
+              {ev.label}
+            </text>
+          ) : null}
+        </g>
+      ) : (
+        <g key={ev.key}>
+          <line x1={sx(ev.a)} x2={sx(ev.a)} y1={0} y2={height} stroke={EVENT_LINE} strokeWidth="1.5" />
+          {withLabels ? (
+            <text
+              x={sx(ev.a) + (sx(ev.a) > width - 150 ? -4 : 4)}
+              y={pad.t + 22 + i * 12}
+              textAnchor={sx(ev.a) > width - 150 ? "end" : "start"}
+              style={styles.eventText}
+            >
+              {ev.label}
+            </text>
+          ) : null}
+        </g>
+      )
+    );
 
   const band = (lo, hi, fill) => (
     <rect x={pad.l} width={width - pad.l - pad.r} y={sy(hi)} height={Math.max(0, sy(lo) - sy(hi))} fill={fill} />
@@ -484,7 +576,7 @@ function SigmaCharts({ series, summary, x0, openMs }) {
 
   return (
     <div ref={wrapRef} style={styles.sigmaWrap}>
-      <SigmaSummaryLine summary={summary} />
+      <SigmaSummaryLine summary={summary} multi={multi} />
       <div style={{ position: "relative" }}>
         <svg width={width} height={h} role="img" aria-label="io:ANTH rolling 15-minute move in sigma since midnight ET" style={styles.sigmaSvg}>
           {band(-SIGMA_Y_MAX, -SIGMA_BREACH, BANDS.something.bg)}
@@ -492,6 +584,7 @@ function SigmaCharts({ series, summary, x0, openMs }) {
           {band(-1.5, 1.5, BANDS.calm.bg)}
           {band(1.5, SIGMA_BREACH, BANDS.moving.bg)}
           {band(SIGMA_BREACH, SIGMA_Y_MAX, BANDS.something.bg)}
+          {eventMarks(h, true)}
           {[-5, -3, -1.5, 0, 1.5, 3, 5].map((z) => (
             <g key={z}>
               <line x1={pad.l} x2={width - pad.r} y1={sy(z)} y2={sy(z)} stroke={z === 0 ? "#a8a29e" : "#e7e5e4"} strokeWidth="1" />
@@ -520,7 +613,7 @@ function SigmaCharts({ series, summary, x0, openMs }) {
               key={p.t}
               tabIndex={0}
               role="button"
-              aria-label={`${fmtHourEt(p.t)} ET, ${fmtSigma(p.sigma)}, ${fmtPct(p.ret)}, close ${p.mark}${p.echo ? ", echo, not counted" : ""}`}
+              aria-label={`${multi ? `${fmtShortDate(p.t)} ` : ""}${fmtHourEt(p.t)} ET, ${fmtSigma(p.sigma)}, ${fmtPct(p.ret)}, close ${p.mark}${p.echo ? ", echo, not counted" : ""}`}
               onMouseEnter={() => setActive(p)}
               onMouseLeave={() => setActive(null)}
               onFocus={() => setActive(p)}
@@ -549,11 +642,11 @@ function SigmaCharts({ series, summary, x0, openMs }) {
             }}
             role="status"
           >
-            <div style={styles.sigmaTipTime}>{fmtEt(active.t)} ET</div>
+            <div style={styles.sigmaTipTime}>{fmtEt(active.t, multi)} ET</div>
             <div>
               <strong style={{ color: BANDS.something.color }}>{fmtSigma(active.sigma)}</strong> · {fmtPct(active.ret)} in 15m
             </div>
-            <div>1m close {active.mark?.toFixed(1)} ($B)</div>
+            <div>{resolution} close {active.mark?.toFixed(1)} ($B)</div>
             {active.echo ? (
               <div style={styles.sigmaTipTime}>Echo of the {fmtHourEt(active.echo)} move · not counted</div>
             ) : null}
@@ -561,10 +654,11 @@ function SigmaCharts({ series, summary, x0, openMs }) {
         ) : null}
       </div>
       <div style={styles.markLabel}>
-        io:ANTH 1m close ($B) · {m1.toFixed(0)} high · {m0.toFixed(0)} low
+        io:ANTH {resolution} close ($B) · {m1.toFixed(0)} high · {m0.toFixed(0)} low
       </div>
       <svg width={width} height={markH + axisH} role="img" aria-label="io:ANTH 1-minute close since midnight ET" style={styles.sigmaSvg}>
         <rect x={pad.l} width={width - pad.l - pad.r} y={0} height={markH} fill="#fafaf9" />
+        {eventMarks(markH, false)}
         {showOpen ? (
           <line x1={sx(openMs)} x2={sx(openMs)} y1={0} y2={markH} stroke={INK} strokeDasharray="3 3" strokeWidth="1" />
         ) : null}
@@ -573,10 +667,233 @@ function SigmaCharts({ series, summary, x0, openMs }) {
           .filter((t) => t >= start && t <= x1)
           .map((t) => (
             <text key={t} x={sx(t)} y={markH + 13} textAnchor="middle" style={styles.axisText}>
-              {fmtHourEt(t)}
+              {tickLabel(t)}
             </text>
           ))}
       </svg>
+    </div>
+  );
+}
+
+const EVENT_BAND = "rgba(124, 58, 237, 0.10)";
+const EVENT_LINE = "#7c3aed";
+
+// Numbered footnotes, one per distinct source URL, in order of first use.
+function buildFootnotes(records) {
+  const order = [];
+  const byUrl = new Map();
+  for (const r of records) {
+    for (const src of r.sources || []) {
+      if (!byUrl.has(src.url)) {
+        byUrl.set(src.url, { n: order.length + 1, src });
+        order.push(src.url);
+      }
+    }
+  }
+  return { list: order.map((u) => byUrl.get(u)), ref: (src) => byUrl.get(src.url)?.n };
+}
+
+function sourceTitle(src) {
+  return `${src.publisher}, ${formatLongDate(src.publicationDate)}${src.note ? ` — ${src.note}` : ""}`;
+}
+
+function Cite({ sources, notes }) {
+  return (
+    <>
+      {(sources || []).map((src) => (
+        <a key={src.url} href={`#ipo-source-${notes.ref(src)}`} title={sourceTitle(src)} style={styles.cite}>
+          [{notes.ref(src)}]
+        </a>
+      ))}
+    </>
+  );
+}
+
+function fmtUsdB(n, { approx = false } = {}) {
+  return Number.isFinite(n) ? `${approx ? "~" : ""}$${(n / 1e9).toFixed(1)}B` : "—";
+}
+
+function InvestorDayFacts() {
+  const facts = Object.fromEntries(ipoTape.facts.map((f) => [f.key, f]));
+  const derived = investorDayDerived(ipoTape.facts);
+  const notes = buildFootnotes(ipoTape.facts);
+  const q3 = facts.revenueQ3;
+  const q2 = facts.revenueQ2;
+  const q1 = facts.revenueQ1;
+  const july = facts.exitRunRateJuly;
+  const semi = facts.semiAnalysisAnnualized;
+  const prof = facts.profitability;
+  const rpc = facts.revenuePerComputeDollar;
+  const dist = facts.distillationShare;
+  const ipo = facts.ipoTiming;
+  const cards = [
+    {
+      key: "q3",
+      eyebrow: q3.label,
+      value: fmtUsdB(q3.valueUsd),
+      body: (
+        <>
+          ~{Math.round(derived.q3OverQ2 * 100)}% above Q2&apos;s {fmtUsdB(q2.valueUsd)} · Q1{" "}
+          {fmtUsdB(q1.valueUsd, { approx: q1.approximate })} <Cite sources={[...q3.sources]} notes={notes} />
+        </>
+      ),
+    },
+    {
+      key: "avg",
+      eyebrow: "Q3 revenue ×4 = average run-rate",
+      value: fmtUsdB(derived.averageRunRateUsd),
+      body: (
+        <>
+          Computed here from Q3 revenue. An <em>average</em> run-rate for the quarter, not an exit
+          run-rate. <Cite sources={q3.sources} notes={notes} />
+        </>
+      ),
+    },
+    {
+      key: "exit",
+      eyebrow: "Exit run-rate (annualized)",
+      value: "Not disclosed",
+      body: (
+        <>
+          No exit run-rate was given at the investor day. <Cite sources={facts.exitRunRateDisclosed.sources} notes={notes} />{" "}
+          Last company figure: {fmtUsdB(july.valueUsd)} exit run-rate at the end of July{" "}
+          <Cite sources={july.sources} notes={notes} />. Outside estimate (SemiAnalysis, not company data):{" "}
+          {fmtUsdB(semi.valueUsd, { approx: semi.approximate })} annualized <Cite sources={semi.sources} notes={notes} />.
+        </>
+      ),
+    },
+    {
+      key: "prof",
+      eyebrow: prof.label,
+      value: "Adjusted-profitable",
+      body: (
+        <>
+          {prof.adjustedProfitableQuarters === 2 ? "Second quarter in a row" : `${prof.adjustedProfitableQuarters} quarters`} ·{" "}
+          {Math.round(prof.adjustedOperatingMarginExSbc * 100)}% adjusted operating margin excluding stock-based comp
+          {prof.cashFlowPositive ? " · cash-flow positive" : ""} · GAAP {prof.gaapDisclosed ? "disclosed" : "not disclosed"}{" "}
+          <Cite sources={prof.sources} notes={notes} />
+        </>
+      ),
+    },
+    {
+      key: "rpc",
+      eyebrow: rpc.label,
+      value: `$${rpc.value.toFixed(2)}`,
+      body: (
+        <>
+          Revenue per $1 of compute in Q3. <Cite sources={rpc.sources} notes={notes} />
+        </>
+      ),
+    },
+    {
+      key: "dist",
+      eyebrow: dist.label,
+      value: `${Math.round(dist.low * 100)}–${Math.round(dist.high * 100)}%`,
+      body: (
+        <>
+          Of revenue; {dist.q3Change}. <Cite sources={dist.sources} notes={notes} />
+        </>
+      ),
+    },
+    {
+      key: "ipo",
+      eyebrow: ipo.label,
+      value: "November",
+      body: (
+        <>
+          {ipo.text}. <Cite sources={ipo.sources} notes={notes} />
+        </>
+      ),
+    },
+  ];
+  return (
+    <section style={styles.factsPanel} aria-labelledby="ipo-facts-title">
+      <h2 id="ipo-facts-title" style={styles.h2}>What the investor day showed</h2>
+      <div style={styles.panelSub}>Anthropic investor day, Oct 14, 2026 · press-reported, not company filings</div>
+      <div style={styles.factsGrid}>
+        {cards.map((c) => (
+          <div key={c.key} style={styles.factCard}>
+            <div style={styles.tileEyebrow}>{c.eyebrow}</div>
+            <div style={styles.factValue}>{c.value}</div>
+            <div style={styles.factBody}>{c.body}</div>
+          </div>
+        ))}
+      </div>
+      <div style={styles.factsAttribution}>{ipoTape.attribution}</div>
+      <ol style={styles.factsNotes}>
+        {notes.list.map(({ n, src }) => (
+          <li key={src.url} id={`ipo-source-${n}`}>
+            [{n}]{" "}
+            <a href={src.url} target="_blank" rel="noopener noreferrer" style={styles.extLink}>
+              {src.publisher}, {formatLongDate(src.publicationDate)} ↗
+            </a>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function UpcomingList() {
+  const notes = buildFootnotes(ipoTape.upcoming);
+  return (
+    <div style={styles.upcoming}>
+      <h3 style={styles.h3Plain}>Upcoming</h3>
+      <ul style={styles.upcomingList}>
+        {ipoTape.upcoming.map((u) => (
+          <li key={u.key} style={styles.upcomingItem}>
+            <span>
+              <strong>{u.label}</strong> · {u.timing}
+            </span>
+            <span style={styles.upcomingStatus}>{u.status}</span>
+            <span style={styles.upcomingSource}>
+              {u.sources.map((src) => (
+                <a key={src.url} href={src.url} target="_blank" rel="noopener noreferrer" title={src.estimationMethod || src.note} style={styles.extLink}>
+                  {src.sourceClass === "assumption" ? "Inferred" : src.publisher}, {fmtDateKeyShort(src.publicationDate)} ↗
+                </a>
+              ))}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div style={styles.footnote}>
+        S-1 timing is inferred, not reported: a confidential filer must file publicly at least 15 days before its roadshow.
+      </div>
+    </div>
+  );
+}
+
+const CHART_EVENTS = ipoTape.events.map((ev) =>
+  ev.kind === "date"
+    ? {
+        key: ev.key,
+        kind: "date",
+        label: ev.label,
+        startMs: etDateStartMs(ev.date),
+        endMs: etDateStartMs(ev.date) + 24 * 60 * 60 * 1000,
+      }
+    : { key: ev.key, kind: "time", label: ev.label, atMs: Date.parse(ev.at) }
+);
+
+function WindowToggle({ value, onChange }) {
+  const opts = [
+    { key: "multi", label: "Since Oct 14" },
+    { key: "today", label: "Today" },
+  ];
+  return (
+    <div role="radiogroup" aria-label="Chart window" style={styles.toggle}>
+      {opts.map((o) => (
+        <button
+          key={o.key}
+          type="button"
+          role="radio"
+          aria-checked={value === o.key}
+          onClick={() => onChange(o.key)}
+          style={{ ...styles.toggleBtn, ...(value === o.key ? styles.toggleBtnOn : {}) }}
+        >
+          {o.label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -692,17 +1009,37 @@ export default function InvestorDayTape() {
   const nov30 = pm?.ipoBy?.find((l) => l.key === "November 30, 2026");
   const sessionOpen = data?.baselines?.sessionOpen;
   const ageLabel = disclosureAgeLabel(disclosure.asOf);
+  const disclosureAge = disclosureAgeDays(disclosure.asOf);
+  // Unset until the first payload: the page is prerendered, so the default is
+  // chosen from the server's asOf (not render-time Date.now()).
+  const [windowChoice, setWindowChoice] = useState(null);
+  const defaultWindow = data?.asOf
+    ? Date.parse(data.asOf) < etDateStartMs(ipoTape.window.defaultMultiDayUntil) + 24 * 60 * 60 * 1000
+      ? "multi"
+      : "today"
+    : null;
+  const chartWindow = windowChoice ?? defaultWindow ?? "multi";
+  const multi = chartWindow === "multi";
 
   return (
     <main style={styles.container} className="vcx-container">
       <div style={styles.eyebrow} className="vcx-eyebrow">
-        LIVE TAPE · ANTHROPIC INVESTOR DAY · OCT 14, 2026
+        LIVE TAPE · ANTHROPIC IPO
       </div>
-      <h1 style={styles.title} className="vcx-title">Anthropic Investor Day tape</h1>
+      <h1 style={styles.title} className="vcx-title">Anthropic IPO tape</h1>
+      <p style={styles.subtitle}>Investor day Oct 14 · S-1, roadshow and pricing next</p>
       <p style={styles.disclosure}>
         {disclosureSentence(disclosure)}
         {ageLabel ? <span style={styles.disclosureAge}> ({ageLabel})</span> : null}
       </p>
+      <div style={styles.disclosureDateRow}>
+        <span style={styles.disclosureDate}>Disclosure date: {formatLongDate(disclosure.asOf)}</span>
+        {disclosureAge != null && disclosureAge > 7 ? (
+          <span style={styles.disclosureWarn}>Disclosure is {disclosureAge} days old — refresh data/disclosure.json</span>
+        ) : null}
+      </div>
+
+      <InvestorDayFacts />
 
       <div style={styles.statusRow}>
         <span
@@ -869,19 +1206,29 @@ export default function InvestorDayTape() {
       </div>
 
       <section style={styles.panel}>
-        <h2 style={styles.h2}>Sigma through the day</h2>
+        <div style={styles.chartHead}>
+          <h2 style={styles.h2}>Sigma through the {multi ? "week" : "day"}</h2>
+          <WindowToggle value={chartWindow} onChange={setWindowChoice} />
+        </div>
         <div style={styles.panelSub}>
-          Rolling 15-minute io:ANTH move at every minute since 00:00 ET, in units of the 30-day
-          15-minute σ. Dots mark ≥3σ; hover or tap for details. A move that reverses within 15
-          minutes shows again with the opposite sign 15 minutes later; those echoes are drawn hollow
-          and not counted.
+          Rolling 15-minute io:ANTH move {multi ? `at every ${data?.multiDay?.interval ?? "5m"} close since Oct 14` : "at every minute since 00:00 ET"}, in
+          units of the 30-day 15-minute σ. Dots mark ≥3σ; hover or tap for details. A move that
+          reverses within 15 minutes shows again with the opposite sign 15 minutes later; those
+          echoes are drawn hollow and not counted. Purple marks events: the investor day (date only;
+          no start time was published) and the FT report (8:59 PM ET Oct 14, from the article&apos;s
+          metadata).
         </div>
         <SigmaCharts
-          series={data?.sigmaSeries}
-          summary={data?.sigmaSummary}
-          x0={data?.baselines?.midnightMs}
-          openMs={data?.baselines?.sessionOpen ? data?.baselines?.openMs : null}
+          key={chartWindow}
+          series={multi ? data?.multiDay?.series : data?.sigmaSeries}
+          summary={multi ? data?.multiDay?.summary : data?.sigmaSummary}
+          x0={multi ? data?.multiDay?.startMs : data?.baselines?.midnightMs}
+          openMs={!multi && data?.baselines?.sessionOpen ? data?.baselines?.openMs : null}
+          multi={multi}
+          events={CHART_EVENTS}
+          resolution={multi ? data?.multiDay?.interval ?? "5m" : "1m"}
         />
+        <UpcomingList />
       </section>
 
       <section style={styles.panel}>
@@ -991,6 +1338,33 @@ const styles = {
   sigmaTip: { position: "absolute", width: "160px", background: INK, color: "#fafaf9", fontFamily: MONO, fontSize: "11px", lineHeight: 1.5, padding: "6px 8px", pointerEvents: "none", zIndex: 5 },
   sigmaTipTime: { color: "#d6d3d1" },
   markLabel: { fontFamily: MONO, fontSize: "10.5px", color: MUTED, margin: "10px 0 4px" },
+  subtitle: { fontSize: "16px", color: "#44403c", margin: "0 0 12px" },
+  disclosureDateRow: { display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", margin: "0 0 18px" },
+  disclosureDate: { fontFamily: MONO, fontSize: "11px", color: "#44403c", background: "#f5f5f4", padding: "2px 8px" },
+  disclosureWarn: { fontFamily: MONO, fontSize: "11px", fontWeight: 700, color: "#78350f", background: "#fef3c7", padding: "2px 8px" },
+  factsPanel: { border: `1px solid ${RULE}`, background: "#fff", padding: "18px 20px", marginBottom: "20px" },
+  factsGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "10px" },
+  factCard: { border: `1px solid ${RULE}`, padding: "12px 14px", background: "#fefdf8" },
+  factValue: { fontSize: "26px", fontWeight: 500, lineHeight: 1.15, fontVariantNumeric: "tabular-nums" },
+  factBody: { fontSize: "12.5px", lineHeight: 1.5, color: "#44403c", marginTop: "6px" },
+  cite: { fontFamily: MONO, fontSize: "10px", color: "#1d4ed8", textDecoration: "none", marginLeft: "2px", verticalAlign: "super" },
+  factsAttribution: { fontFamily: MONO, fontSize: "11px", color: "#44403c", marginTop: "12px" },
+  factsNotes: { fontFamily: MONO, fontSize: "11px", color: MUTED, listStyle: "none", padding: 0, margin: "6px 0 0", display: "grid", gap: "2px" },
+  rankHeadline: { fontSize: "30px", fontWeight: 500, lineHeight: 1.15, fontVariantNumeric: "tabular-nums" },
+  rankText: { fontSize: "18px" },
+  rankSub: { fontFamily: MONO, fontSize: "10.5px", color: MUTED, margin: "4px 0 10px" },
+  meterValueSmall: { fontSize: "22px", fontWeight: 500, lineHeight: 1, fontVariantNumeric: "tabular-nums" },
+  chartHead: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" },
+  toggle: { display: "inline-flex", border: `1px solid ${RULE}` },
+  toggleBtn: { fontFamily: MONO, fontSize: "11px", letterSpacing: "0.04em", padding: "6px 12px", background: "#fff", color: "#44403c", border: "none", cursor: "pointer" },
+  toggleBtnOn: { background: INK, color: "#fafaf9" },
+  eventText: { fontFamily: MONO, fontSize: "9.5px", fill: EVENT_LINE, fontWeight: 600 },
+  upcoming: { marginTop: "16px", borderTop: `1px solid ${RULE}`, paddingTop: "12px" },
+  h3Plain: { fontSize: "16px", fontWeight: 500, margin: "0 0 6px" },
+  upcomingList: { listStyle: "none", padding: 0, margin: 0, display: "grid", gap: "6px" },
+  upcomingItem: { display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: "4px 10px", fontSize: "13px" },
+  upcomingStatus: { fontFamily: MONO, fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.06em", color: "#78350f", background: "#fef3c7", padding: "1px 6px" },
+  upcomingSource: { fontFamily: MONO, fontSize: "10.5px", color: MUTED },
   peakLine: { fontFamily: MONO, fontSize: "12px", marginTop: "12px" },
   preOpenBanner: { fontFamily: MONO, fontSize: "11.5px", background: "#fef3c7", color: "#78350f", padding: "8px 10px", margin: "10px 0" },
   tickerRole: { fontSize: "11.5px", color: "#44403c", marginTop: "2px" },

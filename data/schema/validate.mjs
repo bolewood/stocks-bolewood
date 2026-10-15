@@ -515,3 +515,44 @@ function validateBookLine(line, path, book, companies) {
     if (hasFair) fail(path, "reported-portfolio lines do not store dollars");
   }
 }
+
+// data/anthropic-investor-day.json: press-reported investor-day facts, chart
+// event markers, and upcoming IPO milestones. Every record carries sources.
+export function validateInvestorDay(config) {
+  if (!config || typeof config !== "object") fail("investor-day", "must be an object");
+  if (!isIsoDateKey(config.asOf)) fail("investor-day.asOf", "must be YYYY-MM-DD");
+  if (!isIsoDateKey(config.window?.multiDayStart)) fail("investor-day.window.multiDayStart", "must be YYYY-MM-DD");
+  if (!isIsoDateKey(config.window?.defaultMultiDayUntil)) {
+    fail("investor-day.window.defaultMultiDayUntil", "must be YYYY-MM-DD");
+  }
+  const sections = { facts: config.facts, events: config.events, upcoming: config.upcoming };
+  const keys = new Set();
+  for (const [name, rows] of Object.entries(sections)) {
+    if (!Array.isArray(rows) || rows.length === 0) fail(`investor-day.${name}`, "must be a non-empty array");
+    rows.forEach((row, i) => {
+      const path = `investor-day.${name}[${i}]`;
+      if (typeof row.key !== "string" || !row.key) fail(path, "key required");
+      if (keys.has(row.key)) fail(path, `duplicate key ${row.key}`);
+      keys.add(row.key);
+      if (typeof row.label !== "string" || !row.label) fail(path, "label required");
+      if (!Array.isArray(row.sources) || row.sources.length === 0) fail(path, "sources required");
+      row.sources.forEach((src, j) => validateSource(src, `${path}.sources[${j}]`));
+      // Never label a figure ARR unless it is an exit run-rate.
+      if (/\bARR\b/.test(row.label) && !/exit run-rate/i.test(row.label)) {
+        fail(path, "ARR only allowed in an exit run-rate label");
+      }
+    });
+  }
+  for (const [i, ev] of config.events.entries()) {
+    const path = `investor-day.events[${i}]`;
+    if (ev.kind === "date" && !isIsoDateKey(ev.date)) fail(path, "date event needs YYYY-MM-DD date");
+    if (ev.kind === "time" && !Number.isFinite(Date.parse(ev.at))) fail(path, "time event needs ISO at");
+    if (!["date", "time"].includes(ev.kind)) fail(path, "kind must be date or time");
+  }
+  for (const [i, up] of config.upcoming.entries()) {
+    if (up.status !== "reported, not confirmed") {
+      fail(`investor-day.upcoming[${i}]`, 'status must be "reported, not confirmed"');
+    }
+  }
+  return true;
+}

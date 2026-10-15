@@ -217,3 +217,32 @@ test("echoes: a reverting spike counts once; an overshooting reversal still coun
   assert.equal(l.breaches, 2);
   assert.equal(l.echoMinutes, 0);
 });
+
+test("IPO tape helpers: derived run-rate, percentile, interval, DST-safe ticks", async () => {
+  const L = await import("../lib/investorDay.mjs");
+  const facts = [
+    { key: "revenueQ3", valueUsd: 16.8e9 },
+    { key: "revenueQ2", valueUsd: 11.5e9 },
+  ];
+  const d = L.investorDayDerived(facts);
+  assert.ok(Math.abs(d.averageRunRateUsd - 67.2e9) < 1);
+  assert.ok(Math.abs(d.q3OverQ2 - 0.4609) < 1e-3);
+
+  const sorted = Array.from({ length: 1000 }, (_, i) => (i + 1) / 10000);
+  assert.deepEqual(L.percentileRank(sorted, -0.09995), { pct: 99.9, largest: false, n: 1000 });
+  assert.equal(L.percentileRank(sorted, 0.0999).pct, 99.8, "floors, never rounds up");
+  assert.deepEqual(L.percentileRank(sorted, 0.5), { pct: 100, largest: true, n: 1000 });
+
+  const day = 24 * 60 * 60 * 1000;
+  assert.equal(L.multiDayInterval(0, 10 * day), "5m");
+  assert.equal(L.multiDayInterval(0, 20 * day), "15m");
+
+  // Oct 30 → Nov 3 crosses the Nov 1 DST change; every tick is ET midnight.
+  const ticks = L.etDayStarts(L.etDateStartMs("2026-10-30"), L.etDateStartMs("2026-11-03"));
+  assert.equal(ticks.length, 5);
+  assert.equal(ticks[0], Date.UTC(2026, 9, 30, 4));
+  assert.equal(ticks[4], Date.UTC(2026, 10, 3, 5), "EST after DST ends");
+
+  const series = [{ t: 0, sigma: 3.2, ret: 0.03, mark: 1 }, { t: 5, sigma: 3.1, ret: 0.03, mark: 1 }];
+  assert.equal(L.sigmaSummary(series, 3, { stepMinutes: 5 }).minutes, 10);
+});

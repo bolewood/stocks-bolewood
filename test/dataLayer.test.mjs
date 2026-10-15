@@ -20,6 +20,7 @@ import {
   validateMarks,
   validatePrivateTapeConfig,
   validateWrapper,
+  validateInvestorDay,
 } from "../data/schema/validate.mjs";
 import { RAW_AI_WRAPPERS, WRAPPERS } from "../lib/loadAiData.mjs";
 import {
@@ -220,4 +221,15 @@ test("production modules do not define ticker-keyed wrapper financials", () => {
   for (const r of roots) walk(join(root, r));
   assert.deepEqual(hits, []);
   assert.ok(!skip.has("no-op"));
+});
+
+test("anthropic-investor-day.json validates: sourced facts, events and upcoming", () => {
+  const config = JSON.parse(readFileSync(join(root, "data/anthropic-investor-day.json"), "utf8"));
+  assert.equal(validateInvestorDay(config), true);
+  const broken = structuredClone(config);
+  broken.facts[0].sources = [];
+  assert.throws(() => validateInvestorDay(broken), /sources required/);
+  const arr = structuredClone(config);
+  arr.facts[0].label = "Q3 ARR";
+  assert.throws(() => validateInvestorDay(arr), /ARR only allowed/);
 });

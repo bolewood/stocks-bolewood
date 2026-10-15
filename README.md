@@ -220,7 +220,7 @@ Live market prices are a runtime input and are **not** redistributed in this dat
 ## Disclosure
 
 <!-- BEGIN GENERATED: disclosure -->
-As of October 13, 2026, the author holds long positions in DXYZ, SKM, ZM, AMZN, GOOG, NVDA, NSLR and PWRL. The DXYZ exposure includes options. The author also holds a direct long position in Anthropic through an SPV. Positions are subject to change without notice.
+As of October 15, 2026, the author holds long positions in DXYZ, SKM, ZM, AMZN, GOOG, NVDA, NSLR and PWRL. The DXYZ exposure includes options. The author also holds a direct long position in Anthropic through an SPV. Positions are subject to change without notice.
 <!-- END GENERATED: disclosure -->
 
 Six of the eleven securities covered here are held by the author. Every input is published

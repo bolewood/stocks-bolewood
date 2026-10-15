@@ -48,7 +48,13 @@ import {
   valueAtOrBefore,
   volumeBand,
   volumeRatio,
+  UNUSUAL_WINDOW_MS,
+  etDateStartMs,
+  intervalMinutes,
+  multiDayInterval,
+  percentileRank,
 } from "../../../lib/investorDay.mjs";
+import ipoTapeData from "../../../data/anthropic-investor-day.json" with { type: "json" };
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +65,8 @@ const BASELINE_TTL_MS = 10 * 60 * 1000;
 // ~17 histories on every 15s tick.
 const BASELINE_PARTIAL_TTL_MS = 60 * 1000;
 const SIGMA_LOOKBACK_DAYS = 30;
+// Request all 15m history; Hyperliquid returns only the latest ~5,000 candles.
+const HISTORY_15M_START_MS = Date.UTC(2026, 7, 1);
 const FETCH_TIMEOUT_MS = 8000;
 
 const keepLastGood = createLastGood();
@@ -355,9 +363,9 @@ async function loadBaselines({ midnightMs, tokenIds, now, errors }) {
   }
   const localErrors = [];
   const sigmaStart = now - SIGMA_LOOKBACK_DAYS * DAY_MS;
-  const [candles15m, polymarket, kalshi] = await Promise.all([
+  const [history15m, polymarket, kalshi] = await Promise.all([
     capture("Hyperliquid io:ANTH 15m", () =>
-      fetchCandles(PERP_COINS.anthropic, "15m", sigmaStart, now), localErrors, []),
+      fetchCandles(PERP_COINS.anthropic, "15m", HISTORY_15M_START_MS, now), localErrors, []),
     mapLimit(tokenIds, 4, (id) =>
       capture(`Polymarket CLOB ${id.slice(0, 8)}…`, async () =>
         valueAtOrBefore(await fetchClobHistory(id, midnightMs - 12 * 60 * 60 * 1000, midnightMs), midnightMs)?.p ?? null,
@@ -367,10 +375,17 @@ async function loadBaselines({ midnightMs, tokenIds, now, errors }) {
       capture(`Kalshi ${m.ticker} candles`, () => fetchKalshiBaseline(m, midnightMs, now), localErrors)
     ),
   ]);
+  // σ stays on the trailing 30 days; the full available history ranks moves.
+  const candles15m = history15m.filter((c) => c.startMs >= sigmaStart);
   const returns = simpleReturns(candles15m.map((c) => c.close));
+  const allAbs = simpleReturns(history15m.map((c) => c.close))
+    .map(Math.abs)
+    .sort((a, b) => a - b);
   const value = {
     sigma15m: stdev(returns),
     sigmaN: returns.length,
+    sortedAbs15m: allAbs,
+    history15mStartMs: history15m[0]?.startMs ?? null,
     anthAvgHourNotional: averageHourlyNotional(candles15m),
     polymarket: Object.fromEntries(tokenIds.map((id, i) => [id, polymarket[i]])),
     kalshi: Object.fromEntries(KALSHI_MARKETS.map((m, i) => [m.ticker, kalshi[i]?.mid ?? null])),
@@ -386,6 +401,52 @@ async function loadBaselines({ midnightMs, tokenIds, now, errors }) {
     value,
   };
   return value;
+}
+
+// ---- Multi-day sigma window (since the investor day), cached 60s ---------
+
+const MULTI_DAY_TTL_MS = 60 * 1000;
+let multiDayEntry = null;
+let multiDayInFlight = null;
+
+async function loadMultiDay(sigma15m, now, errors) {
+  const startMs = etDateStartMs(ipoTapeData.window.multiDayStart);
+  const interval = multiDayInterval(startMs, now);
+  const fresh =
+    multiDayEntry &&
+    multiDayEntry.interval === interval &&
+    multiDayEntry.sigma15m === sigma15m &&
+    now - multiDayEntry.writtenAt < MULTI_DAY_TTL_MS;
+  if (!fresh && !multiDayInFlight) {
+    multiDayInFlight = (async () => {
+      const localErrors = [];
+      const candles = await capture(
+        `Hyperliquid io:ANTH ${interval} since ${ipoTapeData.window.multiDayStart}`,
+        () => fetchCandles(PERP_COINS.anthropic, interval, startMs - UNUSUAL_WINDOW_MS, now),
+        localErrors,
+        []
+      );
+      const series = markSigmaEchoes(sigmaSeriesFromCandles(candles, sigma15m, startMs), sigma15m);
+      const value = {
+        startMs,
+        interval,
+        series,
+        summary: sigmaSummary(series, undefined, { stepMinutes: intervalMinutes(interval) }),
+      };
+      // Keep the previous good series if this fetch came back empty.
+      if (series.length || !multiDayEntry) {
+        multiDayEntry = { writtenAt: now, interval, sigma15m, value, errors: localErrors };
+      } else {
+        multiDayEntry = { ...multiDayEntry, writtenAt: now, errors: localErrors };
+      }
+      return multiDayEntry;
+    })().finally(() => {
+      multiDayInFlight = null;
+    });
+  }
+  const entry = multiDayInFlight ? await multiDayInFlight : multiDayEntry;
+  errors.push(...entry.errors);
+  return entry.value;
 }
 
 // ---- Assembly ------------------------------------------------------------
@@ -588,6 +649,11 @@ async function fetchLive(prev) {
     baselines.sigma15m
   );
   const sigmaStats = sigmaSummary(sigmaSeries);
+  const multiDay = await loadMultiDay(baselines.sigma15m, now, errors);
+  const rankOf = (move) => {
+    const r = percentileRank(baselines.sortedAbs15m, move);
+    return r ? { ...r, sinceMs: baselines.history15mStartMs } : null;
+  };
   const fallbackUnusual = unusualMove(candles5m, baselines.sigma15m, { now, sinceMs: midnightMs });
   const lastSigma = sigmaSeries[sigmaSeries.length - 1] ?? null;
   const unusual = lastSigma
@@ -634,6 +700,8 @@ async function fetchLive(prev) {
               ...unusual,
               sigmaN: baselines.sigmaN,
               lookbackDays: SIGMA_LOOKBACK_DAYS,
+              rank: rankOf(unusual.current),
+              peakRank: unusual.peak ? rankOf(sigmaStats.largest?.ret ?? null) : null,
             },
           }
         : null,
@@ -657,6 +725,7 @@ async function fetchLive(prev) {
     volume: { rows: volumeRows },
     sigmaSeries,
     sigmaSummary: sigmaStats,
+    multiDay,
     reused,
     proxies: { rows: proxies, control },
     errors,

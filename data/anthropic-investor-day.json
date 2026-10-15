@@ -1,0 +1,276 @@
+{
+  "schemaVersion": "1.0.0",
+  "asOf": "2026-10-15",
+  "note": "Anthropic's Oct 14, 2026 investor day and the IPO calendar after it. Every figure is press-reported from unnamed people; none is a company filing. Keep \"average run-rate\" (a quarter x 4) and \"exit run-rate\" (annualized from the end of a period) distinct; never label anything ARR unless it is an exit run-rate.",
+  "window": {
+    "multiDayStart": "2026-10-14",
+    "defaultMultiDayUntil": "2026-10-18",
+    "note": "The sigma and io:ANTH charts default to the multi-day window through this date (ET), then to Today."
+  },
+  "attribution": "Figures from the Financial Times (Oct 14, 2026), citing unnamed people with knowledge of the meeting. Anthropic declined to comment.",
+  "facts": [
+    {
+      "key": "revenueQ3",
+      "label": "Q3 2026 revenue",
+      "valueUsd": 16800000000,
+      "period": "2026-Q3",
+      "sources": [
+        {
+          "fields": ["valueUsd"],
+          "sourceClass": "secondary",
+          "publisher": "Financial Times",
+          "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
+          "measurementDate": "2026-09",
+          "publicationDate": "2026-10-14",
+          "note": "Investor-day figure reported by the FT from unnamed people with knowledge of the meeting."
+        }
+      ]
+    },
+    {
+      "key": "revenueQ2",
+      "label": "Q2 2026 revenue",
+      "valueUsd": 11500000000,
+      "period": "2026-Q2",
+      "sources": [
+        {
+          "fields": ["valueUsd"],
+          "sourceClass": "secondary",
+          "publisher": "Financial Times",
+          "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
+          "measurementDate": "2026-06",
+          "publicationDate": "2026-10-14",
+          "note": "Prior-quarter comparison in the FT investor-day report."
+        }
+      ]
+    },
+    {
+      "key": "revenueQ1",
+      "label": "Q1 2026 revenue",
+      "valueUsd": 4800000000,
+      "approximate": true,
+      "period": "2026-Q1",
+      "sources": [
+        {
+          "fields": ["valueUsd"],
+          "sourceClass": "secondary",
+          "publisher": "Financial Times",
+          "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
+          "measurementDate": "2026-03",
+          "publicationDate": "2026-10-14",
+          "note": "Approximate (\"~$4.8B\") in the FT investor-day report."
+        }
+      ]
+    },
+    {
+      "key": "exitRunRateDisclosed",
+      "label": "Annualized exit run-rate at investor day",
+      "disclosed": false,
+      "sources": [
+        {
+          "fields": ["disclosed"],
+          "sourceClass": "secondary",
+          "publisher": "Financial Times",
+          "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
+          "measurementDate": "2026-10-14",
+          "publicationDate": "2026-10-14",
+          "note": "No annualized run-rate was given at the investor day."
+        }
+      ]
+    },
+    {
+      "key": "exitRunRateJuly",
+      "label": "Last company exit run-rate (end of July)",
+      "valueUsd": 65000000000,
+      "companyFigure": true,
+      "sources": [
+        {
+          "fields": ["valueUsd"],
+          "sourceClass": "secondary",
+          "publisher": "Bloomberg",
+          "url": "https://www.bloomberg.com/news/articles/2026-08-17/anthropic-revenue-run-rate-surpasses-65-billion-ahead-of-ipo",
+          "measurementDate": "2026-07",
+          "publicationDate": "2026-08-17",
+          "note": "Run-rate at the end of July from a company investor update, per people familiar (Bloomberg)."
+        }
+      ]
+    },
+    {
+      "key": "semiAnalysisAnnualized",
+      "label": "SemiAnalysis estimate, annualized revenue",
+      "valueUsd": 74000000000,
+      "approximate": true,
+      "outsideEstimate": true,
+      "sources": [
+        {
+          "fields": ["valueUsd"],
+          "sourceClass": "secondary",
+          "publisher": "Financial Times (citing SemiAnalysis)",
+          "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
+          "measurementDate": "2026-10",
+          "publicationDate": "2026-10-14",
+          "note": "Outside estimate, not company data. Whether it is an exit or average run-rate is not stated here."
+        }
+      ]
+    },
+    {
+      "key": "profitability",
+      "label": "Profitability",
+      "adjustedProfitableQuarters": 2,
+      "adjustedOperatingMarginExSbc": 0.11,
+      "cashFlowPositive": true,
+      "gaapDisclosed": false,
+      "sources": [
+        {
+          "fields": ["adjustedProfitableQuarters", "adjustedOperatingMarginExSbc", "cashFlowPositive", "gaapDisclosed"],
+          "sourceClass": "secondary",
+          "publisher": "Financial Times",
+          "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
+          "measurementDate": "2026-09",
+          "publicationDate": "2026-10-14",
+          "note": "Adjusted-profitable for a second straight quarter; 11% adjusted operating margin excluding stock-based compensation; cash-flow positive. GAAP results not disclosed."
+        }
+      ]
+    },
+    {
+      "key": "revenuePerComputeDollar",
+      "label": "Revenue per $1 of compute (Q3)",
+      "value": 1.7,
+      "sources": [
+        {
+          "fields": ["value"],
+          "sourceClass": "secondary",
+          "publisher": "Financial Times",
+          "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
+          "measurementDate": "2026-09",
+          "publicationDate": "2026-10-14",
+          "note": "$1.70 of revenue per $1 of compute in Q3."
+        }
+      ]
+    },
+    {
+      "key": "distillationShare",
+      "label": "Distillation share of revenue",
+      "low": 0.05,
+      "high": 0.07,
+      "q3Change": "cut back “materially” in Q3",
+      "sources": [
+        {
+          "fields": ["low", "high", "q3Change"],
+          "sourceClass": "secondary",
+          "publisher": "Financial Times",
+          "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
+          "measurementDate": "2026-09",
+          "publicationDate": "2026-10-14",
+          "note": "Distillation was 5–7% of revenue and was cut back materially in Q3."
+        }
+      ]
+    },
+    {
+      "key": "ipoTiming",
+      "label": "IPO timing",
+      "text": "Still targeted for November",
+      "sources": [
+        {
+          "fields": ["text"],
+          "sourceClass": "secondary",
+          "publisher": "Financial Times",
+          "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
+          "measurementDate": "2026-10-14",
+          "publicationDate": "2026-10-14",
+          "note": "IPO still targeted for November."
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "key": "investorDay",
+      "label": "Investor day (Oct 14)",
+      "kind": "date",
+      "date": "2026-10-14",
+      "note": "No start time was published, so the marker is the whole ET day.",
+      "sources": [
+        {
+          "fields": ["date"],
+          "sourceClass": "secondary",
+          "publisher": "Financial Times",
+          "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
+          "measurementDate": "2026-10-14",
+          "publicationDate": "2026-10-14"
+        }
+      ]
+    },
+    {
+      "key": "ftReport",
+      "label": "FT reports Q3 numbers (Oct 14)",
+      "kind": "time",
+      "at": "2026-10-15T00:59:36Z",
+      "note": "8:59 PM ET on Oct 14, from datePublished in the article's own structured data.",
+      "sources": [
+        {
+          "fields": ["at"],
+          "sourceClass": "primary",
+          "publisher": "Financial Times",
+          "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
+          "measurementDate": "2026-10-14",
+          "publicationDate": "2026-10-14",
+          "note": "Primary for the publication time only (read from the article page)."
+        }
+      ]
+    }
+  ],
+  "upcoming": [
+    {
+      "key": "s1Public",
+      "label": "S-1 public filing",
+      "timing": "Late October",
+      "status": "reported, not confirmed",
+      "sources": [
+        {
+          "fields": ["timing"],
+          "sourceClass": "assumption",
+          "publisher": "Bloomberg (marketing date); SEC 15-day rule",
+          "url": "https://www.bloomberg.com/news/articles/2026-10-01/anthropic-said-to-target-mega-ipo-before-thanksgiving-holiday",
+          "measurementDate": "2026-10-01",
+          "publicationDate": "2026-10-01",
+          "estimationMethod": "A confidentially submitted S-1 must be filed publicly at least 15 days before the roadshow starts; a roadshow from the week of Nov 9 implies a public filing by about Oct 23.",
+          "note": "Not reported directly; inferred from the reported roadshow date."
+        }
+      ]
+    },
+    {
+      "key": "roadshow",
+      "label": "Roadshow (formal marketing)",
+      "timing": "From the week of Nov 9",
+      "status": "reported, not confirmed",
+      "sources": [
+        {
+          "fields": ["timing"],
+          "sourceClass": "secondary",
+          "publisher": "Bloomberg",
+          "url": "https://www.bloomberg.com/news/articles/2026-10-01/anthropic-said-to-target-mega-ipo-before-thanksgiving-holiday",
+          "measurementDate": "2026-10-01",
+          "publicationDate": "2026-10-01",
+          "note": "Formal marketing could start as soon as the week of Nov 9, per people familiar."
+        }
+      ]
+    },
+    {
+      "key": "pricing",
+      "label": "Pricing and first trade",
+      "timing": "Before Thanksgiving (Nov 26)",
+      "status": "reported, not confirmed",
+      "sources": [
+        {
+          "fields": ["timing"],
+          "sourceClass": "secondary",
+          "publisher": "Bloomberg",
+          "url": "https://www.bloomberg.com/news/articles/2026-10-01/anthropic-said-to-target-mega-ipo-before-thanksgiving-holiday",
+          "measurementDate": "2026-10-01",
+          "publicationDate": "2026-10-01",
+          "note": "In line to begin trading before Thanksgiving, per people familiar."
+        }
+      ]
+    }
+  ]
+}

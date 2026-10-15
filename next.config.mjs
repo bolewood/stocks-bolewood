@@ -9,6 +9,18 @@ const nextConfig = {
         destination: "/echo",
         permanent: true,
       },
+      // /investor-day became the standing Anthropic IPO tape after Oct 14,
+      // 2026. The :path* rule keeps X's cached share-card image URLs working.
+      {
+        source: "/investor-day",
+        destination: "/anthropic-ipo-tape",
+        permanent: true,
+      },
+      {
+        source: "/investor-day/:path*",
+        destination: "/anthropic-ipo-tape/:path*",
+        permanent: true,
+      },
     ];
   },
 };

@@ -25,8 +25,8 @@ export default function Header() {
     { href: "/vcx", label: "VCX" },
     { href: "/dxyz", label: "DXYZ" },
     { href: "/book", label: "Book" },
-    // Temporary: Anthropic Investor Day (Oct 14, 2026). Remove after the event.
-    { href: "/investor-day", label: "Investor Day", highlight: true },
+    // Temporary: standing Anthropic IPO tape until the listing. Remove after.
+    { href: "/anthropic-ipo-tape", label: "IPO tape", highlight: true },
     { href: "/private-tape", label: "Private Tape" },
     { href: "/echo", label: "ECHO" },
     { href: "/sftby", label: "SFTBY" },

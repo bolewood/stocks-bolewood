@@ -6,7 +6,7 @@ import { ImageResponse } from "next/og";
 // days, so a printed valuation would be stale on most shares.
 
 export const alt =
-  "Anthropic Investor Day tape: live implied valuation, IPO odds, closing-cap brackets, and public proxies vs QQQ";
+  "Anthropic IPO tape: investor day Oct 14, then S-1, roadshow and pricing. Live implied valuation, IPO odds and public proxies vs QQQ";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -64,7 +64,7 @@ export default async function Image() {
             }}
           >
             <div style={{ width: 12, height: 12, borderRadius: 6, background: "#16a34a" }} />
-            LIVE TAPE · OCT 14, 2026
+            LIVE TAPE · ANTHROPIC IPO
           </div>
         </div>
 
@@ -81,7 +81,7 @@ export default async function Image() {
               }}
             >
               <div>Anthropic</div>
-              <div>Investor Day tape</div>
+              <div>IPO tape</div>
             </div>
             <div
               style={{
@@ -93,9 +93,9 @@ export default async function Image() {
                 color: "#44403c",
               }}
             >
+              <div style={{ color: INK }}>Investor day Oct 14 · S-1, roadshow and pricing next</div>
               <div>Implied valuation · Hyperliquid io:ANTH</div>
               <div>IPO odds · Polymarket + Kalshi</div>
-              <div>Public proxies vs QQQ</div>
             </div>
           </div>
 
@@ -165,7 +165,7 @@ export default async function Image() {
             color: MUTED,
           }}
         >
-          <div>stocks.bolewood.com/investor-day</div>
+          <div>stocks.bolewood.com/anthropic-ipo-tape</div>
           <div>Public market data only. Not affiliated with Anthropic.</div>
         </div>
       </div>
