@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.17.0.0] — 2026-10-15
+
+- New standing page `/anthropic-ipo-tape` replaces `/investor-day`, which now permanently redirects (308) along with its subpaths so cached share-card URLs keep working. Header, page title, OG/Twitter cards retitled "LIVE TAPE · ANTHROPIC IPO"; the nav link becomes "IPO tape".
+- "What the investor day showed" panel from the new `data/anthropic-investor-day.json` (validated; every record sourced): Q3 revenue $16.8B, the Q3 × 4 average run-rate (computed, kept distinct from exit run-rate), exit run-rate not disclosed alongside the last company figure and an outside estimate, profitability, revenue per compute dollar, distillation share, and IPO timing, with numbered footnotes and the FT attribution.
+- σ chart: Today / Since Oct 14 toggle (1m vs 5m, 15m after 16 days), investor-day date band and FT publish-time marker, DST-safe day ticks, and an Upcoming list (reported, not confirmed; S-1 timing inferred from the 15-day rule).
+- Unusual-move meter headlines the move's percentile rank among all available Hyperliquid 15-minute moves; σ unchanged.
+- Update position disclosures to October 15, 2026 (positions unchanged) site-wide and in the README; the IPO tape shows the disclosure date and warns when it is over 7 days old.
+
 ## [0.16.4.0] — 2026-10-14
 
 - `/investor-day`: "Sigma through the day" moves to its own full-width section (taller on wide screens) instead of the half-width meter panel.
