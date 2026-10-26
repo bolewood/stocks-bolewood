@@ -7,6 +7,7 @@ import {
   INVESTOR_DAY_POLL_MS,
   etDateStartMs,
   etDayStarts,
+  formatLockupMilestoneOffset,
   investorDayDerived,
   KALSHI_CONFIRMED_RULE,
   KALSHI_MARKETS,
@@ -104,7 +105,7 @@ function fmtEt(ms, withDate = false) {
   }).format(new Date(ms));
 }
 
-function Sparkline({ points, baseline }) {
+function Sparkline({ points, baseline, events = [] }) {
   if (!points || points.length < 2) {
     return <div style={styles.sparkEmpty}>Waiting for 5m candles since 00:00 ET</div>;
   }
@@ -122,6 +123,8 @@ function Sparkline({ points, baseline }) {
   const d = points.map((p, i) => `${i ? "L" : "M"}${sx(p.t).toFixed(1)},${sy(p.p).toFixed(1)}`).join("");
   const last = points[points.length - 1];
   const color = signColor(last.p - (baseline ?? points[0].p));
+  const visibleEvents = (events || [])
+    .filter((ev) => ev.kind === "time" && ev.atMs >= x0 && ev.atMs <= x1);
   return (
     <svg
       viewBox={`0 0 ${w} ${h}`}
@@ -133,6 +136,19 @@ function Sparkline({ points, baseline }) {
       {Number.isFinite(baseline) ? (
         <line x1={pad} x2={w - pad} y1={sy(baseline)} y2={sy(baseline)} stroke="#a8a29e" strokeDasharray="4 4" strokeWidth="1" vectorEffect="non-scaling-stroke" />
       ) : null}
+      {visibleEvents.map((ev) => (
+        <g key={ev.key}>
+          <line x1={sx(ev.atMs)} x2={sx(ev.atMs)} y1={0} y2={h} stroke="#7c3aed" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+          <text
+            x={sx(ev.atMs) + (sx(ev.atMs) > w - 140 ? -4 : 4)}
+            y={12}
+            textAnchor={sx(ev.atMs) > w - 140 ? "end" : "start"}
+            style={{ fontFamily: MONO, fontSize: "9.5px", fill: "#7c3aed", fontWeight: 600 }}
+          >
+            {ev.label}
+          </text>
+        </g>
+      ))}
       <path d={d} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" />
       <circle cx={sx(last.t)} cy={sy(last.p)} r="3" fill={color} />
     </svg>
@@ -713,6 +729,122 @@ function fmtUsdB(n, { approx = false } = {}) {
   return Number.isFinite(n) ? `${approx ? "~" : ""}$${(n / 1e9).toFixed(1)}B` : "—";
 }
 
+const AUDIT_BADGE_STYLE = {
+  audited: { label: "AUDITED", color: "#14532d", bg: "#dcfce7" },
+  "filed, unaudited interim": { label: "FILED · UNAUDITED INTERIM", color: "#1e3a8a", bg: "#dbeafe" },
+  filed: { label: "FILED S-1", color: "#1c1917", bg: "#e7e5e4" },
+};
+
+const UPCOMING_STATUS_STYLE = {
+  filed: { color: "#14532d", background: "#dcfce7" },
+  "filed terms, pricing date TBD": { color: "#1e3a8a", background: "#dbeafe" },
+  "expected, not confirmed": { color: "#78350f", background: "#fef3c7" },
+  "reported, not confirmed": { color: "#78350f", background: "#fef3c7" },
+};
+
+function LockupScheduleTable({ schedule, s1Url }) {
+  if (!schedule?.groups?.length) return null;
+  const pricingDate = schedule.pricingDate || null;
+  return (
+    <div style={{ marginTop: "16px", borderTop: `1px solid ${RULE}`, paddingTop: "14px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "8px", marginBottom: "6px" }}>
+        <h3 style={styles.h3Plain}>
+          Staged lock-up release schedule{" "}
+          <a href={s1Url} target="_blank" rel="noopener noreferrer" style={{ ...styles.extLink, fontFamily: MONO, fontSize: "11px", color: "#1d4ed8" }}>
+            ({schedule.citation}) ↗
+          </a>
+        </h3>
+        <span style={{ fontFamily: MONO, fontSize: "10.5px", color: MUTED }}>
+          {pricingDate ? `Anchored to pricing date ${pricingDate}` : "Pricing date TBD — milestones shown relative to pricing"}
+        </span>
+      </div>
+      <div style={{ fontFamily: MONO, fontSize: "11px", color: MUTED, marginBottom: "10px" }}>
+        {schedule.basis}
+      </div>
+      <div style={{ display: "grid", gap: "10px", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+        {schedule.groups.map((g) => (
+          <div key={g.key} style={{ border: `1px solid ${RULE}`, background: "#fefdf8", padding: "10px 12px" }}>
+            <div style={{ fontWeight: 600, fontSize: "12.5px", marginBottom: "2px" }}>{g.label}</div>
+            <div style={{ fontFamily: MONO, fontSize: "10px", color: MUTED, marginBottom: "8px" }}>{g.window}</div>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: MONO, fontSize: "11px" }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${RULE}`, color: MUTED, textAlign: "left" }}>
+                  <th style={{ padding: "3px 4px 3px 0", fontWeight: 500 }}>Milestone</th>
+                  <th style={{ padding: "3px 4px", textAlign: "right", fontWeight: 500 }}>Release</th>
+                  <th style={{ padding: "3px 0 3px 4px", textAlign: "right", fontWeight: 500 }}>Cum.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {g.tranches.map((t, idx) => (
+                  <tr key={idx} style={{ borderBottom: idx < g.tranches.length - 1 ? "1px dotted #e7e5e4" : "none" }}>
+                    <td style={{ padding: "4px 4px 4px 0" }}>
+                      {t.dayOffset != null && pricingDate
+                        ? formatLockupMilestoneOffset(t.dayOffset, pricingDate)
+                        : t.trigger}
+                    </td>
+                    <td style={{ padding: "4px", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
+                      {t.pct}
+                    </td>
+                    <td style={{ padding: "4px 0 4px 4px", textAlign: "right", fontVariantNumeric: "tabular-nums", color: MUTED }}>
+                      {t.cumulativePct}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function S1FactsPanel() {
+  if (!ipoTape.s1Facts?.length) return null;
+  return (
+    <section style={styles.factsPanel} aria-labelledby="s1-facts-title">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "8px" }}>
+        <h2 id="s1-facts-title" style={styles.h2}>What the Form S-1 shows (filed Oct 26, 2026)</h2>
+        <Ext href={ipoTape.s1Url} style={{ fontFamily: MONO, fontSize: "11px", color: "#1d4ed8" }} label="Anthropic Form S-1 on SEC EDGAR (opens in a new tab)">
+          SEC EDGAR · Form S-1 (Reg. No. 333-299633, accession 0001628280-26-067168) ↗
+        </Ext>
+      </div>
+      <div style={styles.panelSub}>
+        Anthropic, PBC Form S-1 · public on EDGAR Oct 26, 2026 at 9:00:11 AM ET · primary SEC filing (supersedes Oct 14 press figures where noted)
+      </div>
+      <div style={styles.factsGrid}>
+        {ipoTape.s1Facts.map((item) => {
+          const badge = AUDIT_BADGE_STYLE[item.auditStatus] || AUDIT_BADGE_STYLE.filed;
+          return (
+            <div key={item.key} style={styles.factCard}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "6px", flexWrap: "wrap", marginBottom: "6px" }}>
+                <span style={{ ...styles.tileEyebrow, marginBottom: 0 }}>{item.label}</span>
+                <span style={{ fontFamily: MONO, fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", padding: "2px 5px", color: badge.color, background: badge.bg }}>
+                  {badge.label}
+                </span>
+              </div>
+              <div style={styles.factValue}>{item.value}</div>
+              <div style={styles.factBody}>
+                {item.detail}{" "}
+                <a
+                  href={item.sources?.[0]?.url || ipoTape.s1Url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontFamily: MONO, fontSize: "10.5px", color: "#1d4ed8", textDecoration: "underline" }}
+                >
+                  ({item.pageCitation}) ↗
+                </a>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <LockupScheduleTable schedule={ipoTape.lockupSchedule} s1Url={ipoTape.s1Url} />
+      <div style={styles.factsAttribution}>{ipoTape.s1Attribution}</div>
+    </section>
+  );
+}
+
 function InvestorDayFacts() {
   const facts = Object.fromEntries(ipoTape.facts.map((f) => [f.key, f]));
   const derived = investorDayDerived(ipoTape.facts);
@@ -731,10 +863,12 @@ function InvestorDayFacts() {
       key: "q3",
       eyebrow: q3.label,
       value: fmtUsdB(q3.valueUsd),
+      superseded: q3.supersededByS1 || q2.supersededByS1 || q1.supersededByS1,
       body: (
         <>
-          ~{Math.round(derived.q3OverQ2 * 100)}% above Q2&apos;s {fmtUsdB(q2.valueUsd)} · Q1{" "}
-          {fmtUsdB(q1.valueUsd, { approx: q1.approximate })} <Cite sources={[...q3.sources]} notes={notes} />
+          ~{Math.round(derived.q3OverQ2 * 100)}% above Q2&apos;s {fmtUsdB(q2.valueUsd)} (S-1 filed Q2: $11,555M, S-1 p. 158) · Q1{" "}
+          {fmtUsdB(q1.valueUsd, { approx: q1.approximate })} (S-1 filed Q1: $4,731M, S-1 p. 158). Q3 is blank in the initial S-1 pending the S-1/A (S-1 pp. 133, 195).{" "}
+          <Cite sources={[...q3.sources]} notes={notes} />
         </>
       ),
     },
@@ -744,7 +878,7 @@ function InvestorDayFacts() {
       value: fmtUsdB(derived.averageRunRateUsd),
       body: (
         <>
-          Computed here from Q3 revenue. An <em>average</em> run-rate for the quarter, not an exit
+          Computed here from Q3 press-reported revenue. An <em>average</em> run-rate for the quarter, not an exit
           run-rate. <Cite sources={q3.sources} notes={notes} />
         </>
       ),
@@ -753,10 +887,11 @@ function InvestorDayFacts() {
       key: "exit",
       eyebrow: "Exit run-rate (annualized)",
       value: "Not disclosed",
+      superseded: facts.exitRunRateDisclosed.supersededByS1,
       body: (
         <>
           No exit run-rate was given at the investor day. <Cite sources={facts.exitRunRateDisclosed.sources} notes={notes} />{" "}
-          Last company figure: {fmtUsdB(july.valueUsd)} exit run-rate at the end of July{" "}
+          S-1 p. 4 defines Run-Rate Revenue (trailing-28-day consumption ×13 + monthly subscriptions ×12); Oct 31 Run-Rate Revenue is blank pending the S-1/A (S-1 pp. 133, 195). Last company figure: {fmtUsdB(july.valueUsd)} exit run-rate at the end of July{" "}
           <Cite sources={july.sources} notes={notes} />. Outside estimate (SemiAnalysis, not company data):{" "}
           {fmtUsdB(semi.valueUsd, { approx: semi.approximate })} annualized <Cite sources={semi.sources} notes={notes} />.
         </>
@@ -766,11 +901,12 @@ function InvestorDayFacts() {
       key: "prof",
       eyebrow: prof.label,
       value: "Adjusted-profitable",
+      superseded: prof.supersededByS1,
       body: (
         <>
           {prof.adjustedProfitableQuarters === 2 ? "Second quarter in a row" : `${prof.adjustedProfitableQuarters} quarters`} ·{" "}
           {Math.round(prof.adjustedOperatingMarginExSbc * 100)}% adjusted operating margin excluding stock-based comp
-          {prof.cashFlowPositive ? " · cash-flow positive" : ""} · GAAP {prof.gaapDisclosed ? "disclosed" : "not disclosed"}{" "}
+          {prof.cashFlowPositive ? " · cash-flow positive" : ""} · GAAP {prof.gaapDisclosed ? "disclosed" : "not disclosed at investor day"} (S-1 filed Q2&apos;26 GAAP operating income +$974M after $1.3B SBC, p. 158; H1&apos;26 GAAP loss −$693M, p. 23; H1&apos;26 Adj. operating income +$1,618M / 10% margin, p. 25){" "}
           <Cite sources={prof.sources} notes={notes} />
         </>
       ),
@@ -799,21 +935,36 @@ function InvestorDayFacts() {
       key: "ipo",
       eyebrow: ipo.label,
       value: "November",
+      superseded: ipo.supersededByS1,
       body: (
         <>
-          {ipo.text}. <Cite sources={ipo.sources} notes={notes} />
+          {ipo.text} (Form S-1 filed publicly Oct 26, 2026 under ticker ANT, S-1 p. 20). <Cite sources={ipo.sources} notes={notes} />
         </>
       ),
     },
   ];
   return (
     <section style={styles.factsPanel} aria-labelledby="ipo-facts-title">
-      <h2 id="ipo-facts-title" style={styles.h2}>What the investor day showed</h2>
-      <div style={styles.panelSub}>Anthropic investor day, Oct 14, 2026 · press-reported, not company filings</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+        <h2 id="ipo-facts-title" style={styles.h2}>What the investor day showed (Oct 14)</h2>
+        <span style={{ fontFamily: MONO, fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em", color: "#78350f", background: "#fef3c7", padding: "2px 6px", textTransform: "uppercase" }}>
+          Superseded in part by the S-1
+        </span>
+      </div>
+      <div style={styles.panelSub}>
+        Anthropic investor day, Oct 14, 2026 · press-reported (FT / Reuters / Bloomberg), not company filings · superseded in part by the Oct 26, 2026 Form S-1
+      </div>
       <div style={styles.factsGrid}>
         {cards.map((c) => (
           <div key={c.key} style={styles.factCard}>
-            <div style={styles.tileEyebrow}>{c.eyebrow}</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "6px", flexWrap: "wrap", marginBottom: "6px" }}>
+              <span style={{ ...styles.tileEyebrow, marginBottom: 0 }}>{c.eyebrow}</span>
+              {c.superseded ? (
+                <span style={{ fontFamily: MONO, fontSize: "9px", fontWeight: 600, color: "#78350f", background: "#fef3c7", padding: "1px 5px" }}>
+                  SEE S-1
+                </span>
+              ) : null}
+            </div>
             <div style={styles.factValue}>{c.value}</div>
             <div style={styles.factBody}>{c.body}</div>
           </div>
@@ -835,29 +986,34 @@ function InvestorDayFacts() {
 }
 
 function UpcomingList() {
-  const notes = buildFootnotes(ipoTape.upcoming);
   return (
     <div style={styles.upcoming}>
-      <h3 style={styles.h3Plain}>Upcoming</h3>
+      <h3 style={styles.h3Plain}>IPO calendar &amp; milestones</h3>
       <ul style={styles.upcomingList}>
-        {ipoTape.upcoming.map((u) => (
-          <li key={u.key} style={styles.upcomingItem}>
-            <span>
-              <strong>{u.label}</strong> · {u.timing}
-            </span>
-            <span style={styles.upcomingStatus}>{u.status}</span>
-            <span style={styles.upcomingSource}>
-              {u.sources.map((src) => (
-                <a key={src.url} href={src.url} target="_blank" rel="noopener noreferrer" title={src.estimationMethod || src.note} style={styles.extLink}>
-                  {src.sourceClass === "assumption" ? "Inferred" : src.publisher}, {fmtDateKeyShort(src.publicationDate)} ↗
-                </a>
-              ))}
-            </span>
-          </li>
-        ))}
+        {ipoTape.upcoming.map((u) => {
+          const statusStyle = UPCOMING_STATUS_STYLE[u.status] || {};
+          return (
+            <li key={u.key} style={styles.upcomingItem}>
+              <span>
+                <strong>{u.label}</strong> · {u.timing}
+              </span>
+              <span style={{ ...styles.upcomingStatus, ...statusStyle }}>{u.status}</span>
+              <span style={styles.upcomingSource}>
+                {u.sources.map((src, idx) => (
+                  <React.Fragment key={`${src.url}-${idx}`}>
+                    {idx > 0 ? " · " : ""}
+                    <a href={src.url} target="_blank" rel="noopener noreferrer" title={src.estimationMethod || src.note} style={styles.extLink}>
+                      {src.sourceClass === "assumption" ? `Inferred (${src.publisher})` : src.publisher}, {fmtDateKeyShort(src.publicationDate)} ↗
+                    </a>
+                  </React.Fragment>
+                ))}
+              </span>
+            </li>
+          );
+        })}
       </ul>
       <div style={styles.footnote}>
-        S-1 timing is inferred, not reported: a confidential filer must file publicly at least 15 days before its roadshow.
+        Form S-1 was filed publicly on Oct 26, 2026 at 9:00:11 AM ET (Reg. No. 333-299633, accession 0001628280-26-067168). Q3 2026 financials and Oct 31 Run-Rate Revenue are blank pending the S-1/A (S-1 pp. 133, 195). Lock-up milestones are relative to pricing until the IPO prices (S-1 pp. 321–323).
       </div>
     </div>
   );
@@ -1027,7 +1183,7 @@ export default function InvestorDayTape() {
         LIVE TAPE · ANTHROPIC IPO
       </div>
       <h1 style={styles.title} className="vcx-title">Anthropic IPO tape</h1>
-      <p style={styles.subtitle}>Investor day Oct 14 · S-1, roadshow and pricing next</p>
+      <p style={styles.subtitle}>Investor day Oct 14 · Form S-1 public Oct 26 (Nasdaq: ANT) · S-1/A, roadshow and pricing next</p>
       <p style={styles.disclosure}>
         {disclosureSentence(disclosure)}
         {ageLabel ? <span style={styles.disclosureAge}> ({ageLabel})</span> : null}
@@ -1039,6 +1195,7 @@ export default function InvestorDayTape() {
         ) : null}
       </div>
 
+      <S1FactsPanel />
       <InvestorDayFacts />
 
       <div style={styles.statusRow}>
@@ -1100,7 +1257,7 @@ export default function InvestorDayTape() {
           className="investor-day-link-card"
           title="Open io:ANTH on Hyperliquid"
         >
-          <Sparkline points={anth?.sparkline} baseline={anth?.midnightPx} />
+          <Sparkline points={anth?.sparkline} baseline={anth?.midnightPx} events={CHART_EVENTS} />
         </a>
         <div style={styles.heroMeta}>
           Mark {anth?.markPx?.toFixed(1) ?? "—"} ($B) · 24h {fmtPct(anth?.change24h)} · OI{" "}
@@ -1214,9 +1371,8 @@ export default function InvestorDayTape() {
           Rolling 15-minute io:ANTH move {multi ? `at every ${data?.multiDay?.interval ?? "5m"} close since Oct 14` : "at every minute since 00:00 ET"}, in
           units of the 30-day 15-minute σ. Dots mark ≥3σ; hover or tap for details. A move that
           reverses within 15 minutes shows again with the opposite sign 15 minutes later; those
-          echoes are drawn hollow and not counted. Purple marks events: the investor day (date only;
-          no start time was published) and the FT report (8:59 PM ET Oct 14, from the article&apos;s
-          metadata).
+          echoes are drawn hollow and not counted. Purple marks events: the investor day (Oct 14, date only),
+          the FT report (8:59 PM ET Oct 14), and the public Form S-1 filing (9:00:11 AM ET Oct 26, EDGAR acceptance timestamp).
         </div>
         <SigmaCharts
           key={chartWindow}

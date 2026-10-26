@@ -34,7 +34,7 @@ export function referenceRow(raw, marks, input, caps = CAPITALIZATION) {
       const sensitivityHigh = valueUnitLots(leg, { ...opts, fdShares: caps[side].lowShares, entryPrice: leg.acquisition ? caps.dxyzOpenaiEntry.lowPrice : opts.entryPrice });
       legs[key] = { pct: point.pct, lo: Math.min(point.per100, high.per100), hi: Math.max(point.per100, high.per100), lots: point.lots, units: point.units, revaluation: point.revaluation, pps: point.pps, sensitivity: { low: sensitivityLow.per100, high: sensitivityHigh.per100 } };
     } else {
-      const pct = impliedExposure(leg, marks) || 0;
+      const pct = impliedExposure(leg, marks, { fdShares: fd }) || 0;
       const args = { claimPct: pct, ipoVal: val, dilution: input.dilution };
       const point = lookThroughPer100({ ...args, wrapperValue });
       const high = lookThroughPer100({ ...args, wrapperValue: highDenom });
@@ -67,7 +67,7 @@ export function referenceRow(raw, marks, input, caps = CAPITALIZATION) {
 }
 
 export function calculateScenario(dataset, input) {
-  if (dataset.meta.schemaVersion !== '1.2.0' || dataset.meta.methodologyVersion !== '1.2.0') throw new Error('Unsupported dataset version');
+  if (dataset.meta.schemaVersion !== '1.3.0' || dataset.meta.methodologyVersion !== '1.3.0') throw new Error('Unsupported dataset version');
   for (const key of ['anthVal', 'oaiVal']) if (!Number.isFinite(input[key]) || input[key] < 0) throw new Error(`Invalid ${key}`);
   if (!Number.isFinite(input.dilution) || input.dilution < 0 || input.dilution > 1) throw new Error('Invalid dilution');
   if (!['filed','estimated'].includes(input.holdingsBasis || 'filed')) throw new Error('Invalid holdingsBasis');
@@ -76,5 +76,5 @@ export function calculateScenario(dataset, input) {
 }
 
 export function createScenarioExport(dataset, inputs, metadata = {}) {
-  return { format: 'ai-exposure-scenario', version: '1.2.0', dataset, inputs, metadata, results: calculateScenario(dataset, inputs) };
+  return { format: 'ai-exposure-scenario', version: '1.3.0', dataset, inputs, metadata, results: calculateScenario(dataset, inputs) };
 }

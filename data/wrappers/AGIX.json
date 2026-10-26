@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "1.2.0",
-  "methodologyVersion": "1.2.0",
+  "schemaVersion": "1.3.0",
+  "methodologyVersion": "1.3.0",
   "ticker": "AGIX",
   "yahooSymbol": "AGIX",
   "name": "KraneShares Public-Private AI ETF",
@@ -17,7 +17,7 @@
   "security": {
     "label": "Fund NAV",
     "linear": true,
-    "footnote": "Look-through from filed fair value ÷ the round used to mark that FV."
+    "footnote": "Look-through from filed fair value converted to pre-split share-equivalents at Series H-1 ($589.0095, S-1 p. F-47) ÷ S-1 fully diluted shares (p. 13)."
   },
   "sources": [
     {
@@ -71,8 +71,25 @@
         "measurementDate": "2026-05-28",
         "publicationDate": null,
         "section": "See source note"
+      },
+      {
+        "fields": [
+          "measurementCompanyMark"
+        ],
+        "sourceClass": "primary",
+        "issuer": "Anthropic, PBC",
+        "filingType": "S-1",
+        "accession": "0001628280-26-067168",
+        "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
+        "documentDate": "2026-10-26",
+        "asOf": "2026-06-30",
+        "measurementDate": "2026-06-30",
+        "publicationDate": "2026-10-26",
+        "section": "S-1 pp. 13, F-47",
+        "note": "Converted to share-equivalents at Series H-1 ($589.0095 per pre-split share, S-1 p. F-47) and divided by the S-1 pre-split FD share count (S-1 p. 13)."
       }
-    ]
+    ],
+    "evidenceNote": "Converted to 21,945.36 pre-split share-equivalents at the Series H-1 price ($589.0095, S-1 p. F-47) and divided by the S-1 fully diluted share count (1,778,366,016 pre-split, S-1 p. 13)."
   },
   "openai": null
 }

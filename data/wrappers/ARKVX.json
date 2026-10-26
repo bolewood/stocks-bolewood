@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "1.2.0",
-  "methodologyVersion": "1.2.0",
+  "schemaVersion": "1.3.0",
+  "methodologyVersion": "1.3.0",
   "ticker": "ARKVX",
   "yahooSymbol": "ARKVX",
   "name": "ARK Venture Fund",
@@ -24,7 +24,7 @@
   "security": {
     "label": "Fund NAV",
     "linear": true,
-    "footnote": "Look-through from filed fair value ÷ the round used to mark that FV."
+    "footnote": "Anthropic: Series C-1 fair value converted to pre-split share-equivalents at Series G-1 ($259.14, S-1 p. F-47; Series C-1 converts to 1-vote Class A, S-1 p. 20) ÷ S-1 FD shares (p. 13). OpenAI: filed FV ÷ round post-money."
   },
   "sources": [
     {
@@ -96,9 +96,27 @@
         "measurementDate": "2026-02-12",
         "publicationDate": null,
         "section": "See source note",
-        "estimationMethod": "Associate the April fund mark with the February Series G valuation. The schedule supplies FV but does not disclose this company-wide valuation."
+        "estimationMethod": "Associate the April fund mark with the February Series G valuation ($259.14 per pre-split share, S-1 p. F-47). The schedule supplies FV but does not disclose this company-wide valuation."
+      },
+      {
+        "fields": [
+          "holdingSecurity",
+          "measurementCompanyMark"
+        ],
+        "sourceClass": "primary",
+        "issuer": "Anthropic, PBC",
+        "filingType": "S-1",
+        "accession": "0001628280-26-067168",
+        "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
+        "documentDate": "2026-10-26",
+        "asOf": "2026-06-30",
+        "measurementDate": "2026-06-30",
+        "publicationDate": "2026-10-26",
+        "section": "S-1 pp. 13, 20, F-47",
+        "note": "Series C-1 preferred converts to Class A common stock (1 vote, S-1 p. 20). April 30 FV is converted to pre-split share-equivalents at Series G-1 ($259.14, S-1 p. F-47) and divided by the S-1 pre-split FD share count (S-1 p. 13)."
       }
-    ]
+    ],
+    "evidenceNote": "Series C-1 preferred (converts to 1-vote Class A, S-1 p. 20). April 30 FV ($23.08M) converted to 89,078.00 pre-split share-equivalents at Series G-1 ($259.14, S-1 p. F-47) and divided by the S-1 FD share count (1,778,366,016 pre-split, S-1 p. 13)."
   },
   "openai": {
     "basis": "filed-fv-equiv",

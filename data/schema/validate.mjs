@@ -1,5 +1,5 @@
-export const SCHEMA_VERSION = "1.2.0";
-export const METHODOLOGY_VERSION = "1.2.0";
+export const SCHEMA_VERSION = "1.3.0";
+export const METHODOLOGY_VERSION = "1.3.0";
 export const PRIVATE_TAPE_SCHEMA_VERSION = "1.0.0";
 export const BOOK_SCHEMA_VERSION = "1.0.0";
 
@@ -254,9 +254,19 @@ export function validateMarks(marks) {
     fail("marks", "companies.anthropic and companies.openai required");
   }
   for (const [name, company] of Object.entries(marks.companies)) {
-    (company.rounds || []).forEach((r, i) => {
+    const rounds = company.rounds || [];
+    rounds.forEach((r, i) => {
       const path = `marks.${name}.rounds[${i}]`;
       if (!r.id || !(r.postMoney > 0)) fail(path, "id and postMoney required");
+      if (r.pricePerShare != null && !(r.pricePerShare > 0)) {
+        fail(path, "pricePerShare must be positive when present");
+      }
+      if (r.pricePerShareFromMark != null) {
+        const ref = rounds.find((other) => other.id === r.pricePerShareFromMark);
+        if (!ref || !(ref.pricePerShare > 0)) {
+          fail(path, `pricePerShareFromMark ${r.pricePerShareFromMark} must reference a round with pricePerShare`);
+        }
+      }
       if (!Array.isArray(r.sources) || r.sources.length === 0) {
         fail(path, "sources[] required");
       }
@@ -278,6 +288,35 @@ export function validateCapitalization(config) {
     if (!item.method || !item.sources?.length) fail(side, 'method and sources required');
     item.sources.forEach((s,i) => validateSource(s, `${side}.sources[${i}]`));
   }
+  const anth = config.anthropic;
+  if (!isMeasurementDate(anth.asOf)) fail('anthropic.asOf', 'asOf required');
+  if (anth.shareBasis !== 'pre-split') fail('anthropic.shareBasis', 'must be "pre-split"');
+  if (anth.splitFactor !== 10) fail('anthropic.splitFactor', 'must be 10');
+  if (!isMeasurementDate(anth.splitEffectiveDate)) fail('anthropic.splitEffectiveDate', 'splitEffectiveDate required');
+  if (!hasPrimary(anth.sources)) fail('anthropic.sources', 'primary S-1 source required');
+  if (!anth.roundPrices || typeof anth.roundPrices !== 'object') {
+    fail('anthropic.roundPrices', 'roundPrices object required');
+  }
+  for (const key of ['E-1', 'F-1', 'G-1', 'H-1']) {
+    const rp = anth.roundPrices[key];
+    const rPath = `anthropic.roundPrices.${key}`;
+    if (!rp || !(rp.pricePerShare > 0) || !(rp.postMoney > 0)) {
+      fail(rPath, 'pricePerShare and postMoney required');
+    }
+    if (rp.shareBasis !== 'pre-split') fail(rPath, 'shareBasis must be "pre-split"');
+    if (Object.prototype.hasOwnProperty.call(rp, 'roundImpliedFd')) {
+      fail(rPath, 'roundImpliedFd is computed, never stored in JSON');
+    }
+  }
+  if (!Array.isArray(anth.superseded) || anth.superseded.length === 0) {
+    fail('anthropic.superseded', 'superseded history array required');
+  }
+  anth.superseded.forEach((entry, i) => {
+    const sPath = `anthropic.superseded[${i}]`;
+    if (!entry?.role || !(entry.shares > 0) || !isMeasurementDate(entry.asOf) || !isMeasurementDate(entry.supersededOn) || !entry.method) {
+      fail(sPath, 'role, positive shares, asOf, supersededOn, and method required');
+    }
+  });
 }
 
 export function validatePrivateTapeConfig(config) {
@@ -516,8 +555,15 @@ function validateBookLine(line, path, book, companies) {
   }
 }
 
-// data/anthropic-investor-day.json: press-reported investor-day facts, chart
-// event markers, and upcoming IPO milestones. Every record carries sources.
+export const UPCOMING_STATUSES = [
+  "reported, not confirmed",
+  "expected, not confirmed",
+  "filed",
+  "filed terms, pricing date TBD",
+];
+
+// data/anthropic-investor-day.json: S-1 filed facts, press-reported investor-day
+// facts, chart event markers, and upcoming IPO milestones. Every record carries sources.
 export function validateInvestorDay(config) {
   if (!config || typeof config !== "object") fail("investor-day", "must be an object");
   if (!isIsoDateKey(config.asOf)) fail("investor-day.asOf", "must be YYYY-MM-DD");
@@ -525,10 +571,15 @@ export function validateInvestorDay(config) {
   if (!isIsoDateKey(config.window?.defaultMultiDayUntil)) {
     fail("investor-day.window.defaultMultiDayUntil", "must be YYYY-MM-DD");
   }
-  const sections = { facts: config.facts, events: config.events, upcoming: config.upcoming };
-  const keys = new Set();
+  const sections = {
+    facts: config.facts,
+    events: config.events,
+    upcoming: config.upcoming,
+    ...(config.s1Facts ? { s1Facts: config.s1Facts } : {}),
+  };
   for (const [name, rows] of Object.entries(sections)) {
     if (!Array.isArray(rows) || rows.length === 0) fail(`investor-day.${name}`, "must be a non-empty array");
+    const keys = new Set();
     rows.forEach((row, i) => {
       const path = `investor-day.${name}[${i}]`;
       if (typeof row.key !== "string" || !row.key) fail(path, "key required");
@@ -541,6 +592,14 @@ export function validateInvestorDay(config) {
       if (/\bARR\b/.test(row.label) && !/exit run-rate/i.test(row.label)) {
         fail(path, "ARR only allowed in an exit run-rate label");
       }
+      if (name === "s1Facts") {
+        if (!["audited", "filed, unaudited interim", "filed"].includes(row.auditStatus)) {
+          fail(path, "s1Facts row requires auditStatus: audited | filed, unaudited interim | filed");
+        }
+        if (typeof row.pageCitation !== "string" || !/^S-1 pp?\.\s/.test(row.pageCitation)) {
+          fail(path, "s1Facts row requires pageCitation starting with 'S-1 p.' or 'S-1 pp.'");
+        }
+      }
     });
   }
   for (const [i, ev] of config.events.entries()) {
@@ -550,8 +609,8 @@ export function validateInvestorDay(config) {
     if (!["date", "time"].includes(ev.kind)) fail(path, "kind must be date or time");
   }
   for (const [i, up] of config.upcoming.entries()) {
-    if (up.status !== "reported, not confirmed") {
-      fail(`investor-day.upcoming[${i}]`, 'status must be "reported, not confirmed"');
+    if (!UPCOMING_STATUSES.includes(up.status)) {
+      fail(`investor-day.upcoming[${i}]`, `status must be one of ${UPCOMING_STATUSES.join(", ")}`);
     }
   }
   return true;

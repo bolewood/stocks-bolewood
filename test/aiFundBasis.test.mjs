@@ -58,7 +58,7 @@ test("DXYZ ESTIMATED shares equal computeAtmBridge on the same rows", () => {
   assert.equal(est.oaiFv, 35_040_868.2 + 150_000_000);
 });
 
-test("ARKVX ESTIMATED cash combined is ~$13.49 at the fallback NAV", () => {
+test("ARKVX ESTIMATED cash combined is ~$12.63 at the fallback NAV (S-1 FD denominator)", () => {
   const w = WRAPPERS.find((x) => x.ticker === "ARKVX");
   const price = FALLBACK_PRICES.ARKVX;
   const filed = resolveFund(w, { basis: BASIS_FILED, deploy: DEPLOY_CASH });
@@ -69,8 +69,8 @@ test("ARKVX ESTIMATED cash combined is ~$13.49 at the fallback NAV", () => {
   const pin = { anthVal: 1_000_000_000_000, oaiVal: 1_250_000_000_000, dilution: 0 };
   const filedM = fundRowMetrics(w, price, { ...pin, resolved: filed });
   const cashM = fundRowMetrics(w, price, { ...pin, resolved: cash });
-  assert.ok(Math.abs(filedM.combinedPer100 - 19.19) < 0.08, filedM.combinedPer100);
-  assert.ok(Math.abs(cashM.combinedPer100 - 13.49) < 0.12, cashM.combinedPer100);
+  assert.ok(Math.abs(filedM.combinedPer100 - 17.96) < 0.08, filedM.combinedPer100);
+  assert.ok(Math.abs(cashM.combinedPer100 - 12.63) < 0.12, cashM.combinedPer100);
 
   const book = resolveFund(w, { basis: BASIS_ESTIMATED, deploy: DEPLOY_PRORATA });
   const bookM = fundRowMetrics(w, price, { ...pin, resolved: book });
@@ -111,7 +111,9 @@ test("VCX ESTIMATED keeps shares, rolls marks, and holds stake %", () => {
   assert.equal(filedM.anthPct, estM.anthPct);
   assert.equal(filedM.oaiPct, estM.oaiPct);
   const remainingMarchAnth = 56_388_340 + 20_000_000;
-  assert.ok(Math.abs(filedM.anthPct - remainingMarchAnth / 380_000_000_000) < 1e-12);
+  const expectedVcxAnthPct =
+    (remainingMarchAnth / 380_000_000_000) * ((965_000_000_000 / 589.0095) / 1_778_366_016);
+  assert.ok(Math.abs(filedM.anthPct - expectedVcxAnthPct) < 1e-12);
   assert.ok(Math.abs(estM.combinedPer100 - filedM.combinedPer100) < 1e-9);
   assert.ok(estM.combinedPer100 < 25, estM.combinedPer100);
   assert.ok(estM.combinedPer100 > 15, estM.combinedPer100);

@@ -63,7 +63,7 @@ import {
 import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 import { META, MARKS, RAW_AI_WRAPPERS } from '../lib/loadAiData.mjs';
 import { createScenarioExport } from '../reference/engine.mjs';
-import { unitPrice } from '../reference/unitExposure.mjs';
+import { ANTH_SPLIT_FACTOR, unitPrice } from '../reference/unitExposure.mjs';
 import referenceInputs from '../reference/fixtures.json';
 import estimatedInputs from '../reference/estimated-fixtures.json';
 import disclosure from "../data/disclosure.json";
@@ -144,6 +144,7 @@ export default function AIPerDollarFinder() {
   const [oaiFdShares, setOaiFdShares] = useState(DEFAULT_OAI_FD_SHARES);
   const [dxyzOaiEntryPrice, setDxyzOaiEntryPrice] = useState(DEFAULT_DXYZ_OAI_ENTRY_PRICE);
   const [frozenInputs, setFrozenInputs] = useState(null);
+  const [frozenRefMode, setFrozenRefMode] = useState(null);
   const [exportStatus, setExportStatus] = useState('');
   const [prices, setPrices] = useState(FALLBACK_PRICES);
   const [sortKey, setSortKey] = useState("combinedPer100");
@@ -180,12 +181,15 @@ export default function AIPerDollarFinder() {
 
   useEffect(() => {
     if (!window.location.search) return;
-    const refMode = new URLSearchParams(window.location.search).get('reference');
-    if (refMode === 'filed' || refMode === 'estimated') {
-      const frozen = refMode === 'filed' ? referenceInputs : estimatedInputs;
+    const params = new URLSearchParams(window.location.search);
+    const refMode = params.get('reference');
+    if (refMode === 'filed' || refMode === 'estimated' || refMode === 's1') {
+      const useEst = refMode === 'estimated' || (refMode === 's1' && params.get('holdings') === 'estimated');
+      const frozen = useEst ? estimatedInputs : referenceInputs;
       // One-time hydration from the external URL after the server render.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setFrozenInputs(frozen);
+      setFrozenRefMode(refMode);
       setPrices(frozen.prices);
       setAnthB(frozen.anthVal / 1e9); setOaiB(frozen.oaiVal / 1e9);
       setDilutionPct(frozen.dilution * 100); setBasis(frozen.holdingsBasis); setDeploy(frozen.deploy);
@@ -235,7 +239,7 @@ export default function AIPerDollarFinder() {
 
   useEffect(() => {
     const refMode = new URLSearchParams(window.location.search).get("reference");
-    if (refMode === 'filed' || refMode === 'estimated') return;
+    if (refMode === 'filed' || refMode === 'estimated' || refMode === 's1') return;
     return startJsonPoll("/api/ai-prices", {
       onData: (data) => {
         if (data.prices) setPrices({ ...FALLBACK_PRICES, ...data.prices });
@@ -264,7 +268,7 @@ export default function AIPerDollarFinder() {
 
   useEffect(() => {
     const refMode = new URLSearchParams(window.location.search).get("reference");
-    if (refMode === 'filed' || refMode === 'estimated') return;
+    if (refMode === 'filed' || refMode === 'estimated' || refMode === 's1') return;
     const nyParts = new Intl.DateTimeFormat("en-CA", {
       timeZone: "America/New_York",
       hour12: false,
@@ -471,10 +475,14 @@ export default function AIPerDollarFinder() {
         <span style={styles.badgeMuted}>SEE AS-OF · EXPAND A ROW</span>
       </div>
 
-      {frozenInputs ? <p style={styles.estBanner}>Frozen reference prices ({frozenInputs.priceAsOf}); dataset {META.asOf}. Sliders remain interactive. Reload to reset.</p> : null}
+      {frozenInputs ? (
+        <p style={styles.estBanner}>
+          Frozen reference view (?reference={frozenRefMode || "filed"}): dataset {META.asOf} (Anthropic Form S-1, p. 13); frozen prices ({frozenInputs.priceAsOf}). ?reference=filed and ?reference=s1 pin Filed Holdings; ?reference=estimated pins Estimated Holdings. Sliders remain interactive. Reload to reset.
+        </p>
+      ) : null}
       <div style={styles.sliderToolbar}>
         <p style={styles.anchorNote}>
-          Last primary: Anthropic Series H $965B (2026-05-28) / OpenAI $852B
+          Last primary: Anthropic Series H $965B ($589.01 per pre-split unit / $58.90 per ANT share, S-1 p. F-47; 2026-05-28) / OpenAI $852B
           (2026-03-31), verified {LAST_PRIMARY_ROUNDS.asOf}. Tick marks the
           round. Sliders are log-scaled $0.5T–$5.0T.
         </p>
@@ -532,7 +540,7 @@ export default function AIPerDollarFinder() {
       </div>
       <p style={styles.caption}>
         Defaults are 1.0× last primary round (Anthropic Series H $0.965T,
-        OpenAI $0.852T). Assumes pro rata dilution of existing holders. Does
+        OpenAI $0.852T). Fully diluted count: 1,778.4M pre-split (17.78B ANT shares), from the S-1 (p. 13), including the 5% Anthropic Public Benefit Fund. Assumes pro rata dilution of existing holders. Does
         not model participation rights, anti-dilution provisions, ownership
         caps, or security-specific conversion terms. Default 0% is gross
         look-through. Both valuations revalue every quantified holding in both holdings modes,
@@ -541,13 +549,15 @@ export default function AIPerDollarFinder() {
 
       <details style={styles.assumptions} open>
         <summary>Company share counts & acquisition assumptions</summary>
-        <p style={styles.caption}>These are pre-IPO fully diluted (FD) share-equivalent estimates, not published cap tables. Low/high presets are sensitivity choices, not probabilities. IPO dilution is additional to these share counts.</p>
+        <p style={styles.caption}>Anthropic’s fully diluted (FD) share count is issuer-derived from the Form S-1 (p. 13) on a pre-split basis (10-for-1 forward split took effect 2026-09-17, S-1 p. 22). Fair-value and carrying-value Anthropic legs convert to share-equivalents at their measurement round’s price per pre-split share (S-1 p. F-47) and divide by the selected FD count. OpenAI remains a pre-IPO FD calibration proxy, not a published cap table. IPO dilution is additional to these share counts.</p>
         <div style={styles.controls} className="vcx-controls ai-controls">
-          <AssumptionControl label="Anthropic FD shares (millions)" value={anthFdShares / 1e6} onChange={n => setAnthFdShares(n * 1e6)} config={CAPITALIZATION.anthropic} unitScale={1e6} suffix="Shares" />
+          <AssumptionControl label="Anthropic FD shares (millions, pre-split)" value={anthFdShares / 1e6} onChange={n => setAnthFdShares(n * 1e6)} config={CAPITALIZATION.anthropic} unitScale={1e6} suffix="Shares" postSplitFactor={ANTH_SPLIT_FACTOR} />
           <AssumptionControl label="OpenAI FD shares (millions)" value={oaiFdShares / 1e6} onChange={n => setOaiFdShares(n * 1e6)} config={CAPITALIZATION.openai} unitScale={1e6} suffix="Shares" />
           <AssumptionControl label="DXYZ August OpenAI entry price ($)" value={dxyzOaiEntryPrice} onChange={setDxyzOaiEntryPrice} config={CAPITALIZATION.dxyzOpenaiEntry} unitScale={1} suffix="Price" />
         </div>
-        <p style={styles.caption}>Implied scenario prices: Anthropic ${unitPrice({ valuation: anthVal, fdShares: anthFdShares, dilution }).toFixed(2)} / share; OpenAI ${unitPrice({ valuation: oaiVal, fdShares: oaiFdShares, dilution }).toFixed(2)} / share. The August lot is included only in Estimated Holdings.</p>
+        <p style={styles.caption}>
+          Implied scenario prices: Anthropic ${unitPrice({ valuation: anthVal, fdShares: anthFdShares, dilution }).toFixed(2)} per pre-split unit · ${(unitPrice({ valuation: anthVal, fdShares: anthFdShares, dilution }) / ANTH_SPLIT_FACTOR).toFixed(2)} per ANT share (${unitPrice({ valuation: anthVal, fdShares: anthFdShares, dilution }).toFixed(2)} per pre-split unit (${(unitPrice({ valuation: anthVal, fdShares: anthFdShares, dilution }) / ANTH_SPLIT_FACTOR).toFixed(2)} per ANT share), 10-for-1 split, S-1 p. 22); OpenAI ${unitPrice({ valuation: oaiVal, fdShares: oaiFdShares, dilution }).toFixed(2)} / share. The August lot is included only in Estimated Holdings.
+        </p>
         <button type="button" style={styles.copyBtn} onClick={() => { setAnthFdShares(DEFAULT_ANTH_FD_SHARES); setOaiFdShares(DEFAULT_OAI_FD_SHARES); setDxyzOaiEntryPrice(DEFAULT_DXYZ_OAI_ENTRY_PRICE); }}>Reset assumptions to recommended</button>
       </details>
 
@@ -579,7 +589,7 @@ export default function AIPerDollarFinder() {
         </div>
       ) : (
         <p style={styles.caption}>
-          Filed Holdings uses filed fund quantities and denominators, revalued under your scenario. No August DXYZ acquisition or post-filing ATM issuance. FD share counts remain estimates; strategic rows retain the basis shown on each leg.
+          Filed Holdings uses filed fund quantities and denominators, revalued under your scenario. No August DXYZ acquisition or post-filing ATM issuance. Anthropic’s FD share count is from the Form S-1 (p. 13); OpenAI’s FD count remains an estimate; strategic rows retain the basis shown on each leg.
         </p>
       )}
       {basis === BASIS_ESTIMATED ? (
@@ -668,10 +678,12 @@ export default function AIPerDollarFinder() {
             .filter(Boolean)
             .sort()
             .slice(-1)[0];
+          // Flag only wrapper share-count denominators >180d old (red, e.g. missed
+          // quarterly cycle). Q2 June 30 wrapper share counts (DXYZ, SKM, etc.) show
+          // the amber dot in As-of; Anthropic's FD denominator is from the Oct 26 S-1 (p. 13).
           const staleDenom =
             row.denomKind !== "netAssets" &&
-            (stalenessLevel(row.sharesAsOf) === "amber" ||
-              stalenessLevel(row.sharesAsOf) === "red");
+            stalenessLevel(row.sharesAsOf) === "red";
           return (
             <div key={row.ticker}>
               <div
@@ -727,7 +739,12 @@ export default function AIPerDollarFinder() {
                   {fmt$(row.wrapperValue || row.marketCap)}
                   <div style={styles.asOf}>{denom.short}</div>
                   {staleDenom ? (
-                    <div style={styles.staleDenom}>Stale denominator</div>
+                    <div
+                      style={styles.staleDenom}
+                      title="Wrapper share count is over 180 days old; Anthropic FD denominator is from the Oct 26, 2026 S-1 (p. 13)."
+                    >
+                      Stale denominator
+                    </div>
                   ) : null}
                 </div>
                 <div
@@ -797,6 +814,7 @@ export default function AIPerDollarFinder() {
         <span style={{ color: STALE_COLOR.amber }}>●</span> amber &gt;90 days
         {" · "}
         <span style={{ color: STALE_COLOR.red }}>●</span> red &gt;180 days.
+        {" "}Stale denominator flags wrapper share counts &gt;180 days old; the Anthropic FD denominator is from the Oct 26, 2026 S-1 (p. 13).
         Evidence is per-leg in the expanded panel.
       </p>
       <p style={styles.disclaimer}>
@@ -819,8 +837,7 @@ export default function AIPerDollarFinder() {
         <h2 style={styles.notesTitle}>Sources & footnotes</h2>
         <p style={styles.caption}>
           Implied exposure is not always ownership. Disclosed means an issuer
-          or investor stated a percentage. Filed FV-equiv is fair value ÷ the
-          measurement valuation associated with it, which may be inferred. Filed units × scenario price uses an adjustable estimated FD denominator. Round-implied is dollars invested ÷ post-money. Commitments have no percentage. DXYZ PPUs are excluded from equity scaling. Source dates and assumptions can differ within a row.
+          or investor stated a percentage. For Anthropic, filed FV-equiv and carrying-value-equiv legs convert to pre-split share-equivalents at the measurement round&apos;s price per share (S-1 p. F-47; VCX scales Series H-1 by 863.7/965 as an explicit estimation assumption) and divide by the selected fully diluted share count (default 1,778,366,016 pre-split / 17,783,660,160 post-split ANT shares, S-1 p. 13, 10-for-1 split S-1 p. 22). Filed units × scenario price uses the S-1 FD denominator for Anthropic and an adjustable estimated FD denominator for OpenAI. Round-implied is dollars invested ÷ post-money. Commitments have no percentage. DXYZ PPUs are excluded from equity scaling. Source dates and assumptions can differ within a row.
         </p>
         {WRAPPERS.map((w) => (
           <div key={w.ticker} style={styles.noteBlock}>
@@ -835,10 +852,10 @@ export default function AIPerDollarFinder() {
               {w.anthropic ? ` Anthropic: ${w.anthropic.source}` : ""}
               {w.openai ? ` OpenAI: ${w.openai.source}` : ""}
               {w.anthropic?.kind === "fund"
-                ? ` Anth. FV ${fmt$(w.anthropic.fairValue)} at ${fmt$(w.anthropic.roundVal)} (${w.anthropic.asOf}).`
+                ? ` Anth. FV ${fmt$(w.anthropic.fairValue)} at ${fmt$(w.anthropic.roundVal)} (${w.anthropic.asOf})${w.anthropic.roundPricePerShare ? `, $${w.anthropic.roundPricePerShare.toFixed(2)} per pre-split unit ($${(w.anthropic.roundPricePerShare / ANTH_SPLIT_FACTOR).toFixed(2)} per ANT share, S-1 p. F-47${w.anthropic.roundPriceIsScaled ? "; scaled 863.7/965 estimation assumption" : ""}) ⇒ ${Math.round(w.anthropic.shareEquivalents).toLocaleString("en-US")} pre-split share-equivalents` : ""}.`
                 : ""}
               {w.anthropic?.kind === "filed-units"
-                ? ` Anth. ${w.anthropic.filedUnits.toLocaleString("en-US")} filed units (${w.anthropic.asOf}); scenario uses the shared estimated FD count.`
+                ? ` Anth. ${w.anthropic.filedUnits.toLocaleString("en-US")} filed pre-split units (${w.anthropic.asOf}); scenario uses the S-1 pre-split FD count (1,778,366,016 incl. the 5% public-benefit fund, S-1 p. 13; 10-for-1 split S-1 p. 22).`
                 : ""}
               {w.openai?.kind === "fund"
                 ? ` OAI FV ${fmt$(w.openai.fairValue)} at ${fmt$(w.openai.roundVal)} (${w.openai.asOf}).`
@@ -863,6 +880,14 @@ function BasisPills({ anth, oai, anthLeg, oaiLeg }) {
       {anth ? (
         <div style={styles.basisLine}>
           <span style={styles.basisTag}>Anth</span> {anth.label}
+          {anthLeg?.roundPriceIsScaled ? (
+            <span
+              style={styles.secondaryPill}
+              title="VCX June 30 NPORT mark ($863.7B) has no S-1 per-share price; scales Series H-1 ($589.0095, S-1 p. F-47) by 863.7/965 (≈$527.17 per pre-split unit)"
+            >
+              EST. ROUND PPS
+            </span>
+          ) : null}
           {anthLeg?.secondaryOnly ? (
             <span style={styles.secondaryPill} title="Derived from secondary sources only">
               SECONDARY
@@ -898,6 +923,7 @@ function LegDetail({ name, leg, pct, per100, ipoVal, wrapperValue, dilution, det
   const fv = leg.fairValue || leg.investmentUsd;
   const round = leg.roundVal;
   const isUnits = leg.kind === "filed-units";
+  const isAnth = leg.side === "anthropic";
   const showPct = !isUnits && leg.kind !== "commitment" && pct > 0;
   const result =
     showPct && wrapperValue > 0
@@ -917,10 +943,21 @@ function LegDetail({ name, leg, pct, per100, ipoVal, wrapperValue, dilution, det
       ) : null}
       {isUnits && detail ? (
         <div>
-          <div>Filed quantity: {leg.filedUnits.toLocaleString('en-US')} ({leg.asOf}). {fv > 0 ? `Historical USD fair value ${fmtUsdPrecise(fv)}; filed mark $${leg.markPerUnit.toFixed(6)} / unit.` : 'Local-currency book value is preserved in the source record; no USD conversion is assumed.'}</div>
+          <div>
+            Filed quantity: {leg.filedUnits.toLocaleString('en-US')}{isAnth ? ' pre-split units' : ''} ({leg.asOf}).{' '}
+            {fv > 0
+              ? isAnth
+                ? `Historical USD fair value ${fmtUsdPrecise(fv)}; filed mark $${leg.markPerUnit.toFixed(2)} per pre-split unit ($${(leg.markPerUnit / ANTH_SPLIT_FACTOR).toFixed(2)} per ANT share, 10-for-1 split S-1 p. 22; exact $${leg.markPerUnit.toFixed(6)}).`
+                : `Historical USD fair value ${fmtUsdPrecise(fv)}; filed mark $${leg.markPerUnit.toFixed(6)} / unit.`
+              : 'Local-currency book value is preserved in the source record; no USD conversion is assumed.'}
+          </div>
           {detail.lots.map(lot => <div key={lot.id}>{lot.label}: {lot.units.toLocaleString('en-US', {maximumFractionDigits: 6})} units ({lot.evidence}, {lot.asOf || 'ATM bridge'}), {lot.carryingValue != null ? `carrying amount $${lot.carryingValue.toLocaleString('en-US', {maximumFractionDigits: 2})}; ` : ''}scenario value ${lot.scenarioValue.toLocaleString('en-US', {maximumFractionDigits: 2})}.</div>)}
-          <div>Scenario-equivalent stake: {fmtExposurePct(detail.pct)} = {detail.units.toLocaleString('en-US', {maximumFractionDigits: 6})} units / {detail.fdShares.toLocaleString('en-US', {maximumFractionDigits: 3})} estimated FD shares.</div>
-          <div>Scenario price ${detail.pps.toFixed(6)} = ${ipoVal.toLocaleString('en-US')} × (1 − {dilution}) / {detail.fdShares.toLocaleString('en-US', {maximumFractionDigits: 3})}. Selected result: ${detail.scenarioValue.toLocaleString('en-US', {maximumFractionDigits: 2})} / ${wrapperValue.toLocaleString('en-US', {maximumFractionDigits: 2})} × 100 = {fmtPer100(detail.per100)}.</div>
+          <div>
+            Scenario-equivalent stake: {fmtExposurePct(detail.pct)} = {detail.units.toLocaleString('en-US', {maximumFractionDigits: 6})} {isAnth ? 'pre-split units' : 'units'} / {detail.fdShares.toLocaleString('en-US', {maximumFractionDigits: 3})} {isAnth ? 'pre-split FD shares (S-1 p. 13; ' + (detail.fdShares * ANTH_SPLIT_FACTOR).toLocaleString('en-US', {maximumFractionDigits: 0}) + ' post-split ANT shares)' : 'estimated FD shares'}.
+          </div>
+          <div>
+            Scenario price ${detail.pps.toFixed(2)} {isAnth ? `per pre-split unit ($${(detail.pps / ANTH_SPLIT_FACTOR).toFixed(2)} per ANT share, S-1 p. 22; exact $${detail.pps.toFixed(6)})` : `($${detail.pps.toFixed(6)})`} = ${ipoVal.toLocaleString('en-US')} × (1 − {dilution}) / {detail.fdShares.toLocaleString('en-US', {maximumFractionDigits: 3})}. Selected result: ${detail.scenarioValue.toLocaleString('en-US', {maximumFractionDigits: 2})} / ${wrapperValue.toLocaleString('en-US', {maximumFractionDigits: 2})} × 100 = {fmtPer100(detail.per100)}.
+          </div>
           <div>Table result: {fmtPer100Cell(per100, per100High, true)}. {detail.high.units !== detail.units ? `Pro rata endpoint: ${detail.high.units.toLocaleString('en-US', {maximumFractionDigits: 6})} units × $${detail.high.pps.toFixed(6)} / $${wrapperValue.toLocaleString('en-US', {maximumFractionDigits: 2})} × 100 = ${fmtPer100(detail.high.per100)}.` : ''}</div>
           <div>FD / entry-price preset sensitivity: {fmtPer100(detail.sensitivity.low)}–{fmtPer100(detail.sensitivity.high)} per $100, holding deployment at the selected setting. This separate range is not a confidence interval.</div>
           {leg.raw.reportedOwnership ? <div>Issuer cross-check: reported {(leg.raw.reportedOwnership.pct * 100).toFixed(1)}% rounded. {leg.raw.reportedOwnership.note}</div> : null}
@@ -931,13 +968,21 @@ function LegDetail({ name, leg, pct, per100, ipoVal, wrapperValue, dilution, det
           {leg.kind === "round-implied" ? "Investment" : "Filed / carrying value"}:{" "}
           {fmtUsdPrecise(fv)} as of {leg.asOf || "—"}. Source mark:{" "}
           {fmtUsdPrecise(round)}
-          {leg.markAsOf ? ` (${leg.markAsOf})` : ""}. Implied exposure:{" "}
+          {leg.markAsOf ? ` (${leg.markAsOf})` : ""}.
+          {detail?.shareEquivalents > 0 && detail?.roundPricePerShare > 0 ? (
+            <>
+              {" "}Round price: ${detail.roundPricePerShare.toFixed(2)} per pre-split unit (${(detail.roundPricePerShare / ANTH_SPLIT_FACTOR).toFixed(2)} per ANT share, exact ${detail.roundPricePerShare.toFixed(4)}, S-1 p. F-47)
+              {detail.roundPriceIsScaled ? " [Estimation assumption: Series H-1 $589.0095 scaled by $863.7B / $965B ≈ $527.17 per pre-split unit]" : ""}.
+              {" "}Share-equivalents: {detail.shareEquivalents.toLocaleString("en-US", { maximumFractionDigits: 2 })} pre-split units ÷ {detail.fdShares.toLocaleString("en-US", { maximumFractionDigits: 0 })} pre-split FD shares (S-1 p. 13).
+            </>
+          ) : null}{" "}
+          Implied exposure:{" "}
           {fmtExposurePct(pct, { max: !!leg.displayAsMax })}.
         </div>
       ) : showPct ? (
         <div>
           Implied exposure: {fmtExposurePct(pct, { max: !!leg.displayAsMax })}
-          {leg.capPct ? ` (hard cap ${fmtExposurePct(leg.capPct)})` : ""}.
+          {leg.capPct ? ` (hard cap ${fmtExposurePct(leg.capPct)}, S-1 p. 169)` : ""}.
         </div>
       ) : null}
       {showPct ? (
@@ -1206,7 +1251,7 @@ function Slider({
   );
 }
 
-function AssumptionControl({ label, value, onChange, config, unitScale, suffix }) {
+function AssumptionControl({ label, value, onChange, config, unitScale, suffix, postSplitFactor = null }) {
   const [draft, setDraft] = useState(null);
   const min = config['min' + suffix] / unitScale;
   const max = config['max' + suffix] / unitScale;
@@ -1217,9 +1262,39 @@ function AssumptionControl({ label, value, onChange, config, unitScale, suffix }
   };
   return <div style={styles.controlGroup}>
     <label style={styles.label}>{label}<input className="vcx-input" type="number" aria-label={label + ' number'} min={min} max={max} step="any" value={draft ?? Number(value.toFixed(6))} onChange={e => setDraft(e.target.value)} onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commit(); } }} style={styles.assumptionInput} /></label>
+    {postSplitFactor ? (
+      <div style={styles.hint}>
+        = {((value * postSplitFactor) / 1000).toFixed(2)}B post-split ANT shares ({(value * postSplitFactor).toFixed(1)}M post-split, 10-for-1 split S-1 p. 22)
+      </div>
+    ) : null}
     <input type="range" aria-label={label} min={min} max={max} step="any" value={value} onChange={e => { setDraft(null); onChange(Number(e.target.value)); }} style={styles.rangeInput} />
-    <div style={styles.basisRow}>{['low','default','high'].map(key => <button type="button" key={key} style={styles.copyBtn} onClick={() => { setDraft(null); onChange(config[key + suffix] / unitScale); }}>{key === 'default' ? 'Base' : key === 'low' ? 'Low' : 'High'} {(config[key + suffix] / unitScale).toFixed(2)}</button>)}</div>
-    <div style={styles.hint}>Base is the recommended starting assumption.</div>
+    <div style={styles.basisRow}>
+      {['low','default','high'].map(key => {
+        const preset = config.presets?.[key];
+        const num = config[key + suffix] / unitScale;
+        const btnLabel = preset?.label || `${key === 'default' ? 'Base' : key === 'low' ? 'Low' : 'High'} ${num.toFixed(2)}`;
+        return (
+          <button type="button" key={key} style={styles.copyBtn} onClick={() => { setDraft(null); onChange(num); }}>
+            {btnLabel}
+          </button>
+        );
+      })}
+    </div>
+    {config.presets ? (
+      <div style={styles.hint}>
+        {['low', 'default', 'high'].map((key) => {
+          const preset = config.presets[key];
+          if (!preset) return null;
+          return (
+            <div key={key}>
+              <strong>{preset.label}:</strong> {preset.explanation}
+            </div>
+          );
+        })}
+      </div>
+    ) : (
+      <div style={styles.hint}>Base is the recommended starting assumption.</div>
+    )}
     <p style={styles.hint}>{config.method}</p>
     {config.sources.map((source, i) => <div key={i} style={styles.hint}><a href={source.url} target="_blank" rel="noopener noreferrer">{source.sourceClass}: {source.measurementDate}</a> · {source.note}</div>)}
   </div>;

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "1.2.0",
-  "methodologyVersion": "1.2.0",
+  "schemaVersion": "1.3.0",
+  "methodologyVersion": "1.3.0",
   "ticker": "VCX",
   "yahooSymbol": "VCX",
   "name": "Fundrise Innovation Fund",
@@ -20,7 +20,7 @@
   "security": {
     "label": "Fund NAV",
     "linear": true,
-    "footnote": "Look-through from filed fair value ÷ the round used to mark that FV."
+    "footnote": "Anthropic: June 30 NPORT mark ($863.7B) has no S-1 per-share price; share-equivalents use an explicit estimation assumption scaling Series H-1 ($589.0095, S-1 p. F-47) by 863.7/965 (≈$527.17 per pre-split share), then divide by S-1 FD shares (p. 13)."
   },
   "sources": [
     {
@@ -102,15 +102,15 @@
           "measurementCompanyMark"
         ],
         "sourceClass": "assumption",
-        "note": "Implied ~$863.7B = Series G $380B × the 2.2729709× NPORT multiple on the remaining lots. Not a disclosed Anthropic round; Fundrise did not take the full Series H 965/380 multiple.",
-        "publicationDate": "2026-08-28",
+        "note": "Implied ~$863.7B = Series G $380B × the 2.2729709× NPORT multiple on the remaining lots. Not a disclosed Anthropic round; Fundrise did not take the full Series H 965/380 multiple. Share-equivalents use the Series H-1 price ($589.0095 per pre-split share, S-1 p. F-47) scaled by 863.7/965 (≈$527.17 per pre-split share), then divide by the S-1 FD share count (p. 13).",
+        "publicationDate": "2026-10-26",
         "url": "https://www.sec.gov/Archives/edgar/data/1867090/000186709026000109/04400.htm",
         "measurementDate": "2026-06-30",
-        "estimationMethod": "Implied ~$863.7B = Series G $380B × the 2.2729709× NPORT multiple on the remaining lots. Not a disclosed Anthropic round; Fundrise did not take the full Series H 965/380 multiple.",
-        "section": "See source note"
+        "estimationMethod": "Implied ~$863.7B = Series G $380B × the 2.2729709× NPORT multiple on the remaining lots. Because this fund mark has no disclosed per-share price, share-equivalents scale the Series H-1 price ($589.0095 pre-split, S-1 p. F-47) by 863.7/965 (≈$527.17 per pre-split unit).",
+        "section": "S-1 pp. 13, F-47"
       }
     ],
-    "evidenceNote": "Filed fair value with an inferred measurement valuation; scenario equivalent, not filed ownership."
+    "evidenceNote": "Estimation assumption: mark anthropic-vcx-nport-2026-06-30 ($863.7B) has no per-share price in the S-1, so share-equivalents (329,342.96 pre-split units) use the Series H-1 price ($589.0095, S-1 p. F-47) scaled by 863.7/965 (≈$527.17 per pre-split share), then divide by the S-1 FD share count (p. 13)."
   },
   "openai": {
     "basis": "filed-fv-equiv",

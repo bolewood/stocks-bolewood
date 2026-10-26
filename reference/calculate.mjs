@@ -47,7 +47,7 @@ const isMain =
 if (isMain) {
   if (process.argv[2] === '--scenario') {
     const snapshot = JSON.parse(readFileSync(process.argv[3], 'utf8'));
-    if (snapshot.format !== 'ai-exposure-scenario' || snapshot.version !== '1.2.0') throw new Error('Unsupported scenario export');
+    if (snapshot.format !== 'ai-exposure-scenario' || snapshot.version !== '1.3.0') throw new Error('Unsupported scenario export');
     const actual = canonicalTable(calculate(snapshot.dataset, snapshot.inputs));
     if (snapshot.results && JSON.stringify(actual) !== JSON.stringify(canonicalTable(snapshot.results))) throw new Error('Exported results do not reproduce');
     console.log(JSON.stringify(actual, null, 2));

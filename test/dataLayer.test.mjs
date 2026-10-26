@@ -128,7 +128,8 @@ test("share count, ADR ratio, TNA and marks each carry as-of and sources", () =>
 });
 
 test("scenario valuation does not change FV-equivalent exposure %", () => {
-  const { marks } = loadPublicDataset();
+  const { marks, capitalization } = loadPublicDataset();
+  const s1Fd = capitalization.anthropic.defaultShares;
   for (const raw of RAW_AI_WRAPPERS) {
     const w = WRAPPERS.find((x) => x.ticker === raw.ticker);
     const resolved = resolveFund(w, {
@@ -169,9 +170,54 @@ test("scenario valuation does not change FV-equivalent exposure %", () => {
         marks,
         raw[side].measurementCompanyMark
       );
-      assert.equal(lo[key], fundClaimPct(fv, round));
+      if (side === "anthropic" && Number.isFinite(w[side]?.roundPricePerShare) && w[side].roundPricePerShare > 0) {
+        const expectedAnthPct = (fv / w[side].roundPricePerShare) / s1Fd;
+        assert.ok(Math.abs(lo[key] - expectedAnthPct) < 1e-15);
+      } else {
+        assert.equal(lo[key], fundClaimPct(fv, round));
+      }
     }
   }
+});
+
+test("S-1 FD denominator scaling matches expected round-to-S1 ratios across all Anthropic wrapper legs", () => {
+  const { capitalization } = loadPublicDataset();
+  const s1Fd = capitalization.anthropic.defaultShares;
+  assert.equal(s1Fd, 1_778_366_016);
+  const oldDxyzCalibratedFd = capitalization.anthropic.superseded.find(
+    (s) => s.role === "defaultShares"
+  ).shares;
+  assert.equal(oldDxyzCalibratedFd, 1_580_904_637.8663518);
+
+  // filed-units legs (DXYZ, SKM): × 1,580.9M / 1,778.4M = × 0.8890 (-11.1%)
+  const filedUnitsRatio = oldDxyzCalibratedFd / s1Fd;
+  assert.ok(Math.abs(filedUnitsRatio - 0.8890) < 1e-4);
+  for (const ticker of ["DXYZ", "SKM"]) {
+    const w = WRAPPERS.find((x) => x.ticker === ticker);
+    const oldPct = w.anthropic.filedUnits / oldDxyzCalibratedFd;
+    const newPct = w.anthropic.filedUnits / s1Fd;
+    assert.ok(Math.abs(newPct / oldPct - filedUnitsRatio) < 1e-12);
+  }
+
+  // Series H-measured legs (AGIX, AMZN, ZM) and VCX (H-1 scaled by 863.7/965): × 1,638.3M / 1,778.4M = × 0.9213 (-7.9%)
+  const h1Fd = 965_000_000_000 / 589.0095;
+  const seriesHRatio = h1Fd / s1Fd;
+  assert.ok(Math.abs(seriesHRatio - 0.9213) < 1e-4);
+  for (const ticker of ["AGIX", "AMZN", "ZM", "VCX"]) {
+    const w = WRAPPERS.find((x) => x.ticker === ticker);
+    const oldPct = fundClaimPct(w.anthropic.fairValue, w.anthropic.roundVal);
+    const newPct = (w.anthropic.fairValue / w.anthropic.roundPricePerShare) / s1Fd;
+    assert.ok(Math.abs(newPct / oldPct - seriesHRatio) < 1e-12, `${ticker} ratio=${newPct / oldPct}`);
+  }
+
+  // Series G-measured leg (ARKVX): × 1,466.4M / 1,778.4M = × 0.8246 (-17.5%)
+  const g1Fd = 380_000_000_000 / 259.14;
+  const seriesGRatio = g1Fd / s1Fd;
+  assert.ok(Math.abs(seriesGRatio - 0.8246) < 1e-4);
+  const arkvx = WRAPPERS.find((x) => x.ticker === "ARKVX");
+  const arkvxOldPct = fundClaimPct(arkvx.anthropic.fairValue, arkvx.anthropic.roundVal);
+  const arkvxNewPct = (arkvx.anthropic.fairValue / arkvx.anthropic.roundPricePerShare) / s1Fd;
+  assert.ok(Math.abs(arkvxNewPct / arkvxOldPct - seriesGRatio) < 1e-12);
 });
 
 test("npm run reference reproduces expected-results.json from data/", () => {

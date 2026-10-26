@@ -1,56 +1,167 @@
 {
-  "schemaVersion": "1.2.0",
-  "methodologyVersion": "1.2.0",
-  "asOf": "2026-09-05",
-  "note": "Adjustable pre-IPO FD share-equivalent assumptions, not issuer cap tables. Bounds are sensitivity choices, not confidence intervals or proven likely outcomes.",
+  "schemaVersion": "1.3.0",
+  "methodologyVersion": "1.3.0",
+  "asOf": "2026-10-26",
+  "note": "Anthropic fully diluted shares are issuer-derived from the Form S-1 (p. 13) as of June 30, 2026 on a pre-split basis (10-for-1 forward split took effect September 17, 2026, S-1 p. 22). OpenAI remains an adjustable pre-IPO calibration proxy, not an issuer cap table.",
   "anthropic": {
-    "defaultShares": 1580904637.8663518,
-    "lowShares": 1544132000.0,
-    "highShares": 2573553333.3333335,
-    "alternateShares": 1930165000.0,
+    "asOf": "2026-06-30",
+    "shareBasis": "pre-split",
+    "splitFactor": 10,
+    "splitEffectiveDate": "2026-09-17",
+    "defaultShares": 1778366016,
+    "lowShares": 1693681920,
+    "highShares": 1814000000,
     "minShares": 800000000,
     "maxShares": 3000000000,
-    "method": "Default: $965B / (DXYZ June FV / units). Different valuation methods and security classes make this a calibration proxy, not independently verified FD. Low/high: conditional SKM rounded 0.2% cross-check; rounding convention and FD definition unverified.",
+    "method": "Issuer-derived from Form S-1 (pp. 13, 144, 236): 846,840,960 post-split Class N shares contributed to Anthropic Public Benefit Fund, LLC represent 5% of fully diluted shares as of June 30, 2026 (assuming full conversion of the Amazon Notes). Pre-fund FD = 846,840,960 / 0.05 = 16,936,819,200 post-split (1,693,681,920 pre-split); including the fund = 17,783,660,160 post-split (1,778,366,016 pre-split). Internal basis is pre-split (splitFactor 10, S-1 p. 22) to match wrapper filed units. Low excludes the fund (or equals the '5% of post-issuance' reading of S-1 p. 13); high adds one future 2% public-benefit milestone issuance (S-1 p. 13).",
+    "presets": {
+      "low": {
+        "label": "ex-fund 1,693.7",
+        "shares": 1693681920,
+        "explanation": "Excludes the 5% public-benefit fund (also equals the '5% of post-issuance' reading, S-1 p. 13)."
+      },
+      "default": {
+        "label": "incl. fund 1,778.4",
+        "shares": 1778366016,
+        "explanation": "June 30, 2026 fully diluted count including 846.8M post-split Class N shares contributed to Anthropic Public Benefit Fund, LLC (S-1 p. 13)."
+      },
+      "high": {
+        "label": "+one future issuance 1,814.0",
+        "shares": 1814000000,
+        "explanation": "Adds one future 2% public-benefit milestone issuance triggered by a +50% share-price appreciation from the IPO price (S-1 p. 13)."
+      }
+    },
+    "roundPrices": {
+      "E-1": {
+        "series": "Series E-1",
+        "pricePerShare": 56.09,
+        "postMoney": 61500000000,
+        "shareBasis": "pre-split",
+        "citation": "S-1 p. F-47"
+      },
+      "F-1": {
+        "series": "Series F-1",
+        "pricePerShare": 140.97,
+        "postMoney": 183000000000,
+        "shareBasis": "pre-split",
+        "citation": "S-1 p. F-47"
+      },
+      "G-1": {
+        "series": "Series G-1",
+        "markId": "anthropic-series-g",
+        "pricePerShare": 259.14,
+        "postMoney": 380000000000,
+        "shareBasis": "pre-split",
+        "citation": "S-1 p. F-47"
+      },
+      "H-1": {
+        "series": "Series H-1",
+        "markId": "anthropic-series-h",
+        "pricePerShare": 589.0095,
+        "postMoney": 965000000000,
+        "shareBasis": "pre-split",
+        "citation": "S-1 p. F-47"
+      }
+    },
+    "superseded": [
+      {
+        "role": "defaultShares",
+        "shares": 1580904637.8663518,
+        "asOf": "2026-06-30",
+        "supersededOn": "2026-10-26",
+        "method": "Pre-S-1 calibration proxy: $965B Series H post-money / (DXYZ June 30, 2026 NPORT-P fair value $235,672,115 / 386,088 units = $610.41036 / unit).",
+        "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/xslFormNPORT-P_X01/primary_doc.xml"
+      },
+      {
+        "role": "lowShares",
+        "shares": 1544132000.0,
+        "asOf": "2026-06-30",
+        "supersededOn": "2026-10-26",
+        "method": "Pre-S-1 SKM conditional upper-bound cross-check: 3,860,330 shares / 0.25%.",
+        "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813001728"
+      },
+      {
+        "role": "alternateShares",
+        "shares": 1930165000.0,
+        "asOf": "2026-06-30",
+        "supersededOn": "2026-10-26",
+        "method": "Pre-S-1 SKM conditional point cross-check: 3,860,330 shares / 0.20%.",
+        "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813001728"
+      },
+      {
+        "role": "highShares",
+        "shares": 2573553333.3333335,
+        "asOf": "2026-06-30",
+        "supersededOn": "2026-10-26",
+        "method": "Pre-S-1 SKM conditional lower-bound cross-check: 3,860,330 shares / 0.15%.",
+        "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813001728"
+      }
+    ],
     "sources": [
       {
         "fields": [
-          "defaultShares"
-        ],
-        "sourceClass": "assumption",
-        "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/xslFormNPORT-P_X01/primary_doc.xml",
-        "measurementDate": "2026-06-30",
-        "publicationDate": "2026-08-28",
-        "asOf": "2026-06-30",
-        "section": "See source note",
-        "note": "Filing supplies units and FV only, not FD.",
-        "estimationMethod": "Filing supplies units and FV only, not FD."
-      },
-      {
-        "fields": [
-          "defaultShares"
+          "defaultShares",
+          "lowShares"
         ],
         "sourceClass": "primary",
-        "url": "https://www.anthropic.com/news/series-h",
-        "measurementDate": "2026-05-28",
-        "publicationDate": "2026-05-28",
-        "asOf": "2026-05-28",
-        "section": "See source note",
-        "note": "$965B primary anchor."
+        "issuer": "Anthropic, PBC",
+        "filingType": "S-1",
+        "accession": "0001628280-26-067168",
+        "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
+        "measurementDate": "2026-06-30",
+        "publicationDate": "2026-10-26",
+        "asOf": "2026-06-30",
+        "section": "S-1 pp. 13, 20, 24, 144, 236",
+        "note": "846,840,960 post-split Class N shares contributed to Anthropic Public Benefit Fund, LLC (a wholly owned subsidiary), representing 5% of fully diluted shares as of June 30, 2026 assuming full conversion of the Amazon Notes (S-1 pp. 13, 144, 236). Shares are legally outstanding but excluded from GAAP share counts (S-1 pp. 20, 24).",
+        "estimationMethod": "Pre-fund FD = 846,840,960 / 0.05 = 16,936,819,200 post-split (1,693,681,920 pre-split, lowShares); including the fund = 16,936,819,200 + 846,840,960 = 17,783,660,160 post-split (1,778,366,016 pre-split, defaultShares). Divided by splitFactor 10 (S-1 p. 22)."
       },
       {
         "fields": [
-          "lowShares",
-          "highShares",
-          "alternateShares"
+          "highShares"
         ],
         "sourceClass": "assumption",
-        "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813001728",
+        "issuer": "Anthropic, PBC",
+        "filingType": "S-1",
+        "accession": "0001628280-26-067168",
+        "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
         "measurementDate": "2026-06-30",
-        "publicationDate": "2026-08-13",
+        "publicationDate": "2026-10-26",
         "asOf": "2026-06-30",
-        "section": "See source note",
-        "note": "3,860,330 divided by conditional 0.25%, 0.15%, 0.2% cross-check.",
-        "estimationMethod": "3,860,330 divided by conditional 0.25%, 0.15%, 0.2% cross-check."
+        "section": "S-1 p. 13",
+        "note": "One future 2% public-benefit milestone issuance (~1,814.0M pre-split). The board may issue up to an additional 2% of then-outstanding fully diluted shares (including the fund's shares) each time the share price appreciates 50% above the prior milestone, starting from the IPO price (S-1 p. 13).",
+        "estimationMethod": "1,778,366,016 × 1.02 = 1,813,933,336.32, rounded to 1,814,000,000 pre-split shares (S-1 p. 13)."
+      },
+      {
+        "fields": [
+          "splitFactor",
+          "splitEffectiveDate",
+          "shareBasis"
+        ],
+        "sourceClass": "primary",
+        "issuer": "Anthropic, PBC",
+        "filingType": "S-1",
+        "accession": "0001628280-26-067168",
+        "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
+        "measurementDate": "2026-09-17",
+        "publicationDate": "2026-10-26",
+        "asOf": "2026-09-17",
+        "section": "S-1 p. 22",
+        "note": "10-for-1 forward stock split of Class A and Class N common stock effective September 17, 2026, retroactive in GAAP common share data (S-1 p. 22). Preferred prices are quoted pre-split (S-1 p. F-47)."
+      },
+      {
+        "fields": [
+          "roundPrices"
+        ],
+        "sourceClass": "primary",
+        "issuer": "Anthropic, PBC",
+        "filingType": "S-1",
+        "accession": "0001628280-26-067168",
+        "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
+        "measurementDate": "2026-06-30",
+        "publicationDate": "2026-10-26",
+        "asOf": "2026-06-30",
+        "section": "S-1 p. F-47",
+        "note": "Preferred stock original issue prices per pre-split share (S-1 p. F-47): Series E-1 $56.09 ($61.5B, 1,096.4M implied FD), Series F-1 $140.97 ($183B, 1,298.2M implied FD), Series G-1 $259.14 ($380B, 1,466.4M implied FD), Series H-1 $589.0095 ($965B, 1,638.3M implied FD; $58.90 per post-split ANT share)."
       },
       {
         "fields": [
@@ -59,8 +170,8 @@
         ],
         "sourceClass": "assumption",
         "url": "https://github.com/bolewood/stocks-bolewood/blob/main/data/METHODOLOGY.md",
-        "measurementDate": "2026-09-05",
-        "publicationDate": "2026-09-05",
+        "measurementDate": "2026-10-26",
+        "publicationDate": "2026-10-26",
         "section": "Capitalization uncertainty",
         "estimationMethod": "Author-selected exploration limits, not evidence-backed confidence bounds.",
         "note": "Slider limits allow sensitivity exploration."
@@ -73,7 +184,7 @@
     "highShares": 1546855936.6345837,
     "minShares": 700000000,
     "maxShares": 2500000000,
-    "method": "Default: $852B / (DXYZ June preferred FV / units). No independent public FD cap table. Low/high are explicitly \u00b125% stress choices, not foundation or option-pool estimates.",
+    "method": "Default: $852B / (DXYZ June preferred FV / units). No independent public FD cap table. Low/high are explicitly ±25% stress choices, not foundation or option-pool estimates.",
     "sources": [
       {
         "fields": [
@@ -124,7 +235,7 @@
     "highPrice": 860.6166666666667,
     "minPrice": 100,
     "maxPrice": 2000,
-    "method": "June preferred FV / units is an adjustable proxy for August common entry. \u00b125% stress choices are not transaction quotes. Estimated units = $150M / entry price; hold fixed as company valuation or FD changes.",
+    "method": "June preferred FV / units is an adjustable proxy for August common entry. ±25% stress choices are not transaction quotes. Estimated units = $150M / entry price; hold fixed as company valuation or FD changes.",
     "sources": [
       {
         "fields": [

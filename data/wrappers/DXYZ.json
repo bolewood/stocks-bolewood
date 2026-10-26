@@ -1,18 +1,18 @@
 {
-  "schemaVersion": "1.2.0",
-  "methodologyVersion": "1.2.0",
+  "schemaVersion": "1.3.0",
+  "methodologyVersion": "1.3.0",
   "ticker": "DXYZ",
   "yahooSymbol": "DXYZ",
   "name": "Destiny Tech100",
   "wrapperType": "closed-end-fund",
   "denominatorType": "market-cap",
   "confidence": "medium",
-  "note": "Filed quantities are revalued under every scenario using adjustable, estimated company FD share counts. Estimated Holdings adds the August 13 cash-funded OpenAI lot and a separate ATM bridge. PPUs remain excluded from equity scaling.",
+  "note": "Filed quantities are revalued under every scenario. Anthropic uses the issuer-derived S-1 fully diluted share count (1,778,366,016 pre-split including the 5% public-benefit fund, S-1 p. 13); OpenAI uses an adjustable calibration proxy. Estimated Holdings adds the August 13 cash-funded OpenAI lot and a separate ATM bridge. PPUs remain excluded from equity scaling.",
   "sharesNote": "FILED: 47,657,338 shares from the June 30, 2026 N-CSRS. ESTIMATED: /dxyz ATM bridge from July 1. Active ATM. Board approved an August 2026 below-NAV repurchase program, discretionary as to size and timing.",
   "security": {
     "label": "Fund NAV",
     "linear": true,
-    "footnote": "Gross share-equivalent exposure assumes conversion at parity. Scenario price = company valuation × (1 − incremental IPO dilution) ÷ estimated pre-IPO FD shares. The FD denominator is not filed."
+    "footnote": "Gross share-equivalent exposure assumes conversion at parity. Anthropic FD (1,778.4M pre-split / 17.78B ANT shares) is issuer-derived from the S-1 (p. 13, including the 5% public-benefit fund); OpenAI FD remains an unfiled calibration proxy. DXYZ's 386,088 Anthropic units are Series B preferred equivalents (N-CSRS), and Series B converts to non-voting, unlisted Class N common stock (convertible to Class A on a qualifying transfer, S-1 pp. 20, 309) — a liquidity and voting note with no valuation change."
   },
   "filedSnapshot": {
     "asOf": "2026-06-30",
@@ -121,10 +121,28 @@
         "publicationDate": "2026-08-28",
         "measurementDate": "2026-06-30",
         "section": "See source note"
+      },
+      {
+        "fields": [
+          "unitLabel",
+          "holdingSecurity"
+        ],
+        "sourceClass": "primary",
+        "issuer": "Anthropic, PBC",
+        "filingType": "S-1",
+        "accession": "0001628280-26-067168",
+        "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
+        "documentDate": "2026-10-26",
+        "asOf": "2026-06-30",
+        "measurementDate": "2026-06-30",
+        "publicationDate": "2026-10-26",
+        "section": "S-1 pp. 13, 20, 22, 309",
+        "note": "Series B preferred converts to Class N common stock (non-voting, not listed, not registered; converts to Class A on a 'qualifying transfer', S-1 pp. 20, 309). Pre-split units are divided by the S-1 pre-split FD share count (1,778,366,016 incl. the 5% public-benefit fund, S-1 p. 13; 10-for-1 split S-1 p. 22)."
       }
     ],
     "unitsAsOf": "2026-06-30",
-    "unitLabel": "Magnitude ANC III — Anthropic Series B preferred equivalents"
+    "unitLabel": "Magnitude ANC III — Anthropic Series B preferred equivalents",
+    "evidenceNote": "Units are 'Series B preferred equivalents' (N-CSRS). Per the S-1 (pp. 20, 309), Series B converts to Class N (non-voting and unlisted, convertible to Class A on a qualifying transfer). No valuation change; this is a liquidity and voting note. Divided by the S-1 pre-split FD count (1,778,366,016 incl. the 5% public-benefit fund, S-1 p. 13)."
   },
   "openai": {
     "basis": "filed-units",

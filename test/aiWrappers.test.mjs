@@ -257,7 +257,7 @@ test("OpenAI last primary is below Anthropic Series H", () => {
   assert.ok(
     LAST_PRIMARY_ROUNDS.openai.postMoney < LAST_PRIMARY_ROUNDS.anthropic.postMoney
   );
-  assert.equal(LAST_PRIMARY_ROUNDS.asOf, "2026-09-05");
+  assert.equal(LAST_PRIMARY_ROUNDS.asOf, "2026-10-26");
 });
 
 test("Base chip multiples are vs last primary rounds", () => {
@@ -323,7 +323,7 @@ test("AMZN and GOOG are non-linear; funds are Fund NAV; SFTBY has navNote", () =
   const agix = WRAPPERS.find((w) => w.ticker === "AGIX");
   assert.equal(amzn.security.label, "Conv + Pfd");
   assert.equal(amzn.security.linear, false);
-  assert.equal(goog.security.label, "Common (15% cap)");
+  assert.equal(goog.security.label, "Common (14.99% cap)");
   assert.equal(goog.security.linear, false);
   assert.equal(msft.security.label, "Equity");
   assert.equal(nvda.security.label, "Undisclosed");
@@ -358,16 +358,20 @@ test("MSFT has no Anthropic percentage; NVDA OpenAI is round-implied $30B/$852B"
   assert.ok(Math.abs(claimPct(nvda.openai) - 30e9 / 852e9) < 1e-15);
 });
 
-test("AMZN Anthropic is $190.4B/$965B; OpenAI $50B/$852B; SKM ADS-equiv from 20-F", () => {
+test("AMZN Anthropic is $190.4B / $589.0095 / 1.778B S-1 FD; OpenAI $50B/$852B; SKM ADS-equiv from 20-F", () => {
   const amzn = WRAPPERS.find((w) => w.ticker === "AMZN");
   const skm = WRAPPERS.find((w) => w.ticker === "SKM");
   const goog = WRAPPERS.find((w) => w.ticker === "GOOG");
   assert.equal(amzn.anthropic.fairValue, 190_400_000_000);
-  assert.ok(Math.abs(claimPct(amzn.anthropic) - 190.4e9 / 965e9) < 1e-12);
+  assert.ok(Math.abs(fundClaimPct(amzn.anthropic.fairValue, amzn.anthropic.roundVal) - 190.4e9 / 965e9) < 1e-12);
+  assert.ok(
+    Math.abs(claimPct(amzn.anthropic) - (190.4e9 / 589.0095) / 1_778_366_016) < 1e-12
+  );
   assert.ok(Math.abs(claimPct(amzn.openai) - 50e9 / 852e9) < 1e-12);
   assert.equal(skm.sharesOutstanding, 213_057_911 * 9 / 5);
   assert.equal(skm.sharesAsOf, "2026-06-30");
   assert.equal(skm.anthropic.basis, "filedUnits");
   assert.equal(goog.sharesOutstanding, 12_230_000_000);
   assert.equal(goog.anthropic.displayAsMax, true);
+  assert.equal(goog.anthropic.capPct, 0.1499);
 });

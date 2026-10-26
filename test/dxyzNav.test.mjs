@@ -101,7 +101,9 @@ test('impliedValuation inverts unitPrice at dilution 0; June marks recover last-
   }), 965e9);
   for (const n of [0, -1, NaN, Infinity]) assert.throws(() => impliedValuation({ pps: 1, fdShares: n }));
   const june = calculateDxyzNav({ includeAugust: false });
-  near(position(june, 'Anthropic').companyValue, 965e9);
+  assert.equal(position(june, 'Anthropic').fdShares, 1_778_366_016);
+  assert.equal(position(june, 'Anthropic').splitFactor, 10);
+  near(position(june, 'Anthropic').companyValue, position(june, 'Anthropic').pps * DEFAULT_ANTH_FD_SHARES);
   near(position(june, 'OpenAI').companyValue, 852e9);
   const marked = calculateDxyzNav({ ppsOverrides: { OpenAI: pps } });
   near(position(marked, 'OpenAI').companyValue, headline);

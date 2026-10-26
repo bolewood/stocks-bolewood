@@ -1,13 +1,13 @@
 {
-  "schemaVersion": "1.2.0",
-  "methodologyVersion": "1.2.0",
+  "schemaVersion": "1.3.0",
+  "methodologyVersion": "1.3.0",
   "ticker": "SKM",
   "yahooSymbol": "SKM",
   "name": "SK Telecom Co.",
   "wrapperType": "adr",
   "denominatorType": "adr-equivalent-market-cap",
   "confidence": "medium",
-  "note": "DART reports 3,860,330 Anthropic shares and a rounded 0.2% at June 30. Scenario exposure uses these units and the shared estimated Anthropic FD denominator. No disclosed OpenAI holding.",
+  "note": "DART reports 3,860,330 pre-split Anthropic shares and a rounded 0.2% at June 30, 2026. Scenario exposure divides these filed pre-split units by the S-1 fully diluted share count (1,778,366,016 pre-split, S-1 p. 13). SK Telecom is not named in the S-1, below disclosure thresholds (S-1 pp. 289–290). No disclosed OpenAI holding.",
   "shareCount": {
     "value": 213057911,
     "issued": 214790053,
@@ -26,7 +26,7 @@
   "security": {
     "label": "Equity equivalents",
     "linear": true,
-    "footnote": "Filed Anthropic shares; security conversion parity and the company FD denominator are modeled. The rounded reported 0.2% is a cross-check, not an exact FD count."
+    "footnote": "3,860,330 pre-split Anthropic shares (DART, 2026-06-30) divided by the S-1 pre-split FD count (1,778,366,016 incl. the 5% public-benefit fund, S-1 p. 13). Not named in the S-1, below disclosure thresholds (S-1 pp. 289–290)."
   },
   "sources": [
     {
@@ -74,12 +74,12 @@
     "unitsAsOf": "2026-06-30",
     "carriedInterestPct": 0,
     "confidence": "medium",
-    "unitLabel": "SK Telecom Anthropic shares",
+    "unitLabel": "SK Telecom Anthropic shares (pre-split)",
     "reportedOwnership": {
       "pct": 0.002,
       "decimalPlacesInPercent": 1,
       "roundingConvention": "not-verified",
-      "note": "If rounded to nearest 0.1 percentage point, 0.15%–0.25% is a cross-check interval, not an ownership confidence interval. Definition may differ from fully diluted."
+      "note": "DART printed a rounded 0.2% as of June 30, 2026; 3,860,330 / 1,778,366,016 (S-1 p. 13) = 0.2171% incl. the public-benefit fund (0.2279% ex-fund)."
     },
     "observations": {
       "beginningUnits": 3703141,
@@ -101,7 +101,23 @@
         "publicationDate": "2026-08-13",
         "asOf": "2026-06-30",
         "section": "XII.3 Detailed investments in other corporations",
-        "note": "Beginning 3,703,141 + acquired 157,189 = ending 3,860,330. Ownership printed 0.2%; investment 139,925 and book value 3,505,017 in KRW millions."
+        "note": "Beginning 3,703,141 + acquired 157,189 = ending 3,860,330 (pre-split). Ownership printed 0.2%; investment 139,925 and book value 3,505,017 in KRW millions."
+      },
+      {
+        "fields": [
+          "filedUnits"
+        ],
+        "sourceClass": "primary",
+        "issuer": "Anthropic, PBC",
+        "filingType": "S-1",
+        "accession": "0001628280-26-067168",
+        "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
+        "documentDate": "2026-10-26",
+        "asOf": "2026-06-30",
+        "measurementDate": "2026-06-30",
+        "publicationDate": "2026-10-26",
+        "section": "S-1 pp. 13, 22, 289–290",
+        "note": "SK Telecom is not named in the S-1, below 5% principal-stockholder disclosure thresholds (S-1 pp. 289–290). DART 6/30 units are pre-split (10-for-1 split took effect 2026-09-17, S-1 p. 22) and are divided by the S-1 pre-split FD share count (1,778,366,016 incl. the 5% public-benefit fund, S-1 p. 13)."
       },
       {
         "fields": [
@@ -116,7 +132,8 @@
         "note": "Direct corporate holding; gross model assumes no SPV carry.",
         "estimationMethod": "Direct corporate holding; gross model assumes no SPV carry."
       }
-    ]
+    ],
+    "evidenceNote": "Not named in the S-1, below disclosure thresholds (S-1 pp. 289–290). Units stay 3,860,330 (DART, 2026-06-30, pre-split) and are divided by the S-1 pre-split fully diluted share count (1,778,366,016 incl. the 5% public-benefit fund, S-1 p. 13)."
   },
   "openai": null,
   "pendingTreasuryDisposal": {

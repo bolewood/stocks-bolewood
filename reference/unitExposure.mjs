@@ -5,6 +5,16 @@ export const CAPITALIZATION = capitalization;
 export const DEFAULT_ANTH_FD_SHARES = capitalization.anthropic.defaultShares;
 export const DEFAULT_OAI_FD_SHARES = capitalization.openai.defaultShares;
 export const DEFAULT_DXYZ_OAI_ENTRY_PRICE = capitalization.dxyzOpenaiEntry.defaultPrice;
+export const ANTH_SPLIT_FACTOR = capitalization.anthropic.splitFactor || 10;
+
+export function roundImpliedFd(roundEntry) {
+  if (!roundEntry || !(roundEntry.postMoney > 0) || !(roundEntry.pricePerShare > 0)) return null;
+  return roundEntry.postMoney / roundEntry.pricePerShare;
+}
+
+export const ANTH_ROUND_IMPLIED_FD = Object.fromEntries(
+  Object.entries(capitalization.anthropic.roundPrices || {}).map(([key, val]) => [key, roundImpliedFd(val)])
+);
 
 export function unitPrice({ valuation, fdShares, dilution = 0 }) {
   if (!Number.isFinite(valuation) || valuation < 0 || !Number.isFinite(fdShares) || fdShares <= 0 || !Number.isFinite(dilution) || dilution < 0 || dilution > 1) {

@@ -422,7 +422,7 @@ export default function DXYZNAVFinder() {
       <div style={styles.howToBox}>
         <div style={styles.howToTitle}>How this works</div>
         <ol style={styles.howToList}>
-          <li style={{ marginBottom: 6 }}>The fund holds share-equivalent units (Box 1) and other SPVs (Box 2). Anthropic is a $/share input: {ANTHROPIC_SPV.units.toLocaleString("en-US")} units, so ΔNAV/share = ${ANTHROPIC_NAV_SENS.toFixed(6)} per $1 of Anthropic price.</li>
+          <li style={{ marginBottom: 6 }}>The fund holds share-equivalent units (Box 1) and other SPVs (Box 2). Anthropic is a $/share input on a pre-split basis: {ANTHROPIC_SPV.units.toLocaleString("en-US")} pre-split units, so ΔNAV/share = ${ANTHROPIC_NAV_SENS.toFixed(6)} per $1 of pre-split Anthropic price (${(ANTHROPIC_NAV_SENS * 10).toFixed(5)} per $1 of ANT share price after the 10-for-1 split, S-1 p. 22).</li>
           <li style={{ marginBottom: 6 }}>Update price-per-share for Box 1 (or implied EV ($T) for Anthropic and OpenAI) and MOIC for Box 2. Private-price defaults are the June 30, 2026 marks. Subsequent purchases through August 13 are included by default; their cash cost is deducted once.</li>
           <li style={{ marginBottom: 6 }}>SpaceX uses the live Yahoo SPCX quote with per-SPV carried interest (MWAM 10%; others 0%). June 30 units are already post 5-for-1 Unit Parity.</li>
           <li style={{ marginBottom: 6 }}>The ATM Issuance Bridge estimates share issuance since June 30 (default: Calibrated Estimate). April 1–June 30 sales of 17,191,674 shares are already in the filed baseline — the ATM toggle only controls issuance. Use Restore June 30 snapshot for the original filed holdings and marks.</li>
@@ -767,7 +767,7 @@ export default function DXYZNAVFinder() {
           <h3 style={{ ...styles.sectionTitle, fontSize: "16px", margin: 0 }}>Note on Holding Data</h3>
         </div>
         <div style={styles.issuanceMeta}>
-          The June 30, 2026 NPORT-P reports share-equivalent units (N-CSRS footnotes (f)/(g)/(h)/(i)). Anthropic is 386,088 Magnitude ANC III units at a filed $610.41/unit; OpenAI equity is 50,895 Goanna units at $688.49; the three SpaceX SPVs are post 5-for-1 Unit Parity and mark to quoted SPCX with per-SPV carry (MWAM 10%). Level 3 inputs are volume-weighted secondary prices, index prices, and recent transactions — not announced primary rounds. Baseline NAV is the N-CSRS print: $34.30 on 47,657,338 shares, net assets $1,634,830,252, investments $1,640,039,144. Issuance after June 30 is modeled in the ATM bridge and never restates these filed figures. The August OpenAI lot is now valued separately, with an equal cost deduction from cash; only its gain or loss changes NAV.
+          The June 30, 2026 NPORT-P reports share-equivalent units (N-CSRS footnotes (f)/(g)/(h)/(i)). Anthropic is 386,088 pre-split Magnitude ANC III (Series B preferred) units at a filed $610.41 per pre-split unit ($61.04 per post-split ANT share; 10-for-1 split effective 2026-09-17, S-1 p. 22; Series B converts to non-voting unlisted Class N, S-1 pp. 20, 309); OpenAI equity is 50,895 Goanna units at $688.49; the three SpaceX SPVs are post 5-for-1 Unit Parity and mark to quoted SPCX with per-SPV carry (MWAM 10%). Level 3 inputs are volume-weighted secondary prices, index prices, and recent transactions — not announced primary rounds. Baseline NAV is the N-CSRS print: $34.30 on 47,657,338 shares, net assets $1,634,830,252, investments $1,640,039,144. Issuance after June 30 is modeled in the ATM bridge and never restates these filed figures. The August OpenAI lot is now valued separately, with an equal cost deduction from cash; only its gain or loss changes NAV.
         </div>
       </div>
 
@@ -775,7 +775,7 @@ export default function DXYZNAVFinder() {
         <div style={styles.sectionHeader} className="vcx-section-header">
           <span style={styles.sectionNum}>01</span>
           <h2 style={styles.sectionTitle}>Positions valued by share price</h2>
-          <span style={styles.sectionMeta} className="vcx-section-meta">Edit PPS or implied EV ($T) — Anthropic/OpenAI EV uses estimated FD from /ai</span>
+          <span style={styles.sectionMeta} className="vcx-section-meta">Edit PPS or implied EV ($T) — Anthropic EV uses S-1 FD (p. 13, pre-split); OpenAI EV uses estimated FD from /ai</span>
         </div>
 
         <div style={styles.tableWrap}>
@@ -810,12 +810,17 @@ export default function DXYZNAVFinder() {
                   <input
                     type="number"
                     step="any"
-                    min="0" aria-label={`${r.name} price per share`}
+                    min="0" aria-label={r.name === "Anthropic" ? "Anthropic price per pre-split unit" : `${r.name} price per share`}
                     value={ppsOverrides[evName]}
                     onChange={(e) => updatePPS(evName, e.target.value)}
                     style={styles.ppsInput}
                     className="vcx-input"
                   />
+                  {r.name === "Anthropic" && (
+                    <div style={styles.delta}>
+                      per pre-split unit (${(r.pps / 10).toFixed(2)} per ANT share)
+                    </div>
+                  )}
                   {Math.abs(delta) > 0.5 && (
                     <div style={{ ...styles.delta, color: delta > 0 ? "#15803d" : "#b91c1c" }}>
                       {delta > 0 ? "▲" : "▼"} {Math.abs(delta).toFixed(0)}% vs mark
@@ -846,7 +851,11 @@ export default function DXYZNAVFinder() {
                         style={styles.ppsInput}
                         className="vcx-input"
                       />
-                      <div style={styles.delta}>est. FD</div>
+                      <div style={styles.delta}>
+                        {r.name === "Anthropic"
+                          ? `per pre-split unit ($${(r.pps / 10).toFixed(2)} per ANT share) · S-1 FD (p. 13)`
+                          : "est. FD"}
+                      </div>
                     </>
                   ) : null}
                 </div>
@@ -1055,6 +1064,7 @@ export default function DXYZNAVFinder() {
       <div style={styles.footer}>
         <div><strong>Changelog:</strong></div>
         <div style={{ marginBottom: "16px" }}>
+          • <strong>October 26, 2026</strong> — Anthropic&apos;s Form S-1 (accession 0001628280-26-067168) replaced the DXYZ-calibrated Anthropic FD proxy with the issuer-derived June 30, 2026 count: 1,778,366,016 pre-split shares (17,783,660,160 post-split), including 846,840,960 post-split Class N shares contributed to Anthropic Public Benefit Fund, LLC (S-1 pp. 13, 144, 236). Anthropic Box 1 PPS ($610.41 June mark) and Implied EV ($T) are labeled per pre-split unit alongside the post-split ANT share equivalent ($61.04/ANT; 10-for-1 split effective 2026-09-17, S-1 p. 22). Noted that Series B preferred converts to non-voting unlisted Class N (S-1 pp. 20, 309).<br />
           • <strong>October 1, 2026</strong> — Added a collapsed holdings chart wall: default-mark treemap and Notice.co two-year charts captured that day. The tiles do not follow the PPS sliders.<br />
           • <strong>September 16, 2026</strong> — Anthropic and OpenAI Box 1 rows now show implied enterprise value ($T) from PPS × the same estimated FD denominator as /ai. Type 1.2 to mark OpenAI at $1.2T; a new primary may issue shares this identity does not model.<br />
           • <strong>September 5, 2026</strong> — August OpenAI units now use the shared AI Per $ model with adjustable entry price. Both OpenAI equity lots respond to PPS; purchase costs reduce cash once. Fluidstack and Boom subsequent purchases are held at cost. June snapshot remains reproducible.<br />
@@ -1078,7 +1088,7 @@ export default function DXYZNAVFinder() {
         <div>• <strong>ATM capacity:</strong> Original $1B shelf (File 333-278734) through 2025 and Q1. New shelf {NEW_SHELF.fileNumber} (effective {NEW_SHELF.filedDate}) authorizes an <strong>indeterminate</strong> amount — there is no filed remaining-capacity dollar figure. Post–June 30 simulation uses the May 26 424B5 $1B illustration as a modeling cap only. Jefferies commission up to 3.0%.</div>
         <div>• <strong>Share repurchase:</strong> In {SHARE_REPURCHASE.approved} the Board approved repurchases of common stock at prices below then-current NAV, discretionary as to size and timing (<a href={SHARE_REPURCHASE.url} target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSRS subsequent events</a>). Presented next to the open ATM; neither is treated as dominant.</div>
         <div>• <strong>Post-June 30 Issuance (estimated):</strong> Modeled daily from July 1 as a fixed share of Yahoo Finance trading volume (calibrated from filed Q2 shares ÷ Apr–Jun volume), issuing only on days above rolling pro forma NAV. Estimated, not company reported.</div>
-        <div>• <strong>Implied EV:</strong> Anthropic and OpenAI PPS × estimated fully diluted shares from <code>data/capitalization.json</code> (same defaults as /ai: $965B and $852B last primaries ÷ June DXYZ unit marks). Dilution is 0 on this page. This is not a filed cap table. A new primary may issue shares the identity does not model.</div>
+        <div>• <strong>Implied EV:</strong> Anthropic and OpenAI PPS × fully diluted shares from <code>data/capitalization.json</code> (same defaults as /ai). The Anthropic count (1,778,366,016 pre-split / 17,783,660,160 post-split as of June 30, 2026) is issuer-derived from the <a href="https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>Form S-1 (p. 13)</a>, including the 5% Anthropic Public Benefit Fund, LLC (846,840,960 post-split Class N shares; pp. 13, 144, 236). The OpenAI count remains an estimated calibration proxy ($852B last primary ÷ June DXYZ unit mark). Dilution is 0 on this page. A new primary or IPO issuance may add shares this identity does not model.</div>
         <div>• <strong>Subsequent events (mix shift, not new ATM):</strong> Aug 13 $150.0M additional Goanna Capital 26E (OpenAI Class A Common); Jul 16 $15.0M Magnitude FSTK / Fluidstack Series B; Aug 4 $4.0M Boom SAFE. When subsequent purchases are enabled, all $169M of costs are deducted from cash. August OpenAI uses estimated units and the same scenario PPS as June equity; Fluidstack and the new Boom SAFE are held at cost. Boom Series B-2 ($1.74M FV) is already on the June 30 schedule.</div>
       </div>
 

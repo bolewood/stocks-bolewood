@@ -1,13 +1,13 @@
 {
-  "schemaVersion": "1.2.0",
-  "methodologyVersion": "1.2.0",
+  "schemaVersion": "1.3.0",
+  "methodologyVersion": "1.3.0",
   "ticker": "GOOG",
   "yahooSymbol": "GOOG",
   "name": "Alphabet Inc.",
   "wrapperType": "operating-company",
   "denominatorType": "market-cap",
   "confidence": "medium",
-  "note": "14% as of Mar 2025; later rounds may have diluted unless Alphabet bought more.",
+  "note": "14% historical stake as of Mar 2025; does not scale with FD. Google 2026 NPA ownership cap is 14.99% of outstanding capitalization, post-money, as-converted (S-1 p. 169). The S-1 does not disclose Google's actual %; non-voting Class N holdings do not appear in the ownership table (S-1 pp. 289–290).",
   "shareCount": {
     "value": 12230000000,
     "asOf": "2026-06-30",
@@ -15,9 +15,9 @@
   },
   "sharesNote": "Class A 5,868M + B 835M + C 5,527M = 12,230M (10-Q 2026-06-30). GOOG price × all classes ≈ Alphabet market cap.",
   "security": {
-    "label": "Common (15% cap)",
+    "label": "Common (14.99% cap)",
     "linear": false,
-    "footnote": "~14%, contractually hard-capped at 15% (NYT / court docs, 2025-03-11)."
+    "footnote": "~14% historical (NYT / court docs, 2025-03-11), capped at 14.99% of outstanding capitalization, post-money, as-converted under the Google 2026 NPA (S-1 p. 169). S-1 does not disclose Google's actual %; non-voting Class N holdings do not appear in the ownership table (S-1 pp. 289–290)."
   },
   "sources": [
     {
@@ -42,17 +42,32 @@
     "ownershipPct": 0.14,
     "ownershipAsOf": "2025-03-11",
     "displayAsMax": true,
-    "capPct": 0.15,
+    "capPct": 0.1499,
     "confidence": "low",
     "sources": [
       {
         "fields": [
-          "ownershipPct",
           "capPct"
         ],
         "sourceClass": "primary",
+        "issuer": "Anthropic, PBC",
+        "filingType": "S-1",
+        "accession": "0001628280-26-067168",
+        "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
+        "documentDate": "2026-10-26",
+        "asOf": "2026-06-30",
+        "measurementDate": "2026-06-30",
+        "publicationDate": "2026-10-26",
+        "section": "S-1 pp. 169, 289–290",
+        "note": "Google 2026 NPA ownership cap: 14.99% of outstanding capitalization, post-money, as-converted (S-1 p. 169). The S-1 does not disclose Google's actual %; non-voting Class N holdings do not appear in the ownership table (S-1 pp. 289–290)."
+      },
+      {
+        "fields": [
+          "ownershipPct"
+        ],
+        "sourceClass": "primary",
         "documentDate": "2025-03-11",
-        "note": "Court docket locator only. Exact exhibit supporting the inherited historical 14% and 15% cap remains unpinned; do not label the scenario as verified current ownership.",
+        "note": "Court docket locator only. Exact exhibit supporting the inherited historical 14% remains unpinned; do not label the scenario as verified current ownership.",
         "url": "https://www.justice.gov/atr/case/us-and-plaintiff-states-v-google-llc",
         "verificationStatus": "unverified",
         "measurementDate": "2025-03-11",
@@ -66,13 +81,13 @@
         "sourceClass": "secondary",
         "documentDate": "2025-03-11",
         "note": "NYT reporting on those court documents. 10-Q does not name Anthropic.",
-        "url": "https://www.nytimes.com/2025/03/11/technology/google-investment-anthropic.html",
+        "url": "https://www.nytimes.com/2025/03-11/technology/google-investment-anthropic.html",
         "measurementDate": "2025-03-11",
         "publicationDate": null,
         "section": "See source note"
       }
     ],
-    "evidenceNote": "Historical percentage from reporting; primary exhibit not yet pinned. Later dilution unknown."
+    "evidenceNote": "Historical 14% percentage from 2025 reporting (not scaled by FD). Cap is 14.99% of outstanding capitalization, post-money, as-converted under the Google 2026 NPA (S-1 p. 169). The S-1 does not disclose Google's actual %; non-voting Class N holdings do not appear in the ownership table (S-1 pp. 289–290)."
   },
   "openai": null
 }

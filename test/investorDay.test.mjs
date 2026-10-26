@@ -245,4 +245,17 @@ test("IPO tape helpers: derived run-rate, percentile, interval, DST-safe ticks",
 
   const series = [{ t: 0, sigma: 3.2, ret: 0.03, mark: 1 }, { t: 5, sigma: 3.1, ret: 0.03, mark: 1 }];
   assert.equal(L.sigmaSummary(series, 3, { stepMinutes: 5 }).minutes, 10);
+
+  assert.equal(
+    L.formatLockupMilestoneOffset(1, null),
+    "Day 1 (first trading day)"
+  );
+  assert.equal(
+    L.formatLockupMilestoneOffset(27, null),
+    "Day 27 after pricing"
+  );
+  assert.equal(
+    L.formatLockupMilestoneOffset(27, "2026-11-16"),
+    "Dec 13, 2026 (day 27)"
+  );
 });

@@ -1,6 +1,26 @@
-# Source changes — September 5, 2026
+# Source changes — October 26, 2026 (methodology 1.3.0) & September 5, 2026 (1.2.0)
 
-This records the evidence checked for methodology 1.2.0 and the distinction between observations and assumptions. A linked source is not proof of an undisclosed cap table. No independently verified full FD count was found for either company.
+## Anthropic Form S-1 update — October 26, 2026 (v1.3.0)
+
+Anthropic, PBC's Form S-1 (Reg. No. 333-299633, accession `0001628280-26-067168`, [EDGAR filing](https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm)) went public on October 26, 2026 at 09:00:11 ET. It replaces the pre-S-1 Anthropic FD calibration proxy and SKM rounding cross-checks with primary issuer disclosures:
+
+| Record | Observed S-1 evidence | Change & superseded pre-S-1 assumption |
+| --- | --- | --- |
+| `capitalization.json` (`anthropic`) | S-1 pp. 13, 20, 22, 24, 144, 236, F-47 | `defaultShares = 1,778,366,016` pre-split (`17,783,660,160` post-split) as of June 30, 2026, derived from the `846,840,960` post-split Class N contribution (5% of pre-fund FD `16,936,819,200`) to Anthropic Public Benefit Fund, LLC (`lowShares = 1,693,681,920` ex-fund; `highShares = 1,814,000,000` +one future 2% milestone issuance). Added `splitFactor: 10` (10-for-1 forward split effective 2026-09-17, S-1 p. 22) and `roundPrices` (E-1 `$56.09`, F-1 `$140.97`, G-1 `$259.14`, H-1 `$589.0095`, S-1 p. F-47). **Superseded:** DXYZ-calibrated proxy `1,580,904,637.87` and SKM 0.15%–0.25% cross-checks (`1,544,132,000` / `1,930,165,000` / `2,573,553,333.33`), retained in `anthropic.superseded`. |
+| `marks.json` (`anthropic`) | S-1 p. F-47 preferred stock table | Added `pricePerShare: 259.14` to `anthropic-series-g` (1,466.39M implied pre-split FD at $380B) and `pricePerShare: 589.0095` to `anthropic-series-h` (1,638.34M implied pre-split FD at $965B). Added `pricePerShareFromMark: "anthropic-series-h"` to `anthropic-vcx-nport-2026-06-30` (`$589.0095 × 863.729/965 ≈ $527.19/pre-split share`). |
+| `DXYZ` Anthropic leg | S-1 pp. 13, 20, 22, 309 | `386,088` Magnitude ANC III units remain pre-split Series B preferred equivalents; noted that Series B preferred converts to non-voting, unlisted Class N common stock (convertible to Class A on a qualifying transfer, S-1 pp. 20, 309). Default look-through changes by `× 0.8890 (−11.10%)`. |
+| `SKM` Anthropic leg | S-1 pp. 13, 289–290 | `3,860,330` pre-split shares unchanged (`0.217%` of S-1 FD `1,778,366,016`, matching DART's rounded `0.2%`). Noted that SKM is not named in the S-1 beneficial ownership table (below 5% threshold, pp. 289–290). Default look-through changes by `× 0.8890 (−11.10%)`. |
+| `AGIX`, `AMZN`, `ZM` Anthropic legs | S-1 pp. 13, 20, 165, 289–290, F-47 | Converted to share-equivalents at Series H-1 `$589.0095/pre-split share` and divided by S-1 FD (`× 1,638.34M / 1,778.37M = × 0.9213`, `−7.87%`). AMZN notes convert into Class N at IPO up to ownership cap, remainder quarterly afterwards or cash at maturity (S-1 pp. 20, 165); S-1 FD assumes full Amazon Note conversion (S-1 p. 13). ZM is not named in the S-1 ownership table (pp. 289–290). |
+| `ARKVX` Anthropic leg | S-1 pp. 13, 20, F-47 | Converted to share-equivalents at Series G-1 `$259.14/pre-split share` and divided by S-1 FD (`× 1,466.39M / 1,778.37M = × 0.8246`, `−17.54%`). Noted that Series C-1 converts into voting Class A common stock (S-1 p. 20). |
+| `VCX` Anthropic leg | S-1 pp. 13, F-47 | Converted to share-equivalents using Series H-1 `$589.0095` scaled by `863.729B / 965B` (`≈ $527.19/pre-split share`) as an explicit assumption (`× 0.9213`, `−7.87%`), flagged `EST. ROUND PPS` in UI. |
+| `GOOG` Anthropic leg | S-1 pp. 169, 289–290 | Updated ownership cap from `15%` to `14.99%` of outstanding capitalization (post-money, as-converted) under the Google 2026 NPA (S-1 p. 169). Retained `≤14%` (`historical`, not scaled by FD); non-voting Class N holdings are omitted from the S-1 beneficial ownership table (pp. 289–290). |
+| `anthropic-investor-day.json` | S-1 pp. 4, 11, 13, 20, 22–25, 118, 133, 144, 158, 165, 168–169, 195, 236, 289–290, 307–309, 318–323, F-47 | Added `s1Facts`, `lockupSchedule`, `s1Public` chart event (`2026-10-26T13:00:11Z`), updated `upcoming`, and marked overlapping Oct 14 FT press figures (`Q1 $4,731M`, `Q2 $11,555M`, H1/Q2 operating income) as superseded in part by the S-1. |
+
+---
+
+## September 5, 2026 (methodology 1.2.0)
+
+This records the evidence checked for methodology 1.2.0 and the distinction between observations and assumptions.
 
 | Record | Observed evidence | Change |
 | --- | --- | --- |
@@ -20,10 +40,10 @@ The SEC submissions indexes for CIK 1843974 and 1867090 were checked again on Se
 
 ## Assumptions that remain unresolved
 
-- **Company FD shares:** defaults calibrate DXYZ marks against [Anthropic's $965B Series H](https://www.anthropic.com/news/series-h) and [OpenAI's $852B primary](https://openai.com/index/accelerating-the-next-phase-ai/). Those sources do not disclose complete FD shares or prove that preferred/common economics are identical. The proposed unsupported NPM preset was not used. OpenAI stress bounds do not claim evidence about a foundation stake or option pool.
+- **OpenAI FD shares:** OpenAI still lacks a public S-1 cap table; its default (`1,237,484,749`) calibrates DXYZ marks against [OpenAI's $852B primary](https://openai.com/index/accelerating-the-next-phase-ai/). OpenAI stress bounds do not claim evidence about a foundation stake or option pool. (Anthropic's FD share count is now primary S-1 data as of June 30, 2026; see above.)
 - **August entry:** full-precision June preferred mark gives 217,867.033328815 estimated August common equivalents. Independent, adjustable entry price; ±25% presets are sensitivity choices. Actual acquisition units are not public in the examined evidence.
-- **SKM rounding:** 0.15%–0.25% is only conditional on nearest-tenth-of-a-percentage-point rounding and a comparable ownership definition. It is not a measured confidence interval. The 0.2% midpoint cannot serve as an upper FD bound.
-- **VCX marks:** Anthropic's ~$863.729B is an inferred scaling denominator. The inherited OpenAI $850B denominator lacks an archived Hiive observation. The June filing verifies fair values, not that denominator; it is labeled an unverified assumption.
+- **SKM rounding (superseded as FD cross-check on 2026-10-26):** SKM's `3,860,330` pre-split shares ÷ `1,778,366,016` S-1 FD shares = `0.2171%`, which rounds to DART's printed `0.2%`. The old 0.15%–0.25% cross-checks (`1,544.1M`–`2,573.6M`) are archived in `capitalization.json` `anthropic.superseded`.
+- **VCX marks:** Anthropic's ~$863.729B is an inferred scaling denominator (`$589.0095 × 863.729/965 ≈ $527.19/pre-split share`). The inherited OpenAI $850B denominator lacks an archived Hiive observation. The June filing verifies fair values, not that denominator; it is labeled an unverified assumption.
 - **Older source mappings:** GOOG's precise historical court exhibit, AGIX's August 18 holdings/share-count archive and ARKVX's July 31 Class D share-count archive are not pinned. Locator URLs and `verificationStatus: unverified` are retained visibly. Some publication dates remain null rather than invented. MSFT/NVDA retain dated historical denominator observations; a link repair is not a claim they are the latest filings.
 
 ## Verification

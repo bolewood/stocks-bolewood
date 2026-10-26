@@ -1,13 +1,13 @@
 {
-  "schemaVersion": "1.2.0",
-  "methodologyVersion": "1.2.0",
+  "schemaVersion": "1.3.0",
+  "methodologyVersion": "1.3.0",
   "ticker": "AMZN",
   "yahooSymbol": "AMZN",
   "name": "Amazon.com Inc.",
   "wrapperType": "operating-company",
   "denominatorType": "market-cap",
   "confidence": "medium",
-  "note": "Anthropic is filed carrying-value equivalent, not an ownership %. OpenAI is round-implied from the $50B Series C.",
+  "note": "Anthropic is filed fair-value equivalent converted to pre-split share-equivalents at Series H-1 ($589.0095, S-1 p. F-47) and divided by the S-1 FD denominator (p. 13, which assumes full conversion of the Amazon Notes). OpenAI is round-implied from the $50B Series C.",
   "shareCount": {
     "value": 10786313572,
     "asOf": "2026-07-22",
@@ -16,7 +16,7 @@
   "security": {
     "label": "Conv + Pfd",
     "linear": false,
-    "footnote": "Anthropic: $92.5B preferred + $97.9B convertible notes (AMZN 10-Q as of 2026-06-30). Conversion terms undisclosed."
+    "footnote": "Anthropic: $92.5B nonvoting preferred + $97.9B convertible notes (AMZN 10-Q as of 2026-06-30), converted to 323.3M pre-split share-equivalents at Series H-1 ($589.0095, S-1 p. F-47). Notes convert into non-voting Class N at the IPO up to Amazon's ownership cap, remainder quarterly afterwards or cash at maturity (S-1 pp. 20, 165); the S-1 FD count (p. 13) assumes full conversion."
   },
   "sources": [
     {
@@ -64,7 +64,7 @@
         "filingType": "10-Q",
         "documentDate": "2026-06-30",
         "asOf": "2026-06-30",
-        "note": "Nonvoting preferred $92.5B + convertible notes FV $97.9B = $190.4B. $100B AWS is not equity. Conversion terms and any ownership cap are undisclosed.",
+        "note": "Nonvoting preferred $92.5B + convertible notes FV $97.9B = $190.4B. $100B AWS is not equity.",
         "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000026/amzn-20260630.htm",
         "measurementDate": "2026-06-30",
         "publicationDate": null,
@@ -82,8 +82,26 @@
         "measurementDate": "2026-05-28",
         "publicationDate": null,
         "section": "See source note"
+      },
+      {
+        "fields": [
+          "holdingSecurity",
+          "measurementCompanyMark"
+        ],
+        "sourceClass": "primary",
+        "issuer": "Anthropic, PBC",
+        "filingType": "S-1",
+        "accession": "0001628280-26-067168",
+        "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
+        "documentDate": "2026-10-26",
+        "asOf": "2026-06-30",
+        "measurementDate": "2026-06-30",
+        "publicationDate": "2026-10-26",
+        "section": "S-1 pp. 13, 20, 165, F-47",
+        "note": "Amazon's convertible notes convert into non-voting Class N at the IPO up to its ownership cap; the remainder converts quarterly afterwards (lowest of fixed price, IPO price, 10-day VWAP) or is repaid in cash at maturity (S-1 pp. 20, 165). The S-1's fully diluted count as of June 30, 2026 assumes full conversion of the Amazon Notes (S-1 p. 13). Measured at Series H-1 ($589.0095 pre-split, S-1 p. F-47)."
       }
-    ]
+    ],
+    "evidenceNote": "Amazon's convertible notes convert into Class N at the IPO subject to its ownership cap, with the remainder converting quarterly afterwards (lowest of fixed price, IPO price, 10-day VWAP) or repaid in cash at maturity (S-1 pp. 20, 165). The S-1's 1,778.4M pre-split fully diluted count (S-1 p. 13) assumes full conversion of the Amazon Notes. Converted to share-equivalents at Series H-1 ($589.0095 pre-split, S-1 p. F-47)."
   },
   "openai": {
     "basis": "round-implied",

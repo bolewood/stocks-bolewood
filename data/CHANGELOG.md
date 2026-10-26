@@ -2,6 +2,24 @@
 
 Typed entries: **Data update** · **Correction** · **Methodology change** · **Schema change**.
 
+## [1.3.0] - 2026-10-26
+
+### Schema change
+- Bumped `schemaVersion` and `methodologyVersion` to `1.3.0`.
+- Added `shareBasis: "pre-split"`, `splitFactor: 10`, `splitEffectiveDate: "2026-09-17"`, `roundPrices` (`E-1` `$56.09`, `F-1` `$140.97`, `G-1` `$259.14`, `H-1` `$589.0095`, S-1 p. F-47), `presets`, and `superseded` history to `data/capitalization.json`.
+- Added `pricePerShare` and `pricePerShareFromMark` to `data/marks.json`.
+- Added `s1Facts`, `lockupSchedule`, and `UPCOMING_STATUSES` (`"filed"`, `"expected, not confirmed"`, `"filed terms, pricing date TBD"`) validation in `data/schema/validate.mjs`.
+
+### Methodology change
+- Replaced the DXYZ-calibrated Anthropic FD proxy (`1,580,904,637.87`) with the issuer-derived June 30, 2026 fully diluted count from Anthropic, PBC Form S-1 (Reg. No. 333-299633, accession `0001628280-26-067168`, S-1 pp. 13, 144, 236): `1,778,366,016` pre-split (`17,783,660,160` post-split), including `846,840,960` post-split Class N shares contributed to Anthropic Public Benefit Fund, LLC (5% of pre-fund FD `16,936,819,200` post-split / `1,693,681,920` pre-split).
+- Normalized all Anthropic `filed-fv-equiv` and `carrying-value-equiv` legs (`AGIX`, `AMZN`, `ARKVX`, `VCX`, `ZM`) onto the same FD share denominator by converting reported fair/carrying value into pre-split share-equivalents at the measurement round's preferred price (`reportedFairValue ÷ roundPricePerPreSplitShare`, S-1 p. F-47) and dividing by the selected FD share count (`= old % × FD_round / FD_now`). At defaults, `DXYZ`/`SKM` change by `× 0.8890 (−11.10%)`, Series H-measured legs (`AGIX`, `AMZN`, `ZM`, and `VCX` scaled from H-1) change by `× 0.9213 (−7.87%)`, and Series G-measured `ARKVX` changes by `× 0.8246 (−17.54%)`.
+
+### Data update
+- 2026-10-26: Anthropic, PBC Form S-1 went public on EDGAR at 09:00:11 ET (`0001628280-26-067168`, Reg. No. 333-299633, Nasdaq Global Select ticker `"ANT"`, S-1 p. 20). Encoded S-1 FD share count (`1,778,366,016` pre-split), 10-for-1 split effective 2026-09-17 (S-1 p. 22), preferred round prices (S-1 p. F-47), Class A / Class N / Class F (50.1% vote) / Class T (board majority) conversions (S-1 pp. 20, 309), Google 2026 NPA `14.99%` ownership cap (S-1 p. 169), Amazon convertible note Class N conversion terms (S-1 pp. 20, 165), FY23–H1'26 financials (S-1 pp. 11, 23, 25, 158), Q3/Oct-31 run-rate blanks (S-1 pp. 4, 133, 195), and the three staged lock-up schedules (S-1 pp. 118, 307–309, 318–323).
+
+### Correction
+- 2026-10-26: Updated `data/disclosure.json` (`asOf: "2026-10-26"`) to drop the `"The DXYZ exposure includes options."` sentence after the author's DXYZ options expired.
+
 ## [1.1.0] - 2026-08-30
 
 ### Schema change

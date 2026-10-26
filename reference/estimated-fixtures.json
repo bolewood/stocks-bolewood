@@ -1,6 +1,6 @@
 {
-  "asOf": "2026-09-05",
-  "note": "Historical frozen price inputs dated August 19 combined with the September 5 dataset. This is not a knowable-as-of August 19 backtest. Other fixtures cover Estimated Holdings and frozen ATM bridge.",
+  "asOf": "2026-10-26",
+  "note": "Historical frozen price inputs dated August 19 combined with the October 26 Form S-1 dataset (Anthropic FD 1,778,366,016 pre-split, S-1 p. 13). This is not a knowable-as-of August 19 backtest. Other fixtures cover Estimated Holdings and frozen ATM bridge.",
   "anthVal": 965000000000,
   "oaiVal": 852000000000,
   "dilution": 0,
@@ -20,7 +20,7 @@
   "priceAsOf": "2026-08-19",
   "holdingsBasis": "estimated",
   "deploy": "range",
-  "anthFdShares": 1580904637.8663518,
+  "anthFdShares": 1778366016,
   "oaiFdShares": 1237484749.307667,
   "dxyzOaiEntryPrice": 688.4933333333333,
   "historySource": "Captured /api/dxyz-history on 2026-09-05 (cache)",

@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.18.0.0] — 2026-10-26
+
+- Update Anthropic data, methodology (`1.3.0`), footnotes, and the IPO tape for Anthropic, PBC's public Form S-1 (Reg. No. 333-299633, accession `0001628280-26-067168`, filed Oct 26, 2026 at 09:00:11 ET; Nasdaq Global Select ticker `"ANT"`, S-1 p. 20).
+- `data/capitalization.json`: replace the DXYZ-calibrated Anthropic FD proxy (`1,580.9M`) with the issuer-derived June 30, 2026 count (`1,778,366,016` pre-split / `17,783,660,160` post-split, including `846,840,960` post-split Class N shares contributed to Anthropic Public Benefit Fund, LLC, S-1 pp. 13, 144, 236), S-1 sensitivity presets (`1,693.7M` ex-fund, `1,778.4M` incl. fund, `1,814.0M` +one 2% milestone issuance), `splitFactor: 10` (10-for-1 split effective 2026-09-17, S-1 p. 22), `roundPrices` (`E-1` `$56.09`, `F-1` `$140.97`, `G-1` `$259.14`, `H-1` `$589.0095`, S-1 p. F-47), and `superseded` history.
+- `/ai` and `reference/`: convert Anthropic `filed-fv-equiv` and `carrying-value-equiv` legs (`AGIX`, `AMZN`, `ARKVX`, `VCX`, `ZM`) to pre-split share-equivalents at the measurement round's preferred price (`reportedFairValue ÷ roundPricePerPreSplitShare`) and divide by the selected FD share count (`= old % × FD_round / FD_now`). At defaults, `DXYZ`/`SKM` move `-11.10%` (`× 0.8890`), `AGIX`/`AMZN`/`ZM`/`VCX` move `-7.87%` (`× 0.9213`), and `ARKVX` moves `-17.54%` (`× 0.8246`). Update `GOOG` ownership cap to `14.99%` (Google 2026 NPA, S-1 p. 169). Show dual pre-split and post-split (`÷10` ANT) share prices everywhere. Add `?reference=s1`.
+- `/dxyz`: label Anthropic PPS (`$610.41` June mark) and Implied EV (`$T`) per pre-split unit alongside the post-split ANT share equivalent (`$61.04/ANT`), note Series B → Class N conversion (S-1 pp. 20, 309), and cite the S-1 FD count in the Implied EV footnote.
+- `/anthropic-ipo-tape`: add "What the Form S-1 shows" panel with audit badges (`audited`, `filed, unaudited interim`, `filed`) and page citations, staged lock-up release schedule table (S-1 pp. 321–323), `"S-1 public, 9:00 ET (Oct 26)"` event marker on the σ and `io:ANTH` charts (`2026-10-26T13:00:11Z`), updated IPO calendar milestones (`s1Public` filed, `s1Amendment`, `lockupReleases`), and S-1 supersession badges on the Oct 14 press panel.
+- Update `data/disclosure.json` (`asOf: "2026-10-26"`, drop expired DXYZ options sentence) and add `docs/listing-day-plan.md`.
+
 ## [0.17.0.0] — 2026-10-15
 
 - New standing page `/anthropic-ipo-tape` replaces `/investor-day`, which now permanently redirects (308) along with its subpaths so cached share-card URLs keep working. Header, page title, OG/Twitter cards retitled "LIVE TAPE · ANTHROPIC IPO"; the nav link becomes "IPO tape".

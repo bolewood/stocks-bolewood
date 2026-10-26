@@ -80,7 +80,8 @@ test('FD changes inversely revalue DXYZ and SKM; August acquisition is independe
     const wrapper=WRAPPERS.find(w=>w.ticker===ticker);
     near(app(wrapper,{...p,anthFdShares:2*p.anthFdShares}).anthPer100,app(wrapper,p).anthPer100/2,'FD inverse');
   }
-  near(app(w,{...p,dxyzBridge:null}).scenarioNetAssets,w.raw.filedSnapshot.netAssets,'Cash-to-equity is not new capital');
+  near(app(w,{...p,dxyzBridge:null}).scenarioNetAssets,app(w,{...filed,dxyzBridge:null}).scenarioNetAssets,'Cash-to-equity is not new capital');
+  near(app(w,{...p,dxyzBridge:null,anthFdShares:1580904637.873207}).scenarioNetAssets,w.raw.filedSnapshot.netAssets,'Cash-to-equity is not new capital at June mark FD');
   const noBridge=app(w,{...p,dxyzBridge:null});
   assert.ok(lot(noBridge)); // Purchase inclusion does not depend on ATM availability.
   assert.equal(noBridge.oaiDetail.lots.some(l=>l.units===11236),false);

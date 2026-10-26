@@ -73,27 +73,23 @@ and no per-$100 figure.
 
 ```
 basis:                    filed-units
-filedUnits:               386,088       
+filedUnits:               386,088        (pre-split Series B preferred equivalents; converts to Class N, S-1 p. 20)
 reportedFairValue:        $235.671976M   (as of 2026-06-30, N-CSRS)
-→ markPerUnit:            $610.41        (computed, not stored)
-→ estimated FD shares:    1,580,904,638 (adjustable calibration proxy, not filed)
-→ scenario price:         $610.41 = valuation × (1 − dilution) ÷ estimated FD shares
-→ scenario exposure:      0.024421966% (units ÷ estimated FD shares)
+→ markPerUnit:            $610.41        per pre-split unit ($61.041 per ANT share; 10-for-1 split, S-1 p. 22)
+→ S-1 FD shares (6/30):   1,778,366,016 pre-split (17,783,660,160 post-split, incl. 5% public-benefit fund; S-1 p. 13)
+→ scenario price:         $542.633 per pre-split unit ($54.2633 per ANT share) = valuation × (1 − dilution) ÷ FD shares
+→ scenario exposure:      0.021710266% (units ÷ S-1 FD shares)
 
-ΔNAV per $1 PPS:          $0.008101      (386,088 ÷ 47,657,338)
+ΔNAV per $1 pre-split:    $0.008101      (386,088 ÷ 47,657,338; $0.08101 per $1 of ANT share price)
 denominator:              $1.565067B     (market-cap: 47,657,338 sh × $32.84)
 
-386,088 × $610.41 ÷ $1.565067B × $100  =  $15.06 per $100
+386,088 × $542.633 ÷ $1.565067B × $100  =  $13.39 per $100
 ```
 
-*($32.84 from `reference/fixtures.json` — frozen prices dated August 19 with the September 5 dataset, not a historical backtest. Filed Holdings; both valuation and FD controls revalue this row. Display digits are rounded; calculation uses full precision.)*
+*($32.84 from `reference/fixtures.json` — frozen prices dated August 19 with the October 26 S-1 dataset, not a historical backtest. Filed Holdings; both valuation and FD controls revalue this row. Display digits are rounded; calculation uses full precision.)*
 <!-- END GENERATED: worked-example -->
 
-For `filed-fv-equiv` legs the percentage is never hand-authored: rolling the mark forward
-changes fair value and the measurement valuation together, so the ratio is unchanged. For
-`filed-units` (DXYZ and SKM), units / selected FD shares produces an estimated equivalent
-stake. Both valuation and FD controls revalue these holdings. See *Filed units* in
-`data/METHODOLOGY.md` and the linked evidence in `data/SOURCE_CHANGES.md`.
+For Anthropic `filed-fv-equiv` and `carrying-value-equiv` legs (`AGIX`, `AMZN`, `ARKVX`, `VCX`, `ZM`), reported fair or carrying value is converted into pre-split share-equivalents at the measurement round's preferred price (`S-1 p. F-47`: Series G-1 `$259.14`, Series H-1 `$589.0095`, or VCX scaled from H-1) and divided by the selected fully diluted share count (`= old % × FD_round / FD_now`). For `filed-units` (`DXYZ` and `SKM`), filed pre-split units ÷ selected FD shares produces the equivalent stake directly. Both valuation and FD controls revalue all unit and share-equivalent legs. See `data/METHODOLOGY.md` and `data/SOURCE_CHANGES.md`.
 
 ---
 
@@ -109,7 +105,7 @@ plus `reference/estimated-expected-results.json`. No application code,
 no network. If your output differs from the published table at the same inputs, that is a
 bug worth filing.
 
-Use `/ai?reference=filed` or `/ai?reference=estimated` to load identical frozen inputs.
+Use `/ai?reference=filed`, `/ai?reference=estimated`, or `/ai?reference=s1` to load identical frozen inputs.
 Copy/export scenario JSON from the page and run `npm run reference -- --scenario /path/ai-scenario.json`
 to reproduce another setting with its frozen dataset, prices and ATM bridge.
 
@@ -220,7 +216,7 @@ Live market prices are a runtime input and are **not** redistributed in this dat
 ## Disclosure
 
 <!-- BEGIN GENERATED: disclosure -->
-As of October 15, 2026, the author holds long positions in DXYZ, SKM, ZM, AMZN, GOOG, NVDA, NSLR and PWRL. The DXYZ exposure includes options. The author also holds a direct long position in Anthropic through an SPV. Positions are subject to change without notice.
+As of October 26, 2026, the author holds long positions in DXYZ, SKM, ZM, AMZN, GOOG, NVDA, NSLR and PWRL. The author also holds a direct long position in Anthropic through an SPV. Positions are subject to change without notice.
 <!-- END GENERATED: disclosure -->
 
 Six of the eleven securities covered here are held by the author. Every input is published
