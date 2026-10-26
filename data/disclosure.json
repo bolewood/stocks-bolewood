@@ -1,5 +1,5 @@
 {
   "asOf": "2026-10-26",
   "tickers": ["DXYZ", "SKM", "ZM", "AMZN", "GOOG", "NVDA", "NSLR", "PWRL"],
-  "notes": "The author also holds a direct long position in Anthropic through an SPV. Positions are subject to change without notice."
+  "notes": "The DXYZ exposure includes options. The author also holds a direct long position in Anthropic through an SPV. Positions are subject to change without notice."
 }

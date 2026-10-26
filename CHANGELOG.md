@@ -7,7 +7,7 @@
 - `/ai` and `reference/`: convert Anthropic `filed-fv-equiv` and `carrying-value-equiv` legs (`AGIX`, `AMZN`, `ARKVX`, `VCX`, `ZM`) to pre-split share-equivalents at the measurement round's preferred price (`reportedFairValue ÷ roundPricePerPreSplitShare`) and divide by the selected FD share count (`= old % × FD_round / FD_now`). At defaults, `DXYZ`/`SKM` move `-11.10%` (`× 0.8890`), `AGIX`/`AMZN`/`ZM`/`VCX` move `-7.87%` (`× 0.9213`), and `ARKVX` moves `-17.54%` (`× 0.8246`). Update `GOOG` ownership cap to `14.99%` (Google 2026 NPA, S-1 p. 169). Show dual pre-split and post-split (`÷10` ANT) share prices everywhere. Add `?reference=s1`.
 - `/dxyz`: label Anthropic PPS (`$610.41` June mark) and Implied EV (`$T`) per pre-split unit alongside the post-split ANT share equivalent (`$61.04/ANT`), note Series B → Class N conversion (S-1 pp. 20, 309), and cite the S-1 FD count in the Implied EV footnote.
 - `/anthropic-ipo-tape`: add "What the Form S-1 shows" panel with audit badges (`audited`, `filed, unaudited interim`, `filed`) and page citations, staged lock-up release schedule table (S-1 pp. 321–323), `"S-1 public, 9:00 ET (Oct 26)"` event marker on the σ and `io:ANTH` charts (`2026-10-26T13:00:11Z`), updated IPO calendar milestones (`s1Public` filed, `s1Amendment`, `lockupReleases`), and S-1 supersession badges on the Oct 14 press panel.
-- Update `data/disclosure.json` (`asOf: "2026-10-26"`, drop expired DXYZ options sentence) and add `docs/listing-day-plan.md`.
+- Update `data/disclosure.json` (`asOf: "2026-10-26"`, positions unchanged) and add `docs/listing-day-plan.md`.
 
 ## [0.17.0.0] — 2026-10-15
 

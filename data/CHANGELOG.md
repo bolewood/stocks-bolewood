@@ -16,9 +16,7 @@ Typed entries: **Data update** · **Correction** · **Methodology change** · **
 
 ### Data update
 - 2026-10-26: Anthropic, PBC Form S-1 went public on EDGAR at 09:00:11 ET (`0001628280-26-067168`, Reg. No. 333-299633, Nasdaq Global Select ticker `"ANT"`, S-1 p. 20). Encoded S-1 FD share count (`1,778,366,016` pre-split), 10-for-1 split effective 2026-09-17 (S-1 p. 22), preferred round prices (S-1 p. F-47), Class A / Class N / Class F (50.1% vote) / Class T (board majority) conversions (S-1 pp. 20, 309), Google 2026 NPA `14.99%` ownership cap (S-1 p. 169), Amazon convertible note Class N conversion terms (S-1 pp. 20, 165), FY23–H1'26 financials (S-1 pp. 11, 23, 25, 158), Q3/Oct-31 run-rate blanks (S-1 pp. 4, 133, 195), and the three staged lock-up schedules (S-1 pp. 118, 307–309, 318–323).
-
-### Correction
-- 2026-10-26: Updated `data/disclosure.json` (`asOf: "2026-10-26"`) to drop the `"The DXYZ exposure includes options."` sentence after the author's DXYZ options expired.
+- 2026-10-26: Updated `data/disclosure.json` (`asOf: "2026-10-26"`, positions unchanged).
 
 ## [1.1.0] - 2026-08-30
 
