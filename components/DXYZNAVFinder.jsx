@@ -30,7 +30,8 @@ import {
   AUGUST_OPENAI_PURCHASE,
   AUGUST_OPENAI_SOURCE,
 } from "../lib/dxyzHoldings.mjs";
-import { SHARE_DENOMINATED, DOLLAR_DENOMINATED, OTHER_HOLDINGS, calculateDxyzNav } from "../lib/dxyzNav.mjs";
+import { SHARE_DENOMINATED, DOLLAR_DENOMINATED, OTHER_HOLDINGS, calculateDxyzNav, anthropicPpsFromValuation } from "../lib/dxyzNav.mjs";
+import { RANGE } from "../lib/shareBasis.mjs";
 import { CAPITALIZATION, DEFAULT_DXYZ_OAI_ENTRY_PRICE, unitPrice } from "../reference/unitExposure.mjs";
 import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 import DXYZChartWall from "./DXYZChartWall";
@@ -161,13 +162,15 @@ export default function DXYZNAVFinder() {
 
   const updateImpliedEV = (name, trillionStr) => {
     const row = SHARE_DENOMINATED.find((p) => p.name === name);
-    if (!row?.fdShares) return;
+    if (!row?.fdShares && !row?.evBasis) return;
     setEvDrafts((prev) => ({ ...prev, [name]: trillionStr }));
     const t = parseFloat(trillionStr);
     if (!Number.isFinite(t) || t < 0) return;
     setPpsOverrides((prev) => ({
       ...prev,
-      [name]: unitPrice({ valuation: t * 1e12, fdShares: row.fdShares }),
+      [name]: row.evBasis
+        ? (t > 0 ? anthropicPpsFromValuation(t * 1e12, row.evBasis) : 0)
+        : unitPrice({ valuation: t * 1e12, fdShares: row.fdShares }),
     }));
     setActiveScenario(null);
   };
@@ -497,6 +500,23 @@ export default function DXYZNAVFinder() {
         </div>
       </div>
 
+      <div style={styles.issuanceBox} aria-labelledby="ipo-range-title">
+        <h2 id="ipo-range-title" style={{ ...styles.sectionTitle, fontSize: "20px" }}>Anthropic IPO range</h2>
+        <p style={styles.issuanceMeta}>
+          S-1/A No. 2 (Nov 10, 2026) sets an estimated range of ${RANGE.low.toFixed(2)}–${RANGE.high.toFixed(2)} per ANT share (cover). The NAV ledger stays on the June 30 filed mark of ${(ANTHROPIC_SPV.valUSD / ANTHROPIC_SPV.units).toFixed(2)} per pre-split unit (${(ANTHROPIC_SPV.valUSD / ANTHROPIC_SPV.units / 10).toFixed(2)} per ANT share). At the ${RANGE.midpoint.toFixed(0)} midpoint the Anthropic sleeve re-marks to {(RANGE.midpoint * 10 / (ANTHROPIC_SPV.valUSD / ANTHROPIC_SPV.units)).toFixed(3)}× the mark: {ANTHROPIC_SPV.units.toLocaleString("en-US")} units × ${(RANGE.midpoint * 10).toFixed(0)} = {fmt$(ANTHROPIC_SPV.units * RANGE.midpoint * 10)} vs {fmt$(ANTHROPIC_SPV.valUSD)} filed.
+        </p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }} role="group" aria-label="Anthropic IPO range presets">
+          {[["Range low", RANGE.low], ["Midpoint", RANGE.midpoint], ["Range high", RANGE.high]].map(([label, px]) => {
+            const active = Math.abs(Number(ppsOverrides.Anthropic) - px * 10) < 0.005;
+            return (
+              <button key={label} type="button" onClick={() => updatePPS("Anthropic", px * 10)} style={{ ...styles.presetBtn, ...(active ? styles.presetBtnActive : {}) }} className="preset-btn vcx-preset-btn">
+                {label} ${px.toFixed(2)} · ${(px * 10).toFixed(0)}/unit · {(px * 10 / (ANTHROPIC_SPV.valUSD / ANTHROPIC_SPV.units)).toFixed(3)}×
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div style={styles.issuanceBox}>
         <h2 style={{ ...styles.sectionTitle, fontSize: "20px" }}>August OpenAI purchase</h2>
         {!ready && <p role="status">Preparing calculator controls…</p>}
@@ -775,7 +795,7 @@ export default function DXYZNAVFinder() {
         <div style={styles.sectionHeader} className="vcx-section-header">
           <span style={styles.sectionNum}>01</span>
           <h2 style={styles.sectionTitle}>Positions valued by share price</h2>
-          <span style={styles.sectionMeta} className="vcx-section-meta">Edit PPS or implied EV ($T) — Anthropic EV uses S-1 FD (p. 13, pre-split); OpenAI EV uses estimated FD from /ai</span>
+          <span style={styles.sectionMeta} className="vcx-section-meta">Edit PPS or implied EV ($T) — Anthropic EV is ANT price × fully diluted shares (S-1/A No. 2 p. 24); OpenAI EV uses estimated FD from /ai</span>
         </div>
 
         <div style={styles.tableWrap}>
@@ -833,7 +853,7 @@ export default function DXYZNAVFinder() {
                   ) : null}
                 </div>
                 <div style={{ ...styles.td, flex: "1.3", textAlign: "right" }} className="vcx-pps-cell" data-label="Implied EV ($T)">
-                  {r.fdShares > 0 ? (
+                  {r.fdShares > 0 || r.evBasis ? (
                     <>
                       <input
                         type="number"
@@ -853,7 +873,7 @@ export default function DXYZNAVFinder() {
                       />
                       <div style={styles.delta}>
                         {r.name === "Anthropic"
-                          ? `per pre-split unit ($${(r.pps / 10).toFixed(2)} per ANT share) · S-1 FD (p. 13)`
+                          ? `$${(r.pps / 10).toFixed(2)} per ANT share ${r.companyValueLabel || ''} (S-1/A No. 2 p. 24)`
                           : "est. FD"}
                       </div>
                     </>

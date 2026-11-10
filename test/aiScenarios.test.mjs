@@ -163,3 +163,28 @@ test('Valuation scenarios cannot mutate filed observations', () => {
   for (const w of WRAPPERS) app(w, { ...estimated, anthVal: 500e9, oaiVal: 500e9, anthFdShares: 3e9 });
   assert.equal(JSON.stringify(WRAPPERS.map(w => w.raw)), rawBefore);
 });
+
+test('Old share links keep their exact numbers; new links are price-first', () => {
+  const old = parseScenarioSearch('?anth=965&oai=852&dil=0&holdings=filed&anthFd=1778.366016&oaiFd=1237.484749307667&oaiEntry=688.4933333333333&deploy=cash&sort=combined');
+  assert.equal(old.legacy, true);
+  assert.equal(old.anthPrice, null);
+  assert.equal(old.anthB, 965);
+  assert.equal(old.anthFdShares, 1778366016);
+  // The legacy link reproduces the frozen s1 view exactly.
+  const s1 = readJson('reference/s1-fixtures.json');
+  const s1Expected = readJson('reference/s1-expected-results.json');
+  for (const w of WRAPPERS) {
+    const row = app(w, { ...s1, anthVal: old.anthB * 1e9, anthFdShares: old.anthFdShares, anthPrice: old.anthPrice });
+    near(row.combinedPer100, s1Expected.rows.find(r => r.ticker === w.ticker).combinedPer100, `${w.ticker} legacy link`);
+  }
+  const fresh = parseScenarioSearch('');
+  assert.equal(fresh.anthPrice, 74);
+  assert.equal(fresh.anthShareBasis, 'fullyDiluted');
+  const qs = serializeScenarioSearch({ ...fresh, anthPrice: 78, anthShareBasis: 'outstanding' });
+  assert.match(qs, /antPx=78/);
+  assert.doesNotMatch(qs, /(^|&)anth=/);
+  const back = parseScenarioSearch('?' + qs);
+  assert.equal(back.anthPrice, 78);
+  assert.equal(back.anthShareBasis, 'outstanding');
+  assert.equal(back.legacy, false);
+});
