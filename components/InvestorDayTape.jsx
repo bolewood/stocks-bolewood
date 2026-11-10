@@ -27,7 +27,7 @@ import {
 import disclosure from "../data/disclosure.json";
 import ipoTape from "../data/anthropic-investor-day.json";
 import { RANGE, basisLabel, publicBenefitTrigger, SHARE_BASES } from "../lib/shareBasis.mjs";
-import { buildRangeVsTape, PERP_BASES } from "../lib/rangeVsTape.mjs";
+import { buildRangeVsTape, headlineValuations, PERP_BASES } from "../lib/rangeVsTape.mjs";
 
 const FILINGS = Object.fromEntries((ipoTape.filings || []).map((f) => [f.key, f]));
 const PRIMARY_SOURCES_LINE = "Primary sources: S-1 (Oct 26), S-1/A No. 1 (Nov 2), S-1/A No. 2 (Nov 10). Later filings supersede earlier figures; each card names the filing and page.";
@@ -1446,6 +1446,7 @@ export default function InvestorDayTape() {
   const chartWindow = windowChoice ?? defaultWindow ?? "multi";
   const [perpBasis, setPerpBasis] = useState(ipoTape.perpBasis?.default || "fullyDiluted");
   const ant = data?.ant;
+  const headline = headlineValuations(data);
   const multi = chartWindow === "multi";
 
   return (
@@ -1505,6 +1506,7 @@ export default function InvestorDayTape() {
               ) : null}
             </div>
             <div style={styles.heroValue}>{fmtTFromB(anth?.markPx)}</div>
+            <div style={styles.heroBasis}>{headline.perp?.basisText ?? "fully diluted valuation"} · not comparable to the market-cap tiles below without converting</div>
             <PerpPerShare perShare={anth?.perShare} basis={perpBasis} />
           </div>
           <div style={styles.heroChanges}>
@@ -1540,6 +1542,11 @@ export default function InvestorDayTape() {
         </div>
         <PerpRecords records={anth?.records} oi={anth?.openInterestVs} />
         <div style={styles.heroCaveat}>
+          At listing, io:ANTH converts in place: it keeps trading in market-cap units with its oracle pinned to ANT × a fixed fully
+          diluted count ÷ 1e9 (taken from the final prospectus), and it does not settle or delist. Three calendar days before an
+          announced listing its oracle becomes a 1-hour average of the mark (“hyperp mode”); if first trade is Nov 19 that would start
+          around Nov 16 (our inference, not an Entropy statement).{" "}
+          <Ext href={ipoTape.perpBasis?.sources?.[0]?.url} label="Entropy pre-IPO perpetuals docs (opens in a new tab)">Entropy docs ↗</Ext>{" "}
           A perpetual-futures mark, not a priced round or a tender. With{" "}
           {fmtUsdCompact(anth?.openInterestUsd)} of open interest and{" "}
           {fmtUsdCompact(anth?.dayNtlVlm)} of daily volume, a few million dollars of flow can move this
@@ -1553,7 +1560,7 @@ export default function InvestorDayTape() {
           value={fmtT(pm?.expectedClose?.valueT)}
           change={{ n: pm?.expectedClose?.changeT, text: fmtDeltaB(pm?.expectedClose?.changeT) }}
           changeLabel="since 00:00 ET"
-          sub="Conditional on IPO by 2027 · normalized brackets, “No IPO” excluded"
+          sub={`${headline.polymarket?.basisText ?? "market cap on shares outstanding"} · ≈ ${fmtPx(headline.polymarket?.perShare?.value)}/ANT share · conditional on IPO by 2027 · normalized brackets, “No IPO” excluded`}
           href={PM_URL.closingCap}
         />
         <Tile
@@ -1709,6 +1716,7 @@ export default function InvestorDayTape() {
 }
 
 const styles = {
+  heroBasis: { fontFamily: MONO, fontSize: "10.5px", color: MUTED, marginTop: "2px" },
   perShare: { fontFamily: MONO, fontSize: "11.5px", marginTop: "4px", lineHeight: 1.5 },
   perSharePrimary: { color: INK, fontWeight: 600 },
   perShareAlt: { color: MUTED },

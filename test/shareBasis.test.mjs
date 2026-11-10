@@ -109,3 +109,19 @@ test("every third-party valuation names a basis; unknown is unconfirmed", () => 
   for (const t of tape.thirdPartyValuations) assert.ok(["outstanding", "fullyDiluted", "unconfirmed"].includes(t.basis), t.key);
   assert.equal(tape.thirdPartyValuations.find((t) => t.key === "morningstar").basis, "unconfirmed");
 });
+
+import { headlineValuations } from "../lib/rangeVsTape.mjs";
+import { readFileSync } from "node:fs";
+
+test("tape headline $T values (hero and Polymarket tile) each carry a share basis and a per-share figure", () => {
+  const h = headlineValuations({ perps: { anthropic: { markPx: 1700 } }, polymarket: { expectedClose: { valueT: 1.43 } } });
+  assert.equal(h.perp.basis, "fullyDiluted");
+  assert.equal(h.polymarket.basis, "outstanding");
+  assert.match(h.perp.basisText, /fully diluted/);
+  assert.match(h.polymarket.basisText, /outstanding/);
+  // On $T the perp looks higher; per share on their own bases it is lower. Both must be shown.
+  assert.ok(h.perp.valueT > h.polymarket.valueT && h.perp.perShare.value < h.polymarket.perShare.value);
+  const src = readFileSync(new URL("../components/InvestorDayTape.jsx", import.meta.url), "utf8");
+  assert.match(src, /headline\.perp\?\.basisText/);
+  assert.match(src, /headline\.polymarket\?\.basisText/);
+});
