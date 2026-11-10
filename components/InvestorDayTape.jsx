@@ -8,6 +8,7 @@ import {
   etDateStartMs,
   etDayStarts,
   formatLockupMilestoneOffset,
+  lockupDate,
   investorDayDerived,
   KALSHI_CONFIRMED_RULE,
   KALSHI_MARKETS,
@@ -25,6 +26,13 @@ import {
 } from "../lib/disclosure.mjs";
 import disclosure from "../data/disclosure.json";
 import ipoTape from "../data/anthropic-investor-day.json";
+import { RANGE, basisLabel, publicBenefitTrigger, SHARE_BASES } from "../lib/shareBasis.mjs";
+import { buildRangeVsTape, headlineValuations, PERP_BASES } from "../lib/rangeVsTape.mjs";
+
+const FILINGS = Object.fromEntries((ipoTape.filings || []).map((f) => [f.key, f]));
+const PRIMARY_SOURCES_LINE = "Primary sources: S-1 (Oct 26), S-1/A No. 1 (Nov 2), S-1/A No. 2 (Nov 10). Later filings supersede earlier figures; each card names the filing and page.";
+const fmtPx = (n) => (Number.isFinite(n) ? `$${n.toFixed(2)}` : "—");
+const fmtPrem = (n) => (Number.isFinite(n) ? `${n >= 0 ? "+" : "−"}${Math.abs(n * 100).toFixed(1)}%` : "—");
 
 const MONO = "var(--font-mono), 'JetBrains Mono', monospace";
 const UP = "#15803d";
@@ -244,8 +252,9 @@ function Tile({ eyebrow, value, change, changeLabel, sub, href }) {
   );
 }
 
-function BracketChart({ brackets, noIpo }) {
+function BracketChart({ brackets, noIpo, boundaries, lowTail, median, expected }) {
   if (!brackets?.length) return <div style={styles.muted}>Bracket market unavailable.</div>;
+  const perShareByT = Object.fromEntries((boundaries || []).map((b) => [b.valueT, b.outstanding]));
   const max = Math.max(0.05, ...brackets.flatMap((b) => [b.price, b.baseline ?? 0]));
   return (
     <div>
@@ -255,7 +264,10 @@ function BracketChart({ brackets, noIpo }) {
       </div>
       {brackets.map((b) => (
         <div key={b.label} style={styles.barRow}>
-          <div style={styles.barLabel}>{b.label}</div>
+          <div style={styles.barLabel}>
+            {b.label}
+            <BracketPerShare label={b.label} perShareByT={perShareByT} />
+          </div>
           <div style={styles.barTrack}>
             {Number.isFinite(b.baseline) ? (
               <div style={{ ...styles.barGhost, width: `${(b.baseline / max) * 100}%` }} />
@@ -272,8 +284,31 @@ function BracketChart({ brackets, noIpo }) {
           Bracket prices are normalized to sum to 100%; open-ended tails use $1.125T and $3.125T.
         </div>
       ) : null}
+      <div style={styles.footnote}>
+        Expected value {fmtT(expected?.valueT)} ({fmtPx(expected?.perShare?.outstanding)} {basisLabel("outstanding")})
+        {lowTail ? ` · ${fmtT(lowTail.valueT)} if the “<$1.25T” tail is centred on $${lowTail.lowTailMidT.toFixed(2)}T instead of $1.125T (${lowTail.deltaT >= 0 ? "+" : "−"}$${Math.abs(lowTail.deltaT * 1000).toFixed(0)}B)` : ""}
+        {median ? ` · median bracket ${median.label}` : ""}. The open-ended low tail holds{" "}
+        {fmtProb(brackets.find((b) => /^</.test(b.label))?.price)} of the probability, so its assumed midpoint moves the mean.
+      </div>
+      <div style={styles.footnote}>
+        Per-share thresholds are on {basisLabel("outstanding")}: Polymarket resolves on “the number of shares outstanding multiplied by
+        the closing share price” per “the primary exchange&apos;s official listing page” (S-1/A No. 2 p. 20 count). Caveat: Nasdaq&apos;s page
+        may show only the listed Class A count (7.43B; Class N is unlisted and non-voting). On that count, $1.25T needs{" "}
+        {fmtPx(1.25e12 / ipoTape_classA())}, not {fmtPx(perShareByT[1.25])}.
+      </div>
     </div>
   );
+}
+
+function ipoTape_classA() {
+  return 7427991791; // S-1/A No. 2 p. 19: Class A outstanding after the offering
+}
+
+function BracketPerShare({ label, perShareByT }) {
+  const nums = (String(label).match(/\d+(?:\.\d+)?/g) || []).map(Number);
+  const parts = nums.map((t) => perShareByT[t]).filter(Number.isFinite);
+  if (!parts.length) return null;
+  return <span style={styles.barPerShare}>{parts.map((p) => `$${p.toFixed(2)}`).join("–")}/sh</span>;
 }
 
 function fmtSigma(z) {
@@ -360,6 +395,12 @@ function UnusualMeter({ unusual }) {
         Hyperliquid&apos;s available history (the latest ~5,000 candles, so the start date moves forward).
         σ divides the move by the standard deviation of 15-minute returns over the trailing {unusual?.lookbackDays ?? 30} days
         ({fmtPct(unusual?.sigma15m, 3)}, n={unusual?.sigmaN ?? "—"}). Calm &lt;1.5σ · Moving 1.5–3σ · Something&apos;s up &gt;3σ.
+        {Number.isFinite(unusual?.sigma15mBeforeToday) ? (
+          <>
+            {" "}Trailing σ now {fmtPct(unusual.sigma15m, 3)} vs {fmtPct(unusual.sigma15mBeforeToday, 3)} for the 30 days ending 00:00 ET today:
+            a spike day (such as Nov 10&apos;s, +17.2σ at 6:56 ET) enters the baseline and widens it, so the same move reads as fewer σ afterwards.
+          </>
+        ) : null}
       </div>
     </div>
   );
@@ -371,6 +412,45 @@ function fmtVolume(n, unit) {
   const text =
     abs >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : abs >= 1e3 ? `${(n / 1e3).toFixed(1)}k` : n.toFixed(0);
   return unit === "usd" ? `$${text}` : `${text} contracts`;
+}
+
+function PerpRecords({ records, oi }) {
+  if (!records) return null;
+  const hours = records.topHours || [];
+  const hourFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric" });
+  const dayFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" });
+  const fmtHour = (ms) => `${dayFmt.format(ms)}, ${hourFmt.format(ms)}–${hourFmt.format(ms + 3600e3)}`;
+  return (
+    <div style={styles.recordsBox}>
+      <h3 style={styles.h3Plain}>io:ANTH records</h3>
+      <div style={styles.volMeta}>
+        Since the contract&apos;s first daily candle ({`${new Date(records.firstCandleMs).toISOString().slice(0, 10)} UTC`}), notional ≈ volume × (high + low) ÷ 2. Records are
+        the largest in io:ANTH&apos;s history, not across crypto perps.
+      </div>
+      <ul style={styles.recordsList}>
+        {records.today ? (
+          <li>
+            Today (UTC day, so far): <strong>{fmtUsdCompact(records.today.notional)}</strong>
+            {records.today.rank === 1 ? " · largest day on record" : ` · #${records.today.rank} day`}
+            {records.priorRecordDay ? ` (previous record ${fmtUsdCompact(records.priorRecordDay.notional)} on ${records.priorRecordDay.date})` : ""}
+          </li>
+        ) : null}
+        {hours.slice(0, 3).map((h, i) => (
+          <li key={h.startMs}>
+            #{i + 1} hour: <strong>{fmtUsdCompact(h.notional)}</strong> · {fmtHour(h.startMs)} ET
+          </li>
+        ))}
+        {oi ? (
+          <li>
+            Open interest <strong>{fmtUsdCompact(oi.currentUsd)}</strong>
+            {oi.reference
+              ? ` vs ${fmtUsdCompact(oi.reference.openInterestUsd)} on ${fmtDateKeyShort(oi.reference.date)} (${fmtPrem(oi.change)}; ${oi.reference.sources?.[0]?.sourceClass === "assumption" ? "site-recorded snapshot" : "recorded API snapshot"}, as Hyperliquid has no historical open-interest endpoint)`
+              : " (no recorded snapshot ~7 days ago)"}
+          </li>
+        ) : null}
+      </ul>
+    </div>
+  );
 }
 
 function VolumePanel({ rows }) {
@@ -422,6 +502,104 @@ function VolumePanel({ rows }) {
         24h norms use the six days before the trailing 24h so today is not in its own baseline.
       </div>
     </div>
+  );
+}
+
+function RangeVsTapePanel({ perpMarkB, perpBasis, onPerpBasis, polymarketExpectedT }) {
+  let view;
+  try {
+    view = buildRangeVsTape({ perpMarkB, perpBasis, polymarketExpectedT, thirdParty: ipoTape.thirdPartyValuations });
+  } catch (err) {
+    return <div style={styles.errors}>Range vs tape unavailable: {err.message}</div>;
+  }
+  const { min, max } = view.axis;
+  const pct = (x) => `${((x - min) / (max - min)) * 100}%`;
+  const ticks = [];
+  for (let t = min; t <= max; t += max - min > 100 ? 20 : 10) ticks.push(t);
+  const band = (
+    <>
+      <div style={{ ...styles.rvtBand, left: pct(view.range.low), width: `calc(${pct(view.range.high)} - ${pct(view.range.low)})` }} />
+      <div style={{ ...styles.rvtMid, left: pct(view.range.midpoint) }} />
+    </>
+  );
+  const allMarks = view.lanes.flatMap((l) => l.marks.map((m) => ({ ...m, lane: l })));
+  return (
+    <section style={styles.panel} aria-labelledby="rvt-title">
+      <div style={styles.chartHead}>
+        <h2 id="rvt-title" style={styles.h2}>The roadshow range vs the tape</h2>
+        <div role="radiogroup" aria-label="io:ANTH share basis" style={styles.toggle}>
+          {PERP_BASES.map((b) => (
+            <button key={b} type="button" role="radio" aria-checked={perpBasis === b} onClick={() => onPerpBasis(b)} style={{ ...styles.toggleBtn, ...(perpBasis === b ? styles.toggleBtnOn : {}) }}>
+              io:ANTH on {SHARE_BASES[b].short}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={styles.panelSub}>
+        $ per ANT share. Shaded: the ${RANGE.low.toFixed(2)}–${RANGE.high.toFixed(2)} range (S-1/A No. 2 cover), line at the ${RANGE.midpoint.toFixed(0)} midpoint.
+        Each row converts on one share basis only; filled dots refresh live, hollow dots are static and cited.
+      </div>
+      <div style={styles.rvtChart}>
+        <div style={styles.rvtLane}>
+          <div style={styles.rvtLaneLabel}>Per-share prices (no conversion)</div>
+          <div style={styles.rvtTrack}>
+            {band}
+            {view.natives.map((m) => (
+              <div key={m.key} title={`${m.label} ${fmtPx(m.price)} · ${m.citation}`} style={{ ...styles.rvtDot, ...styles.rvtDotStatic, left: pct(m.price) }} />
+            ))}
+          </div>
+        </div>
+        {view.lanes.map((lane) => (
+          <div key={lane.key} style={styles.rvtLane}>
+            <div style={styles.rvtLaneLabel}>{lane.title} · {lane.basisLabel}</div>
+            <div style={styles.rvtTrack}>
+              {band}
+              {lane.marks.map((m) =>
+                Number.isFinite(m.priceHigh) ? (
+                  <div key={m.key} title={`${m.label}: ${m.detail}`} style={{ ...styles.rvtSpan, left: pct(m.price), width: `calc(${pct(m.priceHigh)} - ${pct(m.price)})` }} />
+                ) : (
+                  <div
+                    key={m.key}
+                    title={`${m.label}: ${fmtPx(m.price)} · ${m.detail}${m.alt ? ` · ${fmtPx(m.alt.price)} ${m.alt.label}` : ""}`}
+                    style={{ ...styles.rvtDot, ...(m.live ? styles.rvtDotLive : styles.rvtDotStatic), left: pct(m.price) }}
+                  />
+                )
+              )}
+            </div>
+          </div>
+        ))}
+        <div style={styles.rvtAxis}>
+          {ticks.map((t) => (
+            <span key={t} style={{ ...styles.rvtTick, left: pct(t) }}>${t}</span>
+          ))}
+        </div>
+      </div>
+      <ul style={styles.rvtList}>
+        {view.natives.map((m) => (
+          <li key={m.key}><span style={styles.rvtKeyStatic} /> {m.label} <strong>{fmtPx(m.price)}</strong> <span style={{ color: MUTED }}>· per share, {m.citation}</span></li>
+        ))}
+        {allMarks.map((m) => (
+          <li key={m.key}>
+            <span style={m.live ? styles.rvtKeyLive : styles.rvtKeyStatic} /> {m.label}{" "}
+            <strong>{Number.isFinite(m.priceHigh) ? `${fmtPx(m.price)}–${fmtPx(m.priceHigh)}` : fmtPx(m.price)}</strong>{" "}
+            <span style={{ color: MUTED }}>
+              · {m.detail}
+              {m.alt ? ` · on ${SHARE_BASES[m.alt.basis].short}: ${fmtPx(m.alt.price)}` : ""}
+              {m.live ? "" : " · static"}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div style={styles.footnote}>
+        Bases: outstanding = 13,086,672,593 shares after the offering and placement (S-1/A No. 2 p. 20), Polymarket&apos;s resolution basis;
+        fully diluted = 18,012,993,381 at $74 (treasury method, recomputed at each price; S-1/A No. 2 p. 24). io:ANTH is quoted in $B of
+        “fully diluted valuation” per <Ext href={ipoTape.perpBasis?.sources?.[0]?.url} label="Entropy pre-IPO perpetuals docs (opens in a new tab)">Entropy&apos;s docs ↗</Ext>;
+        Entropy has not yet published its Anthropic count, so the site uses its own fully diluted count and Entropy&apos;s may differ.
+        Damodaran ($1.476T, Oct 28) is a site conversion on fully diluted; his own per-share figure uses a share count that does not reconcile
+        with the filing and is not shown (he revised to ~$1.45T on Nov 3). Morningstar ($1.7T equity value, Nov 9) states no share basis,
+        so it is drawn as a span across both conversions. Two converted marks share a row only when they share a basis.
+      </div>
+    </section>
   );
 }
 
@@ -755,11 +933,13 @@ function LockupScheduleTable({ schedule, s1Url }) {
           </a>
         </h3>
         <span style={{ fontFamily: MONO, fontSize: "10.5px", color: MUTED }}>
-          {pricingDate ? `Anchored to pricing date ${pricingDate}` : "Pricing date TBD — milestones shown relative to pricing"}
+          {pricingDate
+            ? `Dates if pricing ${lockupDate(0, pricingDate).label.replace(/, \d{4}$/, "")} (${schedule.pricingDateStatus || "reported"})`
+            : "Pricing date TBD — milestones shown relative to pricing"}
         </span>
       </div>
       <div style={{ fontFamily: MONO, fontSize: "11px", color: MUTED, marginBottom: "10px" }}>
-        {schedule.basis}
+        {schedule.basis} {schedule.pricingDateNote || ""}
       </div>
       <div style={{ display: "grid", gap: "10px", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
         {schedule.groups.map((g) => (
@@ -778,9 +958,14 @@ function LockupScheduleTable({ schedule, s1Url }) {
                 {g.tranches.map((t, idx) => (
                   <tr key={idx} style={{ borderBottom: idx < g.tranches.length - 1 ? "1px dotted #e7e5e4" : "none" }}>
                     <td style={{ padding: "4px 4px 4px 0" }}>
-                      {t.dayOffset != null && pricingDate
-                        ? formatLockupMilestoneOffset(t.dayOffset, pricingDate)
-                        : t.trigger}
+                      {t.dayOffset != null && pricingDate ? (
+                        <>
+                          {lockupDate(t.dayOffset, pricingDate).label}
+                          <span style={{ color: MUTED }}> · {t.dayOffset === 1 ? "day 1 (first trading day)" : `day ${t.dayOffset} after pricing`}{t.dayOffset === 180 || t.dayOffset === 365 ? ", or earlier on earnings" : ""}</span>
+                        </>
+                      ) : (
+                        t.trigger
+                      )}
                     </td>
                     <td style={{ padding: "4px", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
                       {t.pct}
@@ -799,19 +984,58 @@ function LockupScheduleTable({ schedule, s1Url }) {
   );
 }
 
+function QuarterlyTable({ q }) {
+  if (!q?.periods?.length) return null;
+  const last = q.periods.length - 1;
+  const fmt = (v, unit) => (unit === "pct" ? `${v < 0 ? "(" : ""}${Math.abs(v)}%${v < 0 ? ")" : ""}` : v < 0 ? `(${Math.abs(v).toLocaleString("en-US")})` : v.toLocaleString("en-US"));
+  return (
+    <div style={styles.qWrap}>
+      <table style={styles.qTable}>
+        <caption style={styles.qCaption}>
+          {q.title} · {q.citation}{" "}
+          <a href={q.sources?.[0]?.url} target="_blank" rel="noopener noreferrer" style={{ color: "#1d4ed8" }}>↗</a>
+        </caption>
+        <thead>
+          <tr>
+            <th style={styles.qTh} scope="col"></th>
+            {q.periods.map((p, i) => (
+              <th key={p} scope="col" style={{ ...styles.qTh, ...(i === last ? styles.qNew : {}) }}>{p}{i === last ? " (new)" : ""}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {Object.entries(q.rows).map(([k, row]) => (
+            <tr key={k}>
+              <th scope="row" style={styles.qRowHead}>{row.label}</th>
+              {row.values.map((v, i) => (
+                <td key={i} style={{ ...styles.qTd, ...(i === last ? styles.qNew : {}), color: v < 0 ? DOWN : INK }}>{fmt(v, row.unit)}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function S1FactsPanel() {
   if (!ipoTape.s1Facts?.length) return null;
   return (
     <section style={styles.factsPanel} aria-labelledby="s1-facts-title">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "8px" }}>
-        <h2 id="s1-facts-title" style={styles.h2}>What the Form S-1 shows (filed Oct 26, 2026)</h2>
-        <Ext href={ipoTape.s1Url} style={{ fontFamily: MONO, fontSize: "11px", color: "#1d4ed8" }} label="Anthropic Form S-1 on SEC EDGAR (opens in a new tab)">
-          SEC EDGAR · Form S-1 (Reg. No. 333-299633, accession 0001628280-26-067168) ↗
-        </Ext>
+        <h2 id="s1-facts-title" style={styles.h2}>What the filings show (S-1 and S-1/A Nos. 1–2)</h2>
+        <span style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          {(ipoTape.filings || []).map((f) => (
+            <Ext key={f.key} href={f.url} style={{ fontFamily: MONO, fontSize: "11px", color: "#1d4ed8" }} label={`Anthropic ${f.label} on SEC EDGAR (opens in a new tab)`}>
+              {f.label} ↗
+            </Ext>
+          ))}
+        </span>
       </div>
       <div style={styles.panelSub}>
-        Anthropic, PBC Form S-1 · public on EDGAR Oct 26, 2026 at 9:00:11 AM ET · primary SEC filing (supersedes Oct 14 press figures where noted)
+        Anthropic, PBC (Reg. No. 333-299633) · {(ipoTape.filings || []).map((f) => `${f.label} accepted ${f.acceptedEt} (${f.accession})`).join(" · ")} · primary SEC filings; later filings supersede earlier figures and press reports where noted
       </div>
+      <QuarterlyTable q={ipoTape.quarterly} />
       <div style={styles.factsGrid}>
         {ipoTape.s1Facts.map((item) => {
           const badge = AUDIT_BADGE_STYLE[item.auditStatus] || AUDIT_BADGE_STYLE.filed;
@@ -866,8 +1090,8 @@ function InvestorDayFacts() {
       superseded: q3.supersededByS1 || q2.supersededByS1 || q1.supersededByS1,
       body: (
         <>
-          ~{Math.round(derived.q3OverQ2 * 100)}% above Q2&apos;s {fmtUsdB(q2.valueUsd)} (S-1 filed Q2: $11,555M, S-1 p. 158) · Q1{" "}
-          {fmtUsdB(q1.valueUsd, { approx: q1.approximate })} (S-1 filed Q1: $4,731M, S-1 p. 158). Q3 is blank in the initial S-1 pending the S-1/A (S-1 pp. 133, 195).{" "}
+          Press-reported. Filed: $16,956M (S-1/A No. 1 p. 160). ~{Math.round(derived.q3OverQ2 * 100)}% above Q2&apos;s {fmtUsdB(q2.valueUsd)} (filed $11,555M, S-1 p. 158) · Q1{" "}
+          {fmtUsdB(q1.valueUsd, { approx: q1.approximate })} (filed $4,731M, S-1 p. 158).{" "}
           <Cite sources={[...q3.sources]} notes={notes} />
         </>
       ),
@@ -891,7 +1115,7 @@ function InvestorDayFacts() {
       body: (
         <>
           No exit run-rate was given at the investor day. <Cite sources={facts.exitRunRateDisclosed.sources} notes={notes} />{" "}
-          S-1 p. 4 defines Run-Rate Revenue (trailing-28-day consumption ×13 + monthly subscriptions ×12); Oct 31 Run-Rate Revenue is blank pending the S-1/A (S-1 pp. 133, 195). Last company figure: {fmtUsdB(july.valueUsd)} exit run-rate at the end of July{" "}
+          S-1 p. 4 defines Run-Rate Revenue (trailing-28-day consumption ×13 + monthly subscriptions ×12). Filed since: ~$81B as of Oct 31, up $10B from Sep 30 (S-1/A No. 2 p. 202). Last figure before the filings: {fmtUsdB(july.valueUsd)} exit run-rate at the end of July{" "}
           <Cite sources={july.sources} notes={notes} />. Outside estimate (SemiAnalysis, not company data):{" "}
           {fmtUsdB(semi.valueUsd, { approx: semi.approximate })} annualized <Cite sources={semi.sources} notes={notes} />.
         </>
@@ -915,9 +1139,10 @@ function InvestorDayFacts() {
       key: "rpc",
       eyebrow: rpc.label,
       value: `$${rpc.value.toFixed(2)}`,
+      superseded: rpc.supersededByS1,
       body: (
         <>
-          Revenue per $1 of compute in Q3. <Cite sources={rpc.sources} notes={notes} />
+          Revenue per $1 of compute in Q3, press-reported. Filed: $1.72 ($16,956M revenue ÷ $9,863M compute &amp; infrastructure, S-1/A No. 1 p. 160). <Cite sources={rpc.sources} notes={notes} />
         </>
       ),
     },
@@ -948,11 +1173,11 @@ function InvestorDayFacts() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
         <h2 id="ipo-facts-title" style={styles.h2}>What the investor day showed (Oct 14)</h2>
         <span style={{ fontFamily: MONO, fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em", color: "#78350f", background: "#fef3c7", padding: "2px 6px", textTransform: "uppercase" }}>
-          Superseded in part by the S-1
+          Superseded in part by the filings
         </span>
       </div>
       <div style={styles.panelSub}>
-        Anthropic investor day, Oct 14, 2026 · press-reported (FT / Reuters / Bloomberg), not company filings · superseded in part by the Oct 26, 2026 Form S-1
+        Anthropic investor day, Oct 14, 2026 · press-reported (FT / Reuters / Bloomberg), not company filings · superseded in part by the Form S-1 (Oct 26) and S-1/A No. 1 (Nov 2) and No. 2 (Nov 10)
       </div>
       <div style={styles.factsGrid}>
         {cards.map((c) => (
@@ -961,7 +1186,7 @@ function InvestorDayFacts() {
               <span style={{ ...styles.tileEyebrow, marginBottom: 0 }}>{c.eyebrow}</span>
               {c.superseded ? (
                 <span style={{ fontFamily: MONO, fontSize: "9px", fontWeight: 600, color: "#78350f", background: "#fef3c7", padding: "1px 5px" }}>
-                  SEE S-1
+                  SEE FILINGS
                 </span>
               ) : null}
             </div>
@@ -995,7 +1220,8 @@ function UpcomingList() {
           return (
             <li key={u.key} style={styles.upcomingItem}>
               <span>
-                <strong>{u.label}</strong> · {u.timing}
+                <strong>{u.url ? <a href={u.url} target="_blank" rel="noopener noreferrer" style={styles.extLink}>{u.label} ↗</a> : u.label}</strong> · {u.timing}
+                {u.note ? <span style={{ display: "block", color: MUTED, fontSize: "11px" }}>{u.note}</span> : null}
               </span>
               <span style={{ ...styles.upcomingStatus, ...statusStyle }}>{u.status}</span>
               <span style={styles.upcomingSource}>
@@ -1013,7 +1239,7 @@ function UpcomingList() {
         })}
       </ul>
       <div style={styles.footnote}>
-        Form S-1 was filed publicly on Oct 26, 2026 at 9:00:11 AM ET (Reg. No. 333-299633, accession 0001628280-26-067168). Q3 2026 financials and Oct 31 Run-Rate Revenue are blank pending the S-1/A (S-1 pp. 133, 195). Lock-up milestones are relative to pricing until the IPO prices (S-1 pp. 321–323).
+        Acceptance times are the EDGAR “Accepted” field on each filing index. The pricing and first-trade dates are not in the filing; they are reported by CNBC from unnamed sources and flip to confirmed when the 424B4 or a pricing release lands. Lock-up dates assume pricing on Nov 18 (S-1/A No. 2 pp. 318–319, 333–335).
       </div>
     </div>
   );
@@ -1137,6 +1363,49 @@ function ProxyTable({ rows, control, sessionOpen }) {
   );
 }
 
+function PerpPerShare({ perShare, basis }) {
+  if (!perShare) return null;
+  const order = basis === "outstanding" ? ["outstanding", "fullyDiluted"] : ["fullyDiluted", "outstanding"];
+  return (
+    <div style={styles.perShare}>
+      {order.map((b, i) => {
+        const r = perShare[b];
+        return (
+          <div key={b} style={i === 0 ? styles.perSharePrimary : styles.perShareAlt}>
+            {fmtPx(r.price)}/ANT share {r.label}
+            {b === "fullyDiluted" ? " (Entropy's quote basis)" : ""} · {fmtPrem(r.vsMidpoint)} vs ${RANGE.midpoint} midpoint · {fmtPrem(r.vsTop)} vs ${RANGE.high} top
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function AntHeadline({ ant, pm }) {
+  const out = ant.marketCap?.outstanding;
+  const fd = ant.marketCap?.fullyDiluted;
+  const bracket = (pm?.brackets || []).find((b) => {
+    const nums = (String(b.label).match(/\d+(?:\.\d+)?/g) || []).map(Number);
+    const t = out ? out.value / 1e12 : null;
+    if (t == null || !nums.length) return false;
+    if (/^</.test(b.label)) return t < nums[0];
+    if (/\+$/.test(b.label)) return t >= nums[0];
+    return t >= nums[0] && t < nums[1];
+  });
+  const trigger = publicBenefitTrigger(ipoTape.ipoPrice ?? null);
+  return (
+    <section style={{ ...styles.hero, border: "1px solid #15803d" }} aria-labelledby="ant-title">
+      <div style={styles.sectionEyebrow} id="ant-title">NASDAQ: ANT · LISTED {ant.exchange} · first trade {fmtShortDate(ant.firstTradeMs)}</div>
+      <div style={styles.heroValue}>{fmtPx(ant.price)}</div>
+      <div style={styles.heroMeta}>
+        Market cap {fmtT(out ? out.value / 1e12 : null)} {out?.label} · {fmtT(fd ? fd.value / 1e12 : null)} {fd?.label}
+        {bracket ? ` · in Polymarket bracket ${bracket.label} (resolves on the first-day close)` : ""}
+        {trigger ? ` · first public-benefit issuance trigger ${fmtPx(trigger)} (IPO price × 1.5)` : " · public-benefit trigger = IPO price × 1.5, shown once the price is final"}
+      </div>
+    </section>
+  );
+}
+
 export default function InvestorDayTape() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -1175,6 +1444,9 @@ export default function InvestorDayTape() {
       : "today"
     : null;
   const chartWindow = windowChoice ?? defaultWindow ?? "multi";
+  const [perpBasis, setPerpBasis] = useState(ipoTape.perpBasis?.default || "fullyDiluted");
+  const ant = data?.ant;
+  const headline = headlineValuations(data);
   const multi = chartWindow === "multi";
 
   return (
@@ -1183,7 +1455,7 @@ export default function InvestorDayTape() {
         LIVE TAPE · ANTHROPIC IPO
       </div>
       <h1 style={styles.title} className="vcx-title">Anthropic IPO tape</h1>
-      <p style={styles.subtitle}>Investor day Oct 14 · Form S-1 public Oct 26 (Nasdaq: ANT) · S-1/A, roadshow and pricing next</p>
+      <p style={styles.subtitle}>Form S-1 Oct 26 · S-1/A No. 1 Nov 2 · S-1/A No. 2 Nov 10: ${RANGE.low}–${RANGE.high} range, roadshow launched · pricing Nov 18 / first trade Nov 19 (reported, not confirmed) · Nasdaq: ANT</p>
       <p style={styles.disclosure}>
         {disclosureSentence(disclosure)}
         {ageLabel ? <span style={styles.disclosureAge}> ({ageLabel})</span> : null}
@@ -1195,6 +1467,7 @@ export default function InvestorDayTape() {
         ) : null}
       </div>
 
+      {ant ? <AntHeadline ant={ant} pm={data?.polymarket} /> : null}
       <S1FactsPanel />
       <InvestorDayFacts />
 
@@ -1233,6 +1506,8 @@ export default function InvestorDayTape() {
               ) : null}
             </div>
             <div style={styles.heroValue}>{fmtTFromB(anth?.markPx)}</div>
+            <div style={styles.heroBasis}>{headline.perp?.basisText ?? "fully diluted valuation"} · not comparable to the market-cap tiles below without converting</div>
+            <PerpPerShare perShare={anth?.perShare} basis={perpBasis} />
           </div>
           <div style={styles.heroChanges}>
             <div>
@@ -1265,7 +1540,13 @@ export default function InvestorDayTape() {
           {Number.isFinite(anth?.funding) ? `${(anth.funding * 100).toFixed(4)}%/h` : "—"}
           {oai ? ` · io:OAI ${fmtTFromB(oai.markPx)} (${fmtPct(oai.change24h)} 24h)` : ""}
         </div>
+        <PerpRecords records={anth?.records} oi={anth?.openInterestVs} />
         <div style={styles.heroCaveat}>
+          At listing, io:ANTH converts in place: it keeps trading in market-cap units with its oracle pinned to ANT × a fixed fully
+          diluted count ÷ 1e9 (taken from the final prospectus), and it does not settle or delist. Three calendar days before an
+          announced listing its oracle becomes a 1-hour average of the mark (“hyperp mode”); if first trade is Nov 19 that would start
+          around Nov 16 (our inference, not an Entropy statement).{" "}
+          <Ext href={ipoTape.perpBasis?.sources?.[0]?.url} label="Entropy pre-IPO perpetuals docs (opens in a new tab)">Entropy docs ↗</Ext>{" "}
           A perpetual-futures mark, not a priced round or a tender. With{" "}
           {fmtUsdCompact(anth?.openInterestUsd)} of open interest and{" "}
           {fmtUsdCompact(anth?.dayNtlVlm)} of daily volume, a few million dollars of flow can move this
@@ -1279,7 +1560,7 @@ export default function InvestorDayTape() {
           value={fmtT(pm?.expectedClose?.valueT)}
           change={{ n: pm?.expectedClose?.changeT, text: fmtDeltaB(pm?.expectedClose?.changeT) }}
           changeLabel="since 00:00 ET"
-          sub="Conditional on IPO by 2027 · normalized brackets, “No IPO” excluded"
+          sub={`${headline.polymarket?.basisText ?? "market cap on shares outstanding"} · ≈ ${fmtPx(headline.polymarket?.perShare?.value)}/ANT share · conditional on IPO by 2027 · normalized brackets, “No IPO” excluded`}
           href={PM_URL.closingCap}
         />
         <Tile
@@ -1316,6 +1597,13 @@ export default function InvestorDayTape() {
         />
       </section>
 
+      <RangeVsTapePanel
+        perpMarkB={anth?.markPx}
+        perpBasis={perpBasis}
+        onPerpBasis={setPerpBasis}
+        polymarketExpectedT={pm?.expectedClose?.valueT}
+      />
+
       <div style={styles.twoCol} className="investor-day-two-col">
         <section style={styles.panel}>
           <h2 style={styles.h2}>First-day closing market cap</h2>
@@ -1332,7 +1620,7 @@ export default function InvestorDayTape() {
             className="investor-day-link-card"
             title="Open the closing-cap brackets on Polymarket"
           >
-            <BracketChart brackets={pm?.brackets} noIpo={pm?.noIpo} />
+            <BracketChart brackets={pm?.brackets} noIpo={pm?.noIpo} boundaries={pm?.boundaries} lowTail={pm?.lowTailSensitivity} median={pm?.medianBracket} expected={pm?.expectedClose} />
           </a>
         </section>
         <section style={styles.panel}>
@@ -1372,7 +1660,8 @@ export default function InvestorDayTape() {
           units of the 30-day 15-minute σ. Dots mark ≥3σ; hover or tap for details. A move that
           reverses within 15 minutes shows again with the opposite sign 15 minutes later; those
           echoes are drawn hollow and not counted. Purple marks events: the investor day (Oct 14, date only),
-          the FT report (8:59 PM ET Oct 14), and the public Form S-1 filing (9:00:11 AM ET Oct 26, EDGAR acceptance timestamp).
+          the FT report (8:59 PM ET Oct 14), the public Form S-1 (9:00:11 AM ET Oct 26), S-1/A No. 1 (9:24:24 AM ET Nov 2) and
+          S-1/A No. 2 with the price range (6:29:24 AM ET Nov 10), each at its EDGAR acceptance time.
         </div>
         <SigmaCharts
           key={chartWindow}
@@ -1419,6 +1708,7 @@ export default function InvestorDayTape() {
           compares against the last print at or before midnight Eastern.
         </div>
         <div>As of {data ? `${fmtEt(Date.parse(data.asOf), true)} ET` : "—"}.</div>
+        <div>{PRIMARY_SOURCES_LINE}</div>
         <div style={styles.sourcesStrong}>Public market data only. Not affiliated with Anthropic.</div>
       </section>
     </main>
@@ -1426,6 +1716,35 @@ export default function InvestorDayTape() {
 }
 
 const styles = {
+  heroBasis: { fontFamily: MONO, fontSize: "10.5px", color: MUTED, marginTop: "2px" },
+  perShare: { fontFamily: MONO, fontSize: "11.5px", marginTop: "4px", lineHeight: 1.5 },
+  perSharePrimary: { color: INK, fontWeight: 600 },
+  perShareAlt: { color: MUTED },
+  barPerShare: { display: "block", fontFamily: MONO, fontSize: "10px", color: MUTED, fontWeight: 400 },
+  recordsBox: { borderTop: `1px solid ${RULE}`, marginTop: "12px", paddingTop: "10px" },
+  recordsList: { margin: "6px 0 0", paddingLeft: "18px", fontFamily: MONO, fontSize: "11.5px", lineHeight: 1.6 },
+  rvtChart: { position: "relative", margin: "12px 0 4px", paddingBottom: "22px" },
+  rvtLane: { marginBottom: "10px" },
+  rvtLaneLabel: { fontFamily: MONO, fontSize: "10px", color: MUTED, marginBottom: "3px" },
+  rvtTrack: { position: "relative", height: "22px", background: "#fafaf9", border: `1px solid ${RULE}` },
+  rvtBand: { position: "absolute", top: 0, bottom: 0, background: "rgba(124, 58, 237, 0.14)" },
+  rvtMid: { position: "absolute", top: 0, bottom: 0, width: "2px", marginLeft: "-1px", background: "#7c3aed" },
+  rvtDot: { position: "absolute", top: "50%", width: "12px", height: "12px", marginLeft: "-6px", marginTop: "-6px", borderRadius: "50%" },
+  rvtDotLive: { background: "#1d4ed8", border: "2px solid #fff", boxShadow: "0 0 0 1px #1d4ed8" },
+  rvtDotStatic: { background: "#fff", border: "2px solid #44403c" },
+  rvtSpan: { position: "absolute", top: "6px", height: "10px", background: "rgba(68, 64, 60, 0.25)", border: "1px dashed #44403c" },
+  rvtAxis: { position: "absolute", left: 0, right: 0, bottom: 0, height: "16px" },
+  rvtTick: { position: "absolute", transform: "translateX(-50%)", fontFamily: MONO, fontSize: "10px", color: MUTED },
+  rvtList: { listStyle: "none", padding: 0, margin: "8px 0 0", fontFamily: MONO, fontSize: "11.5px", lineHeight: 1.7 },
+  rvtKeyLive: { display: "inline-block", width: "9px", height: "9px", borderRadius: "50%", background: "#1d4ed8", verticalAlign: "middle" },
+  rvtKeyStatic: { display: "inline-block", width: "9px", height: "9px", borderRadius: "50%", border: "2px solid #44403c", boxSizing: "border-box", verticalAlign: "middle" },
+  qWrap: { overflowX: "auto", margin: "10px 0 14px", WebkitOverflowScrolling: "touch" },
+  qTable: { borderCollapse: "collapse", fontFamily: MONO, fontSize: "11px", minWidth: "560px", width: "100%" },
+  qCaption: { textAlign: "left", fontSize: "11px", color: MUTED, marginBottom: "4px", captionSide: "top" },
+  qTh: { textAlign: "right", padding: "3px 6px", borderBottom: `1px solid ${RULE}`, fontWeight: 500, color: MUTED, whiteSpace: "nowrap" },
+  qRowHead: { textAlign: "left", padding: "3px 6px 3px 0", fontWeight: 500, whiteSpace: "nowrap" },
+  qTd: { textAlign: "right", padding: "3px 6px", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" },
+  qNew: { background: "#fef3c7", fontWeight: 600 },
   container: { maxWidth: "1180px", margin: "0 auto", padding: "40px 56px 64px", color: INK },
   eyebrow: { fontFamily: MONO, fontSize: "11px", letterSpacing: "0.18em", color: "#44403c", marginBottom: "12px", fontWeight: 500 },
   title: { fontSize: "48px", lineHeight: 1.05, fontWeight: 500, color: INK, margin: "0 0 12px" },

@@ -1,9 +1,13 @@
 // Offline implementation from raw observations and frozen runtime inputs.
 // No browser, application modules, network, clock, or inferred live prices.
 import { adsEquivalentShares, impliedExposure, markPostMoney, lookThroughPer100 } from './derive.mjs';
-import { CAPITALIZATION, valueUnitLots } from './unitExposure.mjs';
+import { CAPITALIZATION, resolveAnthScenario, valueUnitLots } from './unitExposure.mjs';
 
-export function referenceRow(raw, marks, input, caps = CAPITALIZATION) {
+export const SUPPORTED_VERSIONS = ['1.3.0', '1.4.0'];
+
+export function referenceRow(raw, marks, rawInput, caps = CAPITALIZATION) {
+  const anth = resolveAnthScenario(rawInput, caps);
+  const input = { ...rawInput, anthVal: anth.anthVal, anthFdShares: anth.anthFdShares };
   const price = input.prices[raw.yahooSymbol];
   if (!Number.isFinite(price) || price <= 0) throw new Error(`Missing positive frozen price: ${raw.ticker}`);
   const estimated = input.holdingsBasis === 'estimated';
@@ -30,9 +34,10 @@ export function referenceRow(raw, marks, input, caps = CAPITALIZATION) {
       const opts = { valuation: val, fdShares: fd, dilution: input.dilution, wrapperValue, includeAcquisition: estimated, entryPrice: input.dxyzOaiEntryPrice ?? caps.dxyzOpenaiEntry.defaultPrice, unitScale: deploy === 'prorata' ? scale : 1 };
       const point = valueUnitLots(leg, opts);
       const high = valueUnitLots(leg, { ...opts, unitScale: deploy === 'range' || deploy === 'prorata' ? scale : 1, wrapperValue: highDenom });
-      const sensitivityLow = valueUnitLots(leg, { ...opts, fdShares: caps[side].highShares, entryPrice: leg.acquisition ? caps.dxyzOpenaiEntry.highPrice : opts.entryPrice });
-      const sensitivityHigh = valueUnitLots(leg, { ...opts, fdShares: caps[side].lowShares, entryPrice: leg.acquisition ? caps.dxyzOpenaiEntry.lowPrice : opts.entryPrice });
-      legs[key] = { pct: point.pct, lo: Math.min(point.per100, high.per100), hi: Math.max(point.per100, high.per100), lots: point.lots, units: point.units, revaluation: point.revaluation, pps: point.pps, sensitivity: { low: sensitivityLow.per100, high: sensitivityHigh.per100 } };
+      const skipSensitivity = side === 'anthropic' && anth.priceMode;
+      const sensitivityLow = skipSensitivity ? null : valueUnitLots(leg, { ...opts, fdShares: caps[side].highShares, entryPrice: leg.acquisition ? caps.dxyzOpenaiEntry.highPrice : opts.entryPrice });
+      const sensitivityHigh = skipSensitivity ? null : valueUnitLots(leg, { ...opts, fdShares: caps[side].lowShares, entryPrice: leg.acquisition ? caps.dxyzOpenaiEntry.lowPrice : opts.entryPrice });
+      legs[key] = { pct: point.pct, lo: Math.min(point.per100, high.per100), hi: Math.max(point.per100, high.per100), lots: point.lots, units: point.units, revaluation: point.revaluation, pps: point.pps, sensitivity: skipSensitivity ? null : { low: sensitivityLow.per100, high: sensitivityHigh.per100 } };
     } else {
       const pct = impliedExposure(leg, marks, { fdShares: fd }) || 0;
       const args = { claimPct: pct, ipoVal: val, dilution: input.dilution };
@@ -66,15 +71,17 @@ export function referenceRow(raw, marks, input, caps = CAPITALIZATION) {
   };
 }
 
-export function calculateScenario(dataset, input) {
-  if (dataset.meta.schemaVersion !== '1.3.0' || dataset.meta.methodologyVersion !== '1.3.0') throw new Error('Unsupported dataset version');
+export function calculateScenario(dataset, rawInput) {
+  const anth = resolveAnthScenario(rawInput, dataset.capitalization || CAPITALIZATION);
+  const input = { ...rawInput, anthVal: anth.anthVal, anthFdShares: anth.anthFdShares };
+  if (!SUPPORTED_VERSIONS.includes(dataset.meta.schemaVersion) || !SUPPORTED_VERSIONS.includes(dataset.meta.methodologyVersion)) throw new Error('Unsupported dataset version');
   for (const key of ['anthVal', 'oaiVal']) if (!Number.isFinite(input[key]) || input[key] < 0) throw new Error(`Invalid ${key}`);
   if (!Number.isFinite(input.dilution) || input.dilution < 0 || input.dilution > 1) throw new Error('Invalid dilution');
   if (!['filed','estimated'].includes(input.holdingsBasis || 'filed')) throw new Error('Invalid holdingsBasis');
   if (!['cash','prorata','range'].includes(input.deploy || 'cash')) throw new Error('Invalid deploy');
-  return { schemaVersion: dataset.meta.schemaVersion, methodologyVersion: dataset.meta.methodologyVersion, datasetAsOf: dataset.meta.asOf, priceAsOf: input.priceAsOf || input.asOf, asOf: input.asOf, anthVal: input.anthVal, oaiVal: input.oaiVal, dilution: input.dilution, holdingsBasis: input.holdingsBasis || 'filed', deploy: input.deploy || 'cash', anthFdShares: input.anthFdShares ?? dataset.capitalization?.anthropic.defaultShares ?? CAPITALIZATION.anthropic.defaultShares, oaiFdShares: input.oaiFdShares ?? dataset.capitalization?.openai.defaultShares ?? CAPITALIZATION.openai.defaultShares, dxyzOaiEntryPrice: input.dxyzOaiEntryPrice ?? dataset.capitalization?.dxyzOpenaiEntry.defaultPrice ?? CAPITALIZATION.dxyzOpenaiEntry.defaultPrice, rows: dataset.wrappers.map(raw => referenceRow(raw, dataset.marks, input, dataset.capitalization)) };
+  return { schemaVersion: dataset.meta.schemaVersion, methodologyVersion: dataset.meta.methodologyVersion, datasetAsOf: dataset.meta.asOf, priceAsOf: input.priceAsOf || input.asOf, asOf: input.asOf, ...(anth.priceMode ? { anthPrice: anth.anthPrice, anthShareBasis: anth.anthShareBasis } : {}), anthVal: input.anthVal, oaiVal: input.oaiVal, dilution: input.dilution, holdingsBasis: input.holdingsBasis || 'filed', deploy: input.deploy || 'cash', anthFdShares: input.anthFdShares ?? dataset.capitalization?.anthropic.defaultShares ?? CAPITALIZATION.anthropic.defaultShares, oaiFdShares: input.oaiFdShares ?? dataset.capitalization?.openai.defaultShares ?? CAPITALIZATION.openai.defaultShares, dxyzOaiEntryPrice: input.dxyzOaiEntryPrice ?? dataset.capitalization?.dxyzOpenaiEntry.defaultPrice ?? CAPITALIZATION.dxyzOpenaiEntry.defaultPrice, rows: dataset.wrappers.map(raw => referenceRow(raw, dataset.marks, rawInput, dataset.capitalization)) };
 }
 
 export function createScenarioExport(dataset, inputs, metadata = {}) {
-  return { format: 'ai-exposure-scenario', version: '1.3.0', dataset, inputs, metadata, results: calculateScenario(dataset, inputs) };
+  return { format: 'ai-exposure-scenario', version: '1.4.0', dataset, inputs, metadata, results: calculateScenario(dataset, inputs) };
 }

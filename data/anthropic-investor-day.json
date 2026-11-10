@@ -1,13 +1,13 @@
 {
-  "schemaVersion": "1.3.0",
-  "asOf": "2026-10-26",
-  "note": "Anthropic's Oct 14, 2026 investor day, the Oct 26, 2026 public Form S-1 filing (Reg. No. 333-299633, accession 0001628280-26-067168), and the IPO calendar after it. S-1 facts carry primary SEC citations and audit badges; Oct 14 investor-day figures are press-reported and flagged where superseded in part by the S-1. Keep \"average run-rate\" (a quarter x 4) and \"exit run-rate\" (annualized from the end of a period) distinct; never label anything ARR unless it is an exit run-rate.",
+  "schemaVersion": "1.4.0",
+  "asOf": "2026-11-10",
+  "note": "Anthropic's Oct 14, 2026 investor day; the Oct 26, 2026 public Form S-1 (accession 0001628280-26-067168); S-1/A No. 1 (Nov 2, 2026, accession 0001628280-26-068676: Q3 financials, commitments); and S-1/A No. 2 (Nov 10, 2026, accession 0001628280-26-072484: price range, share counts, Oct 31 Run-Rate Revenue). Every record carries sources; later filings supersede earlier figures and say so.",
   "window": {
     "multiDayStart": "2026-10-14",
     "defaultMultiDayUntil": "2026-10-18",
     "note": "The sigma and io:ANTH charts default to the multi-day window through this date (ET), then to Today."
   },
-  "s1Attribution": "Primary filing: Anthropic, PBC Form S-1 (Reg. No. 333-299633, accession 0001628280-26-067168), filed publicly on EDGAR on October 26, 2026 at 09:00:11 AM ET. FY23–FY25 annual figures are audited; H1 2026 and quarterly figures through June 30, 2026 are filed unaudited interim results.",
+  "s1Attribution": "Primary sources: Form S-1 (Oct 26, 2026, 0001628280-26-067168), S-1/A No. 1 (Nov 2, 2026, 0001628280-26-068676) and S-1/A No. 2 (Nov 10, 2026, 0001628280-26-072484), Anthropic, PBC (Reg. No. 333-299633). Page numbers are the printed pages of the amendment named; pages shift between amendments.",
   "s1Url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
   "s1Facts": [
     {
@@ -19,7 +19,10 @@
       "detail": "FY23 $41M · FY24 $386M · FY25 $4,585M (S-1 p. 23). Gross margin is not disclosed (expenses are presented by type, with no cost-of-revenue line).",
       "sources": [
         {
-          "fields": ["value", "detail"],
+          "fields": [
+            "value",
+            "detail"
+          ],
           "sourceClass": "primary",
           "publisher": "SEC EDGAR — Anthropic, PBC Form S-1 (Reg. No. 333-299633)",
           "filingId": "0001628280-26-067168",
@@ -31,15 +34,30 @@
       ]
     },
     {
-      "key": "s1RevenueInterim",
-      "label": "H1 2026 & quarterly revenue",
-      "value": "$16,286M (H1'26)",
+      "label": "Quarterly revenue (through Q3'26)",
+      "value": "$16,956M Q3'26 · $33,242M 9M'26",
       "auditStatus": "filed, unaudited interim",
-      "pageCitation": "S-1 pp. 23, 158",
-      "detail": "H1'26 $16,286M (S-1 p. 23). Quarterly revenue ($M): Q1'25 $376 · Q2'25 $787 · Q3'25 $1,382 · Q4'25 $2,040 · Q1'26 $4,731 · Q2'26 $11,555 (S-1 p. 158). Supersedes FT investor-day press figures for Q1'26 (~$4.8B) and Q2'26 ($11.5B).",
+      "pageCitation": "S-1/A No. 1 pp. 23, 160",
+      "detail": "Q3'26 revenue $16,956M vs Q2'26 $11,555M and Q1'26 $4,731M (S-1/A No. 1 p. 160). Nine months to Sep 30, 2026: $33,242M (S-1/A No. 1 p. 23). Supersedes the S-1's H1'26 view ($16,286M, S-1 p. 23), which left Q3 blank.",
       "sources": [
         {
-          "fields": ["value", "detail"],
+          "fields": [
+            "value",
+            "detail"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 1 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-068676",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/anthropicpbc-sx1ax1.htm",
+          "measurementDate": "2026-09-30",
+          "publicationDate": "2026-11-02",
+          "note": "Quarterly consolidated statements of operations (S-1/A No. 1 p. 160); nine-month summary (p. 23)."
+        },
+        {
+          "fields": [
+            "value",
+            "detail"
+          ],
           "sourceClass": "primary",
           "publisher": "SEC EDGAR — Anthropic, PBC Form S-1 (Reg. No. 333-299633)",
           "filingId": "0001628280-26-067168",
@@ -48,18 +66,34 @@
           "publicationDate": "2026-10-26",
           "note": "Unaudited interim H1 2026 and quarterly revenue table (S-1 pp. 23, 158)."
         }
-      ]
+      ],
+      "key": "s1RevenueInterim"
     },
     {
-      "key": "s1OperatingIncome",
-      "label": "Operating income / (loss)",
-      "value": "+$974M Q2'26 GAAP · +$1,618M H1'26 Adj.",
+      "label": "Operating income / (loss), GAAP and adjusted",
+      "value": "Q3'26 GAAP −$567M (Q2 +$974M) · Adj. +$2,463M (15%)",
       "auditStatus": "filed, unaudited interim",
-      "pageCitation": "S-1 pp. 23, 25, 158",
-      "detail": "Q2'26 GAAP operating income +$974M after $1.3B of stock-based compensation (S-1 p. 158). H1'26 GAAP operating loss −$693M (S-1 p. 23). H1'26 Adjusted operating income +$1,618M, a 10% margin (S-1 p. 25).",
+      "pageCitation": "S-1/A No. 1 pp. 23, 158, 160, 163",
+      "detail": "GAAP operating loss $(567)M in Q3'26 after a $1,960M non-cash donation-matching charge, vs +$974M in Q2'26 (S-1/A No. 1 p. 160). Adjusted operating income $2,235M (19%) in Q2'26 → $2,463M (15%) in Q3'26 (p. 163); it excludes stock-based compensation, non-cash charitable contributions and the Bartz settlement (p. 158). Q3 change in fair value of convertible notes, derivatives and SAFEs $(21,936)M; net loss $(23,291)M (p. 160). 9M'26 operating loss $(1,260)M, net loss $(104,039)M (p. 23).",
       "sources": [
         {
-          "fields": ["value", "detail"],
+          "fields": [
+            "value",
+            "detail"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 1 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-068676",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/anthropicpbc-sx1ax1.htm",
+          "measurementDate": "2026-09-30",
+          "publicationDate": "2026-11-02",
+          "note": "Quarterly statements (p. 160); adjusted operating income reconciliation (p. 163) and definition (p. 158); nine-month summary (p. 23)."
+        },
+        {
+          "fields": [
+            "value",
+            "detail"
+          ],
           "sourceClass": "primary",
           "publisher": "SEC EDGAR — Anthropic, PBC Form S-1 (Reg. No. 333-299633)",
           "filingId": "0001628280-26-067168",
@@ -68,18 +102,69 @@
           "publicationDate": "2026-10-26",
           "note": "Q2'26 GAAP operating income and SBC (S-1 p. 158); H1'26 GAAP operating loss (S-1 p. 23); H1'26 Adjusted operating income and margin (S-1 p. 25)."
         }
-      ]
+      ],
+      "key": "s1OperatingIncome"
     },
     {
-      "key": "s1RunRateAndQ3Blanks",
-      "label": "Run-Rate Revenue & Q3 blanks",
-      "value": "Blank pending S-1/A",
-      "auditStatus": "filed",
-      "pageCitation": "S-1 pp. 4, 133, 195",
-      "detail": "Run-Rate Revenue definition: trailing-28-day consumption fees ×13 + monthly subscription fees ×12 (S-1 p. 4). Q3 2026 revenue and “Run-Rate Revenue as of October 31, 2026” are BLANK in the initial S-1, pending the S-1/A (S-1 pp. 133, 195).",
+      "label": "Q3'26 cost lines",
+      "value": "Compute 58% of revenue (Q2 48%)",
+      "auditStatus": "filed, unaudited interim",
+      "pageCitation": "S-1/A No. 1 pp. 160, 163",
+      "detail": "Q3'26 ($M): revenue 16,956; compute & infrastructure 9,863 (58% of revenue; Q2'26 5,558 = 48%); personnel 1,711; stock-based compensation 1,070 (p. 163); sales, marketing & partnerships 2,361; other operating & administrative 3,588, including a $1,960M non-cash donation-matching charge (p. 163). Revenue per $1 of compute: $1.72 (16,956 ÷ 9,863, computed).",
       "sources": [
         {
-          "fields": ["value", "detail"],
+          "fields": [
+            "value",
+            "detail"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 1 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-068676",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/anthropicpbc-sx1ax1.htm",
+          "measurementDate": "2026-09-30",
+          "publicationDate": "2026-11-02",
+          "note": "Quarterly statements (p. 160); SBC and non-cash charitable contributions (p. 163)."
+        }
+      ],
+      "key": "q3CostLines"
+    },
+    {
+      "key": "runRateRevenue",
+      "label": "Run-Rate Revenue (blanks now filled)",
+      "value": "~$81B (Oct 31) · ~$71B (Sep 30, derived)",
+      "auditStatus": "filed",
+      "pageCitation": "S-1/A No. 2 p. 202",
+      "detail": "“Our Run-Rate Revenue was approximately $81 billion as of October 31, 2026, up $10 billion from September 30, 2026” (S-1/A No. 2 p. 202). The ~$71B Sep 30 figure is derived (81 − 10), not printed. Run-Rate Revenue annualizes trailing-28-day consumption fees plus monthly subscriptions (S-1 p. 4); it is not revenue and not ARR. Both blanks in the S-1 (pp. 133, 195) are now filled: Q3 revenue by S-1/A No. 1, the Oct 31 run-rate by S-1/A No. 2 (S-1/A No. 1 still left it blank).",
+      "sources": [
+        {
+          "fields": [
+            "value",
+            "detail"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 2 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-072484",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
+          "measurementDate": "2026-10-31",
+          "publicationDate": "2026-11-10",
+          "note": "Run-Rate Revenue as of Oct 31, 2026 and the change from Sep 30 (p. 202)."
+        },
+        {
+          "fields": [
+            "value"
+          ],
+          "sourceClass": "assumption",
+          "publisher": "stocks.bolewood.com",
+          "url": "https://github.com/bolewood/stocks-bolewood/blob/main/data/METHODOLOGY.md",
+          "measurementDate": "2026-09-30",
+          "publicationDate": "2026-11-10",
+          "estimationMethod": "Sep 30 Run-Rate Revenue ≈ $81B − $10B = $71B, derived from S-1/A No. 2 p. 202; not printed in the filing."
+        },
+        {
+          "fields": [
+            "value",
+            "detail"
+          ],
           "sourceClass": "primary",
           "publisher": "SEC EDGAR — Anthropic, PBC Form S-1 (Reg. No. 333-299633)",
           "filingId": "0001628280-26-067168",
@@ -91,15 +176,42 @@
       ]
     },
     {
-      "key": "s1CashAndCapital",
-      "label": "Cash & capital raised",
-      "value": "$131,651M cash · $141.1B raised",
+      "label": "Cash & short-term investments (9/30/26)",
+      "value": "$131.9B · 9M operating cash flow +$6.6B",
       "auditStatus": "filed, unaudited interim",
-      "pageCitation": "S-1 pp. 11, 25",
-      "detail": "Cash, cash equivalents and short-term investments of $131,651M as of June 30, 2026 (S-1 p. 25). Total capital raised to date: $141.1B (S-1 p. 11).",
+      "pageCitation": "S-1/A No. 1 pp. 10, 172",
+      "detail": "Cash and cash equivalents $95.6B + short-term investments $36.3B = $131.9B as of Sep 30, 2026; $141.1B of capital raised to date (S-1/A No. 1 p. 10; S-1/A No. 2 p. 11). Net cash provided by operating activities $6.6B for the nine months (S-1/A No. 1 p. 172). Before net IPO and placement proceeds of ~$84.6B at $74 (S-1/A No. 2 p. 20).",
       "sources": [
         {
-          "fields": ["value", "detail"],
+          "fields": [
+            "value",
+            "detail"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 1 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-068676",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/anthropicpbc-sx1ax1.htm",
+          "measurementDate": "2026-09-30",
+          "publicationDate": "2026-11-02",
+          "note": "Cash, short-term investments and capital raised (p. 10); nine-month operating cash flow (p. 172)."
+        },
+        {
+          "fields": [
+            "detail"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 2 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-072484",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
+          "measurementDate": "2026-09-30",
+          "publicationDate": "2026-11-10",
+          "note": "Same cash figures on S-1/A No. 2 p. 11; net proceeds p. 20."
+        },
+        {
+          "fields": [
+            "value",
+            "detail"
+          ],
           "sourceClass": "primary",
           "publisher": "SEC EDGAR — Anthropic, PBC Form S-1 (Reg. No. 333-299633)",
           "filingId": "0001628280-26-067168",
@@ -108,7 +220,43 @@
           "publicationDate": "2026-10-26",
           "note": "Balance sheet summary as of June 30, 2026 (S-1 p. 25) and capital raised to date (S-1 p. 11)."
         }
-      ]
+      ],
+      "key": "s1CashAndCapital"
+    },
+    {
+      "label": "Compute commitments",
+      "value": "$900.9B aggregate (S-1/A No. 2; No. 1: $895.4B)",
+      "auditStatus": "filed",
+      "pageCitation": "S-1/A No. 2 pp. 7, 177–179",
+      "detail": "S-1/A No. 2: aggregate committed spend ~$900.9B = contractual-obligations table $320.0B ($319,993M) + short-term $17.4B + leases not yet commenced $451.2B + post-9/30 commitments $105.7B + post-9/30 short-term $6.6B; $451.6B through 2030; $70.7B due in the next 12 months; $186.2B terminable or contingent; Microsoft at least $47.2B and up to $49.2B, Nov 2026–Jun 2033 (pp. 7, 177–179). Supersedes S-1/A No. 1 ($895.4B; $447.5B through 2030; $69.8B next 12 months; $213.8B terminable or contingent; post-9/30 $100.2B; Microsoft ≥ $44.9B; pp. 6, 173–174). S-1/A No. 1 also estimated variable payments of ~$150–175B outside the aggregate (p. 174); S-1/A No. 2 removed that estimate.",
+      "sources": [
+        {
+          "fields": [
+            "value",
+            "detail"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 2 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-072484",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
+          "measurementDate": "2026-09-30",
+          "publicationDate": "2026-11-10",
+          "note": "Aggregate committed spend (p. 7); contractual obligations, subsequent commitments, Microsoft agreement (pp. 177–179)."
+        },
+        {
+          "fields": [
+            "detail"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 1 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-068676",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/anthropicpbc-sx1ax1.htm",
+          "measurementDate": "2026-09-30",
+          "publicationDate": "2026-11-02",
+          "note": "Superseded figures: aggregate (p. 6); contractual obligations and variable-payment estimate (pp. 173–174)."
+        }
+      ],
+      "key": "computeCommitments"
     },
     {
       "key": "s1NetRevenueRetention",
@@ -119,7 +267,10 @@
       "detail": "Net revenue retention of ~900% as of September 30, 2026 (S-1 p. 11).",
       "sources": [
         {
-          "fields": ["value", "detail"],
+          "fields": [
+            "value",
+            "detail"
+          ],
           "sourceClass": "primary",
           "publisher": "SEC EDGAR — Anthropic, PBC Form S-1 (Reg. No. 333-299633)",
           "filingId": "0001628280-26-067168",
@@ -131,15 +282,30 @@
       ]
     },
     {
-      "key": "s1FullyDilutedShares",
-      "label": "Fully diluted share count (6/30/26)",
-      "value": "1,778.4M pre-split (17,783.7M post-split)",
-      "auditStatus": "filed, unaudited interim",
-      "pageCitation": "S-1 pp. 13, 20, 24, 144, 236",
-      "detail": "846,840,960 post-split Class N shares contributed to Anthropic Public Benefit Fund, LLC (wholly owned subsidiary) = 5% of fully diluted shares as of June 30, 2026 assuming full conversion of the Amazon Notes (S-1 pp. 13, 144, 236). Pre-fund FD = 16,936,819,200 post-split (1,693,681,920 pre-split); including the fund = 17,783,660,160 post-split (1,778,366,016 pre-split). Legally outstanding but excluded from GAAP share counts (S-1 pp. 20, 24). Future issuances: up to +2% of FD shares (including the fund's shares) each time share price appreciates 50% above the prior milestone starting from the IPO price (S-1 p. 13).",
+      "label": "Share counts after the offering (both bases)",
+      "value": "13.09B outstanding · 18.01B fully diluted at $74",
+      "auditStatus": "filed",
+      "pageCitation": "S-1/A No. 2 pp. 19–20, 22–24",
+      "detail": "Outstanding after the offering and concurrent placement: 13,086,672,593 (Class A 7,427,991,791 + Class N 5,658,680,800 incl. the 846,840,960 public-benefit-fund shares + Class T 1 + Class F 1; 13,210,422,593 with the option) (pp. 19–20). Fully diluted at $74 from the company's table: 18,012,993,381 = Class A 7,430,143,944 + Class N 7,804,580,273 + options 1,704,567,865 (treasury method) + RSUs 1,073,701,297 + Class T/F 2 (p. 24; sum of columns). Supersedes the S-1's derived June 30 count of 17,783,660,160 post-split (S-1 p. 13).",
       "sources": [
         {
-          "fields": ["value", "detail"],
+          "fields": [
+            "value",
+            "detail"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 2 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-072484",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
+          "measurementDate": "2026-09-30",
+          "publicationDate": "2026-11-10",
+          "note": "The Offering (pp. 19–20) and fully diluted table (p. 24)."
+        },
+        {
+          "fields": [
+            "value",
+            "detail"
+          ],
           "sourceClass": "primary",
           "publisher": "SEC EDGAR — Anthropic, PBC Form S-1 (Reg. No. 333-299633)",
           "filingId": "0001628280-26-067168",
@@ -148,7 +314,54 @@
           "publicationDate": "2026-10-26",
           "note": "Anthropic Public Benefit Fund, LLC issuance and fully diluted share count derivation (S-1 pp. 13, 20, 24, 144, 236)."
         }
-      ]
+      ],
+      "key": "s1FullyDilutedShares"
+    },
+    {
+      "label": "Price range & implied value",
+      "value": "$70.00–$78.00 · midpoint $74 · Nasdaq: ANT",
+      "auditStatus": "filed",
+      "pageCitation": "S-1/A No. 2 pp. 19–20, 22, 24 and cover",
+      "detail": "At $70 / $74 / $78: $916B / $968B / $1,021B on 13.09B outstanding; $1,261B / $1,333B / $1,405B on 18.01B fully diluted (fully diluted recomputed at each price, treasury method). 825,000,000 Class A offered (801,351,354 by Anthropic, 23,648,646 by selling stockholders) plus a 123,750,000-share option; Goldman Sachs and Morgan Stanley lead (cover, p. 19).",
+      "sources": [
+        {
+          "fields": [
+            "value",
+            "detail"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 2 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-072484",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
+          "measurementDate": "2026-11-10",
+          "publicationDate": "2026-11-10",
+          "note": "Cover price range, The Offering (p. 19–20), ticker (p. 22), fully diluted table (p. 24)."
+        }
+      ],
+      "key": "priceRangeAndShares"
+    },
+    {
+      "label": "Proceeds & concurrent placement",
+      "value": "~$84.6B net at $74 · $26.0B Class N placement",
+      "auditStatus": "filed",
+      "pageCitation": "S-1/A No. 2 pp. 19–20",
+      "detail": "Concurrent private placement of Class N at the IPO price, $26.0B: Google $10.0B, NVIDIA $10.0B, AMD $2.5B, Broadcom $1.0B, Micron $1.0B, Microsoft $1.0B, TSMC $0.5B (351,351,348 shares at $74). Restricted securities, not under lock-up (p. 19). Net proceeds to Anthropic from the IPO and placement ~$84.6B, or ~$93.7B with the option, at $74 (p. 20).",
+      "sources": [
+        {
+          "fields": [
+            "value",
+            "detail"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 2 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-072484",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
+          "measurementDate": "2026-11-10",
+          "publicationDate": "2026-11-10",
+          "note": "The Offering: concurrent private placement and use of proceeds (pp. 19–20)."
+        }
+      ],
+      "key": "proceedsAndPlacement"
     },
     {
       "key": "s1StockSplitAndRounds",
@@ -159,7 +372,10 @@
       "detail": "10-for-1 forward split of Class A and Class N common took effect 2026-09-17, retroactive in common share data (S-1 p. 22). Preferred prices are quoted pre-split (S-1 p. F-47): E-1 $56.09 ($5.61/ANT, 1,096.4M implied FD at $61.5B) · F-1 $140.97 ($14.10/ANT, 1,298.2M at $183B) · G-1 $259.14 ($25.91/ANT, 1,466.4M at $380B) · H-1 $589.0095 ($58.90/ANT, 1,638.3M at $965B).",
       "sources": [
         {
-          "fields": ["value", "detail"],
+          "fields": [
+            "value",
+            "detail"
+          ],
           "sourceClass": "primary",
           "publisher": "SEC EDGAR — Anthropic, PBC Form S-1 (Reg. No. 333-299633)",
           "filingId": "0001628280-26-067168",
@@ -179,7 +395,10 @@
       "detail": "Applied to list Class A common on the Nasdaq Global Select Market under ticker “ANT”; a “controlled company.” Preferred Series A, C-1, D-1, D-2, E-1, F-1, G-1, H-1 convert to Class A (1 vote). Series B, C-2, D-3, E-2…E-5, F-2, G-2…G-4, H-2…H-4 convert to Class N (non-voting, not listed, not registered; converts to Class A on a “qualifying transfer,” S-1 pp. 20, 309). Class F (1 share, Founder LLC) carries 50.1% of the vote. Class T (1 share, Long-Term Benefit Trust) elects a majority of the board.",
       "sources": [
         {
-          "fields": ["value", "detail"],
+          "fields": [
+            "value",
+            "detail"
+          ],
           "sourceClass": "primary",
           "publisher": "SEC EDGAR — Anthropic, PBC Form S-1 (Reg. No. 333-299633)",
           "filingId": "0001628280-26-067168",
@@ -199,7 +418,10 @@
       "detail": "Amazon's convertible notes convert into Class N at the IPO up to its ownership cap; remainder converts quarterly afterwards (lowest of fixed price, IPO price, 10-day VWAP) or is repaid in cash at maturity (S-1 pp. 20, 165). Google 2026 NPA ownership cap: 14.99% of outstanding capitalization, post-money, as-converted (S-1 p. 169; non-voting Class N holdings do not appear in the ownership table, pp. 289–290). Broadcom (“Infrastructure Partner 2026”) notes may be settled in cash or Class N shares (S-1 p. 168).",
       "sources": [
         {
-          "fields": ["value", "detail"],
+          "fields": [
+            "value",
+            "detail"
+          ],
           "sourceClass": "primary",
           "publisher": "SEC EDGAR — Anthropic, PBC Form S-1 (Reg. No. 333-299633)",
           "filingId": "0001628280-26-067168",
@@ -212,8 +434,8 @@
     }
   ],
   "lockupSchedule": {
-    "pricingDate": null,
-    "citation": "S-1 pp. 118, 307–309, 318–323 (Underwriting pp. 321–323)",
+    "pricingDate": "2026-11-18",
+    "citation": "S-1/A No. 2 pp. 318–319, 333–335 (terms unchanged from S-1 pp. 321–323)",
     "basis": "Percentages are of lock-up securities held 7 days before the prospectus date. Milestones are relative to pricing until the IPO prices.",
     "groups": [
       {
@@ -221,9 +443,24 @@
         "label": "Non-founder directors, officers and certain employees/consultants",
         "window": "Through earlier of Q1-2027 earnings (+2 trading days) or day 180",
         "tranches": [
-          { "dayOffset": 1, "trigger": "First trading day", "pct": "10%", "cumulativePct": "10%" },
-          { "dayOffset": null, "trigger": "FY2026 earnings (+2 trading days)", "pct": "+35%", "cumulativePct": "45%" },
-          { "dayOffset": 180, "trigger": "Earlier of Q1-2027 earnings (+2 trading days) or day 180", "pct": "Remainder (55%)", "cumulativePct": "100%" }
+          {
+            "dayOffset": 1,
+            "trigger": "First trading day",
+            "pct": "10%",
+            "cumulativePct": "10%"
+          },
+          {
+            "dayOffset": null,
+            "trigger": "FY2026 earnings (+2 trading days)",
+            "pct": "+35%",
+            "cumulativePct": "45%"
+          },
+          {
+            "dayOffset": 180,
+            "trigger": "Earlier of Q1-2027 earnings (+2 trading days) or day 180",
+            "pct": "Remainder (55%)",
+            "cumulativePct": "100%"
+          }
         ]
       },
       {
@@ -231,13 +468,48 @@
         "label": "“Certain stockholders” (180-day group)",
         "window": "Through earlier of Q1-2027 earnings (+2 trading days) or day 180",
         "tranches": [
-          { "dayOffset": 27, "trigger": "Day 27 after pricing", "pct": "6%", "cumulativePct": "6%" },
-          { "dayOffset": 48, "trigger": "Day 48 after pricing", "pct": "6%", "cumulativePct": "12%" },
-          { "dayOffset": 62, "trigger": "Day 62 after pricing", "pct": "7%", "cumulativePct": "19%" },
-          { "dayOffset": 76, "trigger": "Day 76 after pricing", "pct": "7%", "cumulativePct": "26%" },
-          { "dayOffset": null, "trigger": "FY2026 earnings (+2 trading days)", "pct": "+12.5%", "cumulativePct": "38.5%" },
-          { "dayOffset": null, "trigger": "FY26-release +13 / +27 / +41 / +55 / +69 days (5 tranches)", "pct": "+9.5% × 5", "cumulativePct": "86%" },
-          { "dayOffset": 180, "trigger": "Earlier of Q1-2027 earnings (+2 trading days) or day 180", "pct": "Remainder (14%)", "cumulativePct": "100%" }
+          {
+            "dayOffset": 27,
+            "trigger": "Day 27 after pricing",
+            "pct": "6%",
+            "cumulativePct": "6%"
+          },
+          {
+            "dayOffset": 48,
+            "trigger": "Day 48 after pricing",
+            "pct": "6%",
+            "cumulativePct": "12%"
+          },
+          {
+            "dayOffset": 62,
+            "trigger": "Day 62 after pricing",
+            "pct": "7%",
+            "cumulativePct": "19%"
+          },
+          {
+            "dayOffset": 76,
+            "trigger": "Day 76 after pricing",
+            "pct": "7%",
+            "cumulativePct": "26%"
+          },
+          {
+            "dayOffset": null,
+            "trigger": "FY2026 earnings (+2 trading days)",
+            "pct": "+12.5%",
+            "cumulativePct": "38.5%"
+          },
+          {
+            "dayOffset": null,
+            "trigger": "FY26-release +13 / +27 / +41 / +55 / +69 days (5 tranches)",
+            "pct": "+9.5% × 5",
+            "cumulativePct": "86%"
+          },
+          {
+            "dayOffset": 180,
+            "trigger": "Earlier of Q1-2027 earnings (+2 trading days) or day 180",
+            "pct": "Remainder (14%)",
+            "cumulativePct": "100%"
+          }
         ]
       },
       {
@@ -245,17 +517,59 @@
         "label": "Holders >0.5% of fully diluted shares, and the 7 co-founders (365-day group)",
         "window": "Through earlier of Q3-2027 earnings or day 365",
         "tranches": [
-          { "dayOffset": 27, "trigger": "Day 27 after pricing", "pct": "1.8%", "cumulativePct": "1.8%" },
-          { "dayOffset": 48, "trigger": "Day 48 after pricing", "pct": "1.8%", "cumulativePct": "3.6%" },
-          { "dayOffset": 62, "trigger": "Day 62 after pricing", "pct": "2.1%", "cumulativePct": "5.7%" },
-          { "dayOffset": 76, "trigger": "Day 76 after pricing", "pct": "2.1%", "cumulativePct": "7.8%" },
-          { "dayOffset": null, "trigger": "FY2026 earnings (+2 trading days)", "pct": "+3.75%", "cumulativePct": "11.55%" },
-          { "dayOffset": null, "trigger": "FY26-release +13 / +27 / +41 / +55 / +69 days (5 tranches)", "pct": "+2.85% × 5", "cumulativePct": "25.8%" },
-          { "dayOffset": 180, "trigger": "Q1-2027 earnings (+2 trading days) / day 180", "pct": "+4.2%", "cumulativePct": "30.0%" },
-          { "dayOffset": 365, "trigger": "Staged releases to earlier of Q3-2027 earnings or day 365", "pct": "Remainder (70.0%)", "cumulativePct": "100%" }
+          {
+            "dayOffset": 27,
+            "trigger": "Day 27 after pricing",
+            "pct": "1.8%",
+            "cumulativePct": "1.8%"
+          },
+          {
+            "dayOffset": 48,
+            "trigger": "Day 48 after pricing",
+            "pct": "1.8%",
+            "cumulativePct": "3.6%"
+          },
+          {
+            "dayOffset": 62,
+            "trigger": "Day 62 after pricing",
+            "pct": "2.1%",
+            "cumulativePct": "5.7%"
+          },
+          {
+            "dayOffset": 76,
+            "trigger": "Day 76 after pricing",
+            "pct": "2.1%",
+            "cumulativePct": "7.8%"
+          },
+          {
+            "dayOffset": null,
+            "trigger": "FY2026 earnings (+2 trading days)",
+            "pct": "+3.75%",
+            "cumulativePct": "11.55%"
+          },
+          {
+            "dayOffset": null,
+            "trigger": "FY26-release +13 / +27 / +41 / +55 / +69 days (5 tranches)",
+            "pct": "+2.85% × 5",
+            "cumulativePct": "25.8%"
+          },
+          {
+            "dayOffset": 180,
+            "trigger": "Q1-2027 earnings (+2 trading days) / day 180",
+            "pct": "+4.2%",
+            "cumulativePct": "30.0%"
+          },
+          {
+            "dayOffset": 365,
+            "trigger": "Staged releases to earlier of Q3-2027 earnings or day 365",
+            "pct": "Remainder (70.0%)",
+            "cumulativePct": "100%"
+          }
         ]
       }
-    ]
+    ],
+    "pricingDateStatus": "reported (CNBC sources), not confirmed",
+    "pricingDateNote": "Dates assume pricing on Nov 18, 2026 (reported by CNBC from unnamed sources; not in the filing). Change pricingDate once the 424B4 lands; every date recomputes."
   },
   "attribution": "Figures from the Financial Times (Oct 14, 2026), citing unnamed people with knowledge of the meeting. Anthropic declined to comment. Superseded in part by the Oct 26, 2026 Form S-1 where noted.",
   "facts": [
@@ -264,10 +578,12 @@
       "label": "Q3 2026 revenue",
       "valueUsd": 16800000000,
       "period": "2026-Q3",
-      "supersededByS1": "Q3 2026 revenue is left blank in the initial Oct 26 S-1 pending the S-1/A (S-1 pp. 133, 195); S-1 filed Q2'26 is $11,555M and Q1'26 is $4,731M (S-1 p. 158).",
+      "supersededByS1": "Superseded by S-1/A No. 1 p. 160: filed Q3 2026 revenue is $16,956M (unaudited interim), vs the FT's reported $16.8B.",
       "sources": [
         {
-          "fields": ["valueUsd"],
+          "fields": [
+            "valueUsd"
+          ],
           "sourceClass": "secondary",
           "publisher": "Financial Times",
           "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
@@ -285,7 +601,9 @@
       "supersededByS1": "Superseded by S-1 p. 158: filed Q2 2026 revenue is $11,555M (unaudited interim).",
       "sources": [
         {
-          "fields": ["valueUsd"],
+          "fields": [
+            "valueUsd"
+          ],
           "sourceClass": "secondary",
           "publisher": "Financial Times",
           "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
@@ -304,7 +622,9 @@
       "supersededByS1": "Superseded by S-1 p. 158: filed Q1 2026 revenue is $4,731M (unaudited interim).",
       "sources": [
         {
-          "fields": ["valueUsd"],
+          "fields": [
+            "valueUsd"
+          ],
           "sourceClass": "secondary",
           "publisher": "Financial Times",
           "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
@@ -318,10 +638,12 @@
       "key": "exitRunRateDisclosed",
       "label": "Annualized exit run-rate at investor day",
       "disclosed": false,
-      "supersededByS1": "S-1 p. 4 defines Run-Rate Revenue (trailing-28-day consumption ×13 + monthly subscriptions ×12); Oct 31, 2026 Run-Rate Revenue is blank pending the S-1/A (S-1 pp. 133, 195).",
+      "supersededByS1": "Superseded by S-1/A No. 2 p. 202: Run-Rate Revenue ~$81B as of Oct 31, 2026, up $10B from Sep 30 (S-1 p. 4 defines Run-Rate Revenue; it was blank in the S-1, pp. 133, 195).",
       "sources": [
         {
-          "fields": ["disclosed"],
+          "fields": [
+            "disclosed"
+          ],
           "sourceClass": "secondary",
           "publisher": "Financial Times",
           "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
@@ -338,7 +660,9 @@
       "companyFigure": true,
       "sources": [
         {
-          "fields": ["valueUsd"],
+          "fields": [
+            "valueUsd"
+          ],
           "sourceClass": "secondary",
           "publisher": "Bloomberg",
           "url": "https://www.bloomberg.com/news/articles/2026-08-17/anthropic-revenue-run-rate-surpasses-65-billion-ahead-of-ipo",
@@ -356,7 +680,9 @@
       "outsideEstimate": true,
       "sources": [
         {
-          "fields": ["valueUsd"],
+          "fields": [
+            "valueUsd"
+          ],
           "sourceClass": "secondary",
           "publisher": "Financial Times (citing SemiAnalysis)",
           "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
@@ -373,10 +699,15 @@
       "adjustedOperatingMarginExSbc": 0.11,
       "cashFlowPositive": true,
       "gaapDisclosed": false,
-      "supersededByS1": "Superseded for H1/Q2 by S-1 pp. 23, 25, 158: Q2'26 GAAP operating income +$974M (after $1.3B SBC), H1'26 GAAP operating loss −$693M, and H1'26 Adjusted operating income +$1,618M (10% margin).",
+      "supersededByS1": "Superseded by S-1/A No. 1 pp. 160, 163: Q3'26 GAAP operating loss $(567)M; adjusted operating income $2,463M (15%), after Q2'26's $2,235M (19%).",
       "sources": [
         {
-          "fields": ["adjustedProfitableQuarters", "adjustedOperatingMarginExSbc", "cashFlowPositive", "gaapDisclosed"],
+          "fields": [
+            "adjustedProfitableQuarters",
+            "adjustedOperatingMarginExSbc",
+            "cashFlowPositive",
+            "gaapDisclosed"
+          ],
           "sourceClass": "secondary",
           "publisher": "Financial Times",
           "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
@@ -392,7 +723,9 @@
       "value": 1.7,
       "sources": [
         {
-          "fields": ["value"],
+          "fields": [
+            "value"
+          ],
           "sourceClass": "secondary",
           "publisher": "Financial Times",
           "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
@@ -400,7 +733,8 @@
           "publicationDate": "2026-10-14",
           "note": "$1.70 of revenue per $1 of compute in Q3."
         }
-      ]
+      ],
+      "supersededByS1": "Superseded by S-1/A No. 1 p. 160: filed Q3 revenue $16,956M ÷ compute & infrastructure $9,863M = $1.72 per $1 of compute (computed)."
     },
     {
       "key": "distillationShare",
@@ -410,7 +744,11 @@
       "q3Change": "cut back “materially” in Q3",
       "sources": [
         {
-          "fields": ["low", "high", "q3Change"],
+          "fields": [
+            "low",
+            "high",
+            "q3Change"
+          ],
           "sourceClass": "secondary",
           "publisher": "Financial Times",
           "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
@@ -427,7 +765,9 @@
       "supersededByS1": "Form S-1 went public Oct 26, 2026 (Reg. No. 333-299633, Nasdaq Global Select ticker ANT, S-1 p. 20).",
       "sources": [
         {
-          "fields": ["text"],
+          "fields": [
+            "text"
+          ],
           "sourceClass": "secondary",
           "publisher": "Financial Times",
           "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
@@ -447,7 +787,9 @@
       "note": "No start time was published, so the marker is the whole ET day.",
       "sources": [
         {
-          "fields": ["date"],
+          "fields": [
+            "date"
+          ],
           "sourceClass": "secondary",
           "publisher": "Financial Times",
           "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
@@ -464,7 +806,9 @@
       "note": "8:59 PM ET on Oct 14, from datePublished in the article's own structured data.",
       "sources": [
         {
-          "fields": ["at"],
+          "fields": [
+            "at"
+          ],
           "sourceClass": "primary",
           "publisher": "Financial Times",
           "url": "https://www.ft.com/content/11632d03-358c-454b-af95-d06d4072932b",
@@ -482,7 +826,9 @@
       "note": "9:00:11 AM ET on Oct 26, 2026, from the EDGAR filing acceptance timestamp (accession 0001628280-26-067168).",
       "sources": [
         {
-          "fields": ["at"],
+          "fields": [
+            "at"
+          ],
           "sourceClass": "primary",
           "publisher": "SEC EDGAR — Anthropic, PBC Form S-1 (Reg. No. 333-299633)",
           "filingId": "0001628280-26-067168",
@@ -490,6 +836,48 @@
           "measurementDate": "2026-10-26",
           "publicationDate": "2026-10-26",
           "note": "Anthropic, PBC Form S-1 filed publicly on EDGAR on 2026-10-26 at 09:00:11 ET."
+        }
+      ]
+    },
+    {
+      "key": "s1a1",
+      "label": "S-1/A No. 1, 9:24 ET (Nov 2)",
+      "kind": "time",
+      "at": "2026-11-02T14:24:24Z",
+      "note": "9:24:24 AM ET on Nov 2, 2026, from the EDGAR “Accepted” field (accession 0001628280-26-068676): Q3 financials and commitments.",
+      "sources": [
+        {
+          "fields": [
+            "at"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 1 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-068676",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/0001628280-26-068676-index.htm",
+          "measurementDate": "2026-11-02",
+          "publicationDate": "2026-11-02",
+          "note": "EDGAR filing index: Accepted 2026-11-02 09:24:24."
+        }
+      ]
+    },
+    {
+      "key": "s1a2",
+      "label": "S-1/A No. 2 range, 6:29 ET (Nov 10)",
+      "kind": "time",
+      "at": "2026-11-10T11:29:24Z",
+      "note": "6:29:24 AM ET on Nov 10, 2026, from the EDGAR “Accepted” field (accession 0001628280-26-072484): $70–$78 range, share counts, Oct 31 run-rate.",
+      "sources": [
+        {
+          "fields": [
+            "at"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 2 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-072484",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/0001628280-26-072484-index.htm",
+          "measurementDate": "2026-11-10",
+          "publicationDate": "2026-11-10",
+          "note": "EDGAR filing index: Accepted 2026-11-10 06:29:24."
         }
       ]
     }
@@ -502,7 +890,10 @@
       "status": "filed",
       "sources": [
         {
-          "fields": ["timing", "status"],
+          "fields": [
+            "timing",
+            "status"
+          ],
           "sourceClass": "primary",
           "publisher": "SEC EDGAR — Anthropic, PBC Form S-1",
           "filingId": "0001628280-26-067168",
@@ -514,84 +905,377 @@
       ]
     },
     {
-      "key": "s1Amendment",
-      "label": "S-1/A with price range and Q3 financials",
-      "timing": "Expected around the roadshow (reported week of Nov 9)",
-      "status": "expected, not confirmed",
+      "key": "s1Amendment1",
+      "label": "S-1/A No. 1 — Q3 financials & commitments",
+      "timing": "Nov 2, 2026, 9:24:24 AM ET",
+      "status": "filed",
+      "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/anthropicpbc-sx1ax1.htm",
       "sources": [
         {
-          "fields": ["label"],
+          "fields": [
+            "timing",
+            "status"
+          ],
           "sourceClass": "primary",
-          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1 (pp. 133, 195)",
-          "filingId": "0001628280-26-067168",
-          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
-          "measurementDate": "2026-10-26",
-          "publicationDate": "2026-10-26",
-          "note": "Q3 2026 revenue and “Run-Rate Revenue as of October 31, 2026” are left blank in the initial S-1, pending an S-1/A (S-1 pp. 133, 195)."
-        },
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 1 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-068676",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/0001628280-26-068676-index.htm",
+          "measurementDate": "2026-11-02",
+          "publicationDate": "2026-11-02",
+          "note": "EDGAR “Accepted” 2026-11-02 09:24:24."
+        }
+      ]
+    },
+    {
+      "key": "s1Amendment2",
+      "label": "S-1/A No. 2 — $70–$78 range & share counts",
+      "timing": "Nov 10, 2026, 6:29:24 AM ET",
+      "status": "filed",
+      "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
+      "sources": [
         {
-          "fields": ["timing"],
-          "sourceClass": "assumption",
-          "publisher": "SEC Reg S-X 3-12 (135-day staleness rule) & Bloomberg",
-          "url": "https://www.bloomberg.com/news/articles/2026-10-01/anthropic-said-to-target-mega-ipo-before-thanksgiving-holiday",
-          "measurementDate": "2026-10-26",
-          "publicationDate": "2026-10-26",
-          "estimationMethod": "June 30, 2026 interim financial statements go stale after 135 days (~Nov 12, 2026 under Reg S-X 3-12), and the S-1 leaves Q3 2026 revenue and Oct 31 Run-Rate Revenue blank (S-1 pp. 133, 195) ahead of the reported week-of-Nov-9 roadshow.",
-          "note": "Expected before or alongside the roadshow launch."
+          "fields": [
+            "timing",
+            "status"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 2 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-072484",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/0001628280-26-072484-index.htm",
+          "measurementDate": "2026-11-10",
+          "publicationDate": "2026-11-10",
+          "note": "EDGAR “Accepted” 2026-11-10 06:29:24."
         }
       ]
     },
     {
       "key": "roadshow",
-      "label": "Roadshow (formal marketing)",
-      "timing": "From the week of Nov 9",
-      "status": "reported, not confirmed",
+      "label": "Roadshow launched",
+      "timing": "Nov 10, 2026",
+      "status": "confirmed",
+      "url": "https://www.anthropic.com/news/roadshow-launch",
       "sources": [
         {
-          "fields": ["timing"],
-          "sourceClass": "secondary",
-          "publisher": "Bloomberg",
-          "url": "https://www.bloomberg.com/news/articles/2026-10-01/anthropic-said-to-target-mega-ipo-before-thanksgiving-holiday",
-          "measurementDate": "2026-10-01",
-          "publicationDate": "2026-10-01",
-          "note": "Formal marketing could start as soon as the week of Nov 9, per people familiar."
+          "fields": [
+            "timing",
+            "status"
+          ],
+          "note": "Anthropic announced the roadshow launch with 825,000,000 Class A shares at an expected $70.00–$78.00.",
+          "sourceClass": "primary",
+          "publisher": "Anthropic — “Anthropic launches roadshow for proposed initial public offering”",
+          "url": "https://www.anthropic.com/news/roadshow-launch",
+          "measurementDate": "2026-11-10",
+          "publicationDate": "2026-11-10"
         }
       ]
     },
     {
       "key": "pricing",
-      "label": "Pricing and first trade",
-      "timing": "Before Thanksgiving (Nov 26)",
-      "status": "reported, not confirmed",
+      "label": "Pricing Nov 18 · first trade Nov 19",
+      "timing": "Pricing Nov 18, 2026 · first trade Nov 19, 2026",
+      "status": "reported (CNBC sources), not confirmed",
+      "note": "Not in the filing. Flip to confirmed when the 424B4 or the pricing press release lands. Consistent with the filing's November 19, 2026 RSU service-vesting date (S-1/A No. 2 p. 22: 101,333,940 RSUs, 49,754,965 net after withholding).",
       "sources": [
         {
-          "fields": ["timing"],
+          "fields": [
+            "timing",
+            "status"
+          ],
+          "note": "“The company is planning to price on Nov. 18 and trade on Nov. 19, according to people familiar with the details”; ~20% retail allocation.",
           "sourceClass": "secondary",
-          "publisher": "Bloomberg",
-          "url": "https://www.bloomberg.com/news/articles/2026-10-01/anthropic-said-to-target-mega-ipo-before-thanksgiving-holiday",
-          "measurementDate": "2026-10-01",
-          "publicationDate": "2026-10-01",
-          "note": "In line to begin trading before Thanksgiving, per people familiar."
+          "publisher": "CNBC (Ashley Capoot, Leslie Picker), citing people familiar with the details",
+          "url": "https://www.cnbc.com/2026/11/10/anthropic-sets-price-range-of-70-to-78-in-upcoming-ipo.html",
+          "measurementDate": "2026-11-10",
+          "publicationDate": "2026-11-10"
+        },
+        {
+          "fields": [
+            "note"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 2 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-072484",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
+          "measurementDate": "2026-11-10",
+          "publicationDate": "2026-11-10",
+          "note": "RSU service-based vesting condition satisfied as of November 19, 2026 (p. 22)."
         }
       ]
     },
     {
       "key": "lockupReleases",
       "label": "Lock-up releases",
-      "timing": "Staged from day 1 through day 365 after pricing (pricing date TBD)",
+      "timing": "Staged from day 1 through day 365 after pricing; dates shown if pricing is Nov 18 (reported)",
       "status": "filed terms, pricing date TBD",
       "sources": [
         {
-          "fields": ["timing", "status"],
+          "fields": [
+            "timing",
+            "status"
+          ],
           "sourceClass": "primary",
-          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1 (pp. 118, 307–309, 318–323)",
-          "filingId": "0001628280-26-067168",
-          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
-          "measurementDate": "2026-10-26",
-          "publicationDate": "2026-10-26",
-          "note": "Three lock-up release schedules (non-founder directors/officers/employees, 180-day certain stockholders, and 365-day >0.5% FD holders & 7 co-founders) disclosed in Underwriting, S-1 pp. 321–323 (also pp. 118, 307–309, 318–320)."
+          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 2 (Reg. No. 333-299633)",
+          "filingId": "0001628280-26-072484",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
+          "measurementDate": "2026-11-10",
+          "publicationDate": "2026-11-10",
+          "note": "Lock-up release schedules (Shares Eligible for Future Sale pp. 318–319; Underwriting pp. 333–335); tranche percentages unchanged from the S-1 (pp. 321–323)."
         }
       ]
     }
-  ]
+  ],
+  "filings": [
+    {
+      "key": "s1",
+      "label": "Form S-1",
+      "accession": "0001628280-26-067168",
+      "acceptedAt": "2026-10-26T13:00:11Z",
+      "acceptedEt": "Oct 26, 2026, 9:00:11 AM ET",
+      "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm"
+    },
+    {
+      "key": "s1a1",
+      "label": "S-1/A No. 1",
+      "accession": "0001628280-26-068676",
+      "acceptedAt": "2026-11-02T14:24:24Z",
+      "acceptedEt": "Nov 2, 2026, 9:24:24 AM ET",
+      "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/anthropicpbc-sx1ax1.htm",
+      "indexUrl": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/0001628280-26-068676-index.htm"
+    },
+    {
+      "key": "s1a2",
+      "label": "S-1/A No. 2",
+      "accession": "0001628280-26-072484",
+      "acceptedAt": "2026-11-10T11:29:24Z",
+      "acceptedEt": "Nov 10, 2026, 6:29:24 AM ET",
+      "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
+      "indexUrl": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/0001628280-26-072484-index.htm"
+    }
+  ],
+  "s1aUrls": {
+    "s1a1": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/anthropicpbc-sx1ax1.htm",
+    "s1a2": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm"
+  },
+  "quarterly": {
+    "title": "Quarterly results ($M)",
+    "periods": [
+      "Q1'25",
+      "Q2'25",
+      "Q3'25",
+      "Q4'25",
+      "Q1'26",
+      "Q2'26",
+      "Q3'26"
+    ],
+    "rows": {
+      "revenue": {
+        "label": "Revenue",
+        "values": [
+          376,
+          787,
+          1382,
+          2040,
+          4731,
+          11555,
+          16956
+        ]
+      },
+      "compute": {
+        "label": "Compute & infrastructure",
+        "values": [
+          944,
+          1390,
+          2047,
+          2945,
+          3387,
+          5558,
+          9863
+        ]
+      },
+      "operatingIncome": {
+        "label": "GAAP operating income (loss)",
+        "values": [
+          -935,
+          -1200,
+          -3089,
+          -2836,
+          -1667,
+          974,
+          -567
+        ]
+      },
+      "adjustedOperatingIncome": {
+        "label": "Adjusted operating income (loss)",
+        "values": [
+          -830,
+          -1019,
+          -1284,
+          -1721,
+          -617,
+          2235,
+          2463
+        ]
+      },
+      "adjustedMargin": {
+        "label": "Adjusted operating margin",
+        "unit": "pct",
+        "values": [
+          -221,
+          -129,
+          -93,
+          -84,
+          -13,
+          19,
+          15
+        ]
+      }
+    },
+    "citation": "S-1/A No. 1 pp. 160, 163 (Q3'26 column new; earlier quarters unchanged from S-1 p. 158)",
+    "sources": [
+      {
+        "fields": [
+          "rows"
+        ],
+        "sourceClass": "primary",
+        "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 1 (Reg. No. 333-299633)",
+        "filingId": "0001628280-26-068676",
+        "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/anthropicpbc-sx1ax1.htm",
+        "measurementDate": "2026-09-30",
+        "publicationDate": "2026-11-02",
+        "note": "Quarterly consolidated statements of operations (p. 160) and adjusted operating income reconciliation (p. 163)."
+      }
+    ]
+  },
+  "thirdPartyValuations": [
+    {
+      "key": "damodaran",
+      "label": "Aswath Damodaran (Oct 28)",
+      "equityValueUsd": 1475879000000,
+      "basis": "fullyDiluted",
+      "siteConversion": true,
+      "note": "Damodaran's value of equity, $1,475,879M (post image “Anthropic (IPO S-1)”). His own per-share figure uses a 3,298M share count that does not reconcile with the filing, so it is not shown; the per-share mark here is a site conversion on 18.01B fully diluted. His Nov 3 update lowered equity value to ~$1.45T.",
+      "sources": [
+        {
+          "fields": [
+            "equityValueUsd"
+          ],
+          "sourceClass": "secondary",
+          "publisher": "Aswath Damodaran, “The Anthropic Prospectus Arrives: My (but not the) IPO valuation!” (Musings on Markets)",
+          "url": "https://aswathdamodaran.blogspot.com/2026/10/the-anthropic-prospectus-arrives-ipo.html",
+          "measurementDate": "2026-10-26",
+          "publicationDate": "2026-10-28",
+          "note": "Value of equity $1,475,879M from the post's valuation image; text: “a value for the equity of $1.475 trillion”."
+        },
+        {
+          "fields": [
+            "note"
+          ],
+          "sourceClass": "secondary",
+          "publisher": "Aswath Damodaran, “The Anthropic Feedback Loop” (Musings on Markets)",
+          "url": "https://aswathdamodaran.blogspot.com/2026/11/the-anthropic-feedback-loop-cost-of.html",
+          "measurementDate": "2026-11-03",
+          "publicationDate": "2026-11-03",
+          "note": "“the equity value at $1.45 trillion is slightly lower than my prior estimate of $1.475 trillion”."
+        }
+      ]
+    },
+    {
+      "key": "morningstar",
+      "label": "Morningstar fair value (Nov 9–10)",
+      "equityValueUsd": 1700000000000,
+      "bearUsd": 500000000000,
+      "bullUsd": 3000000000000,
+      "uncertainty": "Very High",
+      "basis": "unconfirmed",
+      "note": "Morningstar values Anthropic's equity at $1.7T (bear $500B, bull “slightly north of $3 trillion”, Uncertainty Rating Very High). It states no per-share value and no share basis, so both conversions are shown. Verified on Morningstar's own Australian edition; the US page returned HTTP 403 to our fetch.",
+      "sources": [
+        {
+          "fields": [
+            "equityValueUsd",
+            "bearUsd",
+            "bullUsd",
+            "uncertainty"
+          ],
+          "sourceClass": "secondary",
+          "publisher": "Morningstar (Malik Ahmed Khan, CFA), “Why Morningstar Thinks Anthropic Is Worth $1.7 Trillion”",
+          "url": "https://www.morningstar.com.au/stocks/why-morningstar-thinks-anthropic-is-worth-17-trillion",
+          "measurementDate": "2026-11-09",
+          "publicationDate": "2026-11-10",
+          "note": "“Our fair value estimate values Anthropic's equity at $1.7 trillion”. US edition: https://www.morningstar.com/stocks/why-morningstar-thinks-anthropic-is-worth-17-trillion (not accessible to our fetch)."
+        }
+      ]
+    }
+  ],
+  "openInterestObservations": [
+    {
+      "key": "oi-2026-11-02",
+      "label": "io:ANTH open interest, Nov 2",
+      "date": "2026-11-02",
+      "openInterestUsd": 84000000,
+      "sources": [
+        {
+          "fields": [
+            "openInterestUsd"
+          ],
+          "sourceClass": "assumption",
+          "publisher": "stocks.bolewood.com (site-recorded)",
+          "url": "https://app.hyperliquid.xyz/trade/io:ANTH",
+          "measurementDate": "2026-11-02",
+          "publicationDate": "2026-11-10",
+          "estimationMethod": "Author-recorded observation of the io:ANTH open interest on Nov 2, 2026 (~$84M). Hyperliquid exposes no historical open-interest endpoint, so this is a dated snapshot, not an API value."
+        }
+      ]
+    },
+    {
+      "key": "oi-2026-11-10",
+      "label": "io:ANTH open interest, Nov 10 (09:39 ET)",
+      "date": "2026-11-10",
+      "at": "2026-11-10T14:39:00Z",
+      "openInterestUsd": 174600000,
+      "sources": [
+        {
+          "fields": [
+            "openInterestUsd"
+          ],
+          "sourceClass": "primary",
+          "publisher": "Hyperliquid info API metaAndAssetCtxs (dex io)",
+          "url": "https://api.hyperliquid.xyz/info",
+          "measurementDate": "2026-11-10",
+          "publicationDate": "2026-11-10",
+          "note": "103,965.1 contracts × mark 1679.4 ≈ $174.6M at 14:39Z, recorded so a 7-day comparison exists on Nov 17."
+        }
+      ]
+    }
+  ],
+  "perpBasis": {
+    "default": "fullyDiluted",
+    "note": "Entropy quotes pre-IPO perps in market cap: “a price of $1 represents $1B of the company's fully diluted valuation”. After listing, the oracle becomes share price × a fixed fully diluted count ÷ 1e9, taken from the final 424(b) prospectus (or the last S-1/A) — for Anthropic, the “Total Class A and Class N Common Stock (As-Converted, Fully Diluted)” line, excluding the option and no-economic-rights shares. Entropy has not published that count yet, and S-1/A No. 2 does not print that line, so the site converts on its own 18.01B fully diluted count (S-1/A No. 2 p. 24); Entropy's eventual count may differ.",
+    "afterListing": "Converts in place: io:ANTH keeps trading in market-cap units with the oracle pinned to ANT × the fixed count ÷ 1e9; it does not settle or delist. Three calendar days before an announced listing the oracle becomes a 1-hour EMA of the mark (“hyperp mode”). If the IPO is delayed or withdrawn it continues under the pre-IPO method.",
+    "sources": [
+      {
+        "fields": [
+          "default",
+          "note",
+          "afterListing"
+        ],
+        "sourceClass": "primary",
+        "publisher": "Entropy docs — Pre-IPO perpetuals",
+        "url": "https://docs.entropy.io/market-types/pre-ipo-perpetuals",
+        "measurementDate": "2026-11-10",
+        "publicationDate": "2026-11-10",
+        "note": "Share basis, post-listing conversion and source-document rule."
+      },
+      {
+        "fields": [
+          "afterListing"
+        ],
+        "sourceClass": "primary",
+        "publisher": "Entropy docs — Oracle price",
+        "url": "https://docs.entropy.io/pre-ipo-perp-mechanics/oracle-price",
+        "measurementDate": "2026-11-10",
+        "publicationDate": "2026-11-10",
+        "note": "Oracle blend; hyperp mode before listing."
+      }
+    ]
+  }
 }

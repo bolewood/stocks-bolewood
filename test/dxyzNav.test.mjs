@@ -1,3 +1,5 @@
+import { fullyDilutedAt } from '../lib/shareBasis.mjs';
+import { anthropicPpsFromValuation } from '../lib/dxyzNav.mjs';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { calculateDxyzNav } from '../lib/dxyzNav.mjs';
@@ -101,9 +103,16 @@ test('impliedValuation inverts unitPrice at dilution 0; June marks recover last-
   }), 965e9);
   for (const n of [0, -1, NaN, Infinity]) assert.throws(() => impliedValuation({ pps: 1, fdShares: n }));
   const june = calculateDxyzNav({ includeAugust: false });
-  assert.equal(position(june, 'Anthropic').fdShares, 1_778_366_016);
+  assert.equal(position(june, 'Anthropic').evBasis, 'fullyDiluted');
   assert.equal(position(june, 'Anthropic').splitFactor, 10);
-  near(position(june, 'Anthropic').companyValue, position(june, 'Anthropic').pps * DEFAULT_ANTH_FD_SHARES);
+  // Anthropic implied EV = ANT price × fully diluted at that price (S-1/A No. 2 p. 24).
+  const anthJune = position(june, 'Anthropic');
+  near(anthJune.companyValue, anthJune.pps / 10 * fullyDilutedAt(anthJune.pps / 10));
+  assert.match(anthJune.companyValueLabel, /fully diluted/);
+  const atMid = calculateDxyzNav({ includeAugust: false, ppsOverrides: { Anthropic: 740 } });
+  near(position(atMid, 'Anthropic').companyValue, 74 * 18012993381);
+  near(position(atMid, 'Anthropic').positionValue, 386088 * 740);
+  near(anthropicPpsFromValuation(74 * 18012993381), 740);
   near(position(june, 'OpenAI').companyValue, 852e9);
   const marked = calculateDxyzNav({ ppsOverrides: { OpenAI: pps } });
   near(position(marked, 'OpenAI').companyValue, headline);

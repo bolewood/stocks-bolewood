@@ -1,4 +1,4 @@
-import { unitPrice } from './unitExposure.mjs';
+import { resolveAnthScenario, unitPrice } from './unitExposure.mjs';
 import { loadPublicDataset, readJson, rowFromData } from "./calculate.mjs";
 
 function fmtUsd(n) {
@@ -61,8 +61,9 @@ export function dxyzAnthropicWorkedExample(
   const shares = row.wrapperValue / row.price;
   const markPerUnit = leg.filedUnits > 0 ? leg.reportedFairValue / leg.filedUnits : null;
   const per100 = row.anthPer100;
-  const fdShares = fixtures.anthFdShares;
-  const scenarioPps = unitPrice({ valuation: fixtures.anthVal, fdShares, dilution: fixtures.dilution });
+  const anth = resolveAnthScenario(fixtures, dataset.capitalization);
+  const fdShares = anth.anthFdShares;
+  const scenarioPps = unitPrice({ valuation: anth.anthVal, fdShares, dilution: fixtures.dilution });
   const navSens = leg.filedUnits / shares;
   const filing = raw.filedSnapshot?.filingType || "filing";
   return {
@@ -76,6 +77,9 @@ export function dxyzAnthropicWorkedExample(
     impliedExposure: exposure,
     fdShares,
     scenarioPps,
+    antPrice: anth.anthPrice,
+    shareBasis: anth.anthShareBasis,
+    impliedValuation: anth.anthVal,
     shares,
     price: row.price,
     wrapperValue: row.wrapperValue,
@@ -106,9 +110,9 @@ basis:                    ${ex.basis}
 filedUnits:               ${col(ex.unitsLabel)} (pre-split Series B preferred equivalents; converts to Class N, S-1 p. 20)
 reportedFairValue:        ${col(ex.fvLabel)} (as of ${ex.fairValueAsOf}, ${ex.filingType})
 → markPerUnit:            ${col(ex.markLabel)} per pre-split unit (${postSplitMark} per ANT share; 10-for-1 split, S-1 p. 22)
-→ S-1 FD shares (6/30):   ${fmtShares(ex.fdShares)} pre-split (${fmtShares(ex.fdShares * 10)} post-split, incl. 5% public-benefit fund; S-1 p. 13)
-→ scenario price:         ${fmtPrice(ex.scenarioPps)} per pre-split unit (${postSplitScenario} per ANT share) = valuation × (1 − dilution) ÷ FD shares
-→ scenario exposure:      ${(ex.impliedExposure * 100).toPrecision(8)}% (units ÷ S-1 FD shares)
+→ scenario ANT price:     ${fmtPrice(ex.antPrice)} per ANT share (S-1/A No. 2 range midpoint) = ${fmtPrice(ex.scenarioPps)} per pre-split unit × (1 − dilution)
+→ implied valuation:      ${fmtUsd(ex.impliedValuation)} on ${fmtShares(ex.fdShares * 10)} ${ex.shareBasis === 'outstanding' ? 'outstanding' : 'fully diluted'} ANT shares (S-1/A No. 2 p. 24; display only, not used below)
+→ scenario exposure:      ${(ex.impliedExposure * 100).toPrecision(8)}% of the selected basis (units ÷ ${fmtShares(ex.fdShares)} pre-split)
 
 ΔNAV per $1 pre-split:    ${col(ex.navSensLabel)} (${ex.unitsLabel} ÷ ${ex.sharesLabel}; $${(ex.navSens * 10).toFixed(5)} per $1 of ANT share price)
 denominator:              ${col(ex.denomLabel)} (market-cap: ${ex.sharesLabel} sh × ${ex.priceLabel})
@@ -116,6 +120,6 @@ denominator:              ${col(ex.denomLabel)} (market-cap: ${ex.sharesLabel} s
 ${ex.unitsLabel} × ${fmtPrice(ex.scenarioPps)} ÷ ${ex.denomLabel} × $100  =  ${ex.per100Label} per $100
 \`\`\`
 
-*(${ex.priceLabel} from \`reference/fixtures.json\` — frozen prices dated August 19 with the October 26 S-1 dataset, not a historical backtest. Filed Holdings; both valuation and FD controls revalue this row. Display digits are rounded; calculation uses full precision.)*
+*(${ex.priceLabel} from \`reference/fixtures.json\` — frozen prices dated August 19 with the November 10 S-1/A No. 2 dataset (s1a2), not a historical backtest. Filed Holdings; price-first: the row is filed units × 10 × ANT price, so no fully diluted count enters it. Display digits are rounded; calculation uses full precision.)*
 <!-- END GENERATED: worked-example -->`;
 }

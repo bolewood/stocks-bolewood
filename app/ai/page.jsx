@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AnthropicSources from "@/components/AnthropicSources";
 import AIPerDollarFinder from "@/components/AIPerDollarFinder";
 
 const OG_TITLE = "Pre-IPO Anthropic & OpenAI per $100 | stocks.bolewood.com";
@@ -28,6 +29,7 @@ export default function AIPage() {
     <>
       <Header />
       <AIPerDollarFinder />
+      <AnthropicSources />
       <Footer />
     </>
   );

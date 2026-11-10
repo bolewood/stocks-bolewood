@@ -30,7 +30,8 @@ import {
   AUGUST_OPENAI_PURCHASE,
   AUGUST_OPENAI_SOURCE,
 } from "../lib/dxyzHoldings.mjs";
-import { SHARE_DENOMINATED, DOLLAR_DENOMINATED, OTHER_HOLDINGS, calculateDxyzNav } from "../lib/dxyzNav.mjs";
+import { SHARE_DENOMINATED, DOLLAR_DENOMINATED, OTHER_HOLDINGS, calculateDxyzNav, anthropicPpsFromValuation } from "../lib/dxyzNav.mjs";
+import { RANGE } from "../lib/shareBasis.mjs";
 import { CAPITALIZATION, DEFAULT_DXYZ_OAI_ENTRY_PRICE, unitPrice } from "../reference/unitExposure.mjs";
 import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 import DXYZChartWall from "./DXYZChartWall";
@@ -161,13 +162,15 @@ export default function DXYZNAVFinder() {
 
   const updateImpliedEV = (name, trillionStr) => {
     const row = SHARE_DENOMINATED.find((p) => p.name === name);
-    if (!row?.fdShares) return;
+    if (!row?.fdShares && !row?.evBasis) return;
     setEvDrafts((prev) => ({ ...prev, [name]: trillionStr }));
     const t = parseFloat(trillionStr);
     if (!Number.isFinite(t) || t < 0) return;
     setPpsOverrides((prev) => ({
       ...prev,
-      [name]: unitPrice({ valuation: t * 1e12, fdShares: row.fdShares }),
+      [name]: row.evBasis
+        ? (t > 0 ? anthropicPpsFromValuation(t * 1e12, row.evBasis) : 0)
+        : unitPrice({ valuation: t * 1e12, fdShares: row.fdShares }),
     }));
     setActiveScenario(null);
   };
@@ -497,6 +500,23 @@ export default function DXYZNAVFinder() {
         </div>
       </div>
 
+      <div style={styles.issuanceBox} aria-labelledby="ipo-range-title">
+        <h2 id="ipo-range-title" style={{ ...styles.sectionTitle, fontSize: "20px" }}>Anthropic IPO range</h2>
+        <p style={styles.issuanceMeta}>
+          S-1/A No. 2 (Nov 10, 2026) sets an estimated range of ${RANGE.low.toFixed(2)}–${RANGE.high.toFixed(2)} per ANT share (cover). The NAV ledger stays on the June 30 filed mark of ${(ANTHROPIC_SPV.valUSD / ANTHROPIC_SPV.units).toFixed(2)} per pre-split unit (${(ANTHROPIC_SPV.valUSD / ANTHROPIC_SPV.units / 10).toFixed(2)} per ANT share). At the ${RANGE.midpoint.toFixed(0)} midpoint the Anthropic sleeve re-marks to {(RANGE.midpoint * 10 / (ANTHROPIC_SPV.valUSD / ANTHROPIC_SPV.units)).toFixed(3)}× the mark: {ANTHROPIC_SPV.units.toLocaleString("en-US")} units × ${(RANGE.midpoint * 10).toFixed(0)} = {fmt$(ANTHROPIC_SPV.units * RANGE.midpoint * 10)} vs {fmt$(ANTHROPIC_SPV.valUSD)} filed.
+        </p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }} role="group" aria-label="Anthropic IPO range presets">
+          {[["Range low", RANGE.low], ["Midpoint", RANGE.midpoint], ["Range high", RANGE.high]].map(([label, px]) => {
+            const active = Math.abs(Number(ppsOverrides.Anthropic) - px * 10) < 0.005;
+            return (
+              <button key={label} type="button" onClick={() => updatePPS("Anthropic", px * 10)} style={{ ...styles.presetBtn, ...(active ? styles.presetBtnActive : {}) }} className="preset-btn vcx-preset-btn">
+                {label} ${px.toFixed(2)} · ${(px * 10).toFixed(0)}/unit · {(px * 10 / (ANTHROPIC_SPV.valUSD / ANTHROPIC_SPV.units)).toFixed(3)}×
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div style={styles.issuanceBox}>
         <h2 style={{ ...styles.sectionTitle, fontSize: "20px" }}>August OpenAI purchase</h2>
         {!ready && <p role="status">Preparing calculator controls…</p>}
@@ -775,7 +795,7 @@ export default function DXYZNAVFinder() {
         <div style={styles.sectionHeader} className="vcx-section-header">
           <span style={styles.sectionNum}>01</span>
           <h2 style={styles.sectionTitle}>Positions valued by share price</h2>
-          <span style={styles.sectionMeta} className="vcx-section-meta">Edit PPS or implied EV ($T) — Anthropic EV uses S-1 FD (p. 13, pre-split); OpenAI EV uses estimated FD from /ai</span>
+          <span style={styles.sectionMeta} className="vcx-section-meta">Edit PPS or implied EV ($T) — Anthropic EV is ANT price × fully diluted shares (S-1/A No. 2 p. 24); OpenAI EV uses estimated FD from /ai</span>
         </div>
 
         <div style={styles.tableWrap}>
@@ -833,7 +853,7 @@ export default function DXYZNAVFinder() {
                   ) : null}
                 </div>
                 <div style={{ ...styles.td, flex: "1.3", textAlign: "right" }} className="vcx-pps-cell" data-label="Implied EV ($T)">
-                  {r.fdShares > 0 ? (
+                  {r.fdShares > 0 || r.evBasis ? (
                     <>
                       <input
                         type="number"
@@ -853,7 +873,7 @@ export default function DXYZNAVFinder() {
                       />
                       <div style={styles.delta}>
                         {r.name === "Anthropic"
-                          ? `per pre-split unit ($${(r.pps / 10).toFixed(2)} per ANT share) · S-1 FD (p. 13)`
+                          ? `$${(r.pps / 10).toFixed(2)} per ANT share ${r.companyValueLabel || ''} (S-1/A No. 2 p. 24)`
                           : "est. FD"}
                       </div>
                     </>
@@ -1064,6 +1084,7 @@ export default function DXYZNAVFinder() {
       <div style={styles.footer}>
         <div><strong>Changelog:</strong></div>
         <div style={{ marginBottom: "16px" }}>
+          • <strong>November 10, 2026</strong> — Anthropic&apos;s S-1/A No. 2 (accession 0001628280-26-072484) sets an estimated $70.00–$78.00 range. Added IPO-range presets for the Anthropic PPS ($700 / $740 / $780 per pre-split unit) and the midpoint-vs-NAV-mark ratio (74 ÷ 61.04 = 1.212×; the sleeve re-marks to 386,088 × $740 = $285.7M from $235.7M filed). Implied EV now uses the S-1/A No. 2 fully diluted count (p. 24) and names its basis. The NAV ledger is unchanged.<br />
           • <strong>October 26, 2026</strong> — Anthropic&apos;s Form S-1 (accession 0001628280-26-067168) replaced the DXYZ-calibrated Anthropic FD proxy with the issuer-derived June 30, 2026 count: 1,778,366,016 pre-split shares (17,783,660,160 post-split), including 846,840,960 post-split Class N shares contributed to Anthropic Public Benefit Fund, LLC (S-1 pp. 13, 144, 236). Anthropic Box 1 PPS ($610.41 June mark) and Implied EV ($T) are labeled per pre-split unit alongside the post-split ANT share equivalent ($61.04/ANT; 10-for-1 split effective 2026-09-17, S-1 p. 22). Noted that Series B preferred converts to non-voting unlisted Class N (S-1 pp. 20, 309).<br />
           • <strong>October 1, 2026</strong> — Added a collapsed holdings chart wall: default-mark treemap and Notice.co two-year charts captured that day. The tiles do not follow the PPS sliders.<br />
           • <strong>September 16, 2026</strong> — Anthropic and OpenAI Box 1 rows now show implied enterprise value ($T) from PPS × the same estimated FD denominator as /ai. Type 1.2 to mark OpenAI at $1.2T; a new primary may issue shares this identity does not model.<br />
@@ -1088,7 +1109,7 @@ export default function DXYZNAVFinder() {
         <div>• <strong>ATM capacity:</strong> Original $1B shelf (File 333-278734) through 2025 and Q1. New shelf {NEW_SHELF.fileNumber} (effective {NEW_SHELF.filedDate}) authorizes an <strong>indeterminate</strong> amount — there is no filed remaining-capacity dollar figure. Post–June 30 simulation uses the May 26 424B5 $1B illustration as a modeling cap only. Jefferies commission up to 3.0%.</div>
         <div>• <strong>Share repurchase:</strong> In {SHARE_REPURCHASE.approved} the Board approved repurchases of common stock at prices below then-current NAV, discretionary as to size and timing (<a href={SHARE_REPURCHASE.url} target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>N-CSRS subsequent events</a>). Presented next to the open ATM; neither is treated as dominant.</div>
         <div>• <strong>Post-June 30 Issuance (estimated):</strong> Modeled daily from July 1 as a fixed share of Yahoo Finance trading volume (calibrated from filed Q2 shares ÷ Apr–Jun volume), issuing only on days above rolling pro forma NAV. Estimated, not company reported.</div>
-        <div>• <strong>Implied EV:</strong> Anthropic and OpenAI PPS × fully diluted shares from <code>data/capitalization.json</code> (same defaults as /ai). The Anthropic count (1,778,366,016 pre-split / 17,783,660,160 post-split as of June 30, 2026) is issuer-derived from the <a href="https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>Form S-1 (p. 13)</a>, including the 5% Anthropic Public Benefit Fund, LLC (846,840,960 post-split Class N shares; pp. 13, 144, 236). The OpenAI count remains an estimated calibration proxy ($852B last primary ÷ June DXYZ unit mark). Dilution is 0 on this page. A new primary or IPO issuance may add shares this identity does not model.</div>
+        <div>• <strong>Implied EV:</strong> Anthropic implied valuation = ANT price (pre-split PPS ÷ 10) × fully diluted shares at that price, 18,012,993,381 at $74 (treasury method for options; <a href="https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm" target="_blank" rel="noopener noreferrer" style={{ color: "#d97706", textDecoration: "underline" }}>S-1/A No. 2 p. 24</a>), labelled with its basis. It is display only: the position value is units × price, so no fully diluted count enters the NAV. The S-1&apos;s June 30 derived count (1,778,366,016 pre-split / 17,783,660,160 post-split, S-1 p. 13) is superseded by S-1/A No. 2 and kept as the frozen s1 dataset on /ai. The OpenAI count remains an estimated calibration proxy ($852B last primary ÷ June DXYZ unit mark). Dilution is 0 on this page.</div>
         <div>• <strong>Subsequent events (mix shift, not new ATM):</strong> Aug 13 $150.0M additional Goanna Capital 26E (OpenAI Class A Common); Jul 16 $15.0M Magnitude FSTK / Fluidstack Series B; Aug 4 $4.0M Boom SAFE. When subsequent purchases are enabled, all $169M of costs are deducted from cash. August OpenAI uses estimated units and the same scenario PPS as June equity; Fluidstack and the new Boom SAFE are held at cost. Boom Series B-2 ($1.74M FV) is already on the June 30 schedule.</div>
       </div>
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.19.0.0] — 2026-11-10
+
+- Update every Anthropic calculator, the methodology (`1.4.0`) and `/anthropic-ipo-tape` for S-1/A No. 1 (Nov 2, `0001628280-26-068676`, Q3 financials and commitments) and S-1/A No. 2 (Nov 10, `0001628280-26-072484`, $70–$78 range, share counts, Oct 31 Run-Rate Revenue).
+- Share bases: new `lib/shareBasis.mjs` (outstanding 13.087B · fully diluted 18.013B at $74, treasury method · fully diluted incl. option). Every $T ↔ $/share conversion is labelled with its basis, and a unit test fails if a chart lane mixes bases.
+- `/ai`: price-first Anthropic input (ANT $/share, presets $70 / $74 / $78 / Series H $58.90 / DXYZ $61.04) with a basis selector for the implied $T; caption now "Defaults use the IPO range midpoint ($74; S-1/A No. 2)". Old `anth`/`anthFd` links load their exact old numbers; `?reference=s1` stays frozen.
+- `/dxyz`: IPO-range presets for the Anthropic PPS and the midpoint vs NAV mark (1.212×; sleeve $285.7M at $74). Implied EV uses the S-1/A No. 2 fully diluted count and names its basis. NAV ledger unchanged.
+- `/anthropic-ipo-tape`: new "The roadshow range vs the tape" panel (range band; Polymarket on outstanding, io:ANTH with a basis toggle defaulting to fully diluted per Entropy's docs, Damodaran and Morningstar reference marks; one basis per row). Filing panel covers S-1 + S-1/A Nos. 1–2 with a quarterly table including Q3'26, run-rate, price range and share counts, proceeds and placement, commitments ($900.9B, S-1/A No. 2) and cash. Polymarket brackets show per-share thresholds, the Class-A-only caveat, low-tail sensitivity and the median bracket. io:ANTH hero shows per-share on both bases vs the range, volume records since the first candle, and OI vs a recorded snapshot. Meter shows the trailing σ before today. Lock-up dates from a single `pricingDate` (Nov 18, reported). S-1/A event markers. ANT quote guard (Nasdaq, first trade ≥ listing date) and a listed-ANT headline.
+- Footers on Anthropic pages list the primary sources (S-1, S-1/A No. 1, S-1/A No. 2). Disclosure re-dated to 2026-11-10, positions unchanged.
+
 ## [0.18.0.0] — 2026-10-26
 
 - Update Anthropic data, methodology (`1.3.0`), footnotes, and the IPO tape for Anthropic, PBC's public Form S-1 (Reg. No. 333-299633, accession `0001628280-26-067168`, filed Oct 26, 2026 at 09:00:11 ET; Nasdaq Global Select ticker `"ANT"`, S-1 p. 20).

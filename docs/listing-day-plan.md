@@ -1,6 +1,9 @@
 # Anthropic Listing-Day Plan (`Nasdaq: ANT`)
 
-> **Status:** Preparation plan only — do **not** implement until `ANT` prices and lists on the Nasdaq Global Select Market.
+> **Status (Nov 10, 2026, v0.19.0.0):** Partly implemented. S-1/A No. 2 (`0001628280-26-072484`) set a $70–$78 range; pricing Nov 18 / first trade Nov 19 is reported (CNBC sources), not confirmed.
+> - Done: ANT quote guard (`lib/yahooQuote.mjs` `parseListedChartPrice`: Nasdaq exchange and `firstTradeDate` ≥ the listing date); `/api/investor-day` returns `ant` with market cap on both bases once a guarded quote exists, and the tape shows an ANT headline with the Polymarket bracket it falls in; lock-up dates from `lockupSchedule.pricingDate`; price-first `/ai` and `/dxyz` (§2 option 1 kept, §3 superseded by IPO-range presets).
+> - Still to do at pricing: set `pricingDate` and the IPO price (`ipoPrice`) from the 424B4, flip the pricing milestone to confirmed, show the public-benefit trigger (IPO price × 1.5), record Polymarket/Kalshi resolutions, wire live ANT into `/ai` and `/dxyz` defaults, and re-tag `/private-tape`.
+> - io:ANTH (Entropy docs, §4): converts in place. It keeps trading in market-cap units with the oracle = ANT × a fixed fully diluted count ÷ 1e9 from the 424(b) (or last S-1/A) “Total Class A and Class N Common Stock (As-Converted, Fully Diluted)” line; it does not settle or delist. Hyperp mode (oracle = 1h EMA of the mark) starts three calendar days before an announced listing. Source: https://docs.entropy.io/market-types/pre-ipo-perpetuals
 > **Source:** Anthropic, PBC Form S-1 (Reg. No. 333-299633, accession `0001628280-26-067168`, filed publicly 2026-10-26 at 09:00:11 ET).
 
 ---

@@ -1,0 +1,27 @@
+{
+  "asOf": "2026-10-26",
+  "note": "FROZEN s1 view (dataset s1: Form S-1, Oct 26, 2026; Anthropic FD 1,778,366,016 pre-split as of June 30, 2026, S-1 p. 13). Legacy valuation-first inputs ($965B Series H on the s1 FD). Reproduced by ?reference=s1 and kept for audit; superseded by the price-first s1a2 fixtures (S-1/A No. 2, Nov 10, 2026). Historical frozen price inputs dated August 19 combined with the October 26 Form S-1 dataset (Anthropic FD 1,778,366,016 pre-split, S-1 p. 13). This is not a knowable-as-of August 19 backtest. Other fixtures cover Estimated Holdings and frozen ATM bridge.",
+  "anthVal": 965000000000,
+  "oaiVal": 852000000000,
+  "dilution": 0,
+  "prices": {
+    "GOOG": 341.39,
+    "AMZN": 264.655,
+    "MSFT": 484.37,
+    "SFTBY": 16.54,
+    "NVDA": 219.6,
+    "SKM": 38.515,
+    "ZM": 108.16,
+    "AGIX": 44.5,
+    "DXYZ": 32.84,
+    "ARKVX": 57.43,
+    "VCX": 39.78
+  },
+  "priceAsOf": "2026-08-19",
+  "holdingsBasis": "filed",
+  "deploy": "cash",
+  "anthFdShares": 1778366016,
+  "oaiFdShares": 1237484749.307667,
+  "dxyzOaiEntryPrice": 688.4933333333333,
+  "dataset": "s1"
+}

@@ -1,4 +1,24 @@
-# Source changes — October 26, 2026 (methodology 1.3.0) & September 5, 2026 (1.2.0)
+# Source changes — November 10, 2026 (methodology 1.4.0), October 26, 2026 (1.3.0) & September 5, 2026 (1.2.0)
+
+## Anthropic S-1/A No. 1 and No. 2 — November 2 and 10, 2026 (v1.4.0)
+
+S-1/A No. 1 ([EDGAR](https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/anthropicpbc-sx1ax1.htm), `0001628280-26-068676`, accepted 2026-11-02 09:24:24 ET) and S-1/A No. 2 ([EDGAR](https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm), `0001628280-26-072484`, accepted 2026-11-10 06:29:24 ET). Acceptance times are the "Accepted" field on each filing's `-index.htm`.
+
+| Record | Evidence | Change & superseded figure |
+| --- | --- | --- |
+| `capitalization.json` (`anthropic.ipo`, dataset `s1a2`) | S-1/A No. 2 cover, pp. 13, 19–20, 22–24, 172 | Range $70.00–$78.00; offering, option and placement; 13,086,672,593 outstanding; fully diluted table 18,012,993,381 at $74; reserves. **Supersedes** the S-1 derived June 30 count 1,778,366,016 pre-split (kept as frozen dataset `s1`). |
+| `reference/fixtures.json`, `estimated-fixtures.json` | — | Price-first: `anthPrice: 74`, `anthShareBasis: "fullyDiluted"`. The previous fixtures are kept as `reference/s1-*.json` and reproduce their old rows exactly. |
+| `anthropic-investor-day.json` (`s1Facts`, `quarterly`) | S-1/A No. 1 pp. 10, 23, 158, 160, 163, 172; S-1/A No. 2 pp. 7, 11, 19–20, 22, 24, 177–179, 202 | Q3'26 column, run-rate ($81B Oct 31), price range, share counts, proceeds, cash ($131.9B), commitments ($900.9B, No. 2). **Supersedes** the S-1 "Run-Rate Revenue & Q3 blanks" card and the FT's Q3 $16.8B and $1.70 per compute dollar (filed $16,956M and $1.72). No. 2 commitments **supersede** No. 1's $895.4B set. |
+| `anthropic-investor-day.json` (`upcoming`, `events`, `lockupSchedule`) | EDGAR indexes; Anthropic roadshow post; CNBC (Nov 10) | S-1/A No. 1 and No. 2 filed (with acceptance times); roadshow launched (confirmed); pricing Nov 18 / first trade Nov 19 (reported, CNBC sources, not confirmed); `pricingDate: "2026-11-18"`. **Removed** the "expected week of Nov 9 / 135-day staleness" inference. |
+| `anthropic-investor-day.json` (`thirdPartyValuations`) | Damodaran blog (Oct 28, Nov 3); Morningstar AU edition (Nov 10) | Reference marks with explicit basis: Damodaran fully diluted (site conversion), Morningstar unconfirmed. |
+| `anthropic-investor-day.json` (`perpBasis`) | docs.entropy.io | io:ANTH is quoted on fully diluted valuation and converts in place at listing. |
+
+### Page citations that differ from the request
+
+The request's S-1/A No. 1 page numbers were one page high against the printed pages (checked against the table of contents: Capitalization p. 127): Q3 statement p. 160 (not 161); adjusted operating income p. 163 (not 164); its definition p. 158 (not 159); 9M summary p. 23 (not 24); operating cash flow p. 172 (not 173); commitments summary p. 6 (not 7) and MD&A pp. 173–174 (not 174–175); cash p. 10 (S-1/A No. 2 prints it on p. 11). In S-1/A No. 2 the run-rate sentence is on p. 202 (not 203). The RSUs whose service vesting moves to November 19, 2026 are 101,333,940 gross / 49,754,965 net after withholding (S-1/A No. 2 p. 22), not ~67M.
+
+---
+
 
 ## Anthropic Form S-1 update — October 26, 2026 (v1.3.0)
 

@@ -13,16 +13,20 @@ import { validateCapitalization, validateWrapper } from '../data/schema/validate
 
 const filed = readJson('reference/fixtures.json');
 const estimated = readJson('reference/estimated-fixtures.json');
+const s1Estimated = readJson('reference/s1-estimated-fixtures.json');
 const dataset = loadPublicDataset();
 function near(a,b,label) { assert.ok(Math.abs(a-b) <= Math.max(1,Math.abs(b))*1e-11, `${label}: ${a} vs ${b}`); }
 function app(w, p) { return fundRowMetrics(w, p.prices[w.yahooSymbol], { ...p, resolved: resolveFund(w, { basis:p.holdingsBasis, deploy:p.deploy, dxyzBridge:p.dxyzBridge }) }); }
 
-for (const holdingsBasis of ['filed','estimated']) for (const deploy of ['cash','prorata','range']) {
-  test(`Every quantified leg responds independently to valuation and dilution: ${holdingsBasis}/${deploy}`, () => {
-    const p = { ...estimated, holdingsBasis, deploy };
+for (const [mode, base, anthKey] of [['price-first s1a2', estimated, 'anthPrice'], ['legacy s1', s1Estimated, 'anthVal']]) for (const holdingsBasis of ['filed','estimated']) for (const deploy of ['cash','prorata','range']) {
+  test(`Every quantified leg responds independently to valuation and dilution: ${mode} ${holdingsBasis}/${deploy}`, () => {
+    // Outstanding is a fixed count, so every leg is exactly linear in price.
+    // Fully diluted moves with price (treasury method), which only affects the
+    // GOOG ownership-percentage leg; see the basis test below.
+    const p = { ...base, holdingsBasis, deploy, ...(anthKey === 'anthPrice' ? { anthShareBasis: 'outstanding' } : {}) };
     for (const w of WRAPPERS) {
       const before=app(w,p);
-      for (const [side,key,val] of [['anthropic','anth','anthVal'],['openai','oai','oaiVal']]) {
+      for (const [side,key,val] of [['anthropic','anth',anthKey],['openai','oai','oaiVal']]) {
         const other=key === 'anth' ? 'oai' : 'anth';
         const after=app(w,{...p,[val]:p[val]*1.7});
         const quantified=w[side] && w[side].kind !== 'commitment';
@@ -36,9 +40,10 @@ for (const holdingsBasis of ['filed','estimated']) for (const deploy of ['cash',
       }
     }
   });
-  test(`Offline/browser parity including both endpoints: ${holdingsBasis}/${deploy}`, () => {
-    for(const changes of [{},{anthVal:1500e9,oaiVal:2000e9,dilution:.1},{anthFdShares:1930165000,oaiFdShares:1500e6,dxyzOaiEntryPrice:900},{prices:{...estimated.prices,ARKVX:20}}]) {
-      const p={...estimated,holdingsBasis,deploy,...changes};
+  test(`Offline/browser parity including both endpoints: ${mode} ${holdingsBasis}/${deploy}`, () => {
+    const anthChange = anthKey === 'anthPrice' ? { anthPrice: 112.5, anthShareBasis: 'outstanding' } : { anthVal: 1500e9 };
+    for(const changes of [{},{...anthChange,oaiVal:2000e9,dilution:.1},{anthFdShares:1930165000,oaiFdShares:1500e6,dxyzOaiEntryPrice:900},{anthShareBasis:'fullyDilutedWithOption'},{prices:{...base.prices,ARKVX:20}}]) {
+      const p={...base,holdingsBasis,deploy,...changes};
       for(const expected of calculate(dataset,p).rows) {
         const actual=app(WRAPPERS.find(w=>w.ticker===expected.ticker),p);
         for(const key of ['shares','wrapperValue','anthPct','oaiPct','anthPer100','oaiPer100','anthPer100High','oaiPer100High','combinedPer100','combinedPer100High']) near(actual[key],expected[key],`${expected.ticker} ${key}`);
@@ -50,8 +55,11 @@ for (const holdingsBasis of ['filed','estimated']) for (const deploy of ['cash',
         for(const key of ['anth','oai']) if(actual[key+'Detail'].lots.length) {
           near(actual[key+'Detail'].lots.reduce((s,l)=>s+l.scenarioValue,0)*100/actual.wrapperValue,actual[key+'Detail'].per100,`${expected.ticker} detail equation`);
           assert.deepEqual(actual[key+'Detail'].lots,expected[key+'Lots']);
-          near(actual[key+'Detail'].sensitivity.low, expected[key+'Sensitivity'].low, 'FD sensitivity low');
-          near(actual[key+'Detail'].sensitivity.high, expected[key+'Sensitivity'].high, 'FD sensitivity high');
+          if (expected[key+'Sensitivity'] == null) assert.equal(actual[key+'Detail'].sensitivity, null);
+          else {
+            near(actual[key+'Detail'].sensitivity.low, expected[key+'Sensitivity'].low, 'FD sensitivity low');
+            near(actual[key+'Detail'].sensitivity.high, expected[key+'Sensitivity'].high, 'FD sensitivity high');
+          }
         }
       }
     }
@@ -66,9 +74,21 @@ test('Hand-computed synthetic quantities detect wrong denominator or double dilu
   for(const n of [0,-1,NaN,Infinity]) assert.throws(()=>impliedValuation({pps:1,fdShares:n}));
 });
 
+test('Price-first: units legs ignore the share basis; only the GOOG ownership-% leg uses it', () => {
+  for (const w of WRAPPERS) {
+    const out = app(w, { ...estimated, anthShareBasis: 'outstanding' });
+    const fd = app(w, { ...estimated, anthShareBasis: 'fullyDiluted' });
+    if (w.ticker === 'GOOG') near(fd.anthPer100 / out.anthPer100, 18012993381 / 13086672593, 'GOOG scales with basis count');
+    else near(fd.anthPer100, out.anthPer100, `${w.ticker} basis-independent`);
+  }
+  const dxyz = app(WRAPPERS.find(w => w.ticker === 'DXYZ'), { ...estimated, deploy: 'cash' });
+  near(dxyz.anthDetail.lots[0].scenarioValue, 386088 * 740, 'DXYZ sleeve at $74 = 386,088 × $740');
+  assert.equal(dxyz.anthDetail.sensitivity, null);
+});
+
 test('FD changes inversely revalue DXYZ and SKM; August acquisition is independent', () => {
   const w=WRAPPERS.find(w=>w.ticker==='DXYZ');
-  const p={...estimated,deploy:'cash'};
+  const p={...s1Estimated,deploy:'cash'};
   const baseline=app(w,p);
   const changed=app(w,{...p,anthVal:2000e9,oaiVal:3000e9,anthFdShares:2*p.anthFdShares,oaiFdShares:2*p.oaiFdShares});
   const lot=r=>r.oaiDetail.lots.find(l=>l.id==='goanna-2026-08-13');
@@ -80,7 +100,8 @@ test('FD changes inversely revalue DXYZ and SKM; August acquisition is independe
     const wrapper=WRAPPERS.find(w=>w.ticker===ticker);
     near(app(wrapper,{...p,anthFdShares:2*p.anthFdShares}).anthPer100,app(wrapper,p).anthPer100/2,'FD inverse');
   }
-  near(app(w,{...p,dxyzBridge:null}).scenarioNetAssets,app(w,{...filed,dxyzBridge:null}).scenarioNetAssets,'Cash-to-equity is not new capital');
+  near(app(w,{...p,dxyzBridge:null}).scenarioNetAssets,app(w,{...readJson('reference/s1-fixtures.json'),dxyzBridge:null}).scenarioNetAssets,'Cash-to-equity is not new capital');
+  near(app(w,{...estimated,deploy:'cash',dxyzBridge:null,anthPrice:61.041036}).scenarioNetAssets,app(w,{...filed,dxyzBridge:null,anthPrice:61.041036}).scenarioNetAssets,'Cash-to-equity is not new capital (price-first)');
   near(app(w,{...p,dxyzBridge:null,anthFdShares:1580904637.873207}).scenarioNetAssets,w.raw.filedSnapshot.netAssets,'Cash-to-equity is not new capital at June mark FD');
   const noBridge=app(w,{...p,dxyzBridge:null});
   assert.ok(lot(noBridge)); // Purchase inclusion does not depend on ATM availability.
@@ -141,4 +162,29 @@ test('Valuation scenarios cannot mutate filed observations', () => {
   const rawBefore = JSON.stringify(WRAPPERS.map(w => w.raw));
   for (const w of WRAPPERS) app(w, { ...estimated, anthVal: 500e9, oaiVal: 500e9, anthFdShares: 3e9 });
   assert.equal(JSON.stringify(WRAPPERS.map(w => w.raw)), rawBefore);
+});
+
+test('Old share links keep their exact numbers; new links are price-first', () => {
+  const old = parseScenarioSearch('?anth=965&oai=852&dil=0&holdings=filed&anthFd=1778.366016&oaiFd=1237.484749307667&oaiEntry=688.4933333333333&deploy=cash&sort=combined');
+  assert.equal(old.legacy, true);
+  assert.equal(old.anthPrice, null);
+  assert.equal(old.anthB, 965);
+  assert.equal(old.anthFdShares, 1778366016);
+  // The legacy link reproduces the frozen s1 view exactly.
+  const s1 = readJson('reference/s1-fixtures.json');
+  const s1Expected = readJson('reference/s1-expected-results.json');
+  for (const w of WRAPPERS) {
+    const row = app(w, { ...s1, anthVal: old.anthB * 1e9, anthFdShares: old.anthFdShares, anthPrice: old.anthPrice });
+    near(row.combinedPer100, s1Expected.rows.find(r => r.ticker === w.ticker).combinedPer100, `${w.ticker} legacy link`);
+  }
+  const fresh = parseScenarioSearch('');
+  assert.equal(fresh.anthPrice, 74);
+  assert.equal(fresh.anthShareBasis, 'fullyDiluted');
+  const qs = serializeScenarioSearch({ ...fresh, anthPrice: 78, anthShareBasis: 'outstanding' });
+  assert.match(qs, /antPx=78/);
+  assert.doesNotMatch(qs, /(^|&)anth=/);
+  const back = parseScenarioSearch('?' + qs);
+  assert.equal(back.anthPrice, 78);
+  assert.equal(back.anthShareBasis, 'outstanding');
+  assert.equal(back.legacy, false);
 });

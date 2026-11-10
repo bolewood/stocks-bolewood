@@ -1,6 +1,6 @@
 # Methodology
 
-`schemaVersion` **1.3.0** · `methodologyVersion` **1.3.0** · as of 2026-10-26
+`schemaVersion` **1.4.0** · `methodologyVersion` **1.4.0** · as of 2026-11-10
 
 This dataset estimates Anthropic and OpenAI **exposure** in public wrappers. Exposure is not always legal ownership. Each leg declares a `basis` so those cases are not flattened into one number.
 
@@ -83,7 +83,7 @@ where `FD_round = roundPostMoney ÷ roundPricePerPreSplitShare` (S-1 p. F-47):
 - Series G-1 (`$259.14`, `$380B`): `1,466.39M` pre-split (`14,663.9M` post-split)
 - Series H-1 (`$589.0095`, `$965B`): `1,638.34M` pre-split (`16,383.4M` post-split)
 
-At the default S-1 FD count (`1,778,366,016` pre-split):
+At the default S-1 FD count (`1,778,366,016` pre-split) — **v1.3, frozen dataset `s1`; corrected in v1.4, see “Reconciling the S-1 (s1) and S-1/A No. 2 (s1a2) counts”**:
 - Series H-measured legs (AGIX, AMZN, ZM): `× 1,638.34M / 1,778.37M = × 0.9213 (−7.87%)`
 - Series G-measured leg (ARKVX): `× 1,466.39M / 1,778.37M = × 0.8246 (−17.54%)`
 - VCX (`anthropic-vcx-nport-2026-06-30`, `$863.729B` NPORT-implied mark with no disclosed per-share price): uses an explicit `estimationMethod` assumption scaling the Series H-1 price (`$589.0095`, S-1 p. F-47) by `863.729B / 965B ≈ $527.19` per pre-split share (`$52.72` per post-split ANT share), yielding the same `1,638.34M` round-implied FD as Series H-1 (`× 0.9213`, `−7.87%`) and flagged `EST. ROUND PPS` in the UI.
@@ -183,6 +183,72 @@ Amazon's $100B AWS commitments are not equity.
 
 Taxes, liquidation preferences, conversion terms, anti-dilution, transfer restrictions, lockups, future financing, and — except for DXYZ SpaceX SPVs on `/dxyz` — carried interest. Gross scenario estimates, not NAV, liquidation value, expected proceeds, or price targets. DXYZ private marks are not last-primary-round marks.
 
+## Price-first Anthropic scenarios and share bases (v1.4)
+
+Primary sources: Form S-1 (Oct 26, 2026, `0001628280-26-067168`), S-1/A No. 1 (Nov 2, 2026, `0001628280-26-068676`, EDGAR accepted 09:24:24 ET) and S-1/A No. 2 (Nov 10, 2026, `0001628280-26-072484`, accepted 06:29:24 ET). Page numbers are the printed pages of the amendment named; pages shift between amendments.
+
+### Every number names its share basis
+
+A $T valuation and a $/share price are only comparable on a stated share count. The site uses three bases (dataset `s1a2`, `data/capitalization.json` → `anthropic.ipo`), implemented once in `lib/shareBasis.mjs` and `reference/unitExposure.mjs` (`anthBasisShares`):
+
+| Basis | Count | Source | Used for |
+| --- | ---: | --- | --- |
+| `outstanding` | 13,086,672,593 | S-1/A No. 2 p. 20 (Class A 7,427,991,791 + Class N 5,658,680,800 incl. the 846,840,960 public-benefit-fund shares + Class T 1 + Class F 1) | Market cap; Polymarket's resolution basis |
+| `fullyDiluted` | 18,012,993,381 at $74 | S-1/A No. 2 p. 24, sum of the five column totals (the table prints no grand total) | Default for implied $T on /ai and /dxyz; io:ANTH (Entropy quotes fully diluted) |
+| `fullyDilutedWithOption` | 18,136,743,381 at $74 | + 123,750,000 option shares (p. 19) | Sensitivity |
+
+Fully diluted moves with price: options are counted with the treasury stock method (1,774,342,693 gross at a $2.91 weighted-average exercise price; the company's table nets out 69,774,828 at $74, p. 24). The site keeps the implied exercise proceeds fixed (69,774,828 × $74) and recomputes the reduction at each price P: `FD(P) = 16,308,425,516 + 1,774,342,693 − 5,163,337,272 ÷ P`. Converting a valuation V to a fully diluted price solves `V = P × FD(P)` exactly, so $1.7T converts to $94.30, not $1.7T ÷ 18.013B = $94.38. Everything else in the table (RSUs 1,026,660,010 + 47,041,287 granted after 9/30; Amazon rollover notes 1,563,617,444 Class N at fixed conversion prices; vested donation-matching obligation 553,441,297; matching issuance 27,991,850; acquisition shares 561,963 A + 848,882 N; holdback 1,590,190 A; initial public benefit issuance 846,840,960) is held fixed. Plan reserves (2026 Plan 1,920,580,692 A plus the 2021 Plan remainder; ESPP 128,038,713; Donation Matching Plan 933,698,210 N, rising up to 1% a year through 2036; p. 23) are not in any basis.
+
+Rules, enforced by `test/shareBasis.test.mjs`:
+
+- Every user-facing $T ↔ $/share conversion carries its basis label ("on 13.09B outstanding" / "on 18.01B fully diluted").
+- Two converted marks share an axis row only if they share a basis (`laneBasis` throws otherwise). Native per-share prices (the range, a round price, a NAV mark) need no conversion and can sit anywhere.
+- A source whose basis is not stated is `unconfirmed`. It never shares a row with another converted mark and is shown on both counts.
+
+### Reconciling the S-1 (s1) and S-1/A No. 2 (s1a2) counts
+
+The filed post-offering fully diluted count less the new shares is 18,012,993,381 − 801,351,354 (primary Class A) − 351,351,348 (placement Class N at $74) = **16,860,290,679** post-split. The S-1 view (dataset `s1`, frozen) derived **17,783,660,160** as of June 30, 2026: the 846,840,960 fund shares "represent 5% of our fully diluted shares … assuming full conversion of the Amazon Notes" (S-1 p. 13), so pre-fund FD = 16,936,819,200, and the default then **added** the fund on top. The gap is 923,369,481 shares:
+
+- **846.8M — the fund was counted twice.** The company's table includes the 846,840,960 Initial Public Benefit Issuance inside its fully diluted total (S-1/A No. 2 p. 24), so "5% of fully diluted" means the fund is part of the 16.94B, not added to it. The S-1 "low" preset (16,936,819,200, "also equals the '5% of post-issuance' reading") was the right reading.
+- **76.5M — residual (16,936.8M vs 16,860.3M)**, net of items the filed table now shows explicitly: the treasury method nets out 69,774,828 option shares; RSU tax withholding retires 51,578,975 shares at settlement (p. 22); the Amazon notes are counted at their fixed conversion prices (1,840,444,962 in total, 276,827,518 converting at the IPO and 1,563,617,444 as rollover notes that convert quarterly under the ownership cap, p. 172), which is how the "full conversion" assumption in the S-1 reads; the vested matching obligation and matching issuance (581.4M) and post-9/30 RSU grants (47.0M) are included; and the count date moved from June 30 to September 30. The S-1 printed no June 30 component table, so this residual cannot be split exactly.
+
+Consequence (data correction): the per-leg changes shipped on Oct 26 at a fixed $965B were too large. On the s1a2 pre-offering count (16,860,290,679 post-split = 1,686,029,067.9 pre-split):
+
+| Leg | Shipped Oct 26 (s1) | Corrected (s1a2 pre-offering) |
+| --- | ---: | ---: |
+| DXYZ, SKM (filed units; vs the 1,580.9M DXYZ-calibrated proxy) | × 0.8890 (−11.10%) | × 0.9376 (−6.24%) |
+| AGIX, AMZN, ZM, VCX (Series H-1 share-equivalents, 1,638.3M implied) | × 0.9213 (−7.87%) | × 0.9717 (−2.83%) |
+| ARKVX (Series G-1 share-equivalents, 1,466.4M implied) | × 0.8246 (−17.54%) | × 0.8697 (−13.03%) |
+
+Price-first scenarios (below) make these valuation-to-price haircuts moot going forward, because no fully diluted count enters a units-based leg.
+
+### Price-first scenarios
+
+Now that a range exists, the Anthropic scenario input is the **price per ANT share** (post-split). Presets: $70 / **$74 (default, midpoint)** / $78 (S-1/A No. 2 cover), Series H $58.90 ($589.0095 pre-split ÷ 10, S-1 p. F-47) and the DXYZ June mark $61.04 ($610.41 per pre-split unit ÷ 10).
+
+- Filed-units legs (DXYZ 386,088 and SKM 3,860,330 pre-split units) = units × 10 × price. At $74 the DXYZ sleeve is 386,088 × $740 = $285.7M. **No fully diluted count is needed.**
+- Fair-value and carrying-value legs keep the share-equivalent rule: value ÷ the measurement round's pre-split price → share-equivalents × 10 × price.
+- The ownership-percentage leg (GOOG, `historical` 14%) is the only leg that uses a share count: 14% × price × the selected basis. Default fully diluted.
+- The selected basis otherwise only converts the price to a displayed $T ("$1.333T on 18.01B fully diluted").
+- Implementation: `resolveAnthScenario` turns `{ anthPrice, anthShareBasis }` into the same internal (valuation, pre-split FD) pair the legacy code used, so the browser and the reference engine share every identity and agree to 12 significant digits. The legacy FD sensitivity range is omitted in price mode.
+- Old links: a URL with `anth` (and `anthFd`) and no `antPx` loads its exact old valuation and FD (dataset `s1`) and shows the implied ANT price. `?reference=s1` reproduces `reference/s1-expected-results.json`; `?reference=filed` / `?reference=estimated` are the price-first s1a2 fixtures. Exports from 1.3.0 still reproduce.
+
+### Polymarket's resolution basis and its caveat
+
+The closing-cap market resolves on "the number of shares outstanding multiplied by the closing share price on the first trading day", per "the primary exchange's official listing page". The site therefore converts its brackets on 13.087B outstanding: $1.25T → $95.52, $1.5T → $114.62, $1.75T → $133.72, $2.0T → $152.83. Boundaries come from the live bracket labels. **Caveat:** Nasdaq's page may show only the listed Class A count (7,427,991,791; Class N is unlisted and non-voting), on which $1.25T needs $168.28. The expected value normalizes bracket prices and centres the open-ended tails half a bracket out ($1.125T / $3.125T). The page also shows the expected value with the low tail at $1.0T (about −$33B at current prices) and the median bracket.
+
+### io:ANTH share basis and listing
+
+Entropy quotes pre-IPO perps in market cap: "a price of $1 represents $1B of the company's fully diluted valuation" ([docs](https://docs.entropy.io/market-types/pre-ipo-perpetuals)). The site converts the mark on its own fully diluted count by default; the toggle shows outstanding. Entropy says the post-listing count will be the 424(b) prospectus's (or last S-1/A's) "Total Class A and Class N Common Stock (As-Converted, Fully Diluted)" line, which S-1/A No. 2 does not print, and Entropy has not published its Anthropic count, so its figure may differ from 18.01B. At listing io:ANTH **converts in place**: it keeps trading in market-cap units with the oracle pinned to ANT × that fixed count ÷ 1e9; it does not settle or delist. Three calendar days before an announced listing its oracle becomes a 1-hour EMA of the mark.
+
+### Volume records, open interest and σ
+
+Records run from the contract's first daily candle (2026-08-19 UTC). Notional ≈ base volume × (high + low) ÷ 2, which matches Hyperliquid's own `dayNtlVlm` within about 1%. They are the largest in io:ANTH's history, not across crypto perps. Hyperliquid has no historical open-interest endpoint, so "vs ~7 days ago" uses dated snapshots in `anthropic-investor-day.json` → `openInterestObservations` (Nov 2 ≈ $84M is site-recorded; Nov 10 $174.6M is a recorded API read). The unusual-move meter shows the trailing 30-day 15-minute σ now and as of 00:00 ET today, so readers can see a spike day widen the baseline.
+
+### Third-party valuations
+
+Reference marks only, not data. Damodaran's value of equity, $1,475,879M (Oct 28 post), is converted on fully diluted as a site conversion; his own $/share uses a ~3.3B share count that does not reconcile with the filing and is not shown. He revised to ~$1.45T on Nov 3. Morningstar's $1.7T is an equity value with no stated share basis (verified on Morningstar's Australian edition; the US page was not accessible to our fetch), so it is `unconfirmed` and shown on both counts ($94.30–$129.90).
+
 ## Holdings modes and valuation scenarios (v1.3)
 
 **Filed Holdings** fixes fund quantities and wrapper denominators to filed snapshots. **Estimated Holdings** adds known subsequent purchases and explicitly modeled ATM/inflow assumptions. Both modes revalue every quantified exposure under both company valuation sliders. They select holdings; they do not switch valuation sensitivity off. Strategic rows retain their individual historical, pro forma, round-implied or other basis in either mode. In particular SoftBank's 13% is not current funded ownership.
@@ -202,6 +268,8 @@ For Anthropic, the pre-IPO FD share denominator (`data/capitalization.json`) is 
 For OpenAI (where no S-1 round price table exists), `filed-fv-equiv` legs continue to use `reportedFairValue ÷ roundPostMoney`, while `filed-units` (DXYZ) uses `units ÷ oaiFdShares`. Valuation and incremental dilution affect all quantified legs. No ownership is invented for null/undisclosed stakes or unallocated commitments. Preferred/common conversion at parity is a gross modeling convention, not a guarantee of identical realizable economics.
 
 ### Capitalization and FD share counts
+
+> v1.3 text, kept for the frozen `s1` view. Superseded by S-1/A No. 2 (dataset `s1a2`) and price-first scenarios — see “Price-first Anthropic scenarios and share bases (v1.4)”.
 
 `data/capitalization.json` holds dated, sourced FD share counts:
 - **Anthropic (issuer-derived from Form S-1, `sourceClass: primary`, as of June 30, 2026):** S-1 p. 13 (also pp. 144, 236) discloses that Anthropic contributed `846,840,960` post-split shares of Class N common stock, representing **5%** of fully diluted shares as of June 30, 2026 (assuming full conversion of the Amazon Notes), to **Anthropic Public Benefit Fund, LLC** (a wholly owned subsidiary). Those shares are legally outstanding even though excluded from GAAP share counts (S-1 pp. 20, 24).
