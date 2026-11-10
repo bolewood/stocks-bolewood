@@ -1,5 +1,5 @@
-export const SCHEMA_VERSION = "1.3.0";
-export const METHODOLOGY_VERSION = "1.3.0";
+export const SCHEMA_VERSION = "1.4.0";
+export const METHODOLOGY_VERSION = "1.4.0";
 export const PRIVATE_TAPE_SCHEMA_VERSION = "1.0.0";
 export const BOOK_SCHEMA_VERSION = "1.0.0";
 

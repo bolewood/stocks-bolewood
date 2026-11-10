@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.3.0",
+  "schemaVersion": "1.4.0",
   "asOf": "2026-10-26",
   "note": "Anthropic's Oct 14, 2026 investor day, the Oct 26, 2026 public Form S-1 filing (Reg. No. 333-299633, accession 0001628280-26-067168), and the IPO calendar after it. S-1 facts carry primary SEC citations and audit badges; Oct 14 investor-day figures are press-reported and flagged where superseded in part by the S-1. Keep \"average run-rate\" (a quarter x 4) and \"exit run-rate\" (annualized from the end of a period) distinct; never label anything ARR unless it is an exit run-rate.",
   "window": {

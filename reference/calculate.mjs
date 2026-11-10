@@ -1,5 +1,5 @@
 // Public reference calculator. Reads data/ + fixtures.json. No UI, no app/.
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { calculateScenario, referenceRow } from "./engine.mjs";
@@ -47,21 +47,25 @@ const isMain =
 if (isMain) {
   if (process.argv[2] === '--scenario') {
     const snapshot = JSON.parse(readFileSync(process.argv[3], 'utf8'));
-    if (snapshot.format !== 'ai-exposure-scenario' || snapshot.version !== '1.3.0') throw new Error('Unsupported scenario export');
+    if (snapshot.format !== 'ai-exposure-scenario' || !['1.3.0', '1.4.0'].includes(snapshot.version)) throw new Error('Unsupported scenario export');
     const actual = canonicalTable(calculate(snapshot.dataset, snapshot.inputs));
     if (snapshot.results && JSON.stringify(actual) !== JSON.stringify(canonicalTable(snapshot.results))) throw new Error('Exported results do not reproduce');
     console.log(JSON.stringify(actual, null, 2));
   } else {
-    const table = canonicalTable(calculate());
-    const expectedPath = join(ROOT, "reference/expected-results.json");
-    const expected = JSON.parse(readFileSync(expectedPath, "utf8"));
-    if (JSON.stringify(table) !== JSON.stringify(expected)) {
-      throw new Error("Reference output does not match reference/expected-results.json");
-    }
-    const estimated = canonicalTable(calculate(loadPublicDataset(), readJson('reference/estimated-fixtures.json')));
-    if (JSON.stringify(estimated) !== JSON.stringify(readJson('reference/estimated-expected-results.json'))) {
-      throw new Error('Estimated reference results do not match');
-    }
-    console.log(`ok ${table.rows.length} Filed Holdings + ${estimated.rows.length} Estimated Holdings rows @ dataset ${table.datasetAsOf}; frozen prices ${table.priceAsOf}`);
+    const write = process.argv[2] === '--write';
+    const pairs = [
+      ['reference/fixtures.json', 'reference/expected-results.json'],
+      ['reference/estimated-fixtures.json', 'reference/estimated-expected-results.json'],
+      ['reference/s1-fixtures.json', 'reference/s1-expected-results.json'],
+      ['reference/s1-estimated-fixtures.json', 'reference/s1-estimated-expected-results.json'],
+    ];
+    const results = pairs.map(([fixture, expectedRel]) => {
+      const actual = canonicalTable(calculate(loadPublicDataset(), readJson(fixture)));
+      if (write) writeFileSync(join(ROOT, expectedRel), JSON.stringify(actual, null, 2) + "\n");
+      else if (JSON.stringify(actual) !== JSON.stringify(readJson(expectedRel))) throw new Error(`Reference output does not match ${expectedRel}`);
+      return actual;
+    });
+    const [table, estimated] = results;
+    console.log(`${write ? 'wrote' : 'ok'} ${table.rows.length} Filed Holdings + ${estimated.rows.length} Estimated Holdings rows @ dataset ${table.datasetAsOf} (ANT $${table.anthPrice} ${table.anthShareBasis}); frozen s1 views reproduced; frozen prices ${table.priceAsOf}`);
   }
 }

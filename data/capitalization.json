@@ -1,8 +1,8 @@
 {
-  "schemaVersion": "1.3.0",
-  "methodologyVersion": "1.3.0",
-  "asOf": "2026-10-26",
-  "note": "Anthropic fully diluted shares are issuer-derived from the Form S-1 (p. 13) as of June 30, 2026 on a pre-split basis (10-for-1 forward split took effect September 17, 2026, S-1 p. 22). OpenAI remains an adjustable pre-IPO calibration proxy, not an issuer cap table.",
+  "schemaVersion": "1.4.0",
+  "methodologyVersion": "1.4.0",
+  "asOf": "2026-11-10",
+  "note": "Anthropic scenarios are price-first (ANT $/share, S-1/A No. 2 range $70.00–$78.00). Share-basis counts are dataset 's1a2' (S-1/A No. 2, filed 2026-11-10, counts as of 2026-09-30 pro forma for the offering). The top-level anthropic.defaultShares/lowShares/highShares remain the frozen dataset 's1' (Form S-1, 2026-06-30, pre-split) so legacy links and ?reference=s1 reproduce. OpenAI remains an adjustable pre-IPO calibration proxy.",
   "anthropic": {
     "asOf": "2026-06-30",
     "shareBasis": "pre-split",
@@ -176,7 +176,259 @@
         "estimationMethod": "Author-selected exploration limits, not evidence-backed confidence bounds.",
         "note": "Slider limits allow sensitivity exploration."
       }
-    ]
+    ],
+    "frozenDataset": "s1",
+    "datasets": {
+      "s1": {
+        "label": "S-1 (Oct 26, 2026) · June 30, 2026 derived FD",
+        "publishedOn": "2026-10-26",
+        "asOf": "2026-06-30",
+        "accession": "0001628280-26-067168",
+        "shareBasis": "pre-split",
+        "defaultShares": 1778366016,
+        "lowShares": 1693681920,
+        "highShares": 1814000000,
+        "supersededBy": "s1a2",
+        "note": "Frozen. Derived from the 846,840,960 public-benefit-fund shares = 5% of June 30 FD (S-1 p. 13). Reproduced by ?reference=s1 and legacy anth/anthFd links."
+      },
+      "s1a2": {
+        "label": "S-1/A No. 2 (Nov 10, 2026) · Sept 30, 2026 pro forma for the offering",
+        "publishedOn": "2026-11-10",
+        "asOf": "2026-09-30",
+        "accession": "0001628280-26-072484",
+        "shareBasis": "post-split",
+        "note": "Counts below are post-split ANT shares; divide by splitFactor 10 for the pre-split unit basis used by wrapper filings."
+      }
+    },
+    "ipo": {
+      "dataset": "s1a2",
+      "ticker": "ANT",
+      "exchange": "Nasdaq Global Select Market",
+      "priceRange": {
+        "low": 70.0,
+        "high": 78.0,
+        "midpoint": 74.0,
+        "citation": "S-1/A No. 2 cover, pp. 20, 24"
+      },
+      "leadUnderwriters": [
+        "Goldman Sachs & Co. LLC",
+        "Morgan Stanley & Co. LLC"
+      ],
+      "offering": {
+        "primaryClassA": 801351354,
+        "secondaryClassA": 23648646,
+        "totalClassA": 825000000,
+        "underwriterOptionClassA": 123750000,
+        "citation": "S-1/A No. 2 p. 19"
+      },
+      "concurrentPlacement": {
+        "totalUsd": 26000000000,
+        "sharesAtMidpoint": 351351348,
+        "shareClass": "N",
+        "lockup": false,
+        "restrictedSecurities": true,
+        "investors": [
+          {
+            "name": "Google LLC",
+            "usd": 10000000000,
+            "sharesAtMidpoint": 135135135
+          },
+          {
+            "name": "NVIDIA",
+            "usd": 10000000000,
+            "sharesAtMidpoint": 135135135
+          },
+          {
+            "name": "AMD",
+            "usd": 2500000000,
+            "sharesAtMidpoint": 33783783
+          },
+          {
+            "name": "Broadcom",
+            "usd": 1000000000,
+            "sharesAtMidpoint": 13513513
+          },
+          {
+            "name": "Micron",
+            "usd": 1000000000,
+            "sharesAtMidpoint": 13513513
+          },
+          {
+            "name": "Microsoft",
+            "usd": 1000000000,
+            "sharesAtMidpoint": 13513513
+          },
+          {
+            "name": "TSMC Partners",
+            "usd": 500000000,
+            "sharesAtMidpoint": 6756756
+          }
+        ],
+        "citation": "S-1/A No. 2 p. 19"
+      },
+      "netProceedsUsd": {
+        "base": 84600000000,
+        "withOption": 93700000000,
+        "atPrice": 74.0,
+        "citation": "S-1/A No. 2 p. 20"
+      },
+      "outstandingAfterOffering": {
+        "classA": 7427991791,
+        "classN": 5658680800,
+        "classT": 1,
+        "classF": 1,
+        "total": 13086672593,
+        "totalWithOption": 13210422593,
+        "classAWithOption": 7551741791,
+        "publicBenefitFundClassN": 846840960,
+        "note": "Class N includes the 846,840,960 Anthropic Public Benefit Fund shares (legally outstanding; excluded from GAAP counts).",
+        "citation": "S-1/A No. 2 pp. 19–20"
+      },
+      "fullyDilutedTable": {
+        "atPrice": 74.0,
+        "citation": "S-1/A No. 2 p. 24",
+        "columns": {
+          "classA": 7430143944,
+          "classN": 7804580273,
+          "optionsNetTreasury": 1704567865,
+          "rsus": 1073701297,
+          "classTF": 2
+        },
+        "total": 18012993381,
+        "totalNote": "Sum of the five column totals in the company's table (S-1/A No. 2 p. 24); the table does not print a grand total.",
+        "options": {
+          "gross": 1774342693,
+          "weightedAverageExercisePrice": 2.91,
+          "treasuryReductionAtTablePrice": 69774828,
+          "citation": "S-1/A No. 2 pp. 22, 24"
+        },
+        "rsus": {
+          "unvestedAt0930": 1026660010,
+          "grantedAfter0930": 47041287,
+          "citation": "S-1/A No. 2 pp. 22, 24"
+        },
+        "rolloverNotesClassN": 1563617444,
+        "amazonNotes": {
+          "principalUsdM": 6203,
+          "sharesIssuableAtFixedPrice": 1840444962,
+          "fixedPrices": [
+            2.0928,
+            5.0478
+          ],
+          "convertAtIpoShares": 276827518,
+          "convertAtIpoPrincipalUsdM": 579.3,
+          "rolloverShares": 1563617444,
+          "note": "Only part converts at the IPO because of Amazon's ownership cap; the remainder converts quarterly at the lowest of the fixed price, the IPO price and the 10-day VWAP, still capped (S-1/A No. 2 p. 172). The table counts the rollover at fixed conversion prices.",
+          "citation": "S-1/A No. 2 pp. 22, 24, 172"
+        },
+        "vestedMatchingObligationClassN": 553441297,
+        "matchingIssuanceClassN": 27991850,
+        "acquisitionClassA": 561963,
+        "acquisitionClassN": 848882,
+        "acquisitionHoldbackClassA": 1590190,
+        "initialPublicBenefitIssuanceClassN": 846840960
+      },
+      "reserves": {
+        "plan2026ClassA": 1920580692,
+        "espp": 128038713,
+        "donationMatchingPlanClassN": 933698210,
+        "note": "Not in the fully diluted count. 2026 Plan also includes the 2021 Plan remainder; the Donation Matching Plan reserve may increase by up to 1% a year through 2036.",
+        "citation": "S-1/A No. 2 p. 23"
+      },
+      "publicBenefitIssuance": {
+        "stepPct": 0.02,
+        "triggerMultiple": 1.5,
+        "note": "After the IPO the board may issue up to an additional 2% of then-outstanding fully diluted shares to the Anthropic Public Benefit Fund each time the share price appreciates 50% above the prior milestone, starting from the IPO price.",
+        "citation": "S-1/A No. 2 p. 13"
+      },
+      "scenarioPresets": [
+        {
+          "key": "low",
+          "label": "$70 range low",
+          "price": 70.0,
+          "citation": "S-1/A No. 2 cover"
+        },
+        {
+          "key": "mid",
+          "label": "$74 midpoint",
+          "price": 74.0,
+          "default": true,
+          "citation": "S-1/A No. 2 cover, p. 24"
+        },
+        {
+          "key": "high",
+          "label": "$78 range high",
+          "price": 78.0,
+          "citation": "S-1/A No. 2 cover"
+        },
+        {
+          "key": "seriesH",
+          "label": "Series H $58.90",
+          "price": 58.90095,
+          "citation": "S-1 p. F-47 ($589.0095 per pre-split share ÷ 10)"
+        },
+        {
+          "key": "dxyzJune",
+          "label": "DXYZ June mark $61.04",
+          "price": 61.041036,
+          "citation": "DXYZ June 30, 2026 NPORT-P ($235,672,115 ÷ 386,088 = $610.41 per pre-split unit ÷ 10)"
+        }
+      ],
+      "sources": [
+        {
+          "fields": [
+            "priceRange",
+            "offering",
+            "concurrentPlacement",
+            "netProceedsUsd",
+            "outstandingAfterOffering"
+          ],
+          "sourceClass": "primary",
+          "issuer": "Anthropic, PBC",
+          "filingType": "S-1/A No. 2",
+          "accession": "0001628280-26-072484",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
+          "measurementDate": "2026-09-30",
+          "publicationDate": "2026-11-10",
+          "asOf": "2026-09-30",
+          "section": "S-1/A No. 2 cover, pp. 19–20",
+          "note": "Estimated range $70.00–$78.00; 801,351,354 primary + 23,648,646 secondary Class A; 123,750,000 option; $26.0B concurrent Class N placement at the IPO price; ~$84.6B net proceeds (~$93.7B with option) at $74; 13,086,672,593 shares outstanding after the offering and placement (13,210,422,593 with option).",
+          "acceptedAt": "2026-11-10T06:29:24-05:00"
+        },
+        {
+          "fields": [
+            "fullyDilutedTable"
+          ],
+          "sourceClass": "primary",
+          "issuer": "Anthropic, PBC",
+          "filingType": "S-1/A No. 2",
+          "accession": "0001628280-26-072484",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
+          "measurementDate": "2026-09-30",
+          "publicationDate": "2026-11-10",
+          "asOf": "2026-09-30",
+          "section": "S-1/A No. 2 pp. 22, 24, 172",
+          "note": "Company fully diluted table at the $74 midpoint (treasury stock method for options; weighted-average exercise price $2.91; ~$5.2B exercise proceeds).",
+          "estimationMethod": "Grand total 18,012,993,381 = sum of the five column totals. Fully diluted at another price P recomputes only the treasury-method option reduction: 1,774,342,693 − (69,774,828 × 74) ÷ P."
+        },
+        {
+          "fields": [
+            "reserves",
+            "publicBenefitIssuance"
+          ],
+          "sourceClass": "primary",
+          "issuer": "Anthropic, PBC",
+          "filingType": "S-1/A No. 2",
+          "accession": "0001628280-26-072484",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
+          "measurementDate": "2026-09-30",
+          "publicationDate": "2026-11-10",
+          "asOf": "2026-09-30",
+          "section": "S-1/A No. 2 pp. 13, 23",
+          "note": "Plan reserves excluded from the fully diluted count; public-benefit milestone issuances."
+        }
+      ]
+    }
   },
   "openai": {
     "defaultShares": 1237484749.307667,

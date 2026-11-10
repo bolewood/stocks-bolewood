@@ -1,7 +1,9 @@
 {
-  "asOf": "2026-10-26",
-  "note": "Historical frozen price inputs dated August 19 combined with the October 26 Form S-1 dataset (Anthropic FD 1,778,366,016 pre-split, S-1 p. 13). This is not a knowable-as-of August 19 backtest. Other fixtures cover Estimated Holdings and frozen ATM bridge.",
-  "anthVal": 965000000000,
+  "asOf": "2026-11-10",
+  "dataset": "s1a2",
+  "note": "Price-first s1a2 fixture: ANT $74.00 (S-1/A No. 2 range midpoint, cover and p. 24) on the fully diluted basis (18,012,993,381 at $74, S-1/A No. 2 p. 24) for the displayed $T; per-$100 values are units × price and do not depend on the basis. Historical frozen wrapper prices dated August 19 (not a knowable-as-of backtest). OpenAI unchanged.",
+  "anthPrice": 74.0,
+  "anthShareBasis": "fullyDiluted",
   "oaiVal": 852000000000,
   "dilution": 0,
   "prices": {
@@ -20,7 +22,6 @@
   "priceAsOf": "2026-08-19",
   "holdingsBasis": "filed",
   "deploy": "cash",
-  "anthFdShares": 1778366016,
   "oaiFdShares": 1237484749.307667,
   "dxyzOaiEntryPrice": 688.4933333333333
 }

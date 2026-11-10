@@ -76,17 +76,17 @@ basis:                    filed-units
 filedUnits:               386,088        (pre-split Series B preferred equivalents; converts to Class N, S-1 p. 20)
 reportedFairValue:        $235.671976M   (as of 2026-06-30, N-CSRS)
 → markPerUnit:            $610.41        per pre-split unit ($61.041 per ANT share; 10-for-1 split, S-1 p. 22)
-→ S-1 FD shares (6/30):   1,778,366,016 pre-split (17,783,660,160 post-split, incl. 5% public-benefit fund; S-1 p. 13)
-→ scenario price:         $542.633 per pre-split unit ($54.2633 per ANT share) = valuation × (1 − dilution) ÷ FD shares
-→ scenario exposure:      0.021710266% (units ÷ S-1 FD shares)
+→ scenario ANT price:     $74.00 per ANT share (S-1/A No. 2 range midpoint) = $740.00 per pre-split unit × (1 − dilution)
+→ implied valuation:      $1.332962T on 18,012,993,381 fully diluted ANT shares (S-1/A No. 2 p. 24; display only, not used below)
+→ scenario exposure:      0.021433861% of the selected basis (units ÷ 1,801,299,338 pre-split)
 
 ΔNAV per $1 pre-split:    $0.008101      (386,088 ÷ 47,657,338; $0.08101 per $1 of ANT share price)
 denominator:              $1.565067B     (market-cap: 47,657,338 sh × $32.84)
 
-386,088 × $542.633 ÷ $1.565067B × $100  =  $13.39 per $100
+386,088 × $740.00 ÷ $1.565067B × $100  =  $18.26 per $100
 ```
 
-*($32.84 from `reference/fixtures.json` — frozen prices dated August 19 with the October 26 S-1 dataset, not a historical backtest. Filed Holdings; both valuation and FD controls revalue this row. Display digits are rounded; calculation uses full precision.)*
+*($32.84 from `reference/fixtures.json` — frozen prices dated August 19 with the November 10 S-1/A No. 2 dataset (s1a2), not a historical backtest. Filed Holdings; price-first: the row is filed units × 10 × ANT price, so no fully diluted count enters it. Display digits are rounded; calculation uses full precision.)*
 <!-- END GENERATED: worked-example -->
 
 For Anthropic `filed-fv-equiv` and `carrying-value-equiv` legs (`AGIX`, `AMZN`, `ARKVX`, `VCX`, `ZM`), reported fair or carrying value is converted into pre-split share-equivalents at the measurement round's preferred price (`S-1 p. F-47`: Series G-1 `$259.14`, Series H-1 `$589.0095`, or VCX scaled from H-1) and divided by the selected fully diluted share count (`= old % × FD_round / FD_now`). For `filed-units` (`DXYZ` and `SKM`), filed pre-split units ÷ selected FD shares produces the equivalent stake directly. Both valuation and FD controls revalue all unit and share-equivalent legs. See `data/METHODOLOGY.md` and `data/SOURCE_CHANGES.md`.

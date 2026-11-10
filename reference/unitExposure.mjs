@@ -7,6 +7,40 @@ export const DEFAULT_OAI_FD_SHARES = capitalization.openai.defaultShares;
 export const DEFAULT_DXYZ_OAI_ENTRY_PRICE = capitalization.dxyzOpenaiEntry.defaultPrice;
 export const ANTH_SPLIT_FACTOR = capitalization.anthropic.splitFactor || 10;
 
+export const ANTH_SHARE_BASES = ['outstanding', 'fullyDiluted', 'fullyDilutedWithOption'];
+export const DEFAULT_ANTH_SHARE_BASIS = 'fullyDiluted';
+
+// Post-split ANT share count on a basis at price P, from a capitalization
+// dataset's anthropic.ipo block (S-1/A No. 2 pp. 19-20, 24). Fully diluted
+// recomputes only the treasury-method option reduction at P.
+export function anthBasisShares(ipo, basis, price) {
+  if (!ipo) throw new Error('Price-first scenarios need capitalization.anthropic.ipo (dataset s1a2)');
+  if (basis === 'outstanding') return ipo.outstandingAfterOffering.total;
+  const fd = ipo.fullyDilutedTable;
+  if (!(price > 0)) throw new Error('Fully diluted share count requires a positive price');
+  const proceeds = fd.options.treasuryReductionAtTablePrice * fd.atPrice;
+  const c = fd.columns;
+  const shares = c.classA + c.classN + c.rsus + c.classTF + fd.options.gross - Math.min(fd.options.gross, proceeds / price);
+  if (basis === 'fullyDiluted') return shares;
+  if (basis === 'fullyDilutedWithOption') return shares + ipo.offering.underwriterOptionClassA;
+  throw new Error(`Unknown share basis: ${basis}`);
+}
+
+// Price-first scenario: an ANT $/share (post-split) becomes the internal
+// (valuation, pre-split FD) pair. Every leg is units x price, so the selected
+// basis only changes the displayed $T, never a per-$100 value. Legacy inputs
+// (anthVal + anthFdShares) pass through unchanged.
+export function resolveAnthScenario(input, caps = capitalization) {
+  if (!(Number.isFinite(input?.anthPrice) && input.anthPrice > 0)) {
+    return { anthVal: input.anthVal, anthFdShares: input.anthFdShares ?? caps.anthropic.defaultShares, anthPrice: null, anthShareBasis: null, priceMode: false };
+  }
+  const split = caps.anthropic.splitFactor || 10;
+  const basis = input.anthShareBasis || DEFAULT_ANTH_SHARE_BASIS;
+  const postSplit = anthBasisShares(caps.anthropic.ipo, basis, input.anthPrice);
+  const anthFdShares = postSplit / split;
+  return { anthVal: input.anthPrice * split * anthFdShares, anthFdShares, anthPrice: input.anthPrice, anthShareBasis: basis, priceMode: true };
+}
+
 export function roundImpliedFd(roundEntry) {
   if (!roundEntry || !(roundEntry.postMoney > 0) || !(roundEntry.pricePerShare > 0)) return null;
   return roundEntry.postMoney / roundEntry.pricePerShare;
