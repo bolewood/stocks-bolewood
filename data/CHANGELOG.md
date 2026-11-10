@@ -2,6 +2,26 @@
 
 Typed entries: **Data update** · **Correction** · **Methodology change** · **Schema change**.
 
+## [1.4.0] - 2026-11-10
+
+### Data update
+- 2026-11-10: Anthropic, PBC S-1/A No. 2 (accession `0001628280-26-072484`, EDGAR accepted 06:29:24 ET). New `s1a2` dataset in `data/capitalization.json` → `anthropic.ipo`: estimated range `$70.00–$78.00` (midpoint `$74`, Nasdaq `ANT`; cover); 801,351,354 primary + 23,648,646 secondary Class A, 123,750,000 option (p. 19); `$26.0B` concurrent Class N placement (351,351,348 shares at $74, not locked up; p. 19); ~`$84.6B` net proceeds (~`$93.7B` with option; p. 20); 13,086,672,593 outstanding after the offering (p. 20); the full fully diluted table, 18,012,993,381 at $74 (p. 24; treasury method; Amazon rollover notes 1,563,617,444 Class N, p. 172); reserves (p. 23). Run-Rate Revenue ~`$81B` as of Oct 31, 2026, up `$10B` from Sep 30 (p. 202; ~`$71B` at 9/30 is derived).
+- 2026-11-02: Anthropic, PBC S-1/A No. 1 (accession `0001628280-26-068676`, EDGAR accepted 09:24:24 ET). Q3'26 revenue `$16,956M`, compute & infrastructure `$9,863M`, GAAP operating loss `$(567)M`, net loss `$(23,291)M` (p. 160); adjusted operating income `$2,463M` (15%) vs Q2 `$2,235M` (19%) (p. 163); 9M'26 revenue `$33,242M`, operating loss `$(1,260)M`, net loss `$(104,039)M` (p. 23); 9M operating cash flow +`$6.6B` (p. 172); cash and equivalents `$95.6B` + short-term investments `$36.3B` = `$131.9B` (p. 10).
+- Commitments: S-1/A No. 2 restates S-1/A No. 1. Encoded No. 2: `$900.9B` aggregate, `$451.6B` through 2030, `$70.7B` next 12 months, `$186.2B` terminable or contingent, post-9/30 `$105.7B`, Microsoft ≥ `$47.2B` up to `$49.2B` (pp. 7, 177–179). Superseded No. 1: `$895.4B`, `$447.5B`, `$69.8B`, `$213.8B`, `$100.2B`, Microsoft ≥ `$44.9B` (pp. 6, 173–174); No. 1's ~`$150–175B` variable-payment estimate (p. 174) was removed in No. 2.
+- `data/anthropic-investor-day.json`: `filings` with EDGAR acceptance times; S-1/A facts with page citations; `quarterly` table with the Q3'26 column; `s1a1` / `s1a2` chart events; upcoming milestones (S-1/A No. 1 and No. 2 filed; roadshow launched Nov 10, confirmed; pricing Nov 18 / first trade Nov 19, reported (CNBC sources), not confirmed); `lockupSchedule.pricingDate = 2026-11-18` (reported); `thirdPartyValuations` (Damodaran `$1,475,879M`, site conversion on fully diluted; Morningstar `$1.7T`, basis unconfirmed); `openInterestObservations`; `perpBasis` (Entropy docs).
+- `data/disclosure.json`: `asOf` 2026-11-10, positions unchanged.
+
+### Methodology change
+- Price-first Anthropic scenarios: the input is the ANT price per share (presets $70 / $74 default / $78, Series H $58.90, DXYZ June mark $61.04). Filed-units legs are units × 10 × price; fair-value legs are value ÷ round price × 10 × price; no fully diluted count enters either. Only the GOOG ownership-percentage leg uses the selected share basis.
+- Every $T ↔ $/share conversion names its share basis (`outstanding` 13.087B, `fullyDiluted` 18.013B at $74 with the treasury method recomputed at each price, `fullyDilutedWithOption`). Two converted marks never share an axis row unless they share a basis; unstated bases are `unconfirmed`. Enforced in `lib/shareBasis.mjs` and `test/shareBasis.test.mjs`.
+- io:ANTH is converted on fully diluted by default (Entropy: "$1 represents $1B of the company's fully diluted valuation"); Polymarket converts on outstanding (its resolution basis), with a Class-A-only caveat ($1.25T → $95.52 vs $168.28).
+
+### Correction
+- The Oct 26 per-leg changes were too large. The S-1 default (17,783,660,160 post-split) added the 846,840,960 public-benefit-fund shares on top of a count that already included them; S-1/A No. 2's filed fully diluted count less the new shares is 16,860,290,679. At a fixed $965B, the corrected changes are: DXYZ/SKM × 0.9376 (−6.24%, shipped −11.10%); AGIX/AMZN/ZM/VCX × 0.9717 (−2.83%, shipped −7.87%); ARKVX × 0.8697 (−13.03%, shipped −17.54%). Price-first scenarios make the valuation-to-price step moot. The s1 views stay frozen and reproducible (`reference/s1-*.json`, `?reference=s1`, legacy `anth`/`anthFd` links).
+
+### Schema change
+- `schemaVersion` / `methodologyVersion` `1.4.0`. Added `capitalization.anthropic.datasets` (`s1`, `s1a2`), `anthropic.ipo`, `frozenDataset`; scenario inputs `anthPrice` and `anthShareBasis`; investor-day `filings`, `quarterly`, `thirdPartyValuations` (with `basis`), `openInterestObservations`, `perpBasis`; upcoming statuses `"reported (CNBC sources), not confirmed"` and `"confirmed"`; `pageCitation` may cite `S-1/A No. N`. The reference engine still accepts 1.3.0 exports.
+
 ## [1.3.0] - 2026-10-26
 
 ### Schema change

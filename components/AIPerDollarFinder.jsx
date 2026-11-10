@@ -877,7 +877,7 @@ export default function AIPerDollarFinder() {
         <h2 style={styles.notesTitle}>Sources & footnotes</h2>
         <p style={styles.caption}>
           Implied exposure is not always ownership. Disclosed means an issuer
-          or investor stated a percentage. For Anthropic, filed FV-equiv and carrying-value-equiv legs convert to pre-split share-equivalents at the measurement round&apos;s price per share (S-1 p. F-47; VCX scales Series H-1 by 863.7/965 as an explicit estimation assumption) and divide by the selected fully diluted share count (default 1,778,366,016 pre-split / 17,783,660,160 post-split ANT shares, S-1 p. 13, 10-for-1 split S-1 p. 22). Filed units × scenario price uses the S-1 FD denominator for Anthropic and an adjustable estimated FD denominator for OpenAI. Round-implied is dollars invested ÷ post-money. Commitments have no percentage. DXYZ PPUs are excluded from equity scaling. Source dates and assumptions can differ within a row.
+          or investor stated a percentage. For Anthropic, filed FV-equiv and carrying-value-equiv legs convert to pre-split share-equivalents at the measurement round&apos;s price per share (S-1 p. F-47; VCX scales Series H-1 by 863.7/965 as an explicit estimation assumption) and are valued at the scenario ANT price × 10 per pre-split share (10-for-1 split, S-1 p. 22). Filed units × scenario price needs no Anthropic fully diluted count; the selected share basis (13.09B outstanding, S-1/A No. 2 p. 20, or 18.01B fully diluted at $74, p. 24) only converts the price to $T and values the GOOG ownership-percentage leg. Legacy links use the frozen S-1 count (1,778,366,016 pre-split, S-1 p. 13). OpenAI uses an adjustable estimated FD denominator. Round-implied is dollars invested ÷ post-money. Commitments have no percentage. DXYZ PPUs are excluded from equity scaling. Source dates and assumptions can differ within a row.
         </p>
         {WRAPPERS.map((w) => (
           <div key={w.ticker} style={styles.noteBlock}>
@@ -895,7 +895,7 @@ export default function AIPerDollarFinder() {
                 ? ` Anth. FV ${fmt$(w.anthropic.fairValue)} at ${fmt$(w.anthropic.roundVal)} (${w.anthropic.asOf})${w.anthropic.roundPricePerShare ? `, $${w.anthropic.roundPricePerShare.toFixed(2)} per pre-split unit ($${(w.anthropic.roundPricePerShare / ANTH_SPLIT_FACTOR).toFixed(2)} per ANT share, S-1 p. F-47${w.anthropic.roundPriceIsScaled ? "; scaled 863.7/965 estimation assumption" : ""}) ⇒ ${Math.round(w.anthropic.shareEquivalents).toLocaleString("en-US")} pre-split share-equivalents` : ""}.`
                 : ""}
               {w.anthropic?.kind === "filed-units"
-                ? ` Anth. ${w.anthropic.filedUnits.toLocaleString("en-US")} filed pre-split units (${w.anthropic.asOf}); scenario uses the S-1 pre-split FD count (1,778,366,016 incl. the 5% public-benefit fund, S-1 p. 13; 10-for-1 split S-1 p. 22).`
+                ? ` Anth. ${w.anthropic.filedUnits.toLocaleString("en-US")} filed pre-split units (${w.anthropic.asOf}); valued at 10 × the scenario ANT price per unit (10-for-1 split S-1 p. 22); no fully diluted count enters.`
                 : ""}
               {w.openai?.kind === "fund"
                 ? ` OAI FV ${fmt$(w.openai.fairValue)} at ${fmt$(w.openai.roundVal)} (${w.openai.asOf}).`

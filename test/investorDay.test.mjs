@@ -259,3 +259,36 @@ test("IPO tape helpers: derived run-rate, percentile, interval, DST-safe ticks",
     "Dec 13, 2026 (day 27)"
   );
 });
+
+import { lockupDate, perpVolumeRecords, openInterestComparison, bracketBoundariesT, expectedCloseLowTailSensitivity, medianBracket, candleNotional } from "../lib/investorDay.mjs";
+import { parseListedChartPrice } from "../lib/yahooQuote.mjs";
+
+test("lock-up dates from pricingDate 2026-11-18 (UTC date arithmetic)", () => {
+  const want = { 1: "Thu, Nov 19, 2026", 27: "Tue, Dec 15, 2026", 48: "Tue, Jan 5, 2027", 62: "Tue, Jan 19, 2027", 76: "Tue, Feb 2, 2027", 180: "Mon, May 17, 2027", 365: "Thu, Nov 18, 2027" };
+  for (const [d, label] of Object.entries(want)) assert.equal(lockupDate(Number(d), "2026-11-18").label, label);
+  assert.equal(lockupDate(27, null), null);
+});
+
+test("ANT listing guard rejects a recycled ticker and non-Nasdaq quotes", () => {
+  const payload = (meta) => ({ chart: { result: [{ meta: { symbol: "ANT", regularMarketPrice: 80, regularMarketTime: 1795100000, ...meta } }] } });
+  const listingDate = "2026-11-18";
+  assert.ok(parseListedChartPrice(payload({ exchangeName: "NMS", firstTradeDate: Date.UTC(2026, 10, 19) / 1000 }), "ANT", { listingDate }));
+  assert.equal(parseListedChartPrice(payload({ exchangeName: "NMS", firstTradeDate: Date.UTC(2014, 0, 2) / 1000 }), "ANT", { listingDate }), null);
+  assert.equal(parseListedChartPrice(payload({ exchangeName: "PNK", firstTradeDate: Date.UTC(2026, 10, 19) / 1000 }), "ANT", { listingDate }), null);
+});
+
+test("io:ANTH records, OI comparison and bracket helpers", () => {
+  const h = (t, v, hi, lo) => ({ startMs: t, volume: v, high: hi, low: lo, close: lo });
+  assert.equal(candleNotional(h(0, 10, 1700, 1600)), 16500);
+  const now = Date.UTC(2026, 10, 10, 14);
+  const r = perpVolumeRecords([h(1, 10, 2, 2), h(2, 30, 2, 2)], [{ ...h(Date.UTC(2026, 10, 6), 100, 1, 1) }, { ...h(Date.UTC(2026, 10, 10), 200, 1, 1) }], now);
+  assert.equal(r.topHours[0].notional, 60);
+  assert.equal(r.today.rank, 1);
+  assert.equal(r.priorRecordDay.date, "2026-11-06");
+  const oi = openInterestComparison(174e6, [{ date: "2026-11-02", openInterestUsd: 84e6 }], now);
+  assert.ok(Math.abs(oi.change - (174 / 84 - 1)) < 1e-12);
+  const b = [["<$1.25T", 0.28], ["$1.25–$1.5T", 0.42], ["$1.5–$1.75T", 0.3]].map(([label, price]) => ({ label, price, midT: label.startsWith("<") ? 1.125 : label.includes("1.5T") && !label.includes("1.75") ? 1.375 : 1.625 }));
+  assert.deepEqual(bracketBoundariesT(b), [1.25, 1.5, 1.75]);
+  assert.ok(Math.abs(expectedCloseLowTailSensitivity(b, 1.0).deltaT - (-0.28 * 0.125)) < 1e-12);
+  assert.equal(medianBracket(b).label, "$1.25–$1.5T");
+});

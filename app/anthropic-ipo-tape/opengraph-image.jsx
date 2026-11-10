@@ -6,7 +6,7 @@ import { ImageResponse } from "next/og";
 // days, so a printed valuation would be stale on most shares.
 
 export const alt =
-  "Anthropic IPO tape: investor day Oct 14, then S-1, roadshow and pricing. Live implied valuation, IPO odds and public proxies vs QQQ";
+  "Anthropic IPO tape: S-1/A No. 2 sets a $70–$78 range; roadshow launched Nov 10. The range vs the tape on stated share bases, IPO odds and public proxies vs QQQ";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -93,7 +93,7 @@ export default async function Image() {
                 color: "#44403c",
               }}
             >
-              <div style={{ color: INK }}>Investor day Oct 14 · S-1, roadshow and pricing next</div>
+              <div style={{ color: INK }}>S-1/A No. 2: $70–$78 range · roadshow launched Nov 10</div>
               <div>Implied valuation · Hyperliquid io:ANTH</div>
               <div>IPO odds · Polymarket + Kalshi</div>
             </div>

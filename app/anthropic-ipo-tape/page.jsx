@@ -4,7 +4,7 @@ import InvestorDayTape from "@/components/InvestorDayTape";
 
 const TITLE = "Anthropic IPO Tape";
 const DESCRIPTION =
-  "Live tape from Anthropic's Oct 14 investor day through the IPO: Hyperliquid io:ANTH implied valuation, Polymarket and Kalshi IPO odds, investor-day figures with sources, and public proxies vs QQQ. Public market data only.";
+  "Live tape from Anthropic's Oct 14 investor day through the IPO: the S-1/A $70–$78 range vs Hyperliquid io:ANTH and Polymarket on stated share bases, IPO odds, filing figures with page citations, and public proxies vs QQQ. Public market data only.";
 
 export const metadata = {
   title: TITLE,

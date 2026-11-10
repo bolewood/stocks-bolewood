@@ -638,7 +638,7 @@
       "key": "exitRunRateDisclosed",
       "label": "Annualized exit run-rate at investor day",
       "disclosed": false,
-      "supersededByS1": "S-1 p. 4 defines Run-Rate Revenue (trailing-28-day consumption ×13 + monthly subscriptions ×12); Oct 31, 2026 Run-Rate Revenue is blank pending the S-1/A (S-1 pp. 133, 195).",
+      "supersededByS1": "Superseded by S-1/A No. 2 p. 202: Run-Rate Revenue ~$81B as of Oct 31, 2026, up $10B from Sep 30 (S-1 p. 4 defines Run-Rate Revenue; it was blank in the S-1, pp. 133, 195).",
       "sources": [
         {
           "fields": [

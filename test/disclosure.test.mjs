@@ -32,10 +32,10 @@ const finder = readFileSync(
 const expectedResults = readJson("reference/expected-results.json");
 
 const CANONICAL_SENTENCE =
-  "As of October 26, 2026, the author holds long positions in DXYZ, SKM, ZM, AMZN, GOOG, NVDA, NSLR and PWRL. The DXYZ exposure includes options. The author also holds a direct long position in Anthropic through an SPV. Positions are subject to change without notice.";
+  "As of November 10, 2026, the author holds long positions in DXYZ, SKM, ZM, AMZN, GOOG, NVDA, NSLR and PWRL. The DXYZ exposure includes options. The author also holds a direct long position in Anthropic through an SPV. Positions are subject to change without notice.";
 
 test("disclosure.json lists the eight held tickers with a dated note", () => {
-  assert.equal(disclosure.asOf, "2026-10-26");
+  assert.equal(disclosure.asOf, "2026-11-10");
   assert.deepEqual(disclosure.tickers, [
     "DXYZ",
     "SKM",
