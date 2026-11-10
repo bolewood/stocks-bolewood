@@ -560,7 +560,11 @@ export const UPCOMING_STATUSES = [
   "expected, not confirmed",
   "filed",
   "filed terms, pricing date TBD",
+  "reported (CNBC sources), not confirmed",
+  "confirmed",
 ];
+
+export const THIRD_PARTY_BASES = ["outstanding", "fullyDiluted", "unconfirmed"];
 
 // data/anthropic-investor-day.json: S-1 filed facts, press-reported investor-day
 // facts, chart event markers, and upcoming IPO milestones. Every record carries sources.
@@ -576,6 +580,8 @@ export function validateInvestorDay(config) {
     events: config.events,
     upcoming: config.upcoming,
     ...(config.s1Facts ? { s1Facts: config.s1Facts } : {}),
+    ...(config.thirdPartyValuations ? { thirdPartyValuations: config.thirdPartyValuations } : {}),
+    ...(config.openInterestObservations ? { openInterestObservations: config.openInterestObservations } : {}),
   };
   for (const [name, rows] of Object.entries(sections)) {
     if (!Array.isArray(rows) || rows.length === 0) fail(`investor-day.${name}`, "must be a non-empty array");
@@ -596,9 +602,17 @@ export function validateInvestorDay(config) {
         if (!["audited", "filed, unaudited interim", "filed"].includes(row.auditStatus)) {
           fail(path, "s1Facts row requires auditStatus: audited | filed, unaudited interim | filed");
         }
-        if (typeof row.pageCitation !== "string" || !/^S-1 pp?\.\s/.test(row.pageCitation)) {
-          fail(path, "s1Facts row requires pageCitation starting with 'S-1 p.' or 'S-1 pp.'");
+        if (typeof row.pageCitation !== "string" || !/^S-1(\/A No\. \d)? pp?\.\s/.test(row.pageCitation)) {
+          fail(path, "s1Facts row requires pageCitation starting with 'S-1 p.', 'S-1 pp.' or 'S-1/A No. N p(p).'");
         }
+      }
+      if (name === "thirdPartyValuations") {
+        if (!(row.equityValueUsd > 0)) fail(path, "equityValueUsd required");
+        // Every converted mark names its share basis; unknown is "unconfirmed".
+        if (!THIRD_PARTY_BASES.includes(row.basis)) fail(path, `basis must be one of ${THIRD_PARTY_BASES.join(", ")}`);
+      }
+      if (name === "openInterestObservations") {
+        if (!isIsoDateKey(row.date) || !(row.openInterestUsd > 0)) fail(path, "date and openInterestUsd required");
       }
     });
   }
@@ -607,6 +621,18 @@ export function validateInvestorDay(config) {
     if (ev.kind === "date" && !isIsoDateKey(ev.date)) fail(path, "date event needs YYYY-MM-DD date");
     if (ev.kind === "time" && !Number.isFinite(Date.parse(ev.at))) fail(path, "time event needs ISO at");
     if (!["date", "time"].includes(ev.kind)) fail(path, "kind must be date or time");
+  }
+  if (config.quarterly) {
+    const q = config.quarterly;
+    if (!Array.isArray(q.periods) || !q.periods.length) fail("investor-day.quarterly", "periods required");
+    for (const [k, row] of Object.entries(q.rows || {})) {
+      if (!Array.isArray(row.values) || row.values.length !== q.periods.length) fail(`investor-day.quarterly.${k}`, "values must align with periods");
+    }
+    if (!Array.isArray(q.sources) || !q.sources.length) fail("investor-day.quarterly", "sources required");
+    q.sources.forEach((src, j) => validateSource(src, `investor-day.quarterly.sources[${j}]`));
+  }
+  if (config.lockupSchedule?.pricingDate != null && !isIsoDateKey(config.lockupSchedule.pricingDate)) {
+    fail("investor-day.lockupSchedule.pricingDate", "must be YYYY-MM-DD or null");
   }
   for (const [i, up] of config.upcoming.entries()) {
     if (!UPCOMING_STATUSES.includes(up.status)) {
