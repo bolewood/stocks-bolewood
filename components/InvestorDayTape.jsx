@@ -424,7 +424,7 @@ function PerpRecords({ records, oi }) {
     <div style={styles.recordsBox}>
       <h3 style={styles.h3Plain}>io:ANTH records</h3>
       <div style={styles.volMeta}>
-        Since the contract&apos;s first daily candle ({new Date(records.firstCandleMs).toISOString().slice(0, 10)} UTC), notional ≈ volume × (high + low) ÷ 2. Records are
+        Since the contract&apos;s first daily candle ({`${new Date(records.firstCandleMs).toISOString().slice(0, 10)} UTC`}), notional ≈ volume × (high + low) ÷ 2. Records are
         the largest in io:ANTH&apos;s history, not across crypto perps.
       </div>
       <ul style={styles.recordsList}>
