@@ -3,7 +3,9 @@ import {
   YAHOO_CHART_HEADERS,
   YAHOO_CHART_HOSTS,
   parseChartPrice,
+  fetchListedChartPrice,
 } from "../../../lib/yahooQuote.mjs";
+import { priceFromValuation, valuationFromPrice, RANGE, premiumTo } from "../../../lib/shareBasis.mjs";
 import {
   YAHOO_FETCH_CONCURRENCY,
   createLiveQuoteCache,
@@ -53,6 +55,12 @@ import {
   intervalMinutes,
   multiDayInterval,
   percentileRank,
+  bracketBoundariesT,
+  expectedCloseLowTailSensitivity,
+  medianBracket,
+  perpVolumeRecords,
+  openInterestComparison,
+  sigmaBefore,
 } from "../../../lib/investorDay.mjs";
 import ipoTapeData from "../../../data/anthropic-investor-day.json" with { type: "json" };
 
@@ -150,6 +158,8 @@ async function fetchCandles(coin, interval, startMs, endMs) {
       startMs: Number(row.t),
       endMs: Number(row.T) + 1,
       open: num(row.o),
+      high: num(row.h),
+      low: num(row.l),
       close: num(row.c),
       volume: num(row.v) ?? 0,
     }))
@@ -381,9 +391,13 @@ async function loadBaselines({ midnightMs, tokenIds, now, errors }) {
   const allAbs = simpleReturns(history15m.map((c) => c.close))
     .map(Math.abs)
     .sort((a, b) => a - b);
+  const before = sigmaBefore(history15m, midnightMs, SIGMA_LOOKBACK_DAYS * DAY_MS);
   const value = {
     sigma15m: stdev(returns),
     sigmaN: returns.length,
+    // Same 30-day σ ending at 00:00 ET today: shows how today's moves widen it.
+    sigma15mBeforeToday: before?.sigma ?? null,
+    sigmaNBeforeToday: before?.n ?? null,
     sortedAbs15m: allAbs,
     history15mStartMs: history15m[0]?.startMs ?? null,
     anthAvgHourNotional: averageHourlyNotional(candles15m),
@@ -447,6 +461,53 @@ async function loadMultiDay(sigma15m, now, errors) {
   const entry = multiDayInFlight ? await multiDayInFlight : multiDayEntry;
   errors.push(...entry.errors);
   return entry.value;
+}
+
+// ---- io:ANTH volume records since the first candle, cached 60s -----------
+
+// Hyperliquid's io:ANTH daily candles start 2026-08-19; request from Aug 18.
+const PERP_HISTORY_START_MS = Date.UTC(2026, 7, 18);
+const RECORDS_TTL_MS = 60 * 1000;
+let recordsEntry = null;
+
+async function loadPerpRecords(now, errors) {
+  if (recordsEntry && now - recordsEntry.writtenAt < RECORDS_TTL_MS) return recordsEntry.value;
+  const localErrors = [];
+  const [h1, d1] = await Promise.all([
+    capture("Hyperliquid io:ANTH 1h history", () => fetchCandles(PERP_COINS.anthropic, "1h", PERP_HISTORY_START_MS, now), localErrors, []),
+    capture("Hyperliquid io:ANTH 1d history", () => fetchCandles(PERP_COINS.anthropic, "1d", PERP_HISTORY_START_MS, now), localErrors, []),
+  ]);
+  const value = perpVolumeRecords(h1, d1, now) ?? recordsEntry?.value ?? null;
+  recordsEntry = { writtenAt: now, value };
+  errors.push(...localErrors);
+  return value;
+}
+
+// ---- ANT (Nasdaq) quote once listed: guarded against a recycled ticker ---
+
+const ANT_TTL_MS = 60 * 1000;
+let antEntry = null;
+
+async function loadAntQuote(now) {
+  const listingDate = ipoTapeData.lockupSchedule?.pricingDate;
+  if (!listingDate || now < Date.parse(`${listingDate}T00:00:00Z`)) return null;
+  if (antEntry && now - antEntry.writtenAt < ANT_TTL_MS) return antEntry.value;
+  let value = null;
+  try {
+    value = await fetchListedChartPrice("ANT", { listingDate }, { timeoutMs: FETCH_TIMEOUT_MS });
+  } catch {
+    value = null;
+  }
+  antEntry = { writtenAt: now, value };
+  return value;
+}
+
+function perShareBoth(valuation) {
+  if (!(valuation > 0)) return null;
+  const out = priceFromValuation(valuation, "outstanding");
+  const fd = priceFromValuation(valuation, "fullyDiluted");
+  const leg = (r) => ({ price: r.value, basis: r.basis, shares: r.shares, label: r.label, vsMidpoint: premiumTo(r.value, RANGE.midpoint), vsTop: premiumTo(r.value, RANGE.high) });
+  return { outstanding: leg(out), fullyDiluted: leg(fd) };
 }
 
 // ---- Assembly ------------------------------------------------------------
@@ -526,6 +587,13 @@ async function fetchLive(prev) {
 
   const bracketsOut = capBrackets.map((b) => withBaseline(b, baselines));
   const expected = expectedCloseT(bracketsOut);
+  const lowTail = expectedCloseLowTailSensitivity(bracketsOut, 1.0);
+  const median = medianBracket(bracketsOut);
+  // Polymarket resolves on shares outstanding × first-day close (event rules).
+  const boundaries = bracketBoundariesT(bracketsOut).map((t) => ({
+    valueT: t,
+    outstanding: priceFromValuation(t * 1e12, "outstanding").value,
+  }));
   const expectedBaseline = bracketsOut.every((b) => Number.isFinite(b.baseline))
     ? expectedCloseT(bracketsOut, "baseline")
     : null;
@@ -650,6 +718,8 @@ async function fetchLive(prev) {
   );
   const sigmaStats = sigmaSummary(sigmaSeries);
   const multiDay = await loadMultiDay(baselines.sigma15m, now, errors);
+  const [records, ant] = await Promise.all([loadPerpRecords(now, errors), loadAntQuote(now)]);
+  const oi = openInterestComparison(anthropic?.openInterestUsd ?? null, ipoTapeData.openInterestObservations, now, 7);
   const rankOf = (move) => {
     const r = percentileRank(baselines.sortedAbs15m, move);
     return r ? { ...r, sinceMs: baselines.history15mStartMs } : null;
@@ -693,12 +763,18 @@ async function fetchLive(prev) {
             openPx,
             changeSinceMidnight: pctChange(midnightPx, anthropic.markPx),
             changeSinceOpen: pctChange(openPx, anthropic.markPx),
+            // Mark is $B of implied valuation; Entropy defines it as fully diluted.
+            perShare: perShareBoth(anthropic.markPx * 1e9),
+            records,
+            openInterestVs: oi,
             sparkline,
             unusual: {
               // Latest trade close, not markPx: sigma is built from trade
               // closes, and the mark/trade basis would otherwise read as a move.
               ...unusual,
               sigmaN: baselines.sigmaN,
+              sigma15mBeforeToday: baselines.sigma15mBeforeToday,
+              sigmaNBeforeToday: baselines.sigmaNBeforeToday,
               lookbackDays: SIGMA_LOOKBACK_DAYS,
               rank: rankOf(unusual.current),
               peakRank: unusual.peak ? rankOf(sigmaStats.largest?.ret ?? null) : null,
@@ -710,9 +786,14 @@ async function fetchLive(prev) {
     polymarket: {
       brackets: bracketsOut,
       noIpo,
+      boundaries,
+      lowTailSensitivity: lowTail,
+      medianBracket: median,
+      resolutionBasis: "outstanding",
       expectedClose: expected
         ? {
             ...expected,
+            perShare: { outstanding: priceFromValuation(expected.valueT * 1e12, "outstanding").value },
             baselineT: expectedBaseline?.valueT ?? null,
             changeT: expectedBaseline ? expected.valueT - expectedBaseline.valueT : null,
           }
@@ -722,6 +803,12 @@ async function fetchLive(prev) {
       vsOpenai,
     },
     kalshi,
+    ant: ant
+      ? {
+          ...ant,
+          marketCap: { outstanding: valuationFromPrice(ant.price, "outstanding"), fullyDiluted: valuationFromPrice(ant.price, "fullyDiluted") },
+        }
+      : null,
     volume: { rows: volumeRows },
     sigmaSeries,
     sigmaSummary: sigmaStats,

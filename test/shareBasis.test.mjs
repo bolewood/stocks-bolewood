@@ -78,3 +78,34 @@ test("public-benefit trigger and pre-split unit price", () => {
   assert.equal(publicBenefitTrigger(74), 111);
   assert.equal(preSplitUnitPrice(74), 740);
 });
+
+import { buildRangeVsTape } from "../lib/rangeVsTape.mjs";
+import tape from "../data/anthropic-investor-day.json" with { type: "json" };
+
+test("range-vs-tape panel never mixes share bases in a lane, for either perp basis", () => {
+  for (const perpBasis of ["fullyDiluted", "outstanding"]) {
+    const v = buildRangeVsTape({ perpMarkB: 1674.5, perpBasis, polymarketExpectedT: 1.42, thirdParty: tape.thirdPartyValuations });
+    for (const lane of v.lanes) {
+      const bases = new Set(lane.marks.map((m) => m.basis));
+      assert.equal(bases.size, 1, `${lane.key} mixes ${[...bases]}`);
+      assert.equal([...bases][0], lane.key);
+    }
+    const perp = v.lanes.flatMap((l) => l.marks).find((m) => m.key === "perp");
+    assert.equal(perp.basis, perpBasis);
+    assert.ok(perp.alt && perp.alt.basis !== perpBasis, "tooltip carries the other conversion");
+    assert.ok(v.axis.min <= 58.90095 && v.axis.max >= 129);
+  }
+  const fd = buildRangeVsTape({ perpMarkB: 1674.5, perpBasis: "fullyDiluted", thirdParty: tape.thirdPartyValuations });
+  const perp = fd.lanes.find((l) => l.key === "fullyDiluted").marks.find((m) => m.key === "perp");
+  assert.equal(Math.round(perp.price), 93);
+  assert.equal(Math.round(perp.alt.price), 128);
+  const dam = fd.lanes.find((l) => l.key === "fullyDiluted").marks.find((m) => m.key === "damodaran");
+  assert.equal(dam.price.toFixed(1), "81.9");
+  const ms = fd.lanes.find((l) => l.key === "unconfirmed").marks.find((m) => m.key === "morningstar");
+  assert.ok(ms.price > 94 && ms.price < 94.5 && ms.priceHigh > 129 && ms.priceHigh < 130.5);
+});
+
+test("every third-party valuation names a basis; unknown is unconfirmed", () => {
+  for (const t of tape.thirdPartyValuations) assert.ok(["outstanding", "fullyDiluted", "unconfirmed"].includes(t.basis), t.key);
+  assert.equal(tape.thirdPartyValuations.find((t) => t.key === "morningstar").basis, "unconfirmed");
+});
