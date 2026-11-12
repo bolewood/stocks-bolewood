@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 import {
   HYPERLIQUID_URLS,
@@ -1018,12 +1018,58 @@ function QuarterlyTable({ q }) {
   );
 }
 
+// Collapsible reference panels. Collapsed by default so the live tape is near
+// the top; each reader's choice is remembered in localStorage (best effort).
+const collapseListeners = new Set();
+function subscribeCollapse(fn) {
+  collapseListeners.add(fn);
+  return () => collapseListeners.delete(fn);
+}
+// In-memory copy so the toggle still works when storage is blocked.
+const collapseMemory = new Map();
+function readCollapse(storageKey) {
+  if (collapseMemory.has(storageKey)) return collapseMemory.get(storageKey);
+  try {
+    return window.localStorage.getItem(storageKey);
+  } catch {
+    return null;
+  }
+}
+function useCollapsed(key, initial = true) {
+  const storageKey = `ipo-tape:collapsed:${key}`;
+  const stored = useSyncExternalStore(subscribeCollapse, () => readCollapse(storageKey), () => null);
+  const collapsed = stored === "0" ? false : stored === "1" ? true : initial;
+  const toggle = () => {
+    const next = collapsed ? "0" : "1";
+    collapseMemory.set(storageKey, next);
+    try {
+      window.localStorage.setItem(storageKey, next);
+    } catch {}
+    collapseListeners.forEach((fn) => fn());
+  };
+  return [collapsed, toggle];
+}
+
+function CollapseHeading({ id, controls, collapsed, onToggle, children }) {
+  return (
+    <h2 id={id} style={styles.h2}>
+      <button type="button" onClick={onToggle} aria-expanded={!collapsed} aria-controls={controls} style={styles.collapseBtn}>
+        <span aria-hidden="true" style={{ ...styles.collapseChevron, transform: collapsed ? "rotate(-90deg)" : "none" }}>▾</span>
+        {children}
+      </button>
+    </h2>
+  );
+}
+
 function S1FactsPanel() {
+  const [collapsed, toggle] = useCollapsed("s1Facts");
   if (!ipoTape.s1Facts?.length) return null;
   return (
     <section style={styles.factsPanel} aria-labelledby="s1-facts-title">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "8px" }}>
-        <h2 id="s1-facts-title" style={styles.h2}>What the filings show (S-1 and S-1/A Nos. 1–2)</h2>
+        <CollapseHeading id="s1-facts-title" controls="s1-facts-body" collapsed={collapsed} onToggle={toggle}>
+          What the filings show (S-1 and S-1/A Nos. 1–2)
+        </CollapseHeading>
         <span style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           {(ipoTape.filings || []).map((f) => (
             <Ext key={f.key} href={f.url} style={{ fontFamily: MONO, fontSize: "11px", color: "#1d4ed8" }} label={`Anthropic ${f.label} on SEC EDGAR (opens in a new tab)`}>
@@ -1032,6 +1078,10 @@ function S1FactsPanel() {
           ))}
         </span>
       </div>
+      {collapsed ? (
+        <div style={styles.collapsedNote}>{ipoTape.s1Facts.length} filed facts, quarterly table and lock-up schedule</div>
+      ) : null}
+      <div id="s1-facts-body" hidden={collapsed}>
       <div style={styles.panelSub}>
         Anthropic, PBC (Reg. No. 333-299633) · {(ipoTape.filings || []).map((f) => `${f.label} accepted ${f.acceptedEt} (${f.accession})`).join(" · ")} · primary SEC filings; later filings supersede earlier figures and press reports where noted
       </div>
@@ -1065,11 +1115,13 @@ function S1FactsPanel() {
       </div>
       <LockupScheduleTable schedule={ipoTape.lockupSchedule} s1Url={ipoTape.s1Url} />
       <div style={styles.factsAttribution}>{ipoTape.s1Attribution}</div>
+      </div>
     </section>
   );
 }
 
 function InvestorDayFacts() {
+  const [collapsed, toggle] = useCollapsed("investorDay");
   const facts = Object.fromEntries(ipoTape.facts.map((f) => [f.key, f]));
   const derived = investorDayDerived(ipoTape.facts);
   const notes = buildFootnotes(ipoTape.facts);
@@ -1171,11 +1223,17 @@ function InvestorDayFacts() {
   return (
     <section style={styles.factsPanel} aria-labelledby="ipo-facts-title">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-        <h2 id="ipo-facts-title" style={styles.h2}>What the investor day showed (Oct 14)</h2>
+        <CollapseHeading id="ipo-facts-title" controls="ipo-facts-body" collapsed={collapsed} onToggle={toggle}>
+          What the investor day showed (Oct 14)
+        </CollapseHeading>
         <span style={{ fontFamily: MONO, fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em", color: "#78350f", background: "#fef3c7", padding: "2px 6px", textTransform: "uppercase" }}>
           Superseded in part by the filings
         </span>
       </div>
+      {collapsed ? (
+        <div style={styles.collapsedNote}>{cards.length} press-reported facts with sources</div>
+      ) : null}
+      <div id="ipo-facts-body" hidden={collapsed}>
       <div style={styles.panelSub}>
         Anthropic investor day, Oct 14, 2026 · press-reported (FT / Reuters / Bloomberg), not company filings · superseded in part by the Form S-1 (Oct 26) and S-1/A No. 1 (Nov 2) and No. 2 (Nov 10)
       </div>
@@ -1206,6 +1264,7 @@ function InvestorDayFacts() {
           </li>
         ))}
       </ol>
+      </div>
     </section>
   );
 }
@@ -1817,6 +1876,9 @@ const styles = {
   disclosureDateRow: { display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", margin: "0 0 18px" },
   disclosureDate: { fontFamily: MONO, fontSize: "11px", color: "#44403c", background: "#f5f5f4", padding: "2px 8px" },
   disclosureWarn: { fontFamily: MONO, fontSize: "11px", fontWeight: 700, color: "#78350f", background: "#fef3c7", padding: "2px 8px" },
+  collapseBtn: { background: "none", border: 0, padding: 0, margin: 0, color: "inherit", textAlign: "left", cursor: "pointer", display: "inline-flex", alignItems: "baseline", gap: "8px", font: "inherit" },
+  collapseChevron: { display: "inline-block", fontSize: "14px", color: "#64748b", transition: "transform 120ms ease", width: "14px" },
+  collapsedNote: { fontFamily: MONO, fontSize: "11px", color: "#64748b", marginTop: "4px" },
   factsPanel: { border: `1px solid ${RULE}`, background: "#fff", padding: "18px 20px", marginBottom: "20px" },
   factsGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "10px" },
   factCard: { border: `1px solid ${RULE}`, padding: "12px 14px", background: "#fefdf8" },
