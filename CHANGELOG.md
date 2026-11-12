@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.19.1.0] — 2026-11-12
+
+- `/anthropic-ipo-tape`: the two reference panels at the top ("What the filings show" and "What the investor day showed") are collapsible and start collapsed, so the live tape sits near the top. Each reader's choice is remembered in the browser.
+
 ## [0.19.0.0] — 2026-11-10
 
 - Update every Anthropic calculator, the methodology (`1.4.0`) and `/anthropic-ipo-tape` for S-1/A No. 1 (Nov 2, `0001628280-26-068676`, Q3 financials and commitments) and S-1/A No. 2 (Nov 10, `0001628280-26-072484`, $70–$78 range, share counts, Oct 31 Run-Rate Revenue).
