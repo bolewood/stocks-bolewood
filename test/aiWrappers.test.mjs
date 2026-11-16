@@ -133,12 +133,12 @@ test("Aug 7 DXYZ Anthropic pin: FV / round / $1.25B mcap at $1T", () => {
 test("DXYZ OpenAI Series C is filed units; PPU slice is not in WRAPPERS FV", () => {
   const dxyz = WRAPPERS.find((w) => w.ticker === "DXYZ");
   assert.equal(dxyz.openai.basisId, "filed-units");
-  assert.equal(dxyz.openai.fairValue, 35_040_868.2);
-  assert.equal(dxyz.openai.filedUnits, 50_895);
-  assert.equal(dxyz.openai.subsequentPurchasesUsd, 150_000_000);
+  assert.equal(dxyz.openai.fairValue, 226_651_360.32);
+  assert.equal(dxyz.openai.filedUnits, 269_016);
+  assert.equal(dxyz.openai.subsequentPurchasesUsd, 25_000_000);
   const ppu = dxyz.openai.exclusions.find((e) => e.holding.includes("PPU"));
   assert.ok(ppu);
-  assert.equal(ppu.reportedFairValue, 7_735_911.09);
+  assert.equal(ppu.reportedFairValue, 9_466_554.72);
 });
 
 test("combined per $100 is the sum of the two legs", () => {

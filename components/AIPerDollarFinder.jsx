@@ -592,7 +592,7 @@ export default function AIPerDollarFinder() {
         <div style={styles.controls} className="vcx-controls ai-controls">
           {anthScenario.priceMode ? null : <AssumptionControl label="Anthropic FD shares (millions, pre-split; legacy s1)" value={anthFdShares / 1e6} onChange={n => setAnthFdShares(n * 1e6)} config={CAPITALIZATION.anthropic} unitScale={1e6} suffix="Shares" postSplitFactor={ANTH_SPLIT_FACTOR} />}
           <AssumptionControl label="OpenAI FD shares (millions)" value={oaiFdShares / 1e6} onChange={n => setOaiFdShares(n * 1e6)} config={CAPITALIZATION.openai} unitScale={1e6} suffix="Shares" />
-          <AssumptionControl label="DXYZ August OpenAI entry price ($)" value={dxyzOaiEntryPrice} onChange={setDxyzOaiEntryPrice} config={CAPITALIZATION.dxyzOpenaiEntry} unitScale={1} suffix="Price" />
+          <AssumptionControl label="DXYZ Oct 13 OpenAI Series D entry price ($)" value={dxyzOaiEntryPrice} onChange={setDxyzOaiEntryPrice} config={CAPITALIZATION.dxyzOpenaiEntry} unitScale={1} suffix="Price" />
         </div>
         <p style={styles.caption}>
           Implied scenario prices: Anthropic ${unitPrice({ valuation: anthVal, fdShares: anthScenario.anthFdShares, dilution }).toFixed(2)} per pre-split unit · ${(unitPrice({ valuation: anthVal, fdShares: anthScenario.anthFdShares, dilution }) / ANTH_SPLIT_FACTOR).toFixed(2)} per ANT share after dilution (10-for-1 split, S-1 p. 22){anthScenario.priceMode ? ` · implied $${(anthVal / 1e12).toFixed(3)}T ${basisLabel(anthShareBasis, anthPrice)}` : ` · legacy $${(anthVal / 1e12).toFixed(3)}T on the s1 FD`}; OpenAI ${unitPrice({ valuation: oaiVal, fdShares: oaiFdShares, dilution }).toFixed(2)} / share. The August lot is included only in Estimated Holdings.
@@ -624,11 +624,11 @@ export default function AIPerDollarFinder() {
       </div>
       {basis === BASIS_ESTIMATED ? (
         <div style={styles.estBanner}>
-          Estimated Holdings adds DXYZ’s August $150M cash-funded OpenAI purchase and estimated ATM issuance; ARKVX uses an inflow proxy and VCX rolls measurement marks. Both valuation sliders revalue these holdings. Strategic records retain their individual historical, pro forma or estimated basis.
+          Estimated Holdings adds DXYZ’s October 13 $25M cash-funded OpenAI Series D purchase (the August $150M lot is now inside the September 30 filing) and estimated ATM issuance, fees and money-market interest since September 30; ARKVX uses an inflow proxy and VCX rolls measurement marks. Both valuation sliders revalue these holdings. Strategic records retain their individual historical, pro forma or estimated basis.
         </div>
       ) : (
         <p style={styles.caption}>
-          Filed Holdings uses filed fund quantities and denominators, revalued under your scenario. No August DXYZ acquisition or post-filing ATM issuance. Anthropic’s FD share count is from the Form S-1 (p. 13); OpenAI’s FD count remains an estimate; strategic rows retain the basis shown on each leg.
+          Filed Holdings uses filed fund quantities and denominators, revalued under your scenario. No post-9/30 DXYZ acquisition or post-filing ATM issuance (DXYZ is on its September 30, 2026 NPORT-P). Anthropic’s share bases are from S-1/A No. 2; OpenAI’s FD count remains an estimate; strategic rows retain the basis shown on each leg.
         </p>
       )}
       {basis === BASIS_ESTIMATED ? (

@@ -88,7 +88,7 @@ test("README generated worked example matches data/ + fixtures", () => {
   const ex = dxyzAnthropicWorkedExample();
   const dxyz = expectedResults.rows.find((r) => r.ticker === "DXYZ");
   assert.equal(ex.basis, "filed-units");
-  assert.equal(ex.reportedFairValue, 235671976.08);
+  assert.equal(ex.reportedFairValue, 382879608.72);
   assert.equal(ex.filedUnits, 386088);
   assert.equal(ex.price, 32.84);
   assert.equal(ex.impliedExposure, ex.filedUnits / ex.fdShares);

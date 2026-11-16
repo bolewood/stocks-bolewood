@@ -86,13 +86,13 @@ test('Price-first: units legs ignore the share basis; only the GOOG ownership-% 
   assert.equal(dxyz.anthDetail.sensitivity, null);
 });
 
-test('FD changes inversely revalue DXYZ and SKM; August acquisition is independent', () => {
+test('FD changes inversely revalue DXYZ and SKM; the October OpenAI acquisition is independent', () => {
   const w=WRAPPERS.find(w=>w.ticker==='DXYZ');
   const p={...s1Estimated,deploy:'cash'};
   const baseline=app(w,p);
   const changed=app(w,{...p,anthVal:2000e9,oaiVal:3000e9,anthFdShares:2*p.anthFdShares,oaiFdShares:2*p.oaiFdShares});
-  const lot=r=>r.oaiDetail.lots.find(l=>l.id==='goanna-2026-08-13');
-  near(lot(baseline).units,150e6/(35040868.2/50895),'Acquisition units use full precision');
+  const lot=r=>r.oaiDetail.lots.find(l=>l.id==='goanna-2026-10-13');
+  near(lot(baseline).units,25e6/p.dxyzOaiEntryPrice,'Acquisition units use full precision');
   assert.equal(lot(changed).units,lot(baseline).units);
   assert.equal(app(w,filed).oaiDetail.lots.length,1);
   near(lot(app(w,{...p,dxyzOaiEntryPrice:2*p.dxyzOaiEntryPrice})).units,lot(baseline).units/2,'entry inverse');
@@ -101,8 +101,11 @@ test('FD changes inversely revalue DXYZ and SKM; August acquisition is independe
     near(app(wrapper,{...p,anthFdShares:2*p.anthFdShares}).anthPer100,app(wrapper,p).anthPer100/2,'FD inverse');
   }
   near(app(w,{...p,dxyzBridge:null}).scenarioNetAssets,app(w,{...readJson('reference/s1-fixtures.json'),dxyzBridge:null}).scenarioNetAssets,'Cash-to-equity is not new capital');
-  near(app(w,{...estimated,deploy:'cash',dxyzBridge:null,anthPrice:61.041036}).scenarioNetAssets,app(w,{...filed,dxyzBridge:null,anthPrice:61.041036}).scenarioNetAssets,'Cash-to-equity is not new capital (price-first)');
-  near(app(w,{...p,dxyzBridge:null,anthFdShares:1580904637.873207}).scenarioNetAssets,w.raw.filedSnapshot.netAssets,'Cash-to-equity is not new capital at June mark FD');
+  const atEntry={oaiFdShares:estimated.oaiVal/estimated.dxyzOaiEntryPrice};
+  near(app(w,{...estimated,...atEntry,deploy:'cash',dxyzBridge:null,anthPrice:99.169}).scenarioNetAssets,app(w,{...filed,...atEntry,dxyzBridge:null,anthPrice:99.169}).scenarioNetAssets,'Cash-to-equity is not new capital (price-first)');
+  // At the 9/30 marks (Anthropic $991.69/pre-split unit, Goanna $842.52, Oct lot at cost) the estimated book equals filed net assets.
+  const mark930={anthFdShares:p.anthVal/(382879608.72/386088),oaiFdShares:p.oaiVal/(226651360.32/269016),dxyzOaiEntryPrice:226651360.32/269016};
+  near(app(w,{...p,...mark930,dxyzBridge:null}).scenarioNetAssets,w.raw.filedSnapshot.netAssets,'Cash-to-equity is not new capital at the 9/30 mark FD');
   const noBridge=app(w,{...p,dxyzBridge:null});
   assert.ok(lot(noBridge)); // Purchase inclusion does not depend on ATM availability.
   assert.equal(noBridge.oaiDetail.lots.some(l=>l.units===11236),false);

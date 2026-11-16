@@ -371,7 +371,14 @@
           "key": "dxyzJune",
           "label": "DXYZ June mark $61.04",
           "price": 61.041036,
-          "citation": "DXYZ June 30, 2026 NPORT-P ($235,672,115 ÷ 386,088 = $610.41 per pre-split unit ÷ 10)"
+          "citation": "DXYZ June 30, 2026 NPORT-P ($235,671,976.08 ÷ 386,088 = $610.41 per pre-split unit ÷ 10). Superseded by the September 30 mark; kept for history.",
+          "archived": true
+        },
+        {
+          "key": "dxyzSept",
+          "label": "DXYZ 9/30 mark $99.17",
+          "price": 99.16900000000001,
+          "citation": "DXYZ September 30, 2026 NPORT-P ($382,879,608.72 ÷ 3,860,880 post-split share-equivalents = $99.17)"
         }
       ],
       "sources": [
@@ -482,12 +489,12 @@
     ]
   },
   "dxyzOpenaiEntry": {
-    "defaultPrice": 688.4933333333333,
-    "lowPrice": 516.37,
-    "highPrice": 860.6166666666667,
+    "defaultPrice": 842.52,
+    "lowPrice": 631.89,
+    "highPrice": 1053.15,
     "minPrice": 100,
     "maxPrice": 2000,
-    "method": "June preferred FV / units is an adjustable proxy for August common entry. ±25% stress choices are not transaction quotes. Estimated units = $150M / entry price; hold fixed as company valuation or FD changes.",
+    "method": "September 30 Goanna 26E FV / units ($842.52) is an adjustable proxy for the October 13 Series D entry. ±25% stress choices are not transaction quotes. Estimated units = $25.0M / entry price; held fixed as company valuation or FD changes.",
     "sources": [
       {
         "fields": [
@@ -496,13 +503,13 @@
           "highPrice"
         ],
         "sourceClass": "assumption",
-        "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/xslFormNPORT-P_X01/primary_doc.xml",
-        "measurementDate": "2026-06-30",
-        "publicationDate": "2026-08-28",
-        "asOf": "2026-06-30",
+        "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926030445/primary_doc.xml",
+        "measurementDate": "2026-09-30",
+        "publicationDate": "2026-11-16",
+        "asOf": "2026-09-30",
         "section": "See source note",
-        "note": "June preferred mark proxy for a different security and date; actual August units not disclosed.",
-        "estimationMethod": "June preferred mark proxy for a different security and date; actual August units not disclosed."
+        "note": "September 30 Goanna 26E mark ($226,651,360.32 / 269,016) as proxy for a different security (Series D) and date; October units not disclosed.",
+        "estimationMethod": "September 30 Goanna 26E mark ($226,651,360.32 / 269,016) as proxy for a different security (Series D) and date; October units not disclosed."
       },
       {
         "fields": [

@@ -8,7 +8,7 @@ import {
   SPCX_POST_SPLIT_SHARES,
   SPCX_SPLIT,
   SPCX_SPLIT_ADJUSTED_MARK_PPS,
-  SPCX_JUNE30_MARK_PPS,
+  SPCX_FILED_MARK_PPS,
   SPCX_YAHOO_SYMBOL,
   SPCX_VAL_USD_TOTAL,
   spcxPositionValue,
@@ -28,7 +28,7 @@ test("SpaceX 5-for-1 Unit Parity is after the 3/31 N-PORT and before the IPO", (
   assert.ok(SPCX_SPLIT.effective > "2026-03-31");
   assert.ok(SPCX_SPLIT.effective < "2026-06-12");
   assert.equal(SPCX_YAHOO_SYMBOL, "SPCX");
-  assert.equal(SPCX_POST_SPLIT_SHARES, 1_032_385);
+  assert.equal(SPCX_POST_SPLIT_SHARES, 1_032_390);
 });
 
 test("split-adjusted mark keeps the March 31 SpaceX dollar value", () => {
@@ -45,9 +45,9 @@ test("split-adjusted mark keeps the March 31 SpaceX dollar value", () => {
   );
 });
 
-test("June 30 underlying mark is $170.86 and live SPCX uses per-SPV carry", () => {
-  assert.equal(SPCX_JUNE30_MARK_PPS.toFixed(2), "170.86");
-  const live = 170.86;
+test("September 30 underlying mark is $150.86 and live SPCX uses per-SPV carry", () => {
+  assert.equal(SPCX_FILED_MARK_PPS.toFixed(2), "150.86");
+  const live = SPCX_FILED_MARK_PPS;
   assert.ok(Math.abs(spcxPositionValue(live) - SPCX_VAL_USD_TOTAL) < 1e-6);
   const higher = spcxPositionValue(180);
   assert.ok(higher > SPCX_VAL_USD_TOTAL);

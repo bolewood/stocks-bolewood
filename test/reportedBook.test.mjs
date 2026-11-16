@@ -55,18 +55,19 @@ test("book filenames carry the measurement date and accession or source id", () 
   for (const file of files) {
     assert.match(file, /^\d{4}-\d{2}-\d{2}__(?:\d{10}-\d{2}-\d{6}|[a-z0-9-]+)\.json$/);
   }
-  assert.equal(snapshots.length, 9);
+  assert.equal(snapshots.length, 11);
 });
 
 test("DXYZ June 30 reconciles to the filed ledger", () => {
+  // Historical book: June 30 N-CSRS literals (the live ledger is now 9/30).
   const june = book("DXYZ", "2026-06-30");
-  assert.equal(june.netAssets, FILED.netAssets);
+  assert.equal(june.netAssets, 1_634_830_252);
   assert.equal(june.navPerShare, 34.3);
-  assert.equal(june.sharesOutstanding, FILED.sharesOutstanding);
+  assert.equal(june.sharesOutstanding, 47_657_338);
   const lines = positionsByCompany(june, companyMap);
-  assert.equal(lines.get("anthropic").fairValue, ANTHROPIC_SPV.valUSD);
-  assert.equal(lines.get("openai").fairValue, OPENAI_EQUITY_SPV.valUSD);
-  assert.equal(lines.get("money-market").fairValue, MONEY_MARKET.valUSD);
+  assert.equal(lines.get("anthropic").fairValue, 235_671_976.08);
+  assert.equal(lines.get("openai").fairValue, 35_040_868.2);
+  assert.equal(lines.get("money-market").fairValue, 939_712_701);
   assert.ok(lines.get("unitemized").fairValue > 40_000_000);
   assert.equal(lines.has("boom"), false);
   assert.equal(lines.has("ai-llm"), false);
@@ -79,13 +80,13 @@ test("DXYZ OpenAI is 2.14% on June 30 and 11.32% after the cash transfer", () =>
   const august = book("DXYZ", "2026-08-13");
   const juneWeight = weight(june, "openai");
   const augustWeight = weight(august, "openai");
-  assert.ok(Math.abs(juneWeight - 35_040_868.2 / FILED.netAssets) < 1e-12);
-  assert.ok(Math.abs(augustWeight - (35_040_868.2 + 150_000_000) / FILED.netAssets) < 1e-12);
+  assert.ok(Math.abs(juneWeight - 35_040_868.2 / june.netAssets) < 1e-12);
+  assert.ok(Math.abs(augustWeight - (35_040_868.2 + 150_000_000) / june.netAssets) < 1e-12);
   assert.ok(juneWeight < 0.03 && augustWeight > 0.11);
   assert.equal(weight(june, "anthropic"), weight(august, "anthropic"));
   assert.equal(
     positionsByCompany(august, companyMap).get("money-market").fairValue,
-    MONEY_MARKET.valUSD - 169_000_000
+    939_712_701 - 169_000_000
   );
   assert.equal(august.navPerShare, june.navPerShare);
   assert.equal(august.netAssets, june.netAssets);
@@ -135,14 +136,14 @@ test("price formulas use reported NAV and refuse a portfolio-mix percent", () =>
   assert.equal(fundPremium(marketing, 12), null);
 });
 
-test("the current DXYZ book is the August transfer, and June stays available", () => {
+test("the current DXYZ book is the Nov 4 post-deal view, and earlier books stay available", () => {
   const series = fundSeries(snapshots, "DXYZ");
-  assert.deepEqual(series.map((snapshot) => snapshot.measurementDate), ["2026-06-30", "2026-08-13"]);
+  assert.deepEqual(series.map((snapshot) => snapshot.measurementDate), ["2026-06-30", "2026-08-13", "2026-09-30", "2026-11-04"]);
   const current = series.at(-1);
   const prior = priorInSeries(series, current);
-  assert.equal(current.measurementDate, "2026-08-13");
-  assert.equal(prior.measurementDate, "2026-06-30");
-  const diff = diffBooks(prior, current, { price: 33, companies: companyMap });
+  assert.equal(current.measurementDate, "2026-11-04");
+  assert.equal(prior.measurementDate, "2026-09-30");
+  const diff = diffBooks(prior, current, { price: 27, companies: companyMap });
   assert.equal(diff.comparable, true);
   assert.equal(diff.navPerShare.previous, diff.navPerShare.next);
   assert.ok(Math.abs(diff.premiumAtPrice.previous - diff.premiumAtPrice.next) < 1e-12);
@@ -150,7 +151,7 @@ test("the current DXYZ book is the August transfer, and June stays available", (
   assert.equal(diff.changed.some((row) => row.companyId === "anthropic"), false);
   assert.deepEqual(
     diff.added.map((row) => row.companyId).sort(),
-    ["boom", "fluidstack"]
+    ["blue-origin", "blykalla", "together-ai", "varda"]
   );
   assert.equal(diff.removed.length, 0);
 });
@@ -341,4 +342,28 @@ test("basket uses reported fair value per dollar of market price", () => {
   );
   assert.deepEqual(skipped.skipped, ["DXYZ"]);
   assert.match(bookCsv([{ company: "OpenAI", ticker: "DXYZ" }]), /^company,companyId,/);
+});
+
+test("DXYZ September 30 book reconciles to the 9/30 ledger; the Nov 4 book adds the five deals at cost", () => {
+  const sept = book("DXYZ", "2026-09-30");
+  const nov = book("DXYZ", "2026-11-04");
+  assert.equal(sept.netAssets, FILED.netAssets);
+  assert.equal(sept.navPerShare, 38.32);
+  assert.equal(sept.sharesOutstanding, FILED.sharesOutstanding);
+  const lines = positionsByCompany(sept, companyMap);
+  assert.equal(lines.get("anthropic").fairValue, ANTHROPIC_SPV.valUSD);
+  assert.equal(lines.get("openai").fairValue, OPENAI_EQUITY_SPV.valUSD);
+  assert.equal(lines.get("money-market").fairValue, MONEY_MARKET.valUSD);
+  assert.ok(Math.abs(weight(sept, "anthropic") - 0.2096) < 0.0001);
+  const sum = (b) => b.lines.reduce((total, line) => total + line.fairValue, 0);
+  assert.ok(Math.abs(sum(sept) - sept.netAssets) < 0.05);
+  assert.ok(Math.abs(sum(nov) - nov.netAssets) < 0.05);
+  assert.equal(nov.navAsOf, "2026-09-30");
+  assert.equal(nov.unknownDilution, true);
+  assert.equal(positionsByCompany(nov, companyMap).get("money-market").fairValue, MONEY_MARKET.valUSD - 112_000_000);
+  assert.equal(positionsByCompany(nov, companyMap).get("openai").fairValue, OPENAI_EQUITY_SPV.valUSD + 25_000_000);
+  for (const id of ["blue-origin", "varda", "together-ai", "blykalla"]) {
+    const line = nov.lines.find((l) => l.companyId === id);
+    assert.equal(line.valuation, "cost", id);
+  }
 });

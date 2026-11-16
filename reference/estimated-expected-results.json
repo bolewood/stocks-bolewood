@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.4.0",
   "methodologyVersion": "1.4.0",
-  "datasetAsOf": "2026-11-10",
+  "datasetAsOf": "2026-11-16",
   "priceAsOf": "2026-08-19",
   "asOf": "2026-11-10",
   "anthPrice": 74,
@@ -13,7 +13,7 @@
   "deploy": "range",
   "anthFdShares": 1801299338.1,
   "oaiFdShares": 1237484749.31,
-  "dxyzOaiEntryPrice": 688.493333333,
+  "dxyzOaiEntryPrice": 842.52,
   "rows": [
     {
       "ticker": "GOOG",
@@ -252,28 +252,28 @@
     {
       "ticker": "DXYZ",
       "price": 32.84,
-      "shares": 48076389.9554,
-      "sharesAsOf": "2026-09-04",
-      "wrapperValue": 1578828646.14,
+      "shares": 47657338,
+      "sharesAsOf": "2026-11-16",
+      "wrapperValue": 1565066979.92,
       "anthBasis": "filed-units",
       "oaiBasis": "filed-units",
       "anthPct": 0.000214338612042,
-      "oaiPct": 0.000217184117606,
-      "anthPer100": 18.0960182537,
-      "oaiPer100": 11.7201362322,
-      "anthPer100High": 18.1731875436,
-      "oaiPer100High": 11.729600812,
-      "combinedPer100": 29.8161544859,
-      "combinedPer100High": 29.9027883557,
+      "oaiPct": 0.000241367731013,
+      "anthPer100": 18.2551369153,
+      "oaiPer100": 13.1397128341,
+      "anthPer100High": 18.2551369153,
+      "oaiPer100High": 13.1397128341,
+      "combinedPer100": 31.3948497494,
+      "combinedPer100High": 31.3948497494,
       "anthUnits": 386088,
-      "oaiUnits": 268762.033329,
+      "oaiUnits": 298688.886104,
       "anthLots": [
         {
           "id": "filed",
           "label": "Magnitude ANC III — Anthropic Series B preferred equivalents",
           "units": 386088,
-          "carryingValue": 235671976.08,
-          "asOf": "2026-06-30",
+          "carryingValue": 382879608.72,
+          "asOf": "2026-09-30",
           "evidence": "filed",
           "scenarioValue": 285705120
         }
@@ -281,34 +281,34 @@
       "oaiLots": [
         {
           "id": "filed",
-          "label": "Goanna Capital 26E — June Series C preferred equivalents",
-          "units": 50895,
-          "carryingValue": 35040868.2,
-          "asOf": "2026-06-30",
+          "label": "Goanna Capital 26E — Series C preferred and Class A common equivalents (9/30)",
+          "units": 269016,
+          "carryingValue": 226651360.32,
+          "asOf": "2026-09-30",
           "evidence": "filed",
-          "scenarioValue": 35040868.2
+          "scenarioValue": 185215722.56
         },
         {
-          "id": "goanna-2026-08-13",
-          "label": "Class A Common via Goanna Capital 26E",
-          "units": 217867.033329,
-          "carryingValue": 150000000,
-          "entryPrice": 688.493333333,
-          "asOf": "2026-08-13",
+          "id": "goanna-2026-10-13",
+          "label": "Series D Preferred via Goanna Capital 26E",
+          "units": 29672.8861036,
+          "carryingValue": 25000000,
+          "entryPrice": 842.52,
+          "asOf": "2026-10-13",
           "evidence": "estimate",
-          "scenarioValue": 150000000
+          "scenarioValue": 20429584.2631
         }
       ],
       "anthPps": 740,
       "oaiPps": 688.493333333,
       "anthSensitivity": null,
       "oaiSensitivity": {
-        "low": 7.85599468717,
-        "high": 19.8493880279
+        "low": 10.3029144468,
+        "high": 18.0997721691
       },
-      "nav": 34.1498577687,
-      "premium": -0.0383561705466,
-      "scenarioNetAssets": 1691835022.93
+      "nav": 38.2460650664,
+      "premium": -0.141349575623,
+      "scenarioNetAssets": 1679525107.82
     },
     {
       "ticker": "ARKVX",

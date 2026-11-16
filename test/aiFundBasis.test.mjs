@@ -54,8 +54,8 @@ test("DXYZ ESTIMATED shares equal computeAtmBridge on the same rows", () => {
     dxyzBridge: fromHelper,
   });
   assert.equal(filed.shares, impliedFiledShares());
-  assert.equal(filed.oaiFv, 35_040_868.2);
-  assert.equal(est.oaiFv, 35_040_868.2 + 150_000_000);
+  assert.equal(filed.oaiFv, 226_651_360.32);
+  assert.equal(est.oaiFv, 226_651_360.32 + 25_000_000);
 });
 
 test("ARKVX ESTIMATED cash combined is ~$12.63 at the fallback NAV (S-1 FD denominator)", () => {
