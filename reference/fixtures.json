@@ -1,7 +1,7 @@
 {
   "asOf": "2026-11-10",
   "dataset": "s1a2",
-  "note": "Price-first s1a2 fixture: ANT $74.00 (S-1/A No. 2 range midpoint, cover and p. 24) on the fully diluted basis (18,012,993,381 at $74, S-1/A No. 2 p. 24) for the displayed $T; per-$100 values are units × price and do not depend on the basis. Historical frozen wrapper prices dated August 19 (not a knowable-as-of backtest). OpenAI unchanged.",
+  "note": "Price-first s1a2 fixture: ANT $74.00 (S-1/A No. 2 range midpoint, cover and p. 24) on the fully diluted basis (18,012,993,381 at $74, S-1/A No. 2 p. 24) for the displayed $T; per-$100 values are units × price and do not depend on the basis. Historical frozen wrapper prices dated August 19 (not a knowable-as-of backtest). OpenAI unchanged. DXYZ: the frozen August 19 price is paired with the September 30, 2026 filed NAV (dataset 2026-11-16); this is a deliberately frozen test vector, not a live premium.",
   "anthPrice": 74,
   "anthShareBasis": "fullyDiluted",
   "oaiVal": 852000000000,

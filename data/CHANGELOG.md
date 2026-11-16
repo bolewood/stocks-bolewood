@@ -10,6 +10,7 @@ Typed entries: **Data update** · **Correction** · **Methodology change** · **
 - `capitalization.dxyzOpenaiEntry`: default $842.52 (9/30 Goanna mark), ±25% stresses; the $688.49 June proxy is retired. `anthropic.ipo.scenarioPresets`: added `dxyzSept` ($99.17); `dxyzJune` ($61.04) archived (hidden, kept for history; its citation's FV typo $235,672,115 corrected to $235,671,976.08).
 - `data/books/DXYZ`: added `2026-09-30` (NPORT-P) and `2026-11-04` (post-deal, at cost) books. `data/companies.json`: EnduroSat, Synchron, Blue Origin, Varda Space Industries, Together AI, Blykalla.
 - `data/private-tape.json`: as of 2026-09-30; Anthropic $382.88M and SpaceX $152.87M (three SPVs + 109,525 direct Class A shares) of $1,636.2M; sleeve weights 71.5% / 28.5% (June 57.7% / 42.3%).
+- `data/disclosure.json`: `asOf` 2026-11-16, positions unchanged.
 - `app/api/dxyz-history/snapshot.json` refreshed through the 2026-11-16 close. Reference fixtures: current fixtures use the $842.52 entry default; estimated fixtures (including `s1-estimated`) carry a bridge re-based on 9/30 from history captured 2026-11-16. Only DXYZ rows changed in all four expected-results files.
 
 ### Methodology change
