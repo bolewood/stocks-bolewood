@@ -240,7 +240,7 @@ export default function DXYZChartWall() {
           </section>
 
           <footer>
-            <p>Position values are this page&apos;s default marks (June 30, 2026 N-CSRS baseline, live SPCX for SpaceX at the time of the snapshot). OpenAI combines the June equity lot ($35.0M), the Aug 13 purchase at cost ($150.0M) and PPUs ($7.7M). Fluidstack and the Boom SAFE are held at cost.</p>
+            <p>This wall is a dated capture (Oct 1, 2026) and does not reflect the September 30 roll above; its tile weights use the June 30 baseline. Position values were this page&apos;s default marks at the time (June 30, 2026 N-CSRS baseline, live SPCX for SpaceX at the time of the snapshot). OpenAI combines the June equity lot ($35.0M), the Aug 13 purchase at cost ($150.0M) and PPUs ($7.7M). Fluidstack and the Boom SAFE are held at cost.</p>
             <p>Charts are Notice.co&apos;s 2Y view, screenshotted Oct 1, 2026. Notice prices are algorithmic estimates from secondary and reference data. The percent on each card is the change Notice shows over the visible window. Fluidstack and CHAOS histories start partway through the two years. Beast Industries and Ferox Games have no Notice page.</p>
             <p>Boom&apos;s cliff in early 2026 is probably a share-basis change (recap or new share class) in Notice&apos;s series rather than a 97% loss. Treat that chart with caution.</p>
           </footer>

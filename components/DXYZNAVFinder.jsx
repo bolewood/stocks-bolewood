@@ -136,6 +136,7 @@ export default function DXYZNAVFinder() {
   // Market price: a labelled Yahoo quote, else the last completed close from
   // the daily history feed (never a silent hardcoded fallback; see lib/dxyzPrice.mjs).
   const [dxyzQuote, setDxyzQuote] = useState(null);
+  const [quoteSettled, setQuoteSettled] = useState(false);
   const [dxyzManual, setDxyzManual] = useState(null);
   const [liveSpcx, setLiveSpcx] = useState(null);
   const [liveAnt, setLiveAnt] = useState(null);
@@ -334,6 +335,7 @@ export default function DXYZNAVFinder() {
         // Per-ticker quotes carry quoteAsOf + fallback flags; older payloads
         // without `quotes` are treated as unlabelled (→ last close).
         setDxyzQuote(data.quotes?.DXYZ ?? null);
+        setQuoteSettled(true);
         const spcxQ = data.quotes?.SPCX;
         if (spcxQ && !spcxQ.isFallback && spcxQ.price > 0) {
           setLiveSpcx(spcxQ.price);
@@ -350,7 +352,7 @@ export default function DXYZNAVFinder() {
           }
         }
       },
-      onError: () => setDxyzQuote(null),
+      onError: () => { setDxyzQuote(null); setQuoteSettled(true); },
     });
   }, []);
 
@@ -391,8 +393,8 @@ export default function DXYZNAVFinder() {
     [dxyzQuote, historyRows, historySource]
   );
   const dxyzPrice = dxyzManual ?? priceInfo.price ?? LAST_SNAPSHOT_CLOSE?.close ?? 0;
-  const priceChip = dxyzManual != null ? "● MANUAL" : dxyzPriceChip(priceInfo);
-  const priceOk = dxyzManual != null || ["live", "cached", "close"].includes(priceInfo.state);
+  const priceChip = dxyzManual != null ? "● MANUAL" : !quoteSettled && priceInfo.state === "last-close" ? `○ LAST CLOSE ${priceInfo.asOfLabel.replace(" close", "")} · loading quote` : dxyzPriceChip(priceInfo);
+  const priceOk = dxyzManual != null || !quoteSettled || ["live", "cached", "close"].includes(priceInfo.state);
   const anthDiscount = Math.min(Math.max((parseFloat(anthDiscountPct) || 0) / 100, 0), 0.95);
 
   const calc = useMemo(() => calculateDxyzNav({
