@@ -490,17 +490,26 @@ test("simulatePostMay ignores rows before the program start date", () => {
   assert.equal(withPre.gross, withoutPre.gross);
 });
 
+// Post-9/30 rows above the $38.32 NAV so issuance (and its half-weight in the fee base) is exercised.
+const OCT_ABOVE_NAV = [
+  { date: "2026-10-05", close: 50, volume: 2_000_000 },
+  { date: "2026-10-15", close: 50, volume: 2_000_000 },
+];
+
 test("expense drag accrues at rate × days/365 × average assets and lowers NAV", () => {
   const noDrag = computeAtmBridge({
     mode: "calibrated",
-    rows: snapshot.rows,
+    rows: OCT_ABOVE_NAV,
+    participation: 0.08,
     expenseDragAnnualRate: 0,
   });
   const withDrag = computeAtmBridge({
     mode: "calibrated",
-    rows: snapshot.rows,
+    rows: OCT_ABOVE_NAV,
+    participation: 0.08,
     expenseDragAnnualRate: 0.025,
   });
+  assert.ok(withDrag.postMay.net > 0);
   assert.equal(noDrag.drag, 0);
   assert.ok(withDrag.drag > 0);
   // Fee base is GROSS assets: marked net assets + filed liabilities.
@@ -536,7 +545,7 @@ test("degenerate baselines are guarded: zero shares and re-marked net assets", (
 test("custom overrides are respected", () => {
   const b = computeAtmBridge({
     mode: "custom",
-    rows: snapshot.rows,
+    rows: OCT_ABOVE_NAV,
     aprMayShares: 5_000_000,
     aprMayAvgPrice: 40,
     participation: 0.05,
@@ -551,14 +560,15 @@ test("custom overrides are respected", () => {
   // a later as-of date can only add issuance
   const later = computeAtmBridge({
     mode: "custom",
-    rows: snapshot.rows,
+    rows: OCT_ABOVE_NAV,
     aprMayShares: 5_000_000,
     aprMayAvgPrice: 40,
     participation: 0.05,
     commissionRate: 0.01,
     expenseDragAnnualRate: 0,
   });
-  assert.ok(later.postMay.shares >= b.postMay.shares);
+  assert.ok(b.postMay.shares > 0);
+  assert.ok(later.postMay.shares > b.postMay.shares);
   assert.ok(later.asOfDate > b.asOfDate);
 });
 

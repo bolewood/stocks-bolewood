@@ -92,7 +92,8 @@ test('FD changes inversely revalue DXYZ and SKM; the October OpenAI acquisition 
   const baseline=app(w,p);
   const changed=app(w,{...p,anthVal:2000e9,oaiVal:3000e9,anthFdShares:2*p.anthFdShares,oaiFdShares:2*p.oaiFdShares});
   const lot=r=>r.oaiDetail.lots.find(l=>l.id==='goanna-2026-10-13');
-  near(lot(baseline).units,25e6/p.dxyzOaiEntryPrice,'Acquisition units use full precision');
+  near(lot(baseline).units,25e6/688.4933333333333,'Acquisition units use full precision (frozen s1 entry)');
+  near(lot(app(w,{...estimated,deploy:'cash'})).units,25e6/(226651360.32/269016),'Default entry is the unrounded 9/30 Goanna mark');
   assert.equal(lot(changed).units,lot(baseline).units);
   assert.equal(app(w,filed).oaiDetail.lots.length,1);
   near(lot(app(w,{...p,dxyzOaiEntryPrice:2*p.dxyzOaiEntryPrice})).units,lot(baseline).units/2,'entry inverse');

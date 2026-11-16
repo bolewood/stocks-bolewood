@@ -95,19 +95,20 @@ async function fetchLive(prev) {
   const ant = await loadAnt(Date.now());
   if (ant) quotes.ANT = ant;
   const antStale = !ant && !!quotes.ANT;
+  const anyLive = liveCount > 0 || Boolean(ant);
   const prices = Object.fromEntries(Object.entries(quotes).map(([k, q]) => [k, q.price]));
 
   const source =
     liveCount === TICKERS.length && !antStale
       ? "live"
-      : liveCount > 0
+      : anyLive
         ? "partial"
         : prev
           ? "cache"
           : "fallback";
 
   return {
-    ok: liveCount > 0,
+    ok: anyLive,
     payload: {
       prices: withAlias(prices),
       quotes,
@@ -131,10 +132,10 @@ export async function GET() {
     : payload.source;
   const now = Date.now();
   const quotes = Object.fromEntries(
-    Object.entries(payload.quotes || {}).map(([k, q]) => [
-      k,
-      { ...q, servedFromCache: servedFromCache || !!q.carriedFromCache, state: classifyQuote({ quoteAsOf: q.quoteAsOf, servedFromCache: servedFromCache || !!q.carriedFromCache, isFallback: q.isFallback }, now) },
-    ])
+    Object.entries(payload.quotes || {}).map(([k, { carriedFromCache, ...q }]) => {
+      const cached = servedFromCache || !!carriedFromCache;
+      return [k, { ...q, servedFromCache: cached, state: classifyQuote({ quoteAsOf: q.quoteAsOf, servedFromCache: cached, isFallback: q.isFallback }, now) }];
+    })
   );
   return NextResponse.json(
     {

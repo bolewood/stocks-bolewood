@@ -396,7 +396,7 @@ export default function DXYZNAVFinder() {
   }, []);
 
   const priceInfo = useMemo(
-    () => resolveDxyzPrice({ quote: dxyzQuote, servedFromCache: !!dxyzQuote?.servedFromCache, historyRows, historySource }),
+    () => resolveDxyzPrice({ quote: dxyzQuote, historyRows, historySource }),
     [dxyzQuote, historyRows, historySource]
   );
   const manualParsed = dxyzManualDraft == null ? null : parseFloat(dxyzManualDraft);
