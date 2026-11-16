@@ -1,4 +1,26 @@
-# Source changes — November 10, 2026 (methodology 1.4.0), October 26, 2026 (1.3.0) & September 5, 2026 (1.2.0)
+# Source changes — November 16, 2026 (DXYZ 9/30 roll), November 10, 2026 (methodology 1.4.0), October 26, 2026 (1.3.0) & September 5, 2026 (1.2.0)
+
+## Destiny Tech100 (DXYZ) September 30, 2026 filings — November 16, 2026
+
+NPORT-P ([XML](https://www.sec.gov/Archives/edgar/data/1843974/000089418926030445/primary_doc.xml), [schedule of investments](https://www.sec.gov/Archives/edgar/data/1843974/000089418926030445/destiny4.htm), `0000894189-26-030445`, accepted 2026-11-16 16:36:53, period 2026-09-30) and 424B3 Supplement No. 2 ([EDGAR](https://www.sec.gov/Archives/edgar/data/1843974/000157587226000797/dxyz106_424B3.htm), `0001575872-26-000797`, accepted 2026-11-16 16:45:57). Acceptance times are the "Accepted" field on each `-index.htm`. The schedule was parsed from the filing; the 55 XML lines sum to $1,636,202,777.61.
+
+| Record | Evidence | Change & superseded figure |
+| --- | --- | --- |
+| `wrappers/DXYZ.json` `filedSnapshot` | NPORT-P fundInfo; NPORT-EX totals; 424B3 NAV and ATM | NAV $38.32, net assets $1,826,366,694, investments $1,636,202,778 (cost $1,147,126,181), shares 47,657,338 (no Q3 ATM). **Supersedes** the June 30 N-CSRS ($34.30, $1,634,830,252). |
+| `DXYZ.anthropic` | Magnitude ANC III 386,088 units, valUSD $382,879,608.72 | $99.17 per ANT share. **Supersedes** $235,671,976.08 ($61.04). |
+| `DXYZ.openai` | Goanna 26E 269,016 units, $226,651,360.32; DXYZ OAI I $9,466,554.72 | $842.52/unit, August lot inside. **Supersedes** 50,895 units / $35,040,868.20 and the $150M August acquisition entry. |
+| `DXYZ.openai.acquisition`, `otherSubsequentPurchases` | 424B3 Portfolio Deployment Update (as of Nov 4) | Five deals, $112.0M at cost. **Removes** Fluidstack ($15.0M) and Boom SAFE ($4.0M) from the subsequent list (now in the schedule at $15,000,068 and $4,000,000). |
+| `lib/dxyzHoldings.mjs` SpaceX | SpaceX I 607,877 / $91,704,324.22; MWAM 172,558 / $23,152,698.91; Snowpoint 2.6 142,430 / $21,486,989.80; direct Class A 109,525 / $16,522,941.50 | In-kind distribution of 109,525 shares (−67,798 SpaceX I, −41,727 MWAM; cost $1,670,368 moved). |
+| `capitalization.dxyzOpenaiEntry` | 9/30 Goanna mark | $842.52 default. **Supersedes** $688.49. |
+
+### Figures in the update request that differ from the filing
+
+- OpenAI per-unit mark: $226,651,360.32 ÷ 269,016 = **$842.52**, not $842.53.
+- "Other Cash & Cash Equivalents" ($190,163,916 in the request) is the schedule's *other assets less liabilities*; gross cash outside investments is $200,111,559.36 (NPORT-P `cshNotRptdInCorD`), less liabilities $12,754,532.07, plus other assets $2,806,889.10. The 424B3's 10.9% is computed on its ~$1.84B portfolio including cash.
+- MWAM's $23.15M is reproduced by anchoring to the filed value; the bare 10% carry formula gives ≈$23.70M (see METHODOLOGY).
+- The 10/9 proxy record-date share count cited in the request was not checked against a proxy filing; the 47,657,338 count rests on the 424B3 (no Q3 ATM sales) and NAV arithmetic.
+
+---
 
 ## Anthropic S-1/A No. 1 and No. 2 — November 2 and 10, 2026 (v1.4.0)
 

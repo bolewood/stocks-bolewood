@@ -1,0 +1,300 @@
+{
+  "schemaVersion": "1.0.0",
+  "ticker": "DXYZ",
+  "name": "Destiny Tech100",
+  "vehicleType": "closed-end-fund",
+  "yahooSymbol": "DXYZ",
+  "premiumMode": "market",
+  "weightBasis": "net-assets",
+  "measurementDate": "2026-11-04",
+  "publicationDate": "2026-11-16",
+  "accession": "0001575872-26-000797",
+  "navAsOf": "2026-09-30",
+  "navPerShare": 38.32,
+  "netAssets": 1826366694,
+  "sharesOutstanding": 47657338,
+  "unknownDilution": true,
+  "dilutionNote": "ATM sales after September 30 are not yet filed; the share count is the September 30 figure.",
+  "note": "September 30 book after the five cash-funded deals in the November 16, 2026 424B3 (through November 4). New deals are at filed cost. Printed NAV stays $38.32 because no new NAV was struck. This file replaces the September 30 book as the current view. It does not get added to it.",
+  "sources": [
+    {
+      "fields": [
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "issuer": "Destiny Tech100 Inc.",
+      "filingType": "424B3",
+      "accession": "0001575872-26-000797",
+      "url": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000797/dxyz106_424B3.htm",
+      "measurementDate": "2026-11-04",
+      "publicationDate": "2026-11-16",
+      "section": "Portfolio Deployment Update"
+    },
+    {
+      "fields": [
+        "lines"
+      ],
+      "sourceClass": "assumption",
+      "accession": "0001575872-26-000797",
+      "url": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000797/dxyz106_424B3.htm",
+      "measurementDate": "2026-11-04",
+      "publicationDate": "2026-11-16",
+      "estimationMethod": "The five deals are carried at filed purchase cost and deducted from the money market. The 424B3 does not disclose fair values or unit counts. September 30 NAV per share is carried forward because the deals were funded from cash and no new NAV was struck.",
+      "section": "Portfolio Deployment Update"
+    },
+    {
+      "fields": [
+        "netAssets",
+        "sharesOutstanding",
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "issuer": "Destiny Tech100 Inc.",
+      "filingType": "NPORT-P",
+      "accession": "0000894189-26-030445",
+      "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926030445/primary_doc.xml",
+      "measurementDate": "2026-09-30",
+      "publicationDate": "2026-11-16",
+      "section": "Schedule of portfolio investments",
+      "note": "Cent-level fair values; net assets $1,826,366,694."
+    },
+    {
+      "fields": [
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "issuer": "Destiny Tech100 Inc.",
+      "filingType": "NPORT-EX",
+      "accession": "0000894189-26-030445",
+      "url": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926030445/destiny4.htm",
+      "measurementDate": "2026-09-30",
+      "publicationDate": "2026-11-16",
+      "section": "Schedule of investments"
+    },
+    {
+      "fields": [
+        "navPerShare",
+        "sharesOutstanding"
+      ],
+      "sourceClass": "primary",
+      "issuer": "Destiny Tech100 Inc.",
+      "filingType": "424B3",
+      "accession": "0001575872-26-000797",
+      "url": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000797/dxyz106_424B3.htm",
+      "measurementDate": "2026-09-30",
+      "publicationDate": "2026-11-16",
+      "section": "Net Asset Value; At-the-Market Offering",
+      "note": "NAV $38.32; no ATM sales July 1–September 30, so the June 30 share count (47,657,338) carries."
+    }
+  ],
+  "lines": [
+    {
+      "companyId": "anthropic",
+      "fairValue": 382879608.72,
+      "role": "holding",
+      "label": "Magnitude ANC III, LLC",
+      "note": "Magnitude ANC III: 386,088 pre-split Series B equivalents (3,860,880 ANT). Filed fair value, $99.17 per ANT share. 0% carry is inside that figure."
+    },
+    {
+      "companyId": "openai",
+      "fairValue": 226651360.32,
+      "role": "holding",
+      "label": "Goanna Capital 26E LLC",
+      "note": "Series C preferred + Class A common via Goanna Capital 26E, 269,016 units incl. the August 13 lot. Profit participation units are a separate row."
+    },
+    {
+      "companyId": "openai",
+      "fairValue": 25000000,
+      "role": "holding",
+      "label": "Goanna Capital 26E — October 13 Series D",
+      "valuation": "cost",
+      "note": "Filed purchase cost; units and fair value not disclosed."
+    },
+    {
+      "companyId": "spacex",
+      "fairValue": 152866954.43,
+      "role": "holding",
+      "label": "DXYZ SpaceX I, MWAM VC SpaceX-II, Snowpoint Growth 2.6, direct Class A",
+      "note": "Sum of the three filed SPV fair values plus 109,525 Class A shares held directly after an in-kind SPV distribution. Not the live SPCX quote. Carry is inside the filed figure."
+    },
+    {
+      "companyId": "revolut",
+      "fairValue": 17235990,
+      "role": "holding",
+      "note": "Common stock (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "discord",
+      "fairValue": 788018,
+      "role": "holding",
+      "note": "Common 10,690 + Series G 13,110 (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "klarna",
+      "fairValue": 457488,
+      "role": "holding",
+      "note": "Common stock (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "chime",
+      "fairValue": 1619312,
+      "role": "holding",
+      "note": "Chime Financial Inc. common (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "flexport",
+      "fairValue": 76700,
+      "role": "holding",
+      "note": "Common stock (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "openevidence",
+      "fairValue": 35365149,
+      "role": "holding",
+      "note": "SP21Z Opportunities LLC (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "shield-ai",
+      "fairValue": 31925088,
+      "role": "holding",
+      "note": "Snowpoint Growth 2.5, LLC (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "ferox",
+      "fairValue": 26085652,
+      "role": "holding",
+      "note": "Hexagon Master LLC Series 1 (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "databricks",
+      "fairValue": 24263484,
+      "role": "holding",
+      "note": "DA-1125 Gaingels + MCTC Series L (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "erebor",
+      "fairValue": 19999994,
+      "role": "holding",
+      "note": "Series C preferred, acquired 2026-09-18 (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "tenstorrent",
+      "fairValue": 18356156,
+      "role": "holding",
+      "note": "Prive Tens, LLC — Series E-1/E-2 preferred (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "chaos",
+      "fairValue": 15712254,
+      "role": "holding",
+      "note": "WH Strategic Opportunities Fund V (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "fluidstack",
+      "fairValue": 15000068,
+      "role": "holding",
+      "note": "Magnitude FSTK, LLC — Series B, acquired 2026-07-16 (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "hermeus",
+      "fairValue": 15000000,
+      "role": "holding",
+      "note": "Series C preferred (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "beast",
+      "fairValue": 14999990,
+      "role": "holding",
+      "note": "Series C preferred (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "mercury",
+      "fairValue": 14999987,
+      "role": "holding",
+      "note": "Series D preferred (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "skild",
+      "fairValue": 10358226,
+      "role": "holding",
+      "note": "Series C preferred (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "endurosat",
+      "fairValue": 9800000,
+      "role": "holding",
+      "note": "Emphatic Partner Capital Kochav L.P. — Series C, acquired 2026-08-27 (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "synchron",
+      "fairValue": 7701109,
+      "role": "holding",
+      "note": "Common $2.70M (2026-09-04) + Series D $5.00M (2026-09-23) (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "boom",
+      "fairValue": 5894943,
+      "role": "holding",
+      "note": "Series B-2 $1.89M + SAFE $4.00M (2026-08-04) (NPORT-EX 9/30)"
+    },
+    {
+      "companyId": "openai-ppu",
+      "fairValue": 9466554.72,
+      "role": "holding",
+      "label": "DXYZ OAI I LLC",
+      "note": "DXYZ OAI I profit participation units — not equity; in NAV, excluded from /ai IPO scaling"
+    },
+    {
+      "companyId": "money-market",
+      "fairValue": 417644689,
+      "role": "cash",
+      "label": "First American Treasury Obligations",
+      "note": "September 30 money market less 112.0M of deals through November 4 (assumed funded from the money market)."
+    },
+    {
+      "companyId": "unitemized",
+      "fairValue": 49054002.81,
+      "role": "residual",
+      "note": "Residual of September 30 investments after the named lines, so the column sums to net assets."
+    },
+    {
+      "companyId": "other-net-assets",
+      "fairValue": 190163916,
+      "role": "cash",
+      "label": "Other cash & equivalents (net)",
+      "note": "Other assets less liabilities on the 9/30 schedule: cash outside investments $200.1M + other assets $2.8M − liabilities $12.8M. The 424B3 labels it Other Cash & Cash Equivalents."
+    },
+    {
+      "companyId": "blue-origin",
+      "fairValue": 25000000,
+      "role": "holding",
+      "label": "Paladin Cyber Co-Invest Fund III, LLC - Series #3 (economic exposure to Blue Heavy Industries, L.P. preferred LP units; Blue Origin parent)",
+      "valuation": "cost",
+      "note": "2026-10-14. Filed purchase cost; no fair value disclosed."
+    },
+    {
+      "companyId": "varda",
+      "fairValue": 24800000,
+      "role": "holding",
+      "label": "Transform Ventures Investment LP (Varda Space Industries Series E Preferred)",
+      "valuation": "cost",
+      "note": "2026-10-16. Filed purchase cost; no fair value disclosed."
+    },
+    {
+      "companyId": "together-ai",
+      "fairValue": 20000000,
+      "role": "holding",
+      "label": "Together SPV III, a series of TechAviv Purpose, L.P. (Together Computer, Inc. common)",
+      "valuation": "cost",
+      "note": "2026-10-30. Filed purchase cost; no fair value disclosed."
+    },
+    {
+      "companyId": "blykalla",
+      "fairValue": 17200000,
+      "role": "holding",
+      "label": "Blykalla AB (direct)",
+      "valuation": "cost",
+      "note": "2026-10-30. Filed purchase cost; no fair value disclosed."
+    }
+  ]
+}

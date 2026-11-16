@@ -228,7 +228,7 @@ export function validateWrapper(wrapper, { marks, capitalization } = {}) {
     validateCapitalization(capitalization);
     for (const side of ['anthropic', 'openai']) {
       if (wrapper[side]?.basis === 'filed-units' && !capitalization[side]?.method) fail(t, `${side} FD model required`);
-      if (wrapper[side]?.acquisition?.entryPriceModel && wrapper[side].acquisition.entryPriceModel !== 'dxyz-openai-august-entry') fail(t, 'unknown acquisition entry-price model');
+      if (wrapper[side]?.acquisition?.entryPriceModel && !['dxyz-openai-august-entry', 'dxyz-openai-october-entry'].includes(wrapper[side].acquisition.entryPriceModel)) fail(t, 'unknown acquisition entry-price model');
     }
   }
 

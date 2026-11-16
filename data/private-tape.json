@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
   "methodologyVersion": "0.1.3",
-  "asOf": "2026-06-30",
-  "dxyzFiledPortfolioValue": 1640039144,
+  "asOf": "2026-09-30",
+  "dxyzFiledPortfolioValue": 1636202778,
   "modeledAssetsNote": "Private Tape models only DXYZ's filed Anthropic and SpaceX exposure. Anthropic is a private/pre-IPO tape; SpaceX is now a public SPCX tape whose DXYZ SPV read-through may lag public marks. This is not a full DXYZ NAV model.",
   "marketStructureNote": "Anthropic remains a private/pre-IPO market input via Entropy/Hyperliquid. SpaceX began public trading under SPCX on Nasdaq on 2026-06-12, so xyz:SPCX is treated as a 24/7 public-equity/perp tape, not pre-IPO price discovery.",
   "assets": {
@@ -11,18 +11,18 @@
       "hyperliquidCoin": "io:ANTH",
       "tapeRole": "private_pre_ipo_perp",
       "quoteUnit": "usd_billions_implied_valuation",
-      "filedPortfolioWeight": 0.1436989945893633,
-      "filedExposureUsd": 235671976.08,
-      "source": "DXYZ June 30, 2026 NPORT-P: Magnitude ANC III, LLC 386,088 units at $235,671,976.08 (accession 0000894189-26-024246)."
+      "filedPortfolioWeight": 0.2340049863428358,
+      "filedExposureUsd": 382879608.72,
+      "source": "DXYZ September 30, 2026 NPORT-P: Magnitude ANC III, LLC 386,088 units at $382,879,608.72 (accession 0000894189-26-030445)."
     },
     "spacex": {
       "name": "SpaceX",
       "hyperliquidCoin": "xyz:SPCX",
       "tapeRole": "public_equity_perp",
       "quoteUnit": "usd_per_share",
-      "filedPortfolioWeight": 0.10552258461826079,
-      "filedExposureUsd": 173061169.35,
-      "navReadThroughNote": "DXYZ's SpaceX exposure is held through SPVs. Public SPCX and xyz:SPCX moves can be useful tape, but DXYZ NAV may lag because of SPV conversion, lockups, distributions, and per-SPV carried interest (MWAM VC SpaceX-II 10%; SpaceX I and Snowpoint 2.6 0%).",
+      "filedPortfolioWeight": 0.09342787855234898,
+      "filedExposureUsd": 152866954.43,
+      "navReadThroughNote": "DXYZ's SpaceX exposure is held through SPVs. Public SPCX and xyz:SPCX moves can be useful tape, but DXYZ NAV may lag because of SPV conversion, lockups, distributions, and per-SPV carried interest (MWAM VC SpaceX-II 10%; SpaceX I, Snowpoint 2.6 and the directly held Class A shares 0%).",
       "publicListing": {
         "ticker": "SPCX",
         "exchange": "Nasdaq Global Select Market / Nasdaq Texas",
@@ -31,13 +31,13 @@
         "sharesOffered": 555555555,
         "source": "SpaceX June 11, 2026 IPO pricing release and Nasdaq Trader Data Technical News #2026-8."
       },
-      "source": "DXYZ June 30, 2026 NPORT-P: DXYZ SpaceX I $115,445,830.50 + MWAM VC SpaceX-II $33,280,603.35 + Snowpoint Growth 2.6 $24,334,735.50. Units are post 5:1 Unit Parity restatement."
+      "source": "DXYZ September 30, 2026 NPORT-P: DXYZ SpaceX I $91,704,324.22 + MWAM VC SpaceX-II $23,152,698.91 + Snowpoint Growth 2.6 $21,486,989.80 + 109,525 directly held Class A shares $16,522,941.50 (distributed in kind by the SPVs). Units are post 5:1 Unit Parity."
     }
   },
   "sources": {
-    "dxyzNport": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/primary_doc.xml",
+    "dxyzNport": "https://www.sec.gov/Archives/edgar/data/1843974/000089418926030445/primary_doc.xml",
     "dxyzNcsrs": "https://www.sec.gov/Archives/edgar/data/1843974/000121390026095201/ea0302101-01_ncsrs.htm",
-    "dxyz424b3": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm",
+    "dxyz424b3": "https://www.sec.gov/Archives/edgar/data/1843974/000157587226000797/dxyz106_424B3.htm",
     "hyperliquidInfoApi": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
     "hyperliquidRobustPrices": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/robust-price-indices",
     "hyperliquidHip3": "https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-improvement-proposals-hips/hip-3-builder-deployed-perpetuals",

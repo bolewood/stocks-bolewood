@@ -26,11 +26,12 @@ held through SPVs, so public SPCX moves may not flow through to DXYZ NAV one-for
 of conversion timing, lockups, distributions, and vehicle-level economics.
 
 The reusable assumptions live in `data/private-tape.json` and carry their own
-`methodologyVersion`. The first version models two DXYZ filed exposures as of 2026-06-30:
-Anthropic at $235,671,976.08 and SpaceX at $173,061,169.35 of the filed
-$1,640,039,144 portfolio (NPORT-P unit fair values). Those two filed weights
-are normalized inside the modeled sleeve. This is a two-asset tape sleeve only,
-not all of DXYZ NAV.
+`methodologyVersion`. It models two DXYZ filed exposures as of 2026-09-30:
+Anthropic at $382,879,608.72 and SpaceX at $152,866,954.43 (three SPVs plus the
+109,525 directly held Class A shares) of the filed $1,636,202,778 portfolio
+(NPORT-P unit fair values). Those two filed weights are normalized inside the
+modeled sleeve (Anthropic 71.5% / SpaceX 28.5%; June 30 was 57.7% / 42.3%).
+This is a two-asset tape sleeve only, not all of DXYZ NAV.
 
 Runtime analysis uses simple returns:
 
@@ -110,13 +111,13 @@ Therefore, `data/capitalization.json` keeps `anthropic.shareBasis: "pre-split"` 
 
 **Filed-units exposure** starts from a filed quantity of underlying or share-equivalent securities. A USD mark per pre-split unit, when available, is computed as `valUSD / units`. SKM's KRW book value remains in KRW and is not used as a USD mark.
 
-- DXYZ Anthropic: 386,088 pre-split Magnitude ANC III (Series B preferred) units, $235,671,976.08 ($610.41/pre-split unit, $61.04/ANT share), 0% carry. `ΔNAV/share = 386,088 ÷ 47,657,338 = $0.008101` per $1 of pre-split Anthropic price (`$0.08101` per $1 of post-split ANT share price). Under S-1 pp. 20, 309, Series B preferred converts into unlisted, non-voting Class N common stock, convertible into listed Class A common stock upon a "qualifying transfer."
-- DXYZ OpenAI equity: 50,895 Goanna Capital 26E units, $35,040,868.20, 0% carry. PPUs (11,236 units, $7,735,911.09) are excluded from this identity.
-- Carry is modeled **per-SPV**. MWAM VC SpaceX-II is 10%; Magnitude ANC III, DXYZ SpaceX I, Snowpoint Growth 2.6, and Goanna are 0%.
+- DXYZ Anthropic (September 30, 2026 NPORT-P): 386,088 pre-split Magnitude ANC III (Series B preferred) units = 3,860,880 post-split ANT share-equivalents, $382,879,608.72 ($991.69/pre-split unit, **$99.17/ANT share**), 0% carry, 20.96% of net assets. `ΔNAV/share = 3,860,880 ÷ 47,657,338 = $0.08101` per $1 of ANT price. Under S-1 pp. 20, 309, Series B preferred converts into unlisted, non-voting Class N common stock, convertible into listed Class A common stock upon a "qualifying transfer." (June 30: $235,671,976.08, $61.04/ANT share.)
+- DXYZ OpenAI equity (9/30): 269,016 Goanna Capital 26E units (Series C preferred + Class A common, including the August 13 lot), $226,651,360.32 = **$842.52/unit**, 0% carry. PPUs (11,236 units, $9,466,554.72) are excluded from this identity. (June 30: 50,895 units, $35,040,868.20.)
+- Carry is modeled **per-SPV**. MWAM VC SpaceX-II is 10%; Magnitude ANC III, DXYZ SpaceX I, Snowpoint Growth 2.6, the directly held SpaceX Class A shares, and Goanna are 0%.
 
 DXYZ's Level 3 table discloses volume-weighted secondary transaction prices, index prices, and recent transaction prices — not announced primary rounds. At March 31, 2026 Anthropic was marked $347.35/unit on the same 386,088 pre-split units, above the February Series G print ($259.14, S-1 p. F-47) and below the Series H announcement ($589.01, S-1 p. F-47).
 
-SpaceX units underwent a 5:1 Unit Parity restatement between March 31 and June 30 (135,135→675,675 and 42,857→214,285 are exact ×5). Snowpoint 28,486×5 = 142,430 vs NPORT 142,425 (5-unit gap; do not invent a 28,485 March 31 count). June 30 balances are already post-split.
+SpaceX units underwent a 5:1 Unit Parity restatement between March 31 and June 30 (135,135→675,675 and 42,857→214,285 are exact ×5). Snowpoint 28,486×5 = 142,430 vs NPORT 142,425 (5-unit gap; do not invent a 28,485 March 31 count). June 30 and September 30 balances are already post-split (9/30 Snowpoint prints 142,430). Between 6/30 and 9/30, 109,525 units moved from SpaceX I and MWAM to directly held Class A shares (in-kind distribution; see the September 30 roll).
 
 ## Other bases
 
@@ -143,19 +144,46 @@ SpaceX units underwent a 5:1 Unit Parity restatement between March 31 and June 3
 
 SKM: ordinary shares from the June 30 DART half-year report, ADS ratio 5/9, ADS-equivalent = ordinary × 9/5. SFTBY: Tokyo common × 2 for the 1:2 ADR.
 
+## DXYZ September 30, 2026 roll (data update, November 16, 2026)
+
+Sources: [NPORT-P](https://www.sec.gov/Archives/edgar/data/1843974/000089418926030445/primary_doc.xml) and [NPORT-EX schedule of investments](https://www.sec.gov/Archives/edgar/data/1843974/000089418926030445/destiny4.htm) as of September 30, 2026 (accession `0000894189-26-030445`, accepted 2026-11-16 16:36:53), and the [424B3 Supplement No. 2](https://www.sec.gov/Archives/edgar/data/1843974/000157587226000797/dxyz106_424B3.htm) (`0001575872-26-000797`, accepted 2026-11-16 16:45:57). The schedule is parsed from the filing (the XML `invstOrSec` lines sum to $1,636,202,777.61; the printed total is $1,636,202,778).
+
+**Filed basis (one consistent basis).** Shares, net assets and marks all roll to 9/30 together:
+- NAV $38.32 printed (exact $1,826,366,694 ÷ 47,657,338 = $38.32289). Net assets = total assets $1,839,121,226.07 − liabilities $12,754,532.07.
+- Shares stay at the filed **47,657,338**: the 424B3 reports no ATM sales July 1–September 30 and no repurchase is disclosed; net assets ÷ printed NAV ≈ 47.66M is consistent. (The 10/9 proxy record date cited in the update request was not independently checked.)
+- Investments $1,636,202,778 (cost $1,147,126,181), including money market $529,644,689 (First American Treasury Obligations, 3.78% seven-day yield).
+- **Cash.** Money market + "other assets less liabilities" $190,163,916 = **$719.8M (39.4% of net assets)**. The 424B3 labels the second item "Other Cash & Cash Equivalents" (10.9%); per the NPORT-P it is cash outside investments $200,111,559.36 + other assets $2,806,889.10 − liabilities $12,754,532.07, i.e. cash *net of liabilities*.
+- **SpaceX.** DXYZ SpaceX I 607,877, MWAM VC SpaceX-II 172,558, Snowpoint 2.6 142,430 units and **109,525 directly held Class A shares**. The direct shares are an in-kind distribution from the SPVs, not a purchase: SpaceX I fell 67,798 units and MWAM 41,727 (= 109,525), and cost moved with them ($1,004,414 + $665,954 = $1,670,368). The direct line implies SPCX $150.86 at 9/30. MWAM's filed $134.17/unit is **2.3% below** the bare 10%-carry formula ($137.37; the gap was 0.04% at 6/30), so carried legs stay anchored to their filed `valUSD` and only the formula's relative move is applied; the anchor, not the formula, reproduces $23.15M.
+- **Q3 deployments** are inside the schedule: Fluidstack (Magnitude FSTK) $15.0M, Boom SAFE $4.0M, EnduroSat $9.8M, Prive Tens / Tenstorrent $18.36M, Synchron $2.70M common + $5.00M Series D, Erebor Bank $20.0M. The August 13 OpenAI lot is inside Goanna's 269,016 units (218,121 units ≈ $687.69 each, vs the retired $688.49 proxy).
+
+**Post-9/30 deals** (424B3, "as of November 4, 2026"; $112.0M funded from existing cash): 10/13 Goanna 26E (OpenAI Series D) $25.0M · 10/14 Paladin Cyber Co-Invest Fund III S#3 (Blue Heavy Industries / Blue Origin) $25.0M · 10/16 Transform Ventures (Varda Series E) $24.8M · 10/30 Together SPV III (Together AI common) $20.0M · 10/30 Blykalla AB $17.2M. They are added at cost and deducted from the money market once, so they do not change NAV. Cash after the deals ≈ $607.8M (≈33%) before accruals. The OpenAI lot's units = $25.0M ÷ an entry price that defaults to the 9/30 Goanna mark $842.52 (±25% sensitivity; parity assumed).
+
+**Estimated NAV.** `9/30 filed NAV + SPCX moves since 9/30 + (ANT price − $99.17) × 3,860,880 once listed − management fee − other expenses + money-market interest`, divided by filed shares plus modeled ATM issuance:
+- Fee: 2.50%/yr (424B5) of approximate average **gross** assets (marked net assets + filed liabilities + half of modeled ATM proceeds) × days/365.
+- Other expenses: an adjustable annual rate, **default 0** (not estimated).
+- Interest: 3.78% on the 9/30 money-market balance, reduced by each post-9/30 deal from its closing date (deals assumed funded from the money market first).
+- ATM: simulated from October 1 with the Q2-calibrated participation, only on days above rolling NAV; at today's ~0.7× price-to-NAV it issues nothing.
+- Example (as of 11/16, 47 days): SPCX $137.36 and ANT at the $99.17 mark → ≈ $37.96; ANT $74 → ≈ $35.93.
+
+**Anthropic after listing.** `/dxyz` takes the ANT (post-split) price per share; the 9/30 mark is $99.17 and is the break-even. Once ANT trades on Nasdaq (guarded quote: Nasdaq exchange, first trade on or after the listing date), the sleeve follows the listed price by default, the same convention as SpaceX at the SPCX screen price. DXYZ's exposure converts to non-voting, unlisted Class N, so a configurable **Class N / lock-up discount** (default 0) scales only the Anthropic sleeve. The fund has not disclosed such a discount; 0 is a convention, not an estimate. Implied valuation is display only: price × the S-1/A No. 2 fully diluted count at that price (≈$1.79T at $99.17; 18,012,993,381 at $74, which replaces the S-1's 1,778.4M pre-split basis) or outstanding 13,086,672,593.
+
+**OpenAI capitalization proxy (unchanged, flagged).** `openai.defaultShares` remains $852B ÷ the June DXYZ mark ($688.49). With the 9/30 mark of $842.52 the implied OpenAI valuation shown on `/dxyz` is ≈$1.04T. This count is a calibration proxy, not a filed cap table, and was not re-calibrated in this roll.
+
+**Market price.** `/dxyz` shows the DXYZ price with its quote time and state. A hardcoded fallback is never used silently: if the Yahoo quote is unavailable the page shows the last completed close from `/api/dxyz-history` and labels it (`lib/dxyzPrice.mjs`). On 10/29 the page had shown $32.97 (an August 19 hardcoded fallback) and 0.96× while DXYZ traded near $27.
+
 ## DXYZ NAV and subsequent purchases
 
-`/dxyz` imports June Anthropic/OpenAI observations from `data/wrappers/DXYZ.json` and uses the same `unitLots` calculation and `data/capitalization.json` entry assumptions as `/ai`. `lib/dxyzNav.mjs` values the complete NAV ledger. Its price-per-share input corresponds to `/ai` company valuation × (1 − dilution) ÷ estimated FD shares. The Implied EV ($T) field is the inverse at dilution 0: PPS × the same estimated FD. Equal inputs produce equal equity exposure; the NAV tests also compare complete scenario net assets with `/ai` using cash deployment and the same wrapper shares, without ATM or other holding revaluations. A new primary may issue shares that identity does not model.
+`/dxyz` imports September 30 Anthropic/OpenAI observations from `data/wrappers/DXYZ.json` and uses the same `unitLots` calculation and `data/capitalization.json` entry assumptions as `/ai`. `lib/dxyzNav.mjs` values the complete NAV ledger. Its price-per-share input corresponds to `/ai` company valuation × (1 − dilution) ÷ estimated FD shares. The Implied EV ($T) field is the inverse at dilution 0: PPS × the same estimated FD. Equal inputs produce equal equity exposure; the NAV tests also compare complete scenario net assets with `/ai` using cash deployment and the same wrapper shares, without ATM or other holding revaluations. A new primary may issue shares that identity does not model.
 
-Subsequent purchases through August 13 are enabled by default, independently of the ATM toggle. The [August 28 424B3, Portfolio Deployment Update](https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm) discloses $150M OpenAI common on August 13, $15M Fluidstack preferred on July 16 and a separate $4M Boom SAFE on August 4, funded from existing cash. The model subtracts all $169M from June money-market assets, leaving $770,712,701 before ATM proceeds, expenses and other unknown cash movements. Fluidstack and the new Boom SAFE remain at cost; this is an assumption, not a newer filed fair value. June Boom preferred remains in the original ledger.
+Post-9/30 deals through November 4 are enabled by default, independently of the ATM toggle (see the September 30 roll above). *History (June 30 basis):* the [August 28 424B3, Portfolio Deployment Update](https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm) discloses $150M OpenAI common on August 13, $15M Fluidstack preferred on July 16 and a separate $4M Boom SAFE on August 4, funded from existing cash. The model subtracts all $169M from June money-market assets, leaving $770,712,701 before ATM proceeds, expenses and other unknown cash movements. Fluidstack and the new Boom SAFE remain at cost; this is an assumption, not a newer filed fair value. June Boom preferred remains in the original ledger.
 
-August OpenAI units = $150M ÷ assumed entry price. Entry defaults to the full-precision June preferred mark, $688.4933333333333; ±25% presets and a $100–$2,000 slider are sensitivity choices, not observed transaction quotes. The new common and June preferred lots use the same scenario price under assumed parity. Entry and units stay fixed when scenario PPS changes. Only August value less its $150M cost changes NAV. At default entry and PPS, NAV is unchanged; doubling PPS creates $150M of August gain, about $3.15 per filed DXYZ share. PPUs remain a separate MOIC line and do not follow equity PPS.
+*History:* August OpenAI units were $150M ÷ assumed entry price. Entry defaulted to the full-precision June preferred mark, $688.4933333333333; ±25% presets and a $100–$2,000 slider are sensitivity choices, not observed transaction quotes. The new common and June preferred lots use the same scenario price under assumed parity. Entry and units stay fixed when scenario PPS changes. Only August value less its $150M cost changes NAV. At default entry and PPS, NAV is unchanged; doubling PPS creates $150M of August gain, about $3.15 per filed DXYZ share. PPUs remain a separate MOIC line and do not follow equity PPS.
 
-Restore June 30 snapshot disables subsequent purchases and ATM estimates, restores filed shares and private marks, and stops live SpaceX marks. It reproduces $1,634,830,252 / 47,657,338 = $34.30385 per share. The ATM model takes the corrected marked ledger once; it does not add purchase cost or scale August units with modeled issuance. If history stops before August 13, the UI flags the mixed dates and incomplete issuance/expense coverage. These are scenario estimates, not company-reported current NAV.
+Restore September 30 snapshot disables post-9/30 deals and ATM estimates, restores filed shares and private marks, and stops live SpaceX/ANT marks. It reproduces $1,826,366,694 / 47,657,338 = $38.32289 per share. The ATM model takes the corrected marked ledger once; it does not add purchase cost or scale the October units with modeled issuance. If history stops before the last post-9/30 deal (October 30), the UI flags the mixed dates and incomplete issuance/expense coverage. These are scenario estimates, not company-reported current NAV.
 
 ## ATM issuance bridge (DXYZ)
 
-DXYZ has an active ATM. Filed share count is **47,657,338** from the June 30, 2026 N-CSRS (30,465,664 at March 31 = 21,976,305 year-end + 8,489,359 Q1 ATM, plus 17,191,674 Q2 ATM). Estimated share count uses the same `computeAtmBridge` as [stocks.bolewood.com/dxyz](https://stocks.bolewood.com/dxyz): Q2 sales are already in the June 30 baseline; post–June 30 issuance is simulated from July 1. See `lib/dxyzAtm.mjs`. The filed snapshot lives in `data/wrappers/DXYZ.json`.
+DXYZ has an active ATM. Filed share count is **47,657,338** (June 30, 2026 N-CSRS: 30,465,664 at March 31 = 21,976,305 year-end + 8,489,359 Q1 ATM, plus 17,191,674 Q2 ATM; plus **0** Q3 ATM per the November 16 424B3). Estimated share count uses the same `computeAtmBridge` as [stocks.bolewood.com/dxyz](https://stocks.bolewood.com/dxyz): the bridge re-bases on September 30 and simulates issuance from October 1, with the fee, other-expense and interest accruals described above. See `lib/dxyzAtm.mjs`. The filed snapshot lives in `data/wrappers/DXYZ.json`.
 
 The May 26, 2026 shelf (File 333-296212) authorizes an indeterminate amount. There is no filed remaining-capacity dollar figure. Forward simulation uses the May 26 424B5 $1B illustration as a modeling cap only.
 
@@ -175,7 +203,7 @@ DXYZ and ARKVX raised capital after the holdings print. Until the next N-PORT, i
 
 ## Exclusions
 
-**DXYZ OAI I PPUs** (11,236 units, $7,735,911.09 on the June 30 NPORT) are **not equity** per the N-CSR and are **excluded from IPO scaling**. June Goanna Series C has 50,895 units; the August Class A Common purchase is a separate estimated-unit lot. The Aug 13 $150M additional Goanna purchase is applied on ESTIMATED only (cash already inside June 30 NAV).
+**DXYZ OAI I PPUs** (11,236 units, $9,466,554.72 on the September 30 NPORT) are **not equity** and are **excluded from IPO scaling**. Goanna 26E has 269,016 filed units at 9/30 (Series C preferred + Class A common, including the August lot); the October 13 $25.0M Series D purchase is a separate estimated-unit lot applied on ESTIMATED only (cash already inside 9/30 NAV).
 
 Amazon's $100B AWS commitments are not equity.
 
@@ -224,7 +252,7 @@ Price-first scenarios (below) make these valuation-to-price haircuts moot going 
 
 ### Price-first scenarios
 
-Now that a range exists, the Anthropic scenario input is the **price per ANT share** (post-split). Presets: $70 / **$74 (default, midpoint)** / $78 (S-1/A No. 2 cover), Series H $58.90 ($589.0095 pre-split ÷ 10, S-1 p. F-47) and the DXYZ June mark $61.04 ($610.41 per pre-split unit ÷ 10).
+Now that a range exists, the Anthropic scenario input is the **price per ANT share** (post-split). Presets: $70 / **$74 (default, midpoint)** / $78 (S-1/A No. 2 cover), Series H $58.90 ($589.0095 pre-split ÷ 10, S-1 p. F-47) and the DXYZ September 30 mark $99.17 ($382,879,608.72 ÷ 3,860,880). The DXYZ June mark $61.04 is archived (not shown); `antPx=61.041036` links still work.
 
 - Filed-units legs (DXYZ 386,088 and SKM 3,860,330 pre-split units) = units × 10 × price. At $74 the DXYZ sleeve is 386,088 × $740 = $285.7M. **No fully diluted count is needed.**
 - Fair-value and carrying-value legs keep the share-equivalent rule: value ÷ the measurement round's pre-split price → share-equivalents × 10 × price.
@@ -288,13 +316,13 @@ Slider limits are exploration limits, not confidence bounds. The UI labels the s
 
 Sources: [Anthropic Form S-1 (Reg. No. 333-299633)](https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm) (pp. 13, 20, 22, 24, 144, 236, F-47), [DXYZ June N-PORT](https://www.sec.gov/Archives/edgar/data/1843974/000089418926024246/xslFormNPORT-P_X01/primary_doc.xml), [Anthropic Series H](https://www.anthropic.com/news/series-h), [OpenAI March primary](https://openai.com/index/accelerating-the-next-phase-ai/), [SKM DART](https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813001728).
 
-### August OpenAI lot and cash reconciliation
+### OpenAI subsequent lot and cash reconciliation
 
-The [August 28 supplement](https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm) reports a $150M August 13 purchase of Class A Common through Goanna Capital 26E, funded from existing cash. It does not report acquired units or entry price. The independent entry-price control defaults to June preferred FV / units = $688.4933333333333; approximate acquired units = **217,867.033328815**. Low/high entry-price presets are ±25% stress assumptions, not transaction evidence. The June preferred lot and August common lot remain distinct.
+Since the September 30 roll, the estimated-unit lot is the October 13 $25.0M Series D (entry default $842.52, the 9/30 Goanna mark). *History:* the [August 28 supplement](https://www.sec.gov/Archives/edgar/data/1843974/000157587226000624/dxyx104_424b3.htm) reports a $150M August 13 purchase of Class A Common through Goanna Capital 26E, funded from existing cash. It does not report acquired units or entry price. The independent entry-price control defaults to June preferred FV / units = $688.4933333333333; approximate acquired units = **217,867.033328815**. Low/high entry-price presets are ±25% stress assumptions, not transaction evidence. The June preferred lot and August common lot remain distinct.
 
-Acquired units = purchase cost / selected acquisition entry price. They do not change when current valuation, FD count, IPO dilution or ATM assumptions change. Pro rata ATM deployment adds its own assumed-unit lot based on the old filed book; it never scales the known August purchase. Known purchase inclusion is independent of ATM history availability. With no bridge available, Estimated Holdings retains filed wrapper shares and still includes the August acquisition.
+Acquired units = purchase cost / selected acquisition entry price. They do not change when current valuation, FD count, IPO dilution or ATM assumptions change. Pro rata ATM deployment adds its own assumed-unit lot based on the old filed book; it never scales the known October purchase. Known purchase inclusion is independent of ATM history availability. With no bridge available, Estimated Holdings retains filed wrapper shares and still includes the October acquisition.
 
-The purchase exchanges cash for equity within existing assets. Modeled assets = baseline/ATM assets + scenario equity value − the carrying amounts already included in baseline/ATM assets. Do not add $150M again. The result is a partial revaluation, not reported NAV or a full portfolio valuation. PPUs stay in historical NAV and are excluded from equity scaling.
+The purchase exchanges cash for equity within existing assets. Modeled assets = baseline/ATM assets + scenario equity value − the carrying amounts already included in baseline/ATM assets. Do not add the purchase cost ($25.0M; $150M under the June basis) again. The result is a partial revaluation, not reported NAV or a full portfolio valuation. PPUs stay in historical NAV and are excluded from equity scaling.
 
 ### Provenance and unresolved observations
 

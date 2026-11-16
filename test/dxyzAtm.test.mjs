@@ -10,7 +10,10 @@ import {
   PRIOR_ATM,
   Q1_ATM,
   Q2_ATM,
+  Q3_ATM,
   MARCH_31_SHARES_FILED,
+  FILED_CASH_OUTFLOWS,
+  moneyMarketInterest,
   DEFAULTS,
   impliedMarch31Shares,
   impliedFiledShares,
@@ -43,17 +46,22 @@ test("implied March 31 shares ≈ 30.47M and reproduce $24.56 NAV", () => {
   assert.equal((MARCH_31_NPORT.netAssets / shares).toFixed(2), "24.56");
 });
 
-test("filed June 30 shares are 47,657,338 and do not equal shares × printed $34.30", () => {
+test("filed September 30 shares are 47,657,338 (June count + zero Q3 ATM) and reproduce $38.32", () => {
   const shares = impliedFiledShares();
   assert.equal(shares, 47_657_338);
-  assert.equal(shares, MARCH_31_SHARES_FILED + Q2_ATM.shares);
+  assert.equal(Q3_ATM.shares, 0);
+  assert.equal(shares, MARCH_31_SHARES_FILED + Q2_ATM.shares + Q3_ATM.shares);
   assert.equal(MARCH_31_SHARES_FILED, 30_465_664);
+  assert.equal(FILED.asOf, "2026-09-30");
   assert.equal(FILED.sharesOutstanding, 47_657_338);
-  assert.equal(FILED.netAssets, 1_634_830_252);
-  assert.equal(FILED.portfolioValue, 1_640_039_144);
-  assert.equal(FILED.liabilities, 8_543_448);
-  assert.equal((FILED.netAssets / shares).toFixed(2), "34.30");
-  assert.ok(Math.abs(FILED.netAssets - shares * FILED.navPerShare) > 1000);
+  assert.equal(FILED.netAssets, 1_826_366_694);
+  assert.equal(FILED.portfolioValue, 1_636_202_778);
+  assert.equal(FILED.liabilities, 12_754_532.07);
+  assert.equal(FILED.navPerShare, 38.32);
+  // Acceptance 1: filed basis reproduces NAV/share $38.32 (±$0.01).
+  assert.ok(Math.abs(FILED.netAssets / shares - 38.32) <= 0.01);
+  // net assets ÷ printed NAV ≈ 47.66M, consistent with the filed count.
+  assert.ok(Math.abs(FILED.netAssets / FILED.navPerShare - shares) < 10_000);
 });
 
 test("ATM accretion-only path against filed 6/30 shares is $30.71", () => {
@@ -63,9 +71,11 @@ test("ATM accretion-only path against filed 6/30 shares is $30.71", () => {
   assert.equal(preAppreciation.toFixed(2), "30.71");
 });
 
-test("zero issuance (Filed Only) reproduces $34.30", () => {
+test("zero issuance (Filed Only) reproduces $38.32", () => {
   const b = computeAtmBridge({ mode: "filed", rows: snapshot.rows });
-  assert.equal(b.proFormaNav.toFixed(2), "34.30");
+  assert.equal(b.proFormaNav.toFixed(2), "38.32");
+  assert.equal(b.interest, 0);
+  assert.equal(b.drag, 0);
   assert.equal(b.proFormaShares, impliedFiledShares());
   assert.equal(b.aprMay.shares, 0);
   assert.equal(b.postMay.shares, 0);
@@ -140,14 +150,15 @@ test("days with market price below rolling NAV issue zero shares", () => {
 
 test("ATM issuance above NAV is accretive", () => {
   const rows = [
-    { date: "2026-07-01", close: 50, volume: 2_000_000 },
-    { date: "2026-07-02", close: 50, volume: 2_000_000 },
+    { date: "2026-10-01", close: 50, volume: 2_000_000 },
+    { date: "2026-10-02", close: 50, volume: 2_000_000 },
   ];
   const b = computeAtmBridge({
     mode: "calibrated",
     rows,
     participation: 0.08,
     expenseDragAnnualRate: 0, // isolate issuance accretion from fee drag
+    moneyMarketYield: 0,
   });
   assert.ok(b.proFormaNav > b.markedNav, `${b.proFormaNav} vs ${b.markedNav}`);
   assert.ok(b.accretionPerShare > 0);
@@ -156,8 +167,8 @@ test("ATM issuance above NAV is accretive", () => {
 
 test("higher commission reduces net proceeds and pro forma NAV", () => {
   const rows = [
-    { date: "2026-07-01", close: 50, volume: 2_000_000 },
-    { date: "2026-07-02", close: 50, volume: 2_000_000 },
+    { date: "2026-10-01", close: 50, volume: 2_000_000 },
+    { date: "2026-10-02", close: 50, volume: 2_000_000 },
   ];
   const lo = computeAtmBridge({
     mode: "calibrated",
@@ -200,7 +211,7 @@ test("empty windows are zero-safe: windowStats, calibrate, and computeAtmBridge"
   assert.equal(b.drag, 0);
   assert.equal(b.aprMay.shares, 0);
   assert.equal(b.postMay.shares, 0);
-  assert.equal(b.proFormaNav.toFixed(2), "34.30");
+  assert.equal(b.proFormaNav.toFixed(2), "38.32");
 });
 
 test("modeled issuance is invariant to user re-marks (filed-basis gate)", () => {
@@ -240,13 +251,13 @@ test("out-of-range rates are clamped: commission to [0,1], participation to >= 0
   assert.equal(negParticipation.gross, 0);
 });
 
-test("as-of dates before the post-filing start are clamped to July 1", () => {
+test("as-of dates before the post-filing start are clamped to October 1", () => {
   const b = computeAtmBridge({
     mode: "custom",
     rows: snapshot.rows,
     asOfDate: "2026-04-10",
   });
-  assert.equal(b.asOfDate, "2026-07-01");
+  assert.equal(b.asOfDate, "2026-10-01");
 });
 
 test("negative or NaN custom inputs cannot invert the issuance gate", () => {
@@ -479,21 +490,31 @@ test("simulatePostMay ignores rows before the program start date", () => {
   assert.equal(withPre.gross, withoutPre.gross);
 });
 
+// Post-9/30 rows above the $38.32 NAV so issuance (and its half-weight in the fee base) is exercised.
+const OCT_ABOVE_NAV = [
+  { date: "2026-10-05", close: 50, volume: 2_000_000 },
+  { date: "2026-10-15", close: 50, volume: 2_000_000 },
+];
+
 test("expense drag accrues at rate × days/365 × average assets and lowers NAV", () => {
   const noDrag = computeAtmBridge({
     mode: "calibrated",
-    rows: snapshot.rows,
+    rows: OCT_ABOVE_NAV,
+    participation: 0.08,
     expenseDragAnnualRate: 0,
   });
   const withDrag = computeAtmBridge({
     mode: "calibrated",
-    rows: snapshot.rows,
+    rows: OCT_ABOVE_NAV,
+    participation: 0.08,
     expenseDragAnnualRate: 0.025,
   });
+  assert.ok(withDrag.postMay.net > 0);
   assert.equal(noDrag.drag, 0);
   assert.ok(withDrag.drag > 0);
+  // Fee base is GROSS assets: marked net assets + filed liabilities.
   const avgAssets =
-    FILED.netAssets + (withDrag.aprMay.net + withDrag.postMay.net) / 2;
+    FILED.netAssets + FILED.liabilities + (withDrag.aprMay.net + withDrag.postMay.net) / 2;
   const expected = 0.025 * (withDrag.days / 365) * avgAssets;
   assert.ok(Math.abs(withDrag.drag - expected) < 1, `drag ${withDrag.drag} vs ${expected}`);
   assert.ok(withDrag.proFormaNav < noDrag.proFormaNav);
@@ -524,28 +545,51 @@ test("degenerate baselines are guarded: zero shares and re-marked net assets", (
 test("custom overrides are respected", () => {
   const b = computeAtmBridge({
     mode: "custom",
-    rows: snapshot.rows,
+    rows: OCT_ABOVE_NAV,
     aprMayShares: 5_000_000,
     aprMayAvgPrice: 40,
     participation: 0.05,
     commissionRate: 0.01,
     expenseDragAnnualRate: 0,
-    asOfDate: "2026-07-08",
+    asOfDate: "2026-10-08",
   });
   assert.equal(b.aprMay.shares, 5_000_000);
   assert.ok(Math.abs(b.aprMay.net - 5_000_000 * 40 * 0.99) < 1);
-  assert.equal(b.asOfDate, "2026-07-08");
+  assert.equal(b.asOfDate, "2026-10-08");
   // no post-filing rows beyond the as-of date contribute; identical inputs with
   // a later as-of date can only add issuance
   const later = computeAtmBridge({
     mode: "custom",
-    rows: snapshot.rows,
+    rows: OCT_ABOVE_NAV,
     aprMayShares: 5_000_000,
     aprMayAvgPrice: 40,
     participation: 0.05,
     commissionRate: 0.01,
     expenseDragAnnualRate: 0,
   });
-  assert.ok(later.postMay.shares >= b.postMay.shares);
+  assert.ok(b.postMay.shares > 0);
+  assert.ok(later.postMay.shares > b.postMay.shares);
   assert.ok(later.asOfDate > b.asOfDate);
+});
+
+test("money-market interest accrues at the 9/30 yield and falls with each post-9/30 deal", () => {
+  assert.equal(FILED.moneyMarket, 529_644_689);
+  assert.equal(DEFAULTS.moneyMarketYield, 0.0378);
+  // Five deals, $112.0M, all after 9/30 (424B3 as of Nov 4).
+  assert.equal(FILED_CASH_OUTFLOWS.length, 5);
+  assert.equal(FILED_CASH_OUTFLOWS.reduce((s, o) => s + o.amount, 0), 112_000_000);
+  const flat = moneyMarketInterest({ to: "2026-11-16", outflows: [] });
+  assert.ok(Math.abs(flat - 529_644_689 * 0.0378 * 47 / 365) < 1);
+  const withDeals = moneyMarketInterest({ to: "2026-11-16" });
+  assert.ok(withDeals < flat && withDeals > flat - 112_000_000 * 0.0378 * 47 / 365);
+  assert.equal(moneyMarketInterest({ to: "2026-09-30" }), 0);
+});
+
+test("other expenses default to 0 and lower NAV when set", () => {
+  assert.equal(DEFAULTS.otherExpenseAnnualRate, 0);
+  const base = computeAtmBridge({ mode: "calibrated", rows: [], asOfDate: "2026-11-16" });
+  const other = computeAtmBridge({ mode: "calibrated", rows: [], asOfDate: "2026-11-16", otherExpenseAnnualRate: 0.01 });
+  assert.equal(base.otherExpenses, 0);
+  assert.ok(other.otherExpenses > 0 && other.proFormaNav < base.proFormaNav);
+  assert.ok(Math.abs(other.drag - other.fee - other.otherExpenses) < 1e-6);
 });

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.20.0.0] — 2026-11-16
+
+- `/dxyz`, `/ai`, `/private-tape`, `/book`: Destiny Tech100 rolled to its September 30, 2026 filings (NPORT-P `0000894189-26-030445` and 424B3 Supplement No. 2 `0001575872-26-000797`, both Nov 16). Filed NAV $38.32, net assets $1,826.37M, 47,657,338 shares (no Q3 ATM sales). Cash $719.8M (39.4%) at 9/30; ≈$607.8M (≈33%) after $112.0M of October deals added at cost.
+- Anthropic: 9/30 mark $99.17 per ANT share (3,860,880 share-equivalents, $382.9M, 20.96% of net assets), now entered per ANT share on `/dxyz`; ΔNAV ≈ $0.081 per $1, break-even $99.17; ≈$1.79T on the S-1/A No. 2 fully diluted count (replacing the S-1's 1,778.4M pre-split basis). IPO-range presets now read 0.746× the mark at the $74 midpoint. Follows the listed ANT price once it trades, with a Class N / lock-up discount input (default 0).
+- OpenAI: Goanna 26E re-marks to $842.52 on 269,016 units (the August lot is now filed: 218,121 units ≈ $687.69). The $688.49 August entry proxy is retired; the Oct 13 $25.0M Series D uses the 9/30 mark as its entry proxy.
+- Disclosure re-dated to 2026-11-16, positions unchanged.
+- SpaceX: 109,525 Class A shares now held directly after an in-kind SPV distribution (not a purchase); SPCX $150.86 at 9/30.
+- Estimated NAV now nets the management fee on gross assets, other expenses (default 0) and money-market interest; the ATM bridge re-bases on 9/30.
+- Fix: the DXYZ price could silently fall back to a hardcoded $32.97; it now shows its quote time and falls back visibly to the last completed close.
+
 ## [0.19.1.0] — 2026-11-12
 
 - `/anthropic-ipo-tape`: the two reference panels at the top ("What the filings show" and "What the investor day showed") are collapsible and start collapsed, so the live tape sits near the top. Each reader's choice is remembered in the browser.

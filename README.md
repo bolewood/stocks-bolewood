@@ -74,8 +74,8 @@ and no per-$100 figure.
 ```
 basis:                    filed-units
 filedUnits:               386,088        (pre-split Series B preferred equivalents; converts to Class N, S-1 p. 20)
-reportedFairValue:        $235.671976M   (as of 2026-06-30, N-CSRS)
-→ markPerUnit:            $610.41        per pre-split unit ($61.041 per ANT share; 10-for-1 split, S-1 p. 22)
+reportedFairValue:        $382.879609M   (as of 2026-09-30, NPORT-P)
+→ markPerUnit:            $991.69        per pre-split unit ($99.169 per ANT share; 10-for-1 split, S-1 p. 22)
 → scenario ANT price:     $74.00 per ANT share (S-1/A No. 2 range midpoint) = $740.00 per pre-split unit × (1 − dilution)
 → implied valuation:      $1.332962T on 18,012,993,381 fully diluted ANT shares (S-1/A No. 2 p. 24; display only, not used below)
 → scenario exposure:      0.021433861% of the selected basis (units ÷ 1,801,299,338 pre-split)
@@ -216,7 +216,7 @@ Live market prices are a runtime input and are **not** redistributed in this dat
 ## Disclosure
 
 <!-- BEGIN GENERATED: disclosure -->
-As of November 10, 2026, the author holds long positions in DXYZ, SKM, ZM, AMZN, GOOG, NVDA, NSLR and PWRL. The DXYZ exposure includes options. The author also holds a direct long position in Anthropic through an SPV. Positions are subject to change without notice.
+As of November 16, 2026, the author holds long positions in DXYZ, SKM, ZM, AMZN, GOOG, NVDA, NSLR and PWRL. The DXYZ exposure includes options. The author also holds a direct long position in Anthropic through an SPV. Positions are subject to change without notice.
 <!-- END GENERATED: disclosure -->
 
 Six of the eleven securities covered here are held by the author. Every input is published

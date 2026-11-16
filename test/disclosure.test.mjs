@@ -32,10 +32,10 @@ const finder = readFileSync(
 const expectedResults = readJson("reference/expected-results.json");
 
 const CANONICAL_SENTENCE =
-  "As of November 10, 2026, the author holds long positions in DXYZ, SKM, ZM, AMZN, GOOG, NVDA, NSLR and PWRL. The DXYZ exposure includes options. The author also holds a direct long position in Anthropic through an SPV. Positions are subject to change without notice.";
+  "As of November 16, 2026, the author holds long positions in DXYZ, SKM, ZM, AMZN, GOOG, NVDA, NSLR and PWRL. The DXYZ exposure includes options. The author also holds a direct long position in Anthropic through an SPV. Positions are subject to change without notice.";
 
 test("disclosure.json lists the eight held tickers with a dated note", () => {
-  assert.equal(disclosure.asOf, "2026-11-10");
+  assert.equal(disclosure.asOf, "2026-11-16");
   assert.deepEqual(disclosure.tickers, [
     "DXYZ",
     "SKM",
@@ -88,7 +88,7 @@ test("README generated worked example matches data/ + fixtures", () => {
   const ex = dxyzAnthropicWorkedExample();
   const dxyz = expectedResults.rows.find((r) => r.ticker === "DXYZ");
   assert.equal(ex.basis, "filed-units");
-  assert.equal(ex.reportedFairValue, 235671976.08);
+  assert.equal(ex.reportedFairValue, 382879608.72);
   assert.equal(ex.filedUnits, 386088);
   assert.equal(ex.price, 32.84);
   assert.equal(ex.impliedExposure, ex.filedUnits / ex.fdShares);

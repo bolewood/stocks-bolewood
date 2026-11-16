@@ -1039,6 +1039,24 @@
     },
     "arctic-wolf": {
       "name": "Arctic Wolf"
+    },
+    "endurosat": {
+      "name": "EnduroSat"
+    },
+    "synchron": {
+      "name": "Synchron"
+    },
+    "blue-origin": {
+      "name": "Blue Origin"
+    },
+    "varda": {
+      "name": "Varda Space Industries"
+    },
+    "together-ai": {
+      "name": "Together AI"
+    },
+    "blykalla": {
+      "name": "Blykalla"
     }
   }
 }

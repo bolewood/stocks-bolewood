@@ -2,6 +2,25 @@
 
 Typed entries: **Data update** · **Correction** · **Methodology change** · **Schema change**.
 
+## [1.4.0] - 2026-11-16 (data update; schema and methodology version unchanged)
+
+### Data update
+- DXYZ rolled to the September 30, 2026 NPORT-P / NPORT-EX (accession `0000894189-26-030445`, EDGAR accepted 2026-11-16 16:36:53) and the 424B3 Supplement No. 2 (`0001575872-26-000797`, accepted 16:45:57). `filedSnapshot`: NAV $38.32, net assets $1,826,366,694 (total assets $1,839,121,226.07 − liabilities $12,754,532.07), investments $1,636,202,778 (cost $1,147,126,181), money market $529,644,689, other assets less liabilities $190,163,916, 47,657,338 shares (no Q3 ATM sales).
+- `DXYZ.anthropic`: 386,088 units at $382,879,608.72 ($99.17 per post-split ANT share; 20.96% of net assets). `DXYZ.openai`: 269,016 Goanna 26E units at $226,651,360.32 ($842.52; includes the August 13 lot); PPUs $9,466,554.72. `openai.acquisition` is now the Oct 13 $25.0M Series D; `otherSubsequentPurchases` are the four other post-9/30 deals (Blue Origin via Paladin $25.0M, Varda $24.8M, Together AI $20.0M, Blykalla $17.2M). The August, Fluidstack and Boom SAFE entries are inside the 9/30 schedule and were removed from the subsequent lists so their cost is not deducted twice.
+- `capitalization.dxyzOpenaiEntry`: default $842.52 (9/30 Goanna mark), ±25% stresses; the $688.49 June proxy is retired. `anthropic.ipo.scenarioPresets`: added `dxyzSept` ($99.17); `dxyzJune` ($61.04) archived (hidden, kept for history; its citation's FV typo $235,672,115 corrected to $235,671,976.08).
+- `data/books/DXYZ`: added `2026-09-30` (NPORT-P) and `2026-11-04` (post-deal, at cost) books. `data/companies.json`: EnduroSat, Synchron, Blue Origin, Varda Space Industries, Together AI, Blykalla.
+- `data/private-tape.json`: as of 2026-09-30; Anthropic $382.88M and SpaceX $152.87M (three SPVs + 109,525 direct Class A shares) of $1,636.2M; sleeve weights 71.5% / 28.5% (June 57.7% / 42.3%).
+- `data/disclosure.json`: `asOf` 2026-11-16, positions unchanged.
+- `app/api/dxyz-history/snapshot.json` refreshed through the 2026-11-16 close. Reference fixtures: current fixtures use the $842.52 entry default; estimated fixtures (including `s1-estimated`) carry a bridge re-based on 9/30 from history captured 2026-11-16. Only DXYZ rows changed in all four expected-results files.
+
+### Methodology change
+- DXYZ estimated NAV = 9/30 filed NAV + SPCX moves + ANT re-mark once listed − 2.50%/yr fee on **gross** assets (was net) − other expenses (default 0) + money-market interest (3.78%, balance reduced by post-9/30 deals from their dates). The ATM bridge re-bases on 9/30 and simulates from October 1.
+- `/dxyz` Anthropic input is per post-split ANT share; after listing it follows the listed ANT quote, with a Class N / lock-up discount parameter (default 0).
+- MWAM VC SpaceX-II's filed $134.17/unit is 2.3% below the bare 10%-carry formula at 9/30; the leg stays anchored to its filed value.
+
+### Correction
+- `/dxyz` market price: an August 19 hardcoded fallback ($32.97) could be shown without notice (seen 10/29 while DXYZ traded near $27). `/api/prices` now returns per-ticker `quotes` with `quoteAsOf` and `isFallback`; `/dxyz` shows the quote time and falls back visibly to the last completed close.
+
 ## [1.4.0] - 2026-11-10
 
 ### Data update
