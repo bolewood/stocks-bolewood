@@ -137,9 +137,11 @@ export default function DXYZNAVFinder() {
   // the daily history feed (never a silent hardcoded fallback; see lib/dxyzPrice.mjs).
   const [dxyzQuote, setDxyzQuote] = useState(null);
   const [quoteSettled, setQuoteSettled] = useState(false);
-  const [dxyzManual, setDxyzManual] = useState(null);
+  // Raw text while the user types (null = follow the market price).
+  const [dxyzManualDraft, setDxyzManualDraft] = useState(null);
   const [liveSpcx, setLiveSpcx] = useState(null);
   const [liveAnt, setLiveAnt] = useState(null);
+  const [antState, setAntState] = useState(null);
   const spcxFollowLive = useRef(true);
   const antFollowLive = useRef(true);
 
@@ -188,6 +190,7 @@ export default function DXYZNAVFinder() {
   const updateImpliedEV = (name, trillionStr) => {
     const row = SHARE_DENOMINATED.find((p) => p.name === name);
     if (!row?.fdShares && !row?.evBasis) return;
+    if (name === "Anthropic") antFollowLive.current = false;
     setEvDrafts((prev) => ({ ...prev, [name]: trillionStr }));
     const t = parseFloat(trillionStr);
     if (!Number.isFinite(t) || t < 0) return;
@@ -234,6 +237,7 @@ export default function DXYZNAVFinder() {
     );
     setDollarMOICs(DOLLAR_DENOMINATED.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
     setOtherMOICs(OTHER_HOLDINGS.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
+    setAnthDiscountPct("0");
     setActiveScenario("mark");
     updateURL("mark");
   };
@@ -279,6 +283,7 @@ export default function DXYZNAVFinder() {
       "Ferox Games": 1.5,
     });
     setOtherMOICs(OTHER_HOLDINGS.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
+    setAnthDiscountPct("0");
     setActiveScenario("aggressive");
     updateURL("aggressive");
   };
@@ -311,6 +316,7 @@ export default function DXYZNAVFinder() {
       "Ferox Games": 3.0,
     });
     setOtherMOICs(OTHER_HOLDINGS.reduce((acc, p) => ({ ...acc, [p.name]: 1.0 }), {}));
+    setAnthDiscountPct("0");
     setActiveScenario("dream");
     updateURL("dream");
   };
@@ -347,6 +353,7 @@ export default function DXYZNAVFinder() {
         const antQ = data.quotes?.ANT;
         if (antQ && !antQ.isFallback && antQ.price > 0) {
           setLiveAnt(antQ.price);
+          setAntState(antQ.state || null);
           if (antFollowLive.current) {
             setPpsOverrides((prev) => ({ ...prev, Anthropic: antQ.price }));
           }
@@ -392,6 +399,8 @@ export default function DXYZNAVFinder() {
     () => resolveDxyzPrice({ quote: dxyzQuote, servedFromCache: !!dxyzQuote?.servedFromCache, historyRows, historySource }),
     [dxyzQuote, historyRows, historySource]
   );
+  const manualParsed = dxyzManualDraft == null ? null : parseFloat(dxyzManualDraft);
+  const dxyzManual = Number.isFinite(manualParsed) && manualParsed >= 0 ? manualParsed : dxyzManualDraft == null ? null : 0;
   const dxyzPrice = dxyzManual ?? priceInfo.price ?? LAST_SNAPSHOT_CLOSE?.close ?? 0;
   const priceChip = dxyzManual != null ? "● MANUAL" : !quoteSettled && priceInfo.state === "last-close" ? `○ LAST CLOSE ${priceInfo.asOfLabel.replace(" close", "")} · loading quote` : dxyzPriceChip(priceInfo);
   const priceOk = dxyzManual != null || !quoteSettled || ["live", "cached", "close"].includes(priceInfo.state);
@@ -508,8 +517,8 @@ export default function DXYZNAVFinder() {
             <input
               type="number"
               step="0.01" min="0" aria-label="DXYZ market price"
-              value={dxyzPrice}
-              onChange={(e) => { const v = parseFloat(e.target.value); setDxyzManual(Number.isFinite(v) && v > 0 ? v : null); }}
+              value={dxyzManualDraft ?? dxyzPrice}
+              onChange={(e) => setDxyzManualDraft(e.target.value)}
               style={styles.smallInput}
               className="vcx-input vcx-small-input"
             />
@@ -525,7 +534,7 @@ export default function DXYZNAVFinder() {
               {priceChip}
             </span>
             {dxyzManual != null && (
-              <button type="button" onClick={() => setDxyzManual(null)} style={{ ...styles.presetBtn, padding: "4px 8px", fontSize: "10px" }}>Use market price</button>
+              <button type="button" onClick={() => setDxyzManualDraft(null)} style={{ ...styles.presetBtn, padding: "4px 8px", fontSize: "10px" }}>Use market price</button>
             )}
           </div>
         </div>
@@ -572,12 +581,12 @@ export default function DXYZNAVFinder() {
               </button>
             );
           })}
-          <button type="button" onClick={() => updatePPS("Anthropic", Number(ANTH_MARK.toFixed(2)))} style={{ ...styles.presetBtn, ...(Math.abs(Number(ppsOverrides.Anthropic) - ANTH_MARK) < 0.01 ? styles.presetBtnActive : {}) }} className="preset-btn vcx-preset-btn">
+          <button type="button" onClick={() => { updatePPS("Anthropic", ANTH_MARK); setAnthDiscountPct("0"); }} style={{ ...styles.presetBtn, ...(Math.abs(Number(ppsOverrides.Anthropic) - ANTH_MARK) < 0.01 ? styles.presetBtnActive : {}) }} className="preset-btn vcx-preset-btn">
             9/30 mark ${ANTH_MARK.toFixed(2)}
           </button>
           {liveAnt ? (
             <button type="button" onClick={() => { antFollowLive.current = true; updatePPS("Anthropic", liveAnt); antFollowLive.current = true; }} style={styles.presetBtn} className="preset-btn vcx-preset-btn">
-              ● Live ANT ${liveAnt.toFixed(2)}
+              {antState === "live" ? "● Live" : antState === "close" ? "● Close" : "◐ Last"} ANT ${liveAnt.toFixed(2)}
             </button>
           ) : null}
         </div>
@@ -931,7 +940,7 @@ export default function DXYZNAVFinder() {
                     </div>
                   )}
                   {r.name === "Anthropic" && liveAnt != null && Math.abs(Number(ppsOverrides[evName]) - liveAnt) < 0.005 ? (
-                    <div style={{ ...styles.delta, color: "#15803d" }}>● LIVE ANT</div>
+                    <div style={{ ...styles.delta, color: antState === "live" ? "#15803d" : "#b45309" }}>{antState === "live" ? "● LIVE" : antState === "close" ? "● CLOSE" : antState === "cached" ? "● CACHED" : "◐ STALE"} ANT</div>
                   ) : null}
                   {Math.abs(delta) > 0.5 && (
                     <div style={{ ...styles.delta, color: delta > 0 ? "#15803d" : "#b91c1c" }}>

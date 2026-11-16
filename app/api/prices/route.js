@@ -75,7 +75,11 @@ async function loadAnt(now) {
 }
 
 async function fetchLive(prev) {
-  const quotes = { ...(prev?.quotes || fallbackQuotes()) };
+  // Quotes carried over from the previous payload are marked so a partial
+  // refresh never labels them as freshly fetched.
+  const quotes = Object.fromEntries(
+    Object.entries(prev?.quotes || fallbackQuotes()).map(([k, q]) => [k, q.isFallback ? q : { ...q, carriedFromCache: true }])
+  );
   let liveCount = 0;
 
   await mapLimit(TICKERS, YAHOO_FETCH_CONCURRENCY, async ({ yahoo, key }) => {
@@ -90,11 +94,11 @@ async function fetchLive(prev) {
   });
   const ant = await loadAnt(Date.now());
   if (ant) quotes.ANT = ant;
-  else if (prev?.quotes?.ANT) quotes.ANT = prev.quotes.ANT;
+  const antStale = !ant && !!quotes.ANT;
   const prices = Object.fromEntries(Object.entries(quotes).map(([k, q]) => [k, q.price]));
 
   const source =
-    liveCount === TICKERS.length
+    liveCount === TICKERS.length && !antStale
       ? "live"
       : liveCount > 0
         ? "partial"
@@ -129,7 +133,7 @@ export async function GET() {
   const quotes = Object.fromEntries(
     Object.entries(payload.quotes || {}).map(([k, q]) => [
       k,
-      { ...q, servedFromCache, state: classifyQuote({ quoteAsOf: q.quoteAsOf, servedFromCache, isFallback: q.isFallback }, now) },
+      { ...q, servedFromCache: servedFromCache || !!q.carriedFromCache, state: classifyQuote({ quoteAsOf: q.quoteAsOf, servedFromCache: servedFromCache || !!q.carriedFromCache, isFallback: q.isFallback }, now) },
     ])
   );
   return NextResponse.json(
