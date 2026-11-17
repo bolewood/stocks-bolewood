@@ -2,7 +2,7 @@
   "asOf": "2026-10-03",
   "source": "Notice.co",
   "window": "2Y",
-  "notes": "Secondary market prices are indicative algorithmic estimates from Notice.co combining private secondary trades, tender offers, and reference data. They are not fund marks, guaranteed bids, or ASC 820 fair values.",
+  "notes": "Secondary market prices are indicative algorithmic estimates from Notice.co combining private secondary trades, tender offers, and reference data. They are not fund marks, guaranteed bids, or ASC 820 fair values. Entries with their own asOf (the five names added 2026-11-17) were captured on that date; all others are the 2026-10-03 snapshot.",
   "companies": {
     "anthropic": {
       "name": "Anthropic",
@@ -128,7 +128,7 @@
       "chartImage": "/dxyz-charts/databricks.jpg",
       "latestPrice": 255.57,
       "impliedValuation": "$185.03B",
-      "note": "Steady upward secondary momentum across 2025\u20132026"
+      "note": "Steady upward secondary momentum across 2025–2026"
     },
     "revolut": {
       "name": "Revolut",
@@ -2585,6 +2585,116 @@
       "impliedValuation": "$13.91B",
       "note": "Healthcare technology company focused on precision medicine, genomic testing and clinical data.",
       "caveat": "Already publicly traded (Notice shows an Exit marker); the series is a real market price, not private re-marks, and is highly volatile (range roughly $32-$103)."
+    },
+    "erebor": {
+      "name": "Erebor",
+      "twoYearChange": 10.69,
+      "tier": "flat",
+      "sparkline": [
+        157.35,
+        168.33,
+        176.21,
+        158.96,
+        191.92,
+        181.62,
+        210.81,
+        203.05,
+        181.14,
+        174.17
+      ],
+      "chartImage": "/dxyz-charts/erebor.jpg",
+      "latestPrice": 174.17,
+      "impliedValuation": "$4.34B",
+      "asOf": "2026-11-17",
+      "note": "Notice history begins Oct 28, 2025, so the change is about 1 year, not 2. Peaked near $213 in mid-2026. Digital bank for tech companies and venture-backed businesses."
+    },
+    "synchron": {
+      "name": "Synchron",
+      "twoYearChange": 75.48,
+      "tier": "strong",
+      "sparkline": [
+        21.06,
+        20.24,
+        16.32,
+        15.41,
+        33.65,
+        33.66,
+        40.94,
+        38.2,
+        39.21,
+        36.96
+      ],
+      "chartImage": "/dxyz-charts/synchron.jpg",
+      "latestPrice": 36.96,
+      "impliedValuation": "$1.00B",
+      "asOf": "2026-11-17",
+      "caveat": "Most of the 2Y gain is two one-day steps (about $15.6 → $36.7 around Aug 20, 2025 and $31 → $45 around Feb 13, 2026), which look like round or reference-price resets rather than secondary trading. Between the steps the series drifts lower."
+    },
+    "blue-origin": {
+      "name": "Blue Origin",
+      "twoYearChange": -91.01,
+      "tier": "distressed",
+      "sparkline": [
+        212.37,
+        211.01,
+        20.72,
+        20.71,
+        20.34,
+        19.71,
+        18.91,
+        19.68,
+        19.04,
+        19.09
+      ],
+      "chartImage": "/dxyz-charts/blue-origin.jpg",
+      "latestPrice": 19.09,
+      "impliedValuation": "$140.00B",
+      "asOf": "2026-11-17",
+      "caveat": "Notice history begins Aug 26, 2026. The ~90% one-day drop around Sep 11, 2026 ($204 → $20.72) is almost certainly a ~10:1 share-basis change, not a loss of value: Notice still shows a $140B last round. Since then the price has eased from about $20.7 to $19.1 (about −8%)."
+    },
+    "varda": {
+      "name": "Varda Space Industries",
+      "twoYearChange": 52.0,
+      "tier": "strong",
+      "sparkline": [
+        11.23,
+        12.26,
+        11.88,
+        12.8,
+        13.22,
+        12.38,
+        19.35,
+        20.72,
+        20.05,
+        17.07
+      ],
+      "chartImage": "/dxyz-charts/varda.jpg",
+      "latestPrice": 17.07,
+      "impliedValuation": "Not shown",
+      "asOf": "2026-11-17",
+      "caveat": "Most of the gain is one step from $13.06 to $20.51 around Feb 3, 2026 (likely a new-round reference reset). Since then it has slid back to about $17. Notice shows no market cap or last-round valuation."
+    },
+    "together-ai": {
+      "name": "Together AI",
+      "twoYearChange": 120.81,
+      "tier": "strong",
+      "sparkline": [
+        78.42,
+        26.1,
+        74.87,
+        98.89,
+        130.79,
+        121.14,
+        109.17,
+        186.89,
+        211.7,
+        173.16
+      ],
+      "chartImage": "/dxyz-charts/together-ai.jpg",
+      "latestPrice": 173.16,
+      "impliedValuation": "$6.95B",
+      "asOf": "2026-11-17",
+      "caveat": "The series has five one-day breaks: Dec 20, 2024 ($85 → $22), Feb 14, 2025 ($27 → $97), Sep 14, 2025 ($106 → $130), Apr 7, 2026 ($113 → $199) and May 12, 2026 ($249 → $195). The Dec–Feb dip looks like a share-basis error, so treat the 2Y % as rough. Notice shows a $6.95B market cap and an $8.30B last round."
     }
   }
 }
