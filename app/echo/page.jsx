@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ArchivedBanner from "@/components/ArchivedBanner";
 import ECHOSOTPFinder from "@/components/ECHOSOTPFinder";
 
 export const metadata = {
@@ -24,6 +25,7 @@ export default function ECHOPage() {
   return (
     <>
       <Header />
+      <ArchivedBanner slug="/echo" />
       <ECHOSOTPFinder />
       <Footer />
     </>

@@ -27,11 +27,9 @@ export default function Header() {
     { href: "/book", label: "Book" },
     // Temporary: standing Anthropic IPO tape until the listing. Remove after.
     { href: "/anthropic-ipo-tape", label: "IPO tape", highlight: true },
-    { href: "/private-tape", label: "Private Tape" },
-    { href: "/echo", label: "ECHO" },
-    { href: "/sftby", label: "SFTBY" },
     { href: "/ai", label: "AI Per $" },
-    { href: "/muse", label: "Muse" },
+    // Archived tools (/private-tape, /echo, /sftby, /muse) are linked from the
+    // home page and footer only; see components/ArchivedBanner.jsx.
     { href: "/about", label: "About" },
   ];
 

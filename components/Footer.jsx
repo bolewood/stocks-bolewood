@@ -29,24 +29,8 @@ export default function Footer() {
               Book
             </Link>
             <span style={styles.sep}>·</span>
-            <Link href="/private-tape" style={styles.link}>
-              Private Tape
-            </Link>
-            <span style={styles.sep}>·</span>
-            <Link href="/echo" style={styles.link}>
-              ECHO
-            </Link>
-            <span style={styles.sep}>·</span>
-            <Link href="/sftby" style={styles.link}>
-              SFTBY
-            </Link>
-            <span style={styles.sep}>·</span>
             <Link href="/ai" style={styles.link}>
               AI Per $
-            </Link>
-            <span style={styles.sep}>·</span>
-            <Link href="/muse" style={styles.link}>
-              Muse
             </Link>
             <span style={styles.sep}>·</span>
             <Link href="/about" style={styles.link}>
@@ -61,6 +45,24 @@ export default function Footer() {
             >
               bolewood.com
             </a>
+          </div>
+          <div style={styles.links}>
+            <span style={styles.archivedLabel}>Archived, no longer updated:</span>
+            <Link href="/private-tape" style={styles.link}>
+              Private Tape
+            </Link>
+            <span style={styles.sep}>·</span>
+            <Link href="/echo" style={styles.link}>
+              ECHO
+            </Link>
+            <span style={styles.sep}>·</span>
+            <Link href="/sftby" style={styles.link}>
+              SFTBY
+            </Link>
+            <span style={styles.sep}>·</span>
+            <Link href="/muse" style={styles.link}>
+              Muse
+            </Link>
           </div>
           <div style={styles.copy}>
             © {new Date().getFullYear()} Bolewood Group, LLC
@@ -117,6 +119,13 @@ const styles = {
   sep: {
     color: "#d6d3d1",
     fontSize: "11px",
+  },
+  archivedLabel: {
+    fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
+    fontSize: "11px",
+    color: "#a8a29e",
+    letterSpacing: "0.04em",
+    marginRight: "2px",
   },
   copy: {
     fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",

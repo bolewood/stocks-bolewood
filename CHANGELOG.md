@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.21.0.0] — 2026-11-17
+
+- Archived `/private-tape`, `/echo`, `/sftby` and `/muse`: they're no longer updated. They're off the top navigation, moved to an "Archived Tools" section on the home page and an "Archived" row in the footer, and each shows a banner with the date its data was last updated (Private Tape Nov 16, ECHO Aug 24, SFTBY Sep 5, Muse Sep 25, 2026). The pages and their APIs still work.
+
 ## [0.20.1.0] — 2026-11-17
 
 - `/book`: 2-year Notice.co sparklines, chart cards and secondary prices for five names new to DXYZ in the September 30 filings: Erebor, Synchron, Blue Origin, Varda Space Industries and Together AI (captured 2026-11-17). Blue Origin, Synchron, Varda and Together AI carry basis warnings for one-day steps in their series; Erebor's history only starts Oct 28, 2025. EnduroSat has a Notice page but no price history, and Blykalla has no Notice page, so both stay without a trend.
