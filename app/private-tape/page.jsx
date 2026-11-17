@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ArchivedBanner from "@/components/ArchivedBanner";
 import PrivateTapeDashboard from "@/components/PrivateTapeDashboard";
 
 const TITLE = "Private Tape | DXYZ Tape Lab";
@@ -26,6 +27,7 @@ export default function PrivateTapePage() {
   return (
     <>
       <Header />
+      <ArchivedBanner slug="/private-tape" />
       <PrivateTapeDashboard />
       <Footer />
     </>

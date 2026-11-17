@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ArchivedBanner from "@/components/ArchivedBanner";
 import MuseComputeFinder from "@/components/MuseComputeFinder";
 import { readMuseScenario } from "@/lib/museCompute.mjs";
 
@@ -24,6 +25,7 @@ export default async function MusePage({ searchParams }) {
   return (
     <>
       <Header />
+      <ArchivedBanner slug="/muse" />
       <MuseComputeFinder initialInputs={scenario.inputs} initialPreset={scenario.preset} />
       <Footer />
     </>

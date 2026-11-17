@@ -30,7 +30,7 @@ const tools = [
   {
     slug: "/private-tape",
     name: "Private Tape",
-    status: "live",
+    status: "archived",
     description:
       "DXYZ tape lab comparing Anthropic's private/pre-IPO tape and SpaceX's public 24/7 tape against DXYZ opening gaps, correlations, and residuals.",
     tag: "DXYZ TAPE LAB",
@@ -38,7 +38,7 @@ const tools = [
   {
     slug: "/echo",
     name: "ECHO SOTP Finder",
-    status: "live",
+    status: "archived",
     description:
       "Sum-of-the-parts and SpaceX proxy for EchoStar (NASDAQ: ECHO). AT&T closed; Hughes US is in Chapter 11; remaining swing is 261.8M SPCX shares due ~Nov 2027.",
     tag: "NASDAQ: ECHO",
@@ -46,7 +46,7 @@ const tools = [
   {
     slug: "/sftby",
     name: "SFTBY SOTP Finder",
-    status: "live",
+    status: "archived",
     description:
       "Holdco sum-of-the-parts for SoftBank Group (OTCPK: SFTBY / TSE: 9984). Live Arm mark, OpenAI pulled out of SVF2, and IR-adjusted SBG net debt — not consolidated EV.",
     tag: "OTCPK: SFTBY",
@@ -54,7 +54,7 @@ const tools = [
   {
     slug: "/muse",
     name: "Muse Compute Split",
-    status: "live",
+    status: "archived",
     description:
       "Who pays and who collects if Meta subsidizes Muse at scale. Token burn, VM persistence, and explicit sliders for Graviton, EC2 overflow, and Bedrock.",
     tag: "META × AMZN",
@@ -68,6 +68,37 @@ const tools = [
     tag: "11 WRAPPERS",
   },
 ];
+
+const activeTools = tools.filter((t) => t.status !== "archived");
+const archivedTools = tools.filter((t) => t.status === "archived");
+
+function ToolCard({ tool }) {
+  const archived = tool.status === "archived";
+  return (
+    <div style={{ ...styles.toolCard, ...(archived ? styles.toolCardArchived : {}) }}>
+      <div style={styles.cardTop}>
+        <span
+          style={{
+            ...styles.tag,
+            ...(tool.status === "live" ? styles.tagLive : archived ? styles.tagArchived : styles.tagComing),
+          }}
+        >
+          {tool.status === "live" ? "Live" : archived ? "Archived" : "Coming Soon"}
+        </span>
+        <span style={styles.ticker}>{tool.tag}</span>
+      </div>
+      <h3 style={styles.cardTitle}>{tool.name}</h3>
+      <p style={styles.cardDesc}>{tool.description}</p>
+      {tool.status === "coming" ? (
+        <span style={styles.cardLinkDisabled}>In development</span>
+      ) : (
+        <Link href={tool.slug} style={styles.cardLink}>
+          {archived ? "Open archived tool →" : "Open tool →"}
+        </Link>
+      )}
+    </div>
+  );
+}
 
 export default function HomePage() {
   return (
@@ -95,31 +126,23 @@ export default function HomePage() {
           </div>
 
           <div style={styles.toolGrid}>
-            {tools.map((tool) => (
-              <div key={tool.slug} style={styles.toolCard}>
-                <div style={styles.cardTop}>
-                  <span
-                    style={{
-                      ...styles.tag,
-                      ...(tool.status === "live"
-                        ? styles.tagLive
-                        : styles.tagComing),
-                    }}
-                  >
-                    {tool.status === "live" ? "Live" : "Coming Soon"}
-                  </span>
-                  <span style={styles.ticker}>{tool.tag}</span>
-                </div>
-                <h3 style={styles.cardTitle}>{tool.name}</h3>
-                <p style={styles.cardDesc}>{tool.description}</p>
-                {tool.status === "live" ? (
-                  <Link href={tool.slug} style={styles.cardLink}>
-                    Open tool →
-                  </Link>
-                ) : (
-                  <span style={styles.cardLinkDisabled}>In development</span>
-                )}
-              </div>
+            {activeTools.map((tool) => (
+              <ToolCard key={tool.slug} tool={tool} />
+            ))}
+          </div>
+        </div>
+
+        <div style={styles.toolsSection}>
+          <div style={styles.toolsHeader}>
+            <span style={styles.sectionNum}>02</span>
+            <h2 style={styles.sectionTitle}>Archived Tools</h2>
+          </div>
+          <p style={styles.archivedNote}>
+            Still online for reference, but no longer updated. Filings, share counts and assumptions may be out of date.
+          </p>
+          <div style={styles.toolGrid}>
+            {archivedTools.map((tool) => (
+              <ToolCard key={tool.slug} tool={tool} />
             ))}
           </div>
         </div>
@@ -221,6 +244,20 @@ const styles = {
     background: "#f0fdf4",
     color: "#15803d",
     border: "1px solid #bbf7d0",
+  },
+  tagArchived: {
+    background: "#fef3c7",
+    color: "#92400e",
+    border: "1px solid #fcd34d",
+  },
+  toolCardArchived: {
+    background: "#fafaf9",
+    opacity: 0.85,
+  },
+  archivedNote: {
+    fontSize: "14px",
+    color: "#78716c",
+    margin: "-16px 0 24px 0",
   },
   tagComing: {
     background: "#f5f5f4",

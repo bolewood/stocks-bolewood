@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ArchivedBanner from "@/components/ArchivedBanner";
 import SFTBYSOTPFinder from "@/components/SFTBYSOTPFinder";
 import { readSotpScenario } from "@/lib/sftbyScenario.mjs";
 
@@ -26,6 +27,7 @@ export default async function SFTBYPage({ searchParams }) {
   return (
     <>
       <Header />
+      <ArchivedBanner slug="/sftby" />
       <SFTBYSOTPFinder initialInputs={scenario.inputs} initialScenario={scenario.key}
         pinnedFields={[...scenario.pinned]} reference={params.get("reference") === "sftby"} />
       <Footer />
