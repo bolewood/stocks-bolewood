@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.20.1.0] — 2026-11-17
+
+- `/book`: 2-year Notice.co sparklines, chart cards and secondary prices for five names new to DXYZ in the September 30 filings: Erebor, Synchron, Blue Origin, Varda Space Industries and Together AI (captured 2026-11-17). Blue Origin, Synchron, Varda and Together AI carry basis warnings for one-day steps in their series; Erebor's history only starts Oct 28, 2025. EnduroSat has a Notice page but no price history, and Blykalla has no Notice page, so both stay without a trend.
+- Each trend card shows its own capture date (the earlier 119 stay at Oct 3, 2026), and the no-trend message gives the live coverage count instead of "18 core positions".
+
 ## [0.20.0.0] — 2026-11-16
 
 - `/dxyz`, `/ai`, `/private-tape`, `/book`: Destiny Tech100 rolled to its September 30, 2026 filings (NPORT-P `0000894189-26-030445` and 424B3 Supplement No. 2 `0001575872-26-000797`, both Nov 16). Filed NAV $38.32, net assets $1,826.37M, 47,657,338 shares (no Q3 ATM sales). Cash $719.8M (39.4%) at 9/30; ≈$607.8M (≈33%) after $112.0M of October deals added at cost.

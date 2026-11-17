@@ -953,7 +953,7 @@ export default function PrivateBook({ companyMap, snapshots, disclosure, seconda
                                       </div>
                                       <div style={styles.secondaryFactItem}>
                                         <span style={styles.secondaryFactLabel}>Snapshot Date</span>
-                                        <span style={styles.secondaryFactVal}>{secondaryTrends.asOf || "Oct 1, 2026"}</span>
+                                        <span style={styles.secondaryFactVal}>{trend.asOf || secondaryTrends.asOf || "Oct 1, 2026"}</span>
                                       </div>
                                     </div>
 
@@ -985,7 +985,7 @@ export default function PrivateBook({ companyMap, snapshots, disclosure, seconda
                                         loading="lazy"
                                       />
                                       <div style={styles.secondaryChartCaption}>
-                                        Notice.co 2Y Historical Trajectory · Snapshot captured Oct 1, 2026
+                                        Notice.co 2Y Historical Trajectory · Snapshot captured {trend.asOf || secondaryTrends.asOf || "Oct 1, 2026"}
                                       </div>
                                     </div>
                                   </div>
@@ -994,7 +994,7 @@ export default function PrivateBook({ companyMap, snapshots, disclosure, seconda
                             })()
                           ) : secondaryTrends ? (
                             <div style={styles.secondaryNoTapeBox}>
-                              <span style={styles.secondaryNoTapeKicker}>Notice.co Secondary Tape:</span> No 2-year secondary chart snapshot tracked for {row.name}. High-frequency secondary coverage is currently available for 18 core pre-IPO positions.
+                              <span style={styles.secondaryNoTapeKicker}>Notice.co Secondary Tape:</span> No 2-year secondary chart snapshot tracked for {row.name}. Notice.co coverage is tracked for {Object.keys(secondaryTrends.companies || {}).length} private holdings.
                             </div>
                           ) : null}
 
