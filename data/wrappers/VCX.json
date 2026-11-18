@@ -20,7 +20,7 @@
   "security": {
     "label": "Fund NAV",
     "linear": true,
-    "footnote": "Anthropic: June 30 NPORT mark ($863.7B) has no S-1 per-share price; share-equivalents use an explicit estimation assumption scaling Series H-1 ($589.0095, S-1 p. F-47) by 863.7/965 (≈$527.17 per pre-split share), then divide by S-1 FD shares (p. 13)."
+    "footnote": "Anthropic: VCX files no per-share price or share count. Its June 30 lots rose 2.2729709× from Series G-1 ($259.14 × 2.2729709 = $589.02), the Series H-1 price ($589.0095, S-1 p. F-47); share-equivalents = fair value ÷ $589.0095, then ÷ the FD share count."
   },
   "sources": [
     {
@@ -102,15 +102,15 @@
           "measurementCompanyMark"
         ],
         "sourceClass": "assumption",
-        "note": "Implied ~$863.7B = Series G $380B × the 2.2729709× NPORT multiple on the remaining lots. Not a disclosed Anthropic round; Fundrise did not take the full Series H 965/380 multiple. Share-equivalents use the Series H-1 price ($589.0095 per pre-split share, S-1 p. F-47) scaled by 863.7/965 (≈$527.17 per pre-split share), then divide by the S-1 FD share count (p. 13).",
-        "publicationDate": "2026-10-26",
+        "note": "June 30 mark = Series G-1 $259.14 × 2.2729709 (VCX's common lot multiple, March 31 -> June 30 NPORT) = $589.02 per pre-split share, the Series H-1 price ($589.0095) within rounding; $965B post-money. Corrected 2026-11-18 from ~$863.7B / $527.17, which applied the multiple to post-money and ignored shares issued between Series G and H (overstated share-equivalents by 11.7%).",
+        "publicationDate": "2026-11-18",
         "url": "https://www.sec.gov/Archives/edgar/data/1867090/000186709026000109/04400.htm",
         "measurementDate": "2026-06-30",
-        "estimationMethod": "Implied ~$863.7B = Series G $380B × the 2.2729709× NPORT multiple on the remaining lots. Because this fund mark has no disclosed per-share price, share-equivalents scale the Series H-1 price ($589.0095 pre-split, S-1 p. F-47) by 863.7/965 (≈$527.17 per pre-split unit).",
+        "estimationMethod": "VCX files no Anthropic per-share price. Per-share mark inferred from the lot multiple on the Series G-1 price, which equals the Series H-1 price ($589.0095); share-equivalents = reported fair value ÷ $589.0095, then ÷ the FD share count.",
         "section": "S-1 pp. 13, F-47"
       }
     ],
-    "evidenceNote": "Estimation assumption: mark anthropic-vcx-nport-2026-06-30 ($863.7B) has no per-share price in the S-1, so share-equivalents (329,342.96 pre-split units) use the Series H-1 price ($589.0095, S-1 p. F-47) scaled by 863.7/965 (≈$527.17 per pre-split share), then divide by the S-1 FD share count (p. 13)."
+    "evidenceNote": "Estimation assumption: VCX files no Anthropic per-share price, so share-equivalents (294,780.43 pre-split units) use the inferred June 30 mark: Series G-1 $259.14 × VCX's 2.2729709 lot multiple = the Series H-1 price, $589.0095 per pre-split share (S-1 p. F-47), then divide by the FD share count."
   },
   "openai": {
     "basis": "filed-fv-equiv",

@@ -1,4 +1,11 @@
-# Source changes — November 16, 2026 (DXYZ 9/30 roll), November 10, 2026 (methodology 1.4.0), October 26, 2026 (1.3.0) & September 5, 2026 (1.2.0)
+# Source changes — November 18, 2026 (VCX Anthropic mark correction), November 16, 2026 (DXYZ 9/30 roll), November 10, 2026 (methodology 1.4.0), October 26, 2026 (1.3.0) & September 5, 2026 (1.2.0)
+
+## Correction: VCX Anthropic per-share mark — November 18, 2026
+
+| Record | Evidence | Change & superseded figure |
+| --- | --- | --- |
+| `marks.json` `anthropic-vcx-nport-2026-06-30` | VCX March 31 and June 30 NPORT lot values (SaxeCap Advisors VIII, AI Access 12: common 2.2729709× multiple); S-1 p. F-47 Series G-1 $259.14, Series H-1 $589.0095 | The multiple applies per share: $259.14 × 2.2729709 = $589.02, the Series H-1 price within the G-1 price's cent rounding. Now `pricePerShare: 589.0095`, `postMoney: $965B`, `pricePerShareInferred: true`. **Supersedes** `postMoney` $863,728,942,543.80 with `pricePerShareFromMark` scaling (≈ $527.17/pre-split share), which applied the multiple to the $380B post-money and ignored the shares issued between Series G and H (1,466.39M → 1,638.34M FD). |
+| `VCX` Anthropic leg | as above | Share-equivalents 294,781.9 pre-split units (2.95M ANT shares). **Supersedes** 329,342.96 (−10.5%; the old figure was 11.7% too high). At $74 fully diluted and the frozen $39.78 price, Anthropic per $100 is $15.32 (was $17.11). ESTIMATED VCX NAV $21.71 (was $22.28): the June mark is already the Series H price, so rolling to Series H no longer marks it up. |
 
 ## Destiny Tech100 (DXYZ) September 30, 2026 filings — November 16, 2026
 

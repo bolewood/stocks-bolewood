@@ -92,8 +92,9 @@
         {
           "id": "anthropic-vcx-nport-2026-06-30",
           "name": "VCX NPORT-implied mark (June 30, 2026)",
-          "postMoney": 863728942543.7954,
-          "pricePerShareFromMark": "anthropic-series-h",
+          "postMoney": 965000000000,
+          "pricePerShare": 589.0095,
+          "pricePerShareInferred": true,
           "shareBasis": "pre-split",
           "closed": "2026-06-30",
           "sources": [
@@ -108,14 +109,14 @@
               "documentDate": "2026-06-30",
               "asOf": "2026-06-30",
               "url": "https://www.sec.gov/Archives/edgar/data/1867090/000186709026000109/xslFormNPORT-P_X01/primary_doc.xml",
-              "note": "Series G $380B × 2.2729709, the common multiple on VCX's remaining Anthropic lots (SaxeCap Advisors VIII and AI Access 12) from the March 31 NPORT to the June 30 NPORT. Not a disclosed Anthropic round.",
+              "note": "VCX's remaining Anthropic lots (SaxeCap Advisors VIII and AI Access 12) rose by a common 2.2729709× from the March 31 NPORT to the June 30 NPORT. Applied per share to the Series G-1 price ($259.14 pre-split, S-1 p. F-47, rounded to cents) that is $589.018, the Series H-1 price ($589.0095) within the cent rounding of the G-1 price. So the June 30 mark is the Series H-1 price per share, $965B post-money. Not a new Anthropic round.",
               "measurementDate": "2026-06-30",
               "publicationDate": "2026-06-30",
               "section": "Financing announcement or measurement assumption"
             },
             {
               "fields": [
-                "pricePerShareFromMark",
+                "pricePerShare",
                 "shareBasis"
               ],
               "sourceClass": "assumption",
@@ -124,11 +125,11 @@
               "accession": "0001628280-26-067168",
               "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
               "measurementDate": "2026-06-30",
-              "publicationDate": "2026-10-26",
+              "publicationDate": "2026-11-18",
               "asOf": "2026-06-30",
               "section": "S-1 p. F-47",
-              "estimationMethod": "VCX's June 30, 2026 NPORT-implied mark ($863.7B) has no disclosed per-share price; share-equivalents use the Series H-1 price ($589.0095 per pre-split share, S-1 p. F-47) scaled by $863.7B / $965B (≈$527.17 per pre-split share).",
-              "note": "No per-share price exists for VCX's internal June 30 NPORT mark; scales the Series H-1 price ($589.0095 pre-split, S-1 p. F-47) by 863.7/965 (≈$527.17 per pre-split unit)."
+              "estimationMethod": "Per-share mark inferred from VCX's common lot multiple: Series G-1 $259.14 × 2.2729709 = $589.018 per pre-split share, the Series H-1 price $589.0095 (S-1 p. F-47) within rounding; the H-1 price is used. Corrected 2026-11-18: the earlier version applied the multiple to the $380B post-money (~$863.7B) and scaled the H-1 price by 863.7/965 (~$527.17), which ignored the shares issued between Series G and H (1,466.4M -> 1,638.3M FD) and overstated VCX's share-equivalents by 11.7%.",
+              "note": "VCX files no per-share price or share count for Anthropic; the per-share mark is inferred from its lot multiple on the Series G-1 price."
             }
           ]
         }
