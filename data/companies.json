@@ -1061,6 +1061,34 @@
     "rvii-safes": {
       "name": "SAFEs in early-stage private companies (RVII)",
       "note": "Robinhood Ventures Fund II SAFE book, grouped. The fund focuses on current or former Y Combinator companies but may also hold non-YC companies."
+    },
+    "canton-strategic-holdings": {
+      "name": "Canton Strategic Holdings"
+    },
+    "alphabet": {
+      "name": "Alphabet"
+    },
+    "nvidia": {
+      "name": "NVIDIA"
+    },
+    "k2-space": {
+      "name": "K2 Space"
+    },
+    "life-sciences-inc": {
+      "name": "Life Sciences Inc.",
+      "note": "Named \"Life Sciences Inc., Series B-1\" in ARK Venture Fund's July 31, 2026 N-CSR; the N-PORT lists the same line only as \"Preferred Stock, Series B-1\". Not otherwise identified."
+    },
+    "sonothera": {
+      "name": "SonoThera"
+    },
+    "cellares": {
+      "name": "Cellares"
+    },
+    "wonder": {
+      "name": "Wonder"
+    },
+    "wayve": {
+      "name": "Wayve Technologies"
     }
   }
 }

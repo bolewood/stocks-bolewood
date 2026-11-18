@@ -61,7 +61,7 @@ test("book filenames carry the measurement date and accession or source id", () 
   for (const file of files) {
     assert.match(file, /^\d{4}-\d{2}-\d{2}__(?:\d{10}-\d{2}-\d{6}|[a-z0-9-]+)\.json$/);
   }
-  assert.equal(snapshots.length, 13);
+  assert.equal(snapshots.length, 14);
 });
 
 test("DXYZ June 30 reconciles to the filed ledger", () => {
@@ -449,4 +449,20 @@ test("NAV staleness is measured from today's date, over 75 days", () => {
     assert.equal(current.pendingFiling.form, "NPORT-P");
     assert.equal(current.pendingFiling.dueBy, "2026-11-29");
   }
+});
+
+test("ARKVX rolls to the audited July 31 N-CSR; lines tie to net assets", () => {
+  const arkvx = defaultSnapshot(fundSeries(snapshots, "ARKVX"));
+  assert.equal(arkvx.measurementDate, "2026-07-31");
+  assert.equal(arkvx.accession, "0001213900-26-107607");
+  assert.equal(arkvx.netAssets, 1_184_921_592);
+  assert.equal(arkvx.lines.reduce((total, line) => total + line.fairValue, 0), arkvx.netAssets);
+  const holdings = arkvx.lines.filter((l) => l.role !== "residual").reduce((t, l) => t + l.fairValue, 0);
+  assert.equal(holdings, 1_170_865_658);
+  const pos = positionsByCompany(arkvx, companyMap);
+  assert.equal(pos.get("anthropic").fairValue, 49_614_780);
+  assert.equal(pos.get("openai").fairValue, 71_028_518);
+  assert.equal(pos.get("spacex").fairValue, 100_094_867);
+  assert.equal(positionMetrics(pos.get("anthropic"), arkvx, 58.92).per100, 100 * pos.get("anthropic").weight);
+  assert.equal(arkvx.pendingFiling.dueBy, "2026-12-30");
 });

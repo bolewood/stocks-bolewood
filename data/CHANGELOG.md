@@ -17,6 +17,12 @@ Typed entries: **Data update** · **Correction** · **Methodology change** · **
   - NAV $23.21, net assets $210,433,394, 9,066,384 shares after the 0.97658 reverse split on 8/14.
   - The 125 SAFE lines (122 companies, $35,610,699) are grouped as `rvii-safes`, plus Limrun preferred $335,004.
   - First American Government Obligations X $180,213,058, and liabilities in excess of other assets −$5,725,367.
+- ARKVX: `data/books/ARKVX/2026-07-31__0001213900-26-107607.json` from the audited July 31, 2026 N-CSR (filed 2026-10-07).
+  - Net assets $1,184,921,592: 122 investment lines totalling $1,170,865,658, plus other assets in excess of liabilities of $14,055,934.
+  - Cross-checked against the July 31 N-PORT (`0000940400-26-036464`, net assets $1,184,177,831). A few public marks differ; the audited N-CSR is used.
+  - Anthropic $49,614,780 (4.19%), OpenAI $71,028,518 across four lines (5.99%), SpaceX $100,094,867 (8.45%).
+  - `companies.json` adds Alphabet, NVIDIA, Canton Strategic Holdings, K2 Space, SonoThera, Cellares, Wonder, Wayve Technologies and "Life Sciences Inc." (the N-CSR's name for a Series B-1 line the N-PORT leaves unnamed).
+  - Next expected: the Oct 31 N-PORT, due Dec 30.
 - VCX and RVI keep their 6/30 books, with `pendingFiling` (Q3 NPORT-P due 2026-11-29; CIKs 1867090 and 2085091).
 - Every book gains a display `sourceLabel`. `companies.json` adds `rvii-safes`.
 

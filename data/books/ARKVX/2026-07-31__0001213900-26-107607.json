@@ -1,0 +1,798 @@
+{
+  "schemaVersion": "1.0.0",
+  "ticker": "ARKVX",
+  "name": "ARK Venture Fund",
+  "vehicleType": "interval-fund",
+  "yahooSymbol": "ARKVX",
+  "premiumMode": "none",
+  "weightBasis": "net-assets",
+  "measurementDate": "2026-07-31",
+  "publicationDate": "2026-10-07",
+  "accession": "0001213900-26-107607",
+  "sourceLabel": "N-CSR (Jul 31, audited)",
+  "shortSource": "N-CSR",
+  "pendingFiling": {
+    "form": "NPORT-P",
+    "periodEnd": "2026-10-31",
+    "dueBy": "2026-12-30",
+    "cik": "1905088",
+    "note": "Oct 31 N-PORT due by Dec 30."
+  },
+  "netAssets": 1184921592,
+  "note": "July 31, 2026 annual report (N-CSR, audited): consolidated schedule of investments and statement of assets and liabilities. Total investments $1,170,865,658 plus other assets in excess of liabilities $14,055,934. The July 31 N-PORT (0000940400-26-036464, filed Sep 18) shows net assets of $1,184,177,831; the audited N-CSR is used because it was filed later and a few public-stock marks differ. Interval fund: shares are issued at NAV, so this column does not show a market premium. Reported fair value per $100 equals the NAV weight. SPV lines are summed onto the underlying company named by the filing.",
+  "sources": [
+    {
+      "fields": [
+        "netAssets",
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "issuer": "ARK Venture Fund",
+      "filingType": "N-CSR",
+      "url": "https://www.sec.gov/Archives/edgar/data/1905088/000121390026107607/ea0304362-01_ncsr.htm",
+      "accession": "0001213900-26-107607",
+      "measurementDate": "2026-07-31",
+      "publicationDate": "2026-10-07",
+      "section": "Consolidated schedule of investments; statement of assets and liabilities"
+    },
+    {
+      "fields": [
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "issuer": "ARK Venture Fund",
+      "filingType": "NPORT-P",
+      "url": "https://www.sec.gov/Archives/edgar/data/1905088/000094040026036464/primary_doc.xml",
+      "accession": "0000940400-26-036464",
+      "measurementDate": "2026-07-31",
+      "publicationDate": "2026-09-18",
+      "section": "Schedule of portfolio investments (cross-check)"
+    }
+  ],
+  "lines": [
+    {
+      "companyId": "archer-aviation",
+      "fairValue": 2070813,
+      "role": "holding",
+      "label": "Archer Aviation, Inc., Class A"
+    },
+    {
+      "companyId": "spacex",
+      "fairValue": 100094867,
+      "role": "holding",
+      "label": "Space Exploration Technologies Corp., Class A"
+    },
+    {
+      "companyId": "kodiak-ai",
+      "fairValue": 5417886,
+      "role": "holding",
+      "label": "Kodiak Ai, Inc."
+    },
+    {
+      "companyId": "tesla",
+      "fairValue": 5183514,
+      "role": "holding",
+      "label": "Tesla, Inc."
+    },
+    {
+      "companyId": "absci",
+      "fairValue": 12646437,
+      "role": "holding",
+      "label": "Absci Corp."
+    },
+    {
+      "companyId": "beam-therapeutics",
+      "fairValue": 11702630,
+      "role": "holding",
+      "label": "Beam Therapeutics, Inc."
+    },
+    {
+      "companyId": "crispr-therapeutics",
+      "fairValue": 11941544,
+      "role": "holding",
+      "label": "CRISPR Therapeutics AG (Switzerland)"
+    },
+    {
+      "companyId": "generate-biomedicines",
+      "fairValue": 5738194,
+      "role": "holding",
+      "label": "Generate BioMedicines, Inc."
+    },
+    {
+      "companyId": "intellia-therapeutics",
+      "fairValue": 5773490,
+      "role": "holding",
+      "label": "Intellia Therapeutics, Inc."
+    },
+    {
+      "companyId": "prime-medicine",
+      "fairValue": 8521529,
+      "role": "holding",
+      "label": "Prime Medicine, Inc."
+    },
+    {
+      "companyId": "recursion-pharmaceuticals",
+      "fairValue": 6210465,
+      "role": "holding",
+      "label": "Recursion Pharmaceuticals, Inc., Class A"
+    },
+    {
+      "companyId": "coinbase-global",
+      "fairValue": 4497934,
+      "role": "holding",
+      "label": "Coinbase Global, Inc., Class A"
+    },
+    {
+      "companyId": "robinhood-markets",
+      "fairValue": 5378319,
+      "role": "holding",
+      "label": "Robinhood Markets, Inc., Class A"
+    },
+    {
+      "companyId": "canton-strategic-holdings",
+      "fairValue": 5445479,
+      "role": "holding",
+      "label": "Canton Strategic Holdings, Inc."
+    },
+    {
+      "companyId": "x-energy-reactor-company",
+      "fairValue": 10811883,
+      "role": "holding",
+      "label": "X-Energy, Inc."
+    },
+    {
+      "companyId": "roblox",
+      "fairValue": 4102401,
+      "role": "holding",
+      "label": "ROBLOX Corp., Class A"
+    },
+    {
+      "companyId": "securitize",
+      "fairValue": 8650430,
+      "role": "holding",
+      "label": "Securitize Corp."
+    },
+    {
+      "companyId": "alamar-biosciences",
+      "fairValue": 16933303,
+      "role": "holding",
+      "label": "Alamar Biosciences, Inc."
+    },
+    {
+      "companyId": "freenome",
+      "fairValue": 22515095,
+      "role": "holding",
+      "label": "Freenome Inc."
+    },
+    {
+      "companyId": "genedx-holdings",
+      "fairValue": 5011907,
+      "role": "holding",
+      "label": "Genedx Holdings Corp., Class A"
+    },
+    {
+      "companyId": "twist-bioscience",
+      "fairValue": 6261196,
+      "role": "holding",
+      "label": "Twist Bioscience Corp."
+    },
+    {
+      "companyId": "coreweave",
+      "fairValue": 9512180,
+      "role": "holding",
+      "label": "Coreweave, Inc., Class A"
+    },
+    {
+      "companyId": "alphabet",
+      "fairValue": 14635489,
+      "role": "holding",
+      "label": "Alphabet Inc, Class C"
+    },
+    {
+      "companyId": "shopify",
+      "fairValue": 2863615,
+      "role": "holding",
+      "label": "Shopify, Inc., Class A (Canada)"
+    },
+    {
+      "companyId": "10x-genomics",
+      "fairValue": 9889026,
+      "role": "holding",
+      "label": "10X Genomics, Inc., Class A"
+    },
+    {
+      "companyId": "pacific-biosciences-of-california",
+      "fairValue": 2415256,
+      "role": "holding",
+      "label": "Pacific Biosciences of California, Inc."
+    },
+    {
+      "companyId": "nvidia",
+      "fairValue": 11661367,
+      "role": "holding",
+      "label": "NVIDIA Corp."
+    },
+    {
+      "companyId": "tempus-ai",
+      "fairValue": 14307148,
+      "role": "holding",
+      "label": "Tempus AI, Inc., Class A"
+    },
+    {
+      "companyId": "axiom-space",
+      "fairValue": 487937,
+      "role": "holding",
+      "label": "Axiom Space, Inc, Series C"
+    },
+    {
+      "companyId": "boom",
+      "fairValue": 560087,
+      "role": "holding",
+      "label": "Boom Technology, Inc., Series A"
+    },
+    {
+      "companyId": "boom",
+      "fairValue": 15979433,
+      "role": "holding",
+      "label": "Boom Technology, Inc., Series B-1"
+    },
+    {
+      "companyId": "boom",
+      "fairValue": 2285150,
+      "role": "holding",
+      "label": "Boom Technology, Inc., Series B-3"
+    },
+    {
+      "companyId": "k2-space",
+      "fairValue": 24691269,
+      "role": "holding",
+      "label": "K2 Space Corporation, Series D-1"
+    },
+    {
+      "companyId": "portal-space-systems",
+      "fairValue": 4544851,
+      "role": "holding",
+      "label": "Portal Space Systems, Inc., Series A-1"
+    },
+    {
+      "companyId": "gatik-ai",
+      "fairValue": 5319858,
+      "role": "holding",
+      "label": "Gatik AI, Inc., Series D"
+    },
+    {
+      "companyId": "gatik-ai",
+      "fairValue": 1182178,
+      "role": "holding",
+      "label": "Gatik AI, Inc., Series D-1"
+    },
+    {
+      "companyId": "outrider-technologies",
+      "fairValue": 504779,
+      "role": "holding",
+      "label": "Outrider Technologies, Inc., Series D"
+    },
+    {
+      "companyId": "iambic-therapeutics",
+      "fairValue": 12512127,
+      "role": "holding",
+      "label": "Iambic Therapeutics, Inc., Series B-3"
+    },
+    {
+      "companyId": "lila-sciences",
+      "fairValue": 17771539,
+      "role": "holding",
+      "label": "Lila Sciences, Inc., Series A"
+    },
+    {
+      "companyId": "life-sciences-inc",
+      "fairValue": 29999996,
+      "role": "holding",
+      "label": "Life Sciences Inc., Series B-1",
+      "note": "Filed name. The N-PORT for the same date lists this line only as \"Preferred Stock, Series B-1\"."
+    },
+    {
+      "companyId": "relation-therapeutics",
+      "fairValue": 3195615,
+      "role": "holding",
+      "label": "Relation Therapeutics, Inc., Series Seed-2"
+    },
+    {
+      "companyId": "sonothera",
+      "fairValue": 2005800,
+      "role": "holding",
+      "label": "SonoThera Inc., Series B"
+    },
+    {
+      "companyId": "umoja-biopharma",
+      "fairValue": 3028456,
+      "role": "holding",
+      "label": "Umoja Biopharma Inc., Series C"
+    },
+    {
+      "companyId": "discord",
+      "fairValue": 917677,
+      "role": "holding",
+      "label": "Discord, Inc., Series A"
+    },
+    {
+      "companyId": "hammerspace",
+      "fairValue": 2120752,
+      "role": "holding",
+      "label": "Hammerspace, Inc., Series A-1"
+    },
+    {
+      "companyId": "hammerspace",
+      "fairValue": 6368730,
+      "role": "holding",
+      "label": "Hammerspace, Inc., Series B-2"
+    },
+    {
+      "companyId": "hark-labs",
+      "fairValue": 5772865,
+      "role": "holding",
+      "label": "Hark Labs, Inc., Series A"
+    },
+    {
+      "companyId": "kalshi",
+      "fairValue": 18294856,
+      "role": "holding",
+      "label": "Kalshi Inc., Series E"
+    },
+    {
+      "companyId": "kalshi",
+      "fairValue": 14553139,
+      "role": "holding",
+      "label": "Kalshi, Inc., Series F"
+    },
+    {
+      "companyId": "manna-drone-delivery",
+      "fairValue": 15080400,
+      "role": "holding",
+      "label": "Manna Drone Delivery, Inc., Series B"
+    },
+    {
+      "companyId": "lucra",
+      "fairValue": 649871,
+      "role": "holding",
+      "label": "Lucra, Inc., Series A1"
+    },
+    {
+      "companyId": "lucra",
+      "fairValue": 649872,
+      "role": "holding",
+      "label": "Lucra, Inc., Series A1 Prime"
+    },
+    {
+      "companyId": "lucra",
+      "fairValue": 10000000,
+      "role": "holding",
+      "label": "Lucra, Inc., Series B"
+    },
+    {
+      "companyId": "gamefam",
+      "fairValue": 1111358,
+      "role": "holding",
+      "label": "Gamefam, Inc., Series A"
+    },
+    {
+      "companyId": "architect-financial-technologies",
+      "fairValue": 4891804,
+      "role": "holding",
+      "label": "Architect Financial Technologies, Series A-2"
+    },
+    {
+      "companyId": "architect-financial-technologies",
+      "fairValue": 5392427,
+      "role": "holding",
+      "label": "Architect Financial Technologies, Inc., Series A"
+    },
+    {
+      "companyId": "cellares",
+      "fairValue": 20921118,
+      "role": "holding",
+      "label": "Cellares Inc., Series D"
+    },
+    {
+      "companyId": "neuralink",
+      "fairValue": 18206727,
+      "role": "holding",
+      "label": "Neuralink Corp., Series E"
+    },
+    {
+      "companyId": "firmly",
+      "fairValue": 104296,
+      "role": "holding",
+      "label": "Firmly, Inc., Series A-1"
+    },
+    {
+      "companyId": "firmly",
+      "fairValue": 741674,
+      "role": "holding",
+      "label": "Firmly, Inc., Series A-3"
+    },
+    {
+      "companyId": "perplexity",
+      "fairValue": 3347305,
+      "role": "holding",
+      "label": "Perplexity AI Inc., Series D-1"
+    },
+    {
+      "companyId": "radiant-industries",
+      "fairValue": 5750041,
+      "role": "holding",
+      "label": "Radiant Industries, Incorporated, Series C-2"
+    },
+    {
+      "companyId": "radiant-industries",
+      "fairValue": 5224745,
+      "role": "holding",
+      "label": "Radiant Industries, Incorporated, Series D"
+    },
+    {
+      "companyId": "apptronik",
+      "fairValue": 8228140,
+      "role": "holding",
+      "label": "Apptronik, Inc., Series A-1"
+    },
+    {
+      "companyId": "apptronik",
+      "fairValue": 1991219,
+      "role": "holding",
+      "label": "Apptronik, Inc., Series A-X"
+    },
+    {
+      "companyId": "figure",
+      "fairValue": 30255360,
+      "role": "holding",
+      "label": "Figure AI, Inc., Series B"
+    },
+    {
+      "companyId": "wonder",
+      "fairValue": 19971765,
+      "role": "holding",
+      "label": "Wonder, Series D"
+    },
+    {
+      "companyId": "ayar-labs",
+      "fairValue": 33498010,
+      "role": "holding",
+      "label": "Ayar Labs, Inc., Series E"
+    },
+    {
+      "companyId": "tenstorrent",
+      "fairValue": 1086945,
+      "role": "holding",
+      "label": "Tenstorrent Holdings, Inc., Series D-1"
+    },
+    {
+      "companyId": "tenstorrent",
+      "fairValue": 1318778,
+      "role": "holding",
+      "label": "Tenstorrent Holdings, Inc., Series D-2"
+    },
+    {
+      "companyId": "anthropic",
+      "fairValue": 49614780,
+      "role": "holding",
+      "label": "Anthropic, Inc., Series C-1"
+    },
+    {
+      "companyId": "crusoe",
+      "fairValue": 26925717,
+      "role": "holding",
+      "label": "Crusoe, Inc., Series E"
+    },
+    {
+      "companyId": "databricks",
+      "fairValue": 8743693,
+      "role": "holding",
+      "label": "Databricks, Inc., Series K"
+    },
+    {
+      "companyId": "databricks",
+      "fairValue": 10354559,
+      "role": "holding",
+      "label": "Databricks, Inc., Series L"
+    },
+    {
+      "companyId": "hydra-host",
+      "fairValue": 17511477,
+      "role": "holding",
+      "label": "Hydra Host, Inc., Series A-1"
+    },
+    {
+      "companyId": "lambda",
+      "fairValue": 10549978,
+      "role": "holding",
+      "label": "Lambda Inc., Series D"
+    },
+    {
+      "companyId": "lambda",
+      "fairValue": 6858354,
+      "role": "holding",
+      "label": "Lambda Inc., Series E-2"
+    },
+    {
+      "companyId": "mythical",
+      "fairValue": 110638,
+      "role": "holding",
+      "label": "Mythical, Inc., Series C-1"
+    },
+    {
+      "companyId": "mythical",
+      "fairValue": 2475535,
+      "role": "holding",
+      "label": "Mythical, Inc., Series D"
+    },
+    {
+      "companyId": "mythical",
+      "fairValue": 527136,
+      "role": "holding",
+      "label": "Mythical, Inc., Series D-1"
+    },
+    {
+      "companyId": "openai",
+      "fairValue": 7219178,
+      "role": "holding",
+      "label": "OpenAI Group PBC, Series A-2"
+    },
+    {
+      "companyId": "openai",
+      "fairValue": 11049154,
+      "role": "holding",
+      "label": "OpenAI Group PBC, Series A-3"
+    },
+    {
+      "companyId": "openai",
+      "fairValue": 49303475,
+      "role": "holding",
+      "label": "OpenAI Group PBC, Series C"
+    },
+    {
+      "companyId": "replit",
+      "fairValue": 6307665,
+      "role": "holding",
+      "label": "Replit, Inc., Series B-1"
+    },
+    {
+      "companyId": "replit",
+      "fairValue": 13575953,
+      "role": "holding",
+      "label": "Replit, Inc., Series C"
+    },
+    {
+      "companyId": "replit",
+      "fairValue": 10008774,
+      "role": "holding",
+      "label": "Replit, Inc., Series D"
+    },
+    {
+      "companyId": "shield-ai",
+      "fairValue": 7019180,
+      "role": "holding",
+      "label": "Shield AI, Inc., Series F"
+    },
+    {
+      "companyId": "shield-ai",
+      "fairValue": 3073600,
+      "role": "holding",
+      "label": "Shield AI, Inc., Series Seed"
+    },
+    {
+      "companyId": "sortium",
+      "fairValue": 242507,
+      "role": "holding",
+      "label": "Sortium, Inc., Series Seed-1"
+    },
+    {
+      "companyId": "flexport",
+      "fairValue": 176,
+      "role": "holding",
+      "label": "Flexport, Inc., Series A"
+    },
+    {
+      "companyId": "flexport",
+      "fairValue": 17784,
+      "role": "holding",
+      "label": "Flexport, Inc., Series B-1"
+    },
+    {
+      "companyId": "flexport",
+      "fairValue": 88704,
+      "role": "holding",
+      "label": "Flexport, Inc., Series C"
+    },
+    {
+      "companyId": "zipline",
+      "fairValue": 1567584,
+      "role": "holding",
+      "label": "Zipline International, Inc., Series F"
+    },
+    {
+      "companyId": "zipline",
+      "fairValue": 2253422,
+      "role": "holding",
+      "label": "Zipline International, Inc., Series G"
+    },
+    {
+      "companyId": "zipline",
+      "fairValue": 16799310,
+      "role": "holding",
+      "label": "Zipline International, Inc., Series H"
+    },
+    {
+      "companyId": "boom",
+      "fairValue": 19126,
+      "role": "holding",
+      "label": "Boom Technology, Inc."
+    },
+    {
+      "companyId": "wayve",
+      "fairValue": 29999885,
+      "role": "holding",
+      "label": "Wayve Technologies Ltd."
+    },
+    {
+      "companyId": "stripe",
+      "fairValue": 53412306,
+      "role": "holding",
+      "label": "Stripe Global Holdings Inc"
+    },
+    {
+      "companyId": "blockdaemon",
+      "fairValue": 1562498,
+      "role": "holding",
+      "label": "Blockdaemon, Inc."
+    },
+    {
+      "companyId": "discord",
+      "fairValue": 4684370,
+      "role": "holding",
+      "label": "Discord, Inc."
+    },
+    {
+      "companyId": "revolut",
+      "fairValue": 5825096,
+      "role": "holding",
+      "label": "Revolut Group Holdings LTD (United Kingdom)"
+    },
+    {
+      "companyId": "databricks",
+      "fairValue": 7324052,
+      "role": "holding",
+      "label": "Databricks, Inc."
+    },
+    {
+      "companyId": "epic-games",
+      "fairValue": 13406000,
+      "role": "holding",
+      "label": "Epic Games, Inc."
+    },
+    {
+      "companyId": "outrider-technologies",
+      "fairValue": 119730,
+      "role": "holding",
+      "label": "Outrider Technologies, Inc. 6.00%, 4/13/28"
+    },
+    {
+      "companyId": "chipper",
+      "fairValue": 457229,
+      "role": "holding",
+      "label": "Critical Ideas, Inc. (Chipper Cash) 10.00%, 2/28/2027"
+    },
+    {
+      "companyId": "blockdaemon",
+      "fairValue": 1757362,
+      "role": "holding",
+      "label": "Blockdaemon Inc., 5.00%, 5/6/28"
+    },
+    {
+      "companyId": "tenstorrent",
+      "fairValue": 27720350,
+      "role": "holding",
+      "label": "Tenstorrent Holdings Inc. 10.00%, 3/31/27"
+    },
+    {
+      "companyId": "tenstorrent",
+      "fairValue": 11088130,
+      "role": "holding",
+      "label": "Tenstorrent Holdings, Inc. 15.00%, 12/31/26"
+    },
+    {
+      "companyId": "boom",
+      "fairValue": 3500000,
+      "role": "holding",
+      "label": "Boom Technology, Inc."
+    },
+    {
+      "companyId": "kino-tech",
+      "fairValue": 551692,
+      "role": "holding",
+      "label": "Kino Tech, Inc."
+    },
+    {
+      "companyId": "chipper",
+      "fairValue": 365783,
+      "role": "holding",
+      "label": "Critical Ideas, Inc. (Chipper Cash)"
+    },
+    {
+      "companyId": "atomic-vaults",
+      "fairValue": 624659,
+      "role": "holding",
+      "label": "Atomic Vaults, Inc."
+    },
+    {
+      "companyId": "impulse-labs",
+      "fairValue": 4979400,
+      "role": "holding",
+      "label": "Impulse Labs, Inc."
+    },
+    {
+      "companyId": "impulse-labs",
+      "fairValue": 4730430,
+      "role": "holding",
+      "label": "Impulse Labs, Inc."
+    },
+    {
+      "companyId": "pave-financial",
+      "fairValue": 559881,
+      "role": "holding",
+      "label": "Pave Financial, Inc."
+    },
+    {
+      "companyId": "tilda-technologies",
+      "fairValue": 270272,
+      "role": "holding",
+      "label": "Tilda Technologies, Inc (Humata AI)"
+    },
+    {
+      "companyId": "ayar-labs",
+      "fairValue": 2860793,
+      "role": "holding",
+      "label": "Autopilot Horizon V-A LLC (invested in Ayar Labs, Inc., Common Stock)",
+      "note": "SPV; summed onto the underlying company named by the filing."
+    },
+    {
+      "companyId": "tenstorrent",
+      "fairValue": 1086868,
+      "role": "holding",
+      "label": "Coin Tens, LLC (invested in Tenstorrent Holdings, Inc. Preferred Stock Series D-1)",
+      "note": "SPV; summed onto the underlying company named by the filing."
+    },
+    {
+      "companyId": "epic-games",
+      "fairValue": 141400,
+      "role": "holding",
+      "label": "MVP Opportunity Fund VI LLC (invested in Epic Games, Inc. Common Stock)",
+      "note": "SPV; summed onto the underlying company named by the filing."
+    },
+    {
+      "companyId": "openai",
+      "fairValue": 3456711,
+      "role": "holding",
+      "label": "Studio Type One Soul II LLC (invested in OpenAI Group PBC Common Stock)",
+      "note": "SPV; summed onto the underlying company named by the filing."
+    },
+    {
+      "companyId": "mythical",
+      "fairValue": 884117,
+      "role": "holding",
+      "label": "Mythical, Inc."
+    },
+    {
+      "companyId": "money-market",
+      "fairValue": 36566839,
+      "role": "cash",
+      "label": "Goldman Sachs Financial Square Treasury Obligations Fund, 3.54%"
+    },
+    {
+      "companyId": "other-net-assets",
+      "fairValue": 14055934,
+      "role": "residual",
+      "label": "Other assets in excess of liabilities",
+      "note": "1.2% of July 31, 2026 net assets on the schedule of investments."
+    }
+  ]
+}
