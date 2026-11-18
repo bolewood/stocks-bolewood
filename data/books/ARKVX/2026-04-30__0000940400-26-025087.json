@@ -9,6 +9,7 @@
   "measurementDate": "2026-04-30",
   "publicationDate": "2026-04-30",
   "accession": "0000940400-26-025087",
+  "sourceLabel": "N-PORT (Apr 30)",
   "netAssets": 871119657,
   "note": "April 30, 2026 schedule of investments. Interval fund: shares are issued at NAV, so this column does not show a market premium. Reported fair value per $100 equals the NAV weight. Several lines are SPVs; they are summed onto the underlying company.",
   "sources": [

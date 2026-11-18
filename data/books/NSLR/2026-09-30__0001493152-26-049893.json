@@ -1,0 +1,319 @@
+{
+  "schemaVersion": "1.0.0",
+  "ticker": "NSLR",
+  "name": "Neostellar Capital",
+  "vehicleType": "bdc",
+  "yahooSymbol": "NSLR",
+  "premiumMode": "market",
+  "weightBasis": "net-assets",
+  "measurementDate": "2026-09-30",
+  "publicationDate": "2026-11-04",
+  "accession": "0001493152-26-049893",
+  "sourceLabel": "10-Q",
+  "navAsOf": "2026-09-30",
+  "navPerShare": 12.64,
+  "netAssets": 334698480,
+  "sharesOutstanding": 26473222,
+  "unknownDilution": false,
+  "filingType": "10-Q",
+  "note": "September 30, 2026 10-Q: statement of assets and liabilities and condensed consolidated schedule of investments. Total investments $377,196,404 (112.7% of net assets) because the BDC is levered. Cash and liabilities come from the same balance sheet. Positions carried at zero are omitted. Learneo (sold 9/21) and Aventine (sold 7/8) are no longer held. Labels are the filing's own position names; an underlying company is named only where a footnote names it.",
+  "sources": [
+    {
+      "fields": [
+        "netAssets",
+        "navPerShare",
+        "sharesOutstanding",
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "issuer": "Neostellar Capital Corp.",
+      "filingType": "10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1509470/000149315226049893/form10-q.htm",
+      "accession": "0001493152-26-049893",
+      "measurementDate": "2026-09-30",
+      "publicationDate": "2026-11-04",
+      "section": "Condensed consolidated statements of assets and liabilities; condensed consolidated schedule of investments"
+    }
+  ],
+  "lines": [
+    {
+      "companyId": "whoop",
+      "fairValue": 141968736,
+      "role": "holding",
+      "label": "Whoop, Inc.: Preferred Shares, Series C"
+    },
+    {
+      "companyId": "whoop",
+      "fairValue": 1358060,
+      "role": "holding",
+      "label": "Whoop, Inc.: Preferred Shares, Series G-2"
+    },
+    {
+      "companyId": "openai",
+      "fairValue": 59444942,
+      "role": "holding",
+      "label": "ARK Type One Deep Ventures Fund LLC: Membership Interest, Class A",
+      "note": "Class A interest is solely invested in OpenAI Group PBC Series A-2 preferred (footnote 5). A fund interest, not a direct share count."
+    },
+    {
+      "companyId": "vast-data",
+      "fairValue": 33976149,
+      "role": "holding",
+      "label": "IH10, LLC: Membership Interest",
+      "note": "IH10's sole asset is an interest in VAST Data Series B preferred through an SPV (footnote 6)."
+    },
+    {
+      "companyId": "blink-health",
+      "fairValue": 4999994,
+      "role": "holding",
+      "label": "Blink Health, Inc.: Preferred Shares, Series A"
+    },
+    {
+      "companyId": "blink-health",
+      "fairValue": 8115668,
+      "role": "holding",
+      "label": "Blink Health, Inc.: Preferred Shares, Series C"
+    },
+    {
+      "companyId": "canva",
+      "fairValue": 13101914,
+      "role": "holding",
+      "label": "Canva, Inc.: Common Shares"
+    },
+    {
+      "companyId": "locus-robotics",
+      "fairValue": 12532759,
+      "role": "holding",
+      "label": "Locus Robotics Corp.: Preferred Shares, Series F 6%"
+    },
+    {
+      "companyId": "liquid-death",
+      "fairValue": 9999996,
+      "role": "holding",
+      "label": "Supplying Demand, Inc. (d/b/a Liquid Death): Preferred Shares, Series F-1"
+    },
+    {
+      "companyId": "liquid-death",
+      "fairValue": 250000,
+      "role": "holding",
+      "label": "Supplying Demand, Inc. (d/b/a Liquid Death): Series F Convertible Note 4.12%, Due 7/15/2030"
+    },
+    {
+      "companyId": "clickhouse",
+      "fairValue": 9471170,
+      "role": "holding",
+      "label": "ClickHouse, Inc.: Preferred Shares, Series A"
+    },
+    {
+      "companyId": "hearth",
+      "fairValue": 3499993,
+      "role": "holding",
+      "label": "Shogun Enterprises, Inc. (d/b/a Hearth): Preferred Shares, Series B-1"
+    },
+    {
+      "companyId": "hearth",
+      "fairValue": 3499998,
+      "role": "holding",
+      "label": "Shogun Enterprises, Inc. (d/b/a Hearth): Preferred Shares, Series B-2"
+    },
+    {
+      "companyId": "hearth",
+      "fairValue": 530820,
+      "role": "holding",
+      "label": "Shogun Enterprises, Inc. (d/b/a Hearth): Preferred Shares, Series B-3"
+    },
+    {
+      "companyId": "hearth",
+      "fairValue": 499997,
+      "role": "holding",
+      "label": "Shogun Enterprises, Inc. (d/b/a Hearth): Preferred Shares, Series B-4"
+    },
+    {
+      "companyId": "hearth",
+      "fairValue": 79773,
+      "role": "holding",
+      "label": "Shogun Enterprises, Inc. (d/b/a Hearth): Common Shares"
+    },
+    {
+      "companyId": "plaid",
+      "fairValue": 6922679,
+      "role": "holding",
+      "label": "Plaid Inc.: Common Shares",
+      "note": "Held through 1789 Capital Nirvana II LP, a wholly owned SPV (footnote 8)."
+    },
+    {
+      "companyId": "fourkites",
+      "fairValue": 5356057,
+      "role": "holding",
+      "label": "FourKites, Inc.: Common Shares"
+    },
+    {
+      "companyId": "edge-markets",
+      "fairValue": 3201961,
+      "role": "holding",
+      "label": "EDGE Markets, Inc.: Preferred Shares, Series Seed 8%"
+    },
+    {
+      "companyId": "payjoy",
+      "fairValue": 2499758,
+      "role": "holding",
+      "label": "PayJoy, Inc.: Preferred Shares, Series C"
+    },
+    {
+      "companyId": "payjoy",
+      "fairValue": 500000,
+      "role": "holding",
+      "label": "PayJoy, Inc.: Simple Agreement for Future Equity"
+    },
+    {
+      "companyId": "true-global-ventures",
+      "fairValue": 2884437,
+      "role": "holding",
+      "label": "True Global Ventures 4 Plus Pte Ltd: Limited Partner Fund Investment"
+    },
+    {
+      "companyId": "lime",
+      "fairValue": 2852663,
+      "role": "holding",
+      "label": "Neutron Holdings, Inc. (d/b/a Lime): Common Shares",
+      "note": "Lime listed on Nasdaq on 7/1/2026; preferred, note and warrants converted to common (footnote 11). Level 1 or 2."
+    },
+    {
+      "companyId": "prophet-exchange",
+      "fairValue": 2849871,
+      "role": "holding",
+      "label": "Stake Trade, Inc. (d/b/a Prophet Exchange): Preferred Shares, Series B-IV"
+    },
+    {
+      "companyId": "xpoint",
+      "fairValue": 220201,
+      "role": "holding",
+      "label": "Xgroup Holdings Inc. (d/b/a Xpoint): Preferred Shares, Series A-1"
+    },
+    {
+      "companyId": "xpoint",
+      "fairValue": 1593789,
+      "role": "holding",
+      "label": "Xgroup Holdings Inc. (d/b/a Xpoint): Series A-1 Warrants, Strike Price $0.0001, Expiration Date 5/14/2044"
+    },
+    {
+      "companyId": "xpoint",
+      "fairValue": 564568,
+      "role": "holding",
+      "label": "Xgroup Holdings Inc. (d/b/a Xpoint): Series A Warrants, Strike Price $0.0001, Expiration Date 5/14/2044"
+    },
+    {
+      "companyId": "second-avenue",
+      "fairValue": 1463030,
+      "role": "holding",
+      "label": "Residential Homes for Rent, LLC (d/b/a Second Avenue): Preferred Shares, Series A"
+    },
+    {
+      "companyId": "varo",
+      "fairValue": 1079266,
+      "role": "holding",
+      "label": "Varo Money, Inc.: Common Shares"
+    },
+    {
+      "companyId": "grabagun",
+      "fairValue": 645736,
+      "role": "holding",
+      "label": "GrabAGun Digital Holdings Inc.: Common Shares"
+    },
+    {
+      "companyId": "grabagun",
+      "fairValue": 361346,
+      "role": "holding",
+      "label": "GrabAGun Digital Holdings Inc.: Common Warrants, Strike Price $11.50, Expiration Date 7/15/2030"
+    },
+    {
+      "companyId": "skillsoft",
+      "fairValue": 282770,
+      "role": "holding",
+      "label": "Skillsoft Corp.: Common Shares"
+    },
+    {
+      "companyId": "huntress",
+      "fairValue": 230738,
+      "role": "holding",
+      "label": "Huntress Labs Inc.: Common Shares"
+    },
+    {
+      "companyId": "orchard",
+      "fairValue": 80800,
+      "role": "holding",
+      "label": "Orchard Technologies, Inc.: Preferred Shares, Series E-1"
+    },
+    {
+      "companyId": "publicsquare",
+      "fairValue": 35921,
+      "role": "holding",
+      "label": "PSQ Holdings, Inc. (d/b/a PublicSquare): Common Warrants, Strike Price $11.50, Expiration Date 7/19/2028"
+    },
+    {
+      "companyId": "kinetiq",
+      "fairValue": 22077,
+      "role": "holding",
+      "label": "Kinetiq Holdings, LLC: Common Shares, Class A"
+    },
+    {
+      "companyId": "tensorwave",
+      "fairValue": 5312950,
+      "role": "holding",
+      "label": "Magnetar Opportunity 2025-4 LP: Class A Interest",
+      "note": "SPV invested in TensorWave Series B preferred (footnote 16). Affiliate investment."
+    },
+    {
+      "companyId": "tensorwave",
+      "fairValue": 15093083,
+      "role": "holding",
+      "label": "Magnetar Opportunity 2025-4 LP: Class B Interest"
+    },
+    {
+      "companyId": "coreweave",
+      "fairValue": 12325378,
+      "role": "holding",
+      "label": "CW Opportunity 2 LP: Class A Interest",
+      "note": "SPV solely invested in CoreWeave Class A common (footnote 17). About 52.1% of the original investment remained at 9/30. Affiliate investment."
+    },
+    {
+      "companyId": "stormwind",
+      "fairValue": 424314,
+      "role": "holding",
+      "label": "StormWind, LLC: Preferred Shares, Series D 8%",
+      "note": "Affiliate investment."
+    },
+    {
+      "companyId": "stormwind",
+      "fairValue": 4582048,
+      "role": "holding",
+      "label": "StormWind, LLC: Preferred Shares, Series C 8%"
+    },
+    {
+      "companyId": "stormwind",
+      "fairValue": 2407756,
+      "role": "holding",
+      "label": "StormWind, LLC: Preferred Shares, Series B 8%"
+    },
+    {
+      "companyId": "stormwind",
+      "fairValue": 73238,
+      "role": "holding",
+      "label": "StormWind, LLC: Preferred Shares, Series A 8%"
+    },
+    {
+      "companyId": "cash-unscheduled",
+      "fairValue": 40853490,
+      "role": "cash",
+      "label": "Cash",
+      "note": "Balance sheet cash at 9/30. Restricted cash was zero. No U.S. Treasury bills were held at 9/30."
+    },
+    {
+      "companyId": "other-net-assets",
+      "fairValue": -83351414,
+      "role": "liability",
+      "label": "Liabilities less other assets",
+      "note": "Total liabilities $84,365,045 (6.00% notes due 2026 $35.7M, 6.50% convertible notes due 2029 $26.5M, 6.50% promissory note due 2029 $19.9M, payables and accruals) less other assets of $1,013,631."
+    }
+  ]
+}

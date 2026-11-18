@@ -1057,6 +1057,10 @@
     },
     "blykalla": {
       "name": "Blykalla"
+    },
+    "rvii-safes": {
+      "name": "SAFEs in early-stage private companies (RVII)",
+      "note": "Robinhood Ventures Fund II SAFE book, grouped. The fund focuses on current or former Y Combinator companies but may also hold non-YC companies."
     }
   }
 }

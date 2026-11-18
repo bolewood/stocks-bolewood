@@ -9,6 +9,7 @@
   "measurementDate": "2026-06-30",
   "publicationDate": "2026-08-21",
   "accession": "0001193125-26-360659",
+  "sourceLabel": "N-PORT-P",
   "netAssets": 1536563954.67,
   "note": "June 30, 2026 N-PORT for the whole fund. Quoted line is Class I (PIIVX); Classes A (PRIVX) and L (PRLVX) share this book. Interval fund, so there is no market premium and dollars per $100 equal the NAV weight. SPVs invested in SpaceX or Databricks are summed onto that company. The residual is other assets less liabilities.",
   "sources": [

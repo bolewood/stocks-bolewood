@@ -8,6 +8,7 @@
   "weightBasis": "net-assets",
   "measurementDate": "2026-08-31",
   "publicationDate": "2026-09-02",
+  "sourceLabel": "Monthly NAV release",
   "sourceId": "monthly-nav",
   "navAsOf": "2026-08-31",
   "navPerShare": 11.35,

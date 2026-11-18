@@ -10,8 +10,14 @@ import {
   bookCsv,
   canonicalCompanyId,
   currentPublications,
+  defaultSnapshot,
   diffBooks,
   fundPremium,
+  impliedHoldingsPerShare,
+  isStaleNav,
+  navAgeDays,
+  netCashPerShare,
+  priceToNav,
   fundSeries,
   orderedTickers,
   parseBookSearch,
@@ -55,7 +61,7 @@ test("book filenames carry the measurement date and accession or source id", () 
   for (const file of files) {
     assert.match(file, /^\d{4}-\d{2}-\d{2}__(?:\d{10}-\d{2}-\d{6}|[a-z0-9-]+)\.json$/);
   }
-  assert.equal(snapshots.length, 11);
+  assert.equal(snapshots.length, 13);
 });
 
 test("DXYZ June 30 reconciles to the filed ledger", () => {
@@ -136,10 +142,12 @@ test("price formulas use reported NAV and refuse a portfolio-mix percent", () =>
   assert.equal(fundPremium(marketing, 12), null);
 });
 
-test("the current DXYZ book is the Nov 4 post-deal view, and earlier books stay available", () => {
+test("the default DXYZ book is the filed 9/30 N-PORT; the Nov 4 post-deal estimate stays selectable", () => {
   const series = fundSeries(snapshots, "DXYZ");
   assert.deepEqual(series.map((snapshot) => snapshot.measurementDate), ["2026-06-30", "2026-08-13", "2026-09-30", "2026-11-04"]);
+  assert.equal(defaultSnapshot(series).measurementDate, "2026-09-30");
   const current = series.at(-1);
+  assert.equal(current.estimated, true);
   const prior = priorInSeries(series, current);
   assert.equal(current.measurementDate, "2026-11-04");
   assert.equal(prior.measurementDate, "2026-09-30");
@@ -320,7 +328,7 @@ test("new fund columns reconcile, and a portfolio-mix book stays out of dollars 
   assert.equal(fundPremium(arkvx, 50), null);
   const anth = positionsByCompany(arkvx, companyMap).get("anthropic");
   assert.equal(positionMetrics(anth, arkvx, 50).per100, 100 * anth.weight);
-  assert.equal(orderedTickers(snapshots).includes("RVII"), false);
+  assert.equal(orderedTickers(snapshots).includes("RVII"), true);
   const piivx = book("PIIVX", "2026-06-30");
   assert.equal(piivx.premiumMode, "none");
   const psfSpacex = positionsByCompany(piivx, companyMap).get("spacex");
@@ -365,5 +373,80 @@ test("DXYZ September 30 book reconciles to the 9/30 ledger; the Nov 4 book adds 
   for (const id of ["blue-origin", "varda", "together-ai", "blykalla"]) {
     const line = nov.lines.find((l) => l.companyId === id);
     assert.equal(line.valuation, "cost", id);
+  }
+});
+
+// Acceptance for the 2026-11-18 /book update: each fund's ratios recompute from
+// one report (NAV, net assets, shares, cash and holdings from the same filing).
+test("NSLR 9/30 10-Q: ties to the balance sheet, 0.43x at $5.46", () => {
+  const nslr = defaultSnapshot(fundSeries(snapshots, "NSLR"));
+  assert.equal(nslr.measurementDate, "2026-09-30");
+  assert.equal(nslr.accession, "0001493152-26-049893");
+  assert.equal(nslr.netAssets, 334_698_480);
+  assert.equal(nslr.sharesOutstanding, 26_473_222);
+  assert.ok(Math.abs(nslr.navPerShare * nslr.sharesOutstanding - nslr.netAssets) / nslr.netAssets < 0.001);
+  const sum = nslr.lines.reduce((total, line) => total + line.fairValue, 0);
+  assert.equal(sum, nslr.netAssets);
+  const holdings = nslr.lines.filter((line) => line.role === "holding").reduce((t, l) => t + l.fairValue, 0);
+  assert.equal(holdings, 377_196_404);
+  const pos = positionsByCompany(nslr, companyMap);
+  assert.equal(pos.get("whoop").fairValue, 141_968_736 + 1_358_060);
+  assert.equal(pos.get("openai").fairValue, 59_444_942);
+  assert.equal(pos.get("vast-data").fairValue, 33_976_149);
+  assert.equal(pos.get("tensorwave").fairValue, 20_406_033);
+  assert.equal(pos.get("coreweave").fairValue, 12_325_378);
+  assert.equal(pos.get("canva").fairValue, 13_101_914);
+  assert.equal(pos.get("blink-health").fairValue, 13_115_662);
+  assert.equal(pos.get("locus-robotics").fairValue, 12_532_759);
+  assert.equal(pos.get("clickhouse").fairValue, 9_471_170);
+  assert.equal(pos.get("plaid").fairValue, 6_922_679);
+  assert.equal(pos.get("cash-unscheduled").fairValue, 40_853_490);
+  assert.equal(pos.has("learneo"), false);
+  assert.equal(priceToNav(5.46, nslr.navPerShare).toFixed(2), "0.43");
+  const whoop = positionMetrics(pos.get("whoop"), nslr, 5.46);
+  assert.ok(Math.abs(whoop.per100 - (100 * (143_326_796 / 334_698_480) * 12.64) / 5.46) < 1e-9);
+});
+
+test("RVII 9/30 10-Q: SAFEs grouped, net cash $19.25/sh, 0.59x at $13.71", () => {
+  const rvii = defaultSnapshot(fundSeries(snapshots, "RVII"));
+  assert.equal(rvii.measurementDate, "2026-09-30");
+  assert.equal(rvii.netAssets, 210_433_394);
+  assert.equal(rvii.sharesOutstanding, 9_066_384);
+  assert.equal(rvii.lines.reduce((total, line) => total + line.fairValue, 0), rvii.netAssets);
+  const pos = positionsByCompany(rvii, companyMap);
+  assert.equal(pos.get("rvii-safes").fairValue, 35_610_699);
+  assert.equal(pos.get("limrun").fairValue, 335_004);
+  assert.equal(pos.get("money-market").fairValue, 180_213_058);
+  assert.equal(priceToNav(13.71, rvii.navPerShare).toFixed(2), "0.59");
+  assert.equal(netCashPerShare(rvii).toFixed(2), "19.25");
+  assert.ok(impliedHoldingsPerShare(rvii, 13.71) < 0);
+  const safes = positionMetrics(pos.get("rvii-safes"), rvii, 13.71);
+  assert.ok(Math.abs(safes.per100 - (100 * (35_610_699 / 210_433_394) * 23.21) / 13.71) < 1e-9);
+});
+
+test("DXYZ 9/30 basis: 0.69x at $26.50; cash ~$719.8M from the same N-PORT", () => {
+  const dxyz = defaultSnapshot(fundSeries(snapshots, "DXYZ"));
+  assert.equal(dxyz.measurementDate, "2026-09-30");
+  assert.equal(priceToNav(26.5, dxyz.navPerShare).toFixed(2), "0.69");
+  const pos = positionsByCompany(dxyz, companyMap);
+  const cash = pos.get("money-market").fairValue + pos.get("other-net-assets").fairValue;
+  assert.ok(Math.abs(cash - 719_808_605) < 1);
+  assert.ok(Math.abs(pos.get("spacex").fairValue - 152_866_954.43) < 0.01);
+  const anth = positionMetrics(pos.get("anthropic"), dxyz, 26.5);
+  assert.ok(Math.abs(anth.per100 - (100 * (382_879_608.72 / 1_826_366_694) * 38.32) / 26.5) < 1e-9);
+});
+
+test("NAV staleness is measured from today's date, over 75 days", () => {
+  assert.equal(navAgeDays("2026-09-30", "2026-11-18"), 49);
+  assert.equal(isStaleNav("2026-09-30", "2026-11-18"), false);
+  assert.equal(isStaleNav("2026-08-31", "2026-11-18"), true);
+  assert.equal(isStaleNav("2026-09-04", "2026-11-18"), false);
+  assert.equal(isStaleNav("2026-09-03", "2026-11-18"), true);
+  assert.equal(isStaleNav("2026-09-30", null), null);
+  for (const ticker of ["VCX", "RVI"]) {
+    const current = defaultSnapshot(fundSeries(snapshots, ticker));
+    assert.equal(current.measurementDate, "2026-06-30");
+    assert.equal(current.pendingFiling.form, "NPORT-P");
+    assert.equal(current.pendingFiling.dueBy, "2026-11-29");
   }
 });

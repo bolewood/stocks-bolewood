@@ -1,6 +1,6 @@
 {
   "name": "stocks-bolewood",
-  "version": "0.21.0.0",
+  "version": "0.22.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,7 +10,8 @@
     "test": "node --test",
     "sync:readme": "node scripts/sync-readme.mjs",
     "sync:disclosure": "node scripts/sync-readme.mjs",
-    "reference": "node reference/calculate.mjs"
+    "reference": "node reference/calculate.mjs",
+    "check:filings": "node scripts/check-book-filings.mjs"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

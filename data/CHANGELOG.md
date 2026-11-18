@@ -2,6 +2,24 @@
 
 Typed entries: **Data update** · **Correction** · **Methodology change** · **Schema change**.
 
+## [1.4.0] - 2026-11-18 (data update; /book only)
+
+### Data update
+- 2026-11-18: DXYZ 9/30 N-PORT; NSLR and RVII 9/30 10-Qs; RVII added; VCX/RVI marked pending.
+- DXYZ: no new data. The filed 9/30 N-PORT book (`0000894189-26-030445`) is now the default `/book` column. The 11/04 post-deal book is flagged `estimated` (deals at cost) and stays selectable.
+- NSLR: `data/books/NSLR/2026-09-30__0001493152-26-049893.json` from the 9/30 10-Q (filed 2026-11-04).
+  - NAV $12.64 (6/30: $13.44), net assets $334,698,480, 26,473,222 shares.
+  - 43 position lines totalling $377,196,404 (112.7% of net assets).
+  - Cash $40,853,490, and liabilities less other assets −$83,351,414.
+  - Learneo (sold 9/21) and Aventine (sold 7/8) are gone; Hearth adds a common line; Lime is one public common line.
+  - No U.S. Treasury bills were held at 9/30. The $24,995,139 in the cash-flow statement is a nine-month purchase that matured in the same period.
+- RVII: new fund, `data/books/RVII/2026-09-30__0002131040-26-000013.json` from the 9/30 10-Q (filed 2026-11-12).
+  - NAV $23.21, net assets $210,433,394, 9,066,384 shares after the 0.97658 reverse split on 8/14.
+  - The 125 SAFE lines (122 companies, $35,610,699) are grouped as `rvii-safes`, plus Limrun preferred $335,004.
+  - First American Government Obligations X $180,213,058, and liabilities in excess of other assets −$5,725,367.
+- VCX and RVI keep their 6/30 books, with `pendingFiling` (Q3 NPORT-P due 2026-11-29; CIKs 1867090 and 2085091).
+- Every book gains a display `sourceLabel`. `companies.json` adds `rvii-safes`.
+
 ## [1.4.0] - 2026-11-16 (data update; schema and methodology version unchanged)
 
 ### Data update

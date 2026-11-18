@@ -1,6 +1,22 @@
 # Changelog
 
-## [0.21.0.0] — 2026-11-17
+## [0.22.0.0] — 2026-11-18
+
+- `/book`, updated to the latest fund filings:
+  - NSLR rolls to its September 30, 2026 10-Q.
+  - RVII (Robinhood Ventures Fund II) is added from its September 30 10-Q. Its SAFEs are grouped as one row.
+  - DXYZ defaults to the filed 9/30 N-PORT. The Nov 4 post-deal view is still selectable, marked "(est.)".
+  - VCX and RVI stay on their June 30 reports, marked pending: their Q3 N-PORT is due by Nov 29.
+- Every fund column and card shows:
+  - its NAV date and price ÷ NAV;
+  - a "stale" tag when the NAV is more than 75 days old, worked out in the browser from today's date;
+  - a link to the filing it came from;
+  - the time of its quote.
+- RVII shows net cash per share ($19.25) next to the price, and what the price implies for its private holdings.
+- `/api/book-prices`: a quote kept from an earlier fetch after a failed refresh is now labelled cached, not live.
+- `npm run check:filings` (`scripts/check-book-filings.mjs`): lists EDGAR filings newer than each fund's current /book report.
+
+ — 2026-11-17
 
 - Archived `/private-tape`, `/echo`, `/sftby` and `/muse`: they're no longer updated. They're off the top navigation, moved to an "Archived Tools" section on the home page and an "Archived" row in the footer, and each shows a banner with the date its data was last updated (Private Tape Nov 16, ECHO Aug 24, SFTBY Sep 5, Muse Sep 25, 2026). The pages and their APIs still work.
 
