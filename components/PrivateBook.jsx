@@ -6,20 +6,30 @@ import {
   basketLookThrough,
   bookCsv,
   companyName,
+  defaultSnapshot,
   diffBooks,
   fundPremium,
   fundSeries,
+  impliedHoldingsPerShare,
+  isStaleNav,
+  navAgeDays,
   navPer100OfPrice,
+  netCashOutsideHoldings,
+  netCashPerShare,
   orderedTickers,
   parseBookSearch,
   positionMetrics,
   positionsByCompany,
+  priceToNav,
+  primarySource,
   priorInSeries,
   serializeBookSearch,
+  STALE_NAV_DAYS,
   sortBookRows,
 } from "../lib/reportedBook.mjs";
 import {
   chipQuoteAsOf,
+  formatQuoteEt,
   pagePriceState,
   priceChipLabel,
   priceChipTitle,
@@ -72,6 +82,39 @@ function formatWeight(weight) {
   if (abs === 0) return "0.00%";
   if (abs < 0.005) return `${sign}<0.01%`;
   return `${sign}${abs.toFixed(2)}%`;
+}
+
+function formatMultiple(ratio) {
+  if (ratio == null || !Number.isFinite(ratio)) return "—";
+  return `${ratio.toFixed(2)}×`;
+}
+
+function formatShortDate(iso) {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${m}/${d}/${String(y).slice(2)}`;
+}
+
+// Today's date in New York on the client only. The page is statically
+// rendered, so a server-side "stale" flag would freeze at build time.
+function subscribeNoop() {
+  return () => {};
+}
+function todayIsoClient() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date());
+}
+function useTodayIso() {
+  return useSyncExternalStore(subscribeNoop, todayIsoClient, () => null);
+}
+
+function navDateOf(snapshot) {
+  return snapshot.navAsOf || snapshot.measurementDate;
+}
+
+function quoteTimeLabel(quote) {
+  if (!quote || !(quote.quoteAsOf > 0) || quote.isFallback) return "no live quote";
+  const cached = quote.state === "cached";
+  return `${formatQuoteEt(quote.quoteAsOf)}${cached ? " (cached)" : ""}`;
 }
 
 function formatPremium(premium) {
@@ -255,6 +298,7 @@ function roleFor(id, funds) {
 
 export default function PrivateBook({ companyMap, snapshots, disclosure, secondaryTrends = null }) {
   const tickers = useMemo(() => orderedTickers(snapshots), [snapshots]);
+  const todayIso = useTodayIso();
   const search = useSyncExternalStore(subscribeToBookUrl, () => window.location.search, () => "");
   const parsed = useMemo(() => parseBookSearch(search, { tickers }), [search, tickers]);
   const { view, dates, focus, sort, dir, q, overlap, basket: initialBasket } = parsed;
@@ -317,7 +361,7 @@ export default function PrivateBook({ companyMap, snapshots, disclosure, seconda
     return tickers.map((ticker) => {
       const series = fundSeries(snapshots, ticker);
       const snapshot =
-        series.find((item) => item.measurementDate === dates[ticker]) || series.at(-1);
+        series.find((item) => item.measurementDate === dates[ticker]) || defaultSnapshot(series);
       const quote = quotes[snapshot.yahooSymbol];
       const price = quotedPrice(quote);
       return {
@@ -531,6 +575,11 @@ export default function PrivateBook({ companyMap, snapshots, disclosure, seconda
                   ) : (
                     <span style={styles.quickPillNav}>At NAV</span>
                   )}
+                  {isStaleNav(navDateOf(f.snapshot), todayIso) ? (
+                    <span style={styles.staleTag} title={`NAV as of ${formatDate(navDateOf(f.snapshot))}, more than ${STALE_NAV_DAYS} days old`}>
+                      stale
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
@@ -543,6 +592,7 @@ export default function PrivateBook({ companyMap, snapshots, disclosure, seconda
               <FundCard
                 key={fund.ticker}
                 fund={fund}
+                todayIso={todayIso}
                 onSelectDate={(measurementDate) =>
                   replaceBook({ dates: { ...dates, [fund.ticker]: measurementDate } })
                 }
@@ -737,6 +787,25 @@ export default function PrivateBook({ companyMap, snapshots, disclosure, seconda
                         ) : (
                           <span style={styles.headerNavPill}>At NAV</span>
                         )}
+                      </div>
+                      <div style={styles.headerMetaRow} title={`Quote: ${quoteTimeLabel(fund.quote)}. NAV ${formatUsd(fund.snapshot.navPerShare)} as of ${formatDate(navDateOf(fund.snapshot))} (${fund.snapshot.sourceLabel || "filing"}).`}>
+                        {isMarket && fund.price ? (
+                          <span style={styles.headerMetaLine}>{formatMultiple(priceToNav(fund.price, fund.snapshot.navPerShare))} NAV</span>
+                        ) : null}
+                        <span style={styles.headerMetaLine}>
+                          {isMarket ? "NAV" : "Holdings"} {formatShortDate(navDateOf(fund.snapshot))}
+                        </span>
+                        {fund.snapshot.shortSource ? (
+                          <span style={styles.headerMetaLine}>{fund.snapshot.shortSource}</span>
+                        ) : null}
+                        {fund.snapshot.showNetCash && netCashPerShare(fund.snapshot) != null ? (
+                          <span style={{ ...styles.headerMetaLine, color: "#15803d" }}>
+                            cash {formatUsd(netCashPerShare(fund.snapshot))}/sh
+                          </span>
+                        ) : null}
+                        {isStaleNav(navDateOf(fund.snapshot), todayIso) ? (
+                          <span style={{ ...styles.staleTag, marginLeft: 0 }}>stale</span>
+                        ) : null}
                       </div>
                     </button>
                   </th>
@@ -1256,14 +1325,21 @@ export default function PrivateBook({ companyMap, snapshots, disclosure, seconda
   );
 }
 
-function FundCard({ fund, onSelectDate }) {
+function FundCard({ fund, onSelectDate, todayIso }) {
   const { snapshot, price, positions, series } = fund;
   const atNav = snapshot.premiumMode === "none" && snapshot.weightBasis === "net-assets";
   const portfolioMix = snapshot.weightBasis === "reported-portfolio";
   const premium = fundPremium(snapshot, price);
   const navSlice = atNav ? 100 : navPer100OfPrice(snapshot.navPerShare, price);
   const weightSum = [...positions.values()].reduce((sum, position) => sum + (position.weight || 0), 0);
-  const navDate = snapshot.navAsOf || snapshot.measurementDate;
+  const navDate = navDateOf(snapshot);
+  const source = primarySource(snapshot);
+  const stale = isStaleNav(navDate, todayIso);
+  const age = navAgeDays(navDate, todayIso);
+  const ratio = priceToNav(price, snapshot.navPerShare);
+  const cashPerShare = snapshot.showNetCash ? netCashPerShare(snapshot) : null;
+  const impliedHoldings = snapshot.showNetCash ? impliedHoldingsPerShare(snapshot, price) : null;
+  const holdingsValue = snapshot.showNetCash ? snapshot.netAssets - netCashOutsideHoldings(snapshot) : null;
   const sumLabel = portfolioMix ? "the reported portfolio" : "net assets";
   return (
     <div style={styles.card}>
@@ -1297,6 +1373,7 @@ function FundCard({ fund, onSelectDate }) {
               }}
             >
               {formatDate(item.measurementDate)}
+              {item.estimated ? " (est.)" : ""}
             </button>
           ))}
         </div>
@@ -1314,9 +1391,37 @@ function FundCard({ fund, onSelectDate }) {
           </dd>
         </div>
         <div style={styles.fact}>
-          <dt style={styles.dt}>Price</dt>
-          <dd style={styles.dd}>{formatUsd(price)}</dd>
+          <dt style={styles.dt}>{snapshot.premiumMode === "market" ? "NAV source" : "Holdings source"}</dt>
+          <dd style={styles.dd}>
+            {source ? (
+              <a href={source.url} target="_blank" rel="noopener noreferrer" style={styles.sourceLink}>
+                {snapshot.sourceLabel || source.filingType || "Source"}
+              </a>
+            ) : (
+              snapshot.sourceLabel || "—"
+            )}
+            {stale ? <span style={styles.staleTag}>stale · {age} days</span> : null}
+          </dd>
         </div>
+        <div style={styles.fact}>
+          <dt style={styles.dt}>Price</dt>
+          <dd style={styles.dd}>
+            {formatUsd(price)}
+            <span style={styles.quoteTime}>{quoteTimeLabel(fund.quote)}</span>
+          </dd>
+        </div>
+        {snapshot.premiumMode === "market" && !portfolioMix ? (
+          <div style={styles.fact}>
+            <dt style={styles.dt}>Price ÷ NAV</dt>
+            <dd style={styles.dd}>{formatMultiple(ratio)}</dd>
+          </div>
+        ) : null}
+        {cashPerShare != null ? (
+          <div style={styles.fact}>
+            <dt style={styles.dt}>Net cash / share</dt>
+            <dd style={styles.dd}>{formatUsd(cashPerShare)}</dd>
+          </div>
+        ) : null}
         <div style={styles.fact}>
           <dt style={styles.dt}>Premium</dt>
           <dd style={styles.dd}>{atNav || portfolioMix ? "n/a" : formatPremium(premium)}</dd>
@@ -1327,6 +1432,33 @@ function FundCard({ fund, onSelectDate }) {
         </div>
       </dl>
       {snapshot.unknownDilution ? <p style={styles.warn}>{snapshot.dilutionNote}</p> : null}
+      {snapshot.estimated ? (
+        <p style={styles.warn}>Estimate, not a filed report: post-filing deals added at cost. The filed report is the default view.</p>
+      ) : null}
+      {snapshot.pendingFiling && stale ? (
+        <p style={styles.warn}>
+          Newer report pending: {snapshot.pendingFiling.note} Until then this column uses the {formatDate(navDate)} report.
+        </p>
+      ) : null}
+      {cashPerShare != null ? (
+        <p style={styles.cashNote}>
+          Net cash is net assets less the private holdings in the same report: {formatCompact(snapshot.netAssets - holdingsValue)}, or{" "}
+          {formatUsd(cashPerShare)} per share ({snapshot.sourceLabel || "filing"}, {formatDate(navDate)}).{" "}
+          {impliedHoldings != null ? (
+            impliedHoldings < 0 ? (
+              <>
+                At {formatUsd(price)} the price is {formatUsd(-impliedHoldings)} per share below net cash, so the market values the{" "}
+                {formatCompact(holdingsValue)} of private holdings at about {formatCompact(impliedHoldings * snapshot.sharesOutstanding)}, below zero.
+              </>
+            ) : (
+              <>
+                At {formatUsd(price)} the market values the {formatCompact(holdingsValue)} of private holdings at about{" "}
+                {formatCompact(impliedHoldings * snapshot.sharesOutstanding)} ({formatUsd(impliedHoldings)} per share).
+              </>
+            )
+          ) : null}
+        </p>
+      ) : null}
       <details>
         <summary style={{ ...styles.cardSum, cursor: "pointer" }}>How this column was built</summary>
         <p style={styles.cardNote}>{snapshot.note}</p>
@@ -2166,6 +2298,49 @@ const styles = {
     fontSize: 11,
     color: "#78716c",
     margin: "10px 0 0",
+  },
+  staleTag: {
+    marginLeft: 6,
+    fontFamily: "var(--font-mono), monospace",
+    fontSize: 9,
+    fontWeight: 700,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+    color: "#92400e",
+    background: "#fef3c7",
+    border: "1px solid #fcd34d",
+    borderRadius: 4,
+    padding: "0 4px",
+  },
+  headerMetaRow: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-end",
+    gap: 1,
+    marginTop: 2,
+    fontSize: 9,
+    color: "#a8a29e",
+  },
+  headerMetaLine: {
+    whiteSpace: "nowrap",
+  },
+  sourceLink: {
+    color: "#b45309",
+  },
+  quoteTime: {
+    display: "block",
+    fontSize: 10,
+    color: "#a8a29e",
+    fontWeight: 400,
+  },
+  cashNote: {
+    fontSize: 12,
+    lineHeight: 1.45,
+    color: "#1c1917",
+    background: "#f0fdf4",
+    borderRadius: 8,
+    padding: "8px 10px",
+    margin: "8px 0",
   },
   warn: {
     fontSize: 12,

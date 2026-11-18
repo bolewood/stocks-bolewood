@@ -20,13 +20,17 @@ function emptyQuote() {
 function jsonBody(payload, servedFromCache, now) {
   const quotes = {};
   for (const ticker of BOOK_PRICE_TICKERS) {
-    const q = payload.quotes[ticker] || emptyQuote();
+    // A quote carried over from an earlier payload after a failed refresh is
+    // labelled cached, never live.
+    const { carriedFromCache, ...q } = payload.quotes[ticker] || emptyQuote();
+    const cached = servedFromCache || Boolean(carriedFromCache);
     quotes[ticker] = {
       ...q,
+      servedFromCache: cached,
       state: classifyQuote(
         {
           quoteAsOf: q.quoteAsOf,
-          servedFromCache,
+          servedFromCache: cached,
           isFallback: q.isFallback,
         },
         now
@@ -45,7 +49,9 @@ function jsonBody(payload, servedFromCache, now) {
 
 async function fetchLive(prev) {
   const now = Date.now();
-  const quotes = { ...(prev?.quotes || {}) };
+  const quotes = Object.fromEntries(
+    Object.entries(prev?.quotes || {}).map(([k, q]) => [k, q.isFallback ? q : { ...q, carriedFromCache: true }])
+  );
   let liveCount = 0;
   await mapLimit(BOOK_PRICE_TICKERS, YAHOO_FETCH_CONCURRENCY, async (ticker) => {
     try {

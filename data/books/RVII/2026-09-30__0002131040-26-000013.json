@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "1.0.0",
+  "ticker": "RVII",
+  "name": "Robinhood Ventures Fund II",
+  "vehicleType": "bdc",
+  "yahooSymbol": "RVII",
+  "premiumMode": "market",
+  "weightBasis": "net-assets",
+  "measurementDate": "2026-09-30",
+  "publicationDate": "2026-11-12",
+  "accession": "0002131040-26-000013",
+  "sourceLabel": "10-Q",
+  "shortSource": "10-Q",
+  "navAsOf": "2026-09-30",
+  "navPerShare": 23.21,
+  "netAssets": 210433394,
+  "sharesOutstanding": 9066384,
+  "unknownDilution": false,
+  "filingType": "10-Q",
+  "showNetCash": true,
+  "note": "September 30, 2026 10-Q: statement of assets and liabilities and schedule of investments. 9,066,384 shares after the 0.97658 reverse split on August 14, 2026 (IPO). The 125 SAFE lines are grouped into one row. Net cash is net assets less the SAFEs and preferred stock: $174,487,691, or $19.25 per share (the money market fund alone is $19.88 per share).",
+  "sources": [
+    {
+      "fields": [
+        "netAssets",
+        "navPerShare",
+        "sharesOutstanding",
+        "lines"
+      ],
+      "sourceClass": "primary",
+      "issuer": "Robinhood Ventures Fund II",
+      "filingType": "10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/2131040/000213104026000013/rvii-20260930.htm",
+      "accession": "0002131040-26-000013",
+      "measurementDate": "2026-09-30",
+      "publicationDate": "2026-11-12",
+      "section": "Statements of assets and liabilities; schedule of investments"
+    }
+  ],
+  "lines": [
+    {
+      "companyId": "rvii-safes",
+      "fairValue": 35610699,
+      "role": "holding",
+      "label": "Simple Agreements for Future Equity in Private Companies (125 lines, 122 companies)",
+      "note": "Grouped. 125 SAFE lines across 122 companies, cost $35,450,000, fair value $35,610,699 (16.9% of net assets). The fund focuses on Y Combinator companies; the schedule does not mark which holdings are YC companies."
+    },
+    {
+      "companyId": "limrun",
+      "fairValue": 335004,
+      "role": "holding",
+      "label": "Limrun, Inc.: Series Seed and Series Seed-7 Preferred Stock"
+    },
+    {
+      "companyId": "money-market",
+      "fairValue": 180213058,
+      "role": "cash",
+      "label": "First American Government Obligations Fund - X Class (3.56%)",
+      "note": "Money market fund, 85.6% of net assets."
+    },
+    {
+      "companyId": "other-net-assets",
+      "fairValue": -5725367,
+      "role": "liability",
+      "label": "Liabilities in excess of other assets",
+      "note": "Total liabilities $6,638,638 (accrued offering costs $3.04M, due to custodian $1.32M, payables and fees) less receivables, dividends and prepaid of $913,271."
+    }
+  ]
+}

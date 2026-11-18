@@ -2,6 +2,30 @@
 
 Typed entries: **Data update** · **Correction** · **Methodology change** · **Schema change**.
 
+## [1.4.0] - 2026-11-18 (data update; /book only)
+
+### Data update
+- 2026-11-18: DXYZ 9/30 N-PORT; NSLR and RVII 9/30 10-Qs; RVII added; VCX/RVI marked pending.
+- DXYZ: no new data. The filed 9/30 N-PORT book (`0000894189-26-030445`) is now the default `/book` column. The 8/13 and 11/04 post-deal books are flagged `estimated` (deals at cost on an older NAV) and stay selectable. Each book also gains a short `shortSource` for the column header.
+- NSLR: `data/books/NSLR/2026-09-30__0001493152-26-049893.json` from the 9/30 10-Q (filed 2026-11-04).
+  - NAV $12.64 (6/30: $13.44), net assets $334,698,480, 26,473,222 shares.
+  - 43 position lines totalling $377,196,404 (112.7% of net assets).
+  - Cash $40,853,490, and liabilities less other assets −$83,351,414.
+  - Learneo (sold 9/21) and Aventine (sold 7/8) are gone; Hearth adds a common line; Lime is one public common line.
+  - No U.S. Treasury bills were held at 9/30. The $24,995,139 in the cash-flow statement is a nine-month purchase that matured in the same period.
+- RVII: new fund, `data/books/RVII/2026-09-30__0002131040-26-000013.json` from the 9/30 10-Q (filed 2026-11-12).
+  - NAV $23.21, net assets $210,433,394, 9,066,384 shares after the 0.97658 reverse split on 8/14.
+  - The 125 SAFE lines (122 companies, $35,610,699) are grouped as `rvii-safes`, plus Limrun preferred $335,004.
+  - First American Government Obligations X $180,213,058, and liabilities in excess of other assets −$5,725,367.
+- ARKVX: `data/books/ARKVX/2026-07-31__0001213900-26-107607.json` from the audited July 31, 2026 N-CSR (filed 2026-10-07).
+  - Net assets $1,184,921,592: 122 investment lines totalling $1,170,865,658, plus other assets in excess of liabilities of $14,055,934.
+  - Cross-checked against the July 31 N-PORT (`0000940400-26-036464`, net assets $1,184,177,831). A few public marks differ; the audited N-CSR is used.
+  - Anthropic $49,614,780 (4.19%), OpenAI $71,028,518 across four lines (5.99%), SpaceX $100,094,867 (8.45%).
+  - `companies.json` adds Alphabet, NVIDIA, Canton Strategic Holdings, K2 Space, SonoThera, Cellares, Wonder, Wayve Technologies and "Life Sciences Inc." (the N-CSR's name for a Series B-1 line the N-PORT leaves unnamed).
+  - Next expected: the Oct 31 N-PORT, due Dec 30.
+- VCX and RVI keep their 6/30 books, with `pendingFiling` (Q3 NPORT-P due 2026-11-29; CIKs 1867090 and 2085091).
+- Every book gains a display `sourceLabel`. `companies.json` adds `rvii-safes`.
+
 ## [1.4.0] - 2026-11-16 (data update; schema and methodology version unchanged)
 
 ### Data update

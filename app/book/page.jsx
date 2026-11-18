@@ -6,7 +6,7 @@ import { disclosureSentence } from "@/lib/disclosure.mjs";
 import disclosure from "@/data/disclosure.json";
 
 const DESCRIPTION =
-  "Reported portfolio weights and fair values per $100 across pre-IPO funds including Destiny Tech100 (DXYZ), Fundrise Innovation Fund (VCX), ARK Venture Fund (ARKVX), Robinhood Ventures (RVI), and other private-market vehicles.";
+  "Reported portfolio weights and fair values per $100 across pre-IPO funds including Destiny Tech100 (DXYZ), Fundrise Innovation Fund (VCX), ARK Venture Fund (ARKVX), Robinhood Ventures Funds I and II (RVI, RVII), Neostellar Capital (NSLR), and other private-market vehicles. Each column shows its NAV date and source.";
 
 export const metadata = {
   title: "Private Book",

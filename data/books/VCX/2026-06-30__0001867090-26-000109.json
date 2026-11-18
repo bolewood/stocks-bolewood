@@ -9,6 +9,15 @@
   "measurementDate": "2026-06-30",
   "publicationDate": "2026-08-28",
   "accession": "0001867090-26-000109",
+  "sourceLabel": "N-PORT-P",
+  "shortSource": "N-PORT",
+  "pendingFiling": {
+    "form": "NPORT-P",
+    "periodEnd": "2026-09-30",
+    "dueBy": "2026-11-29",
+    "cik": "1867090",
+    "note": "Q3 N-PORT due by Nov 29."
+  },
   "navAsOf": "2026-06-30",
   "navPerShare": 21.70476203768022,
   "netAssets": 776968361.92,

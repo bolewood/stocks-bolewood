@@ -9,6 +9,15 @@
   "measurementDate": "2026-06-30",
   "publicationDate": "2026-08-21",
   "accession": "0000894189-26-022643",
+  "sourceLabel": "Schedule of investments (fund site)",
+  "shortSource": "fund site",
+  "pendingFiling": {
+    "form": "NPORT-P",
+    "periodEnd": "2026-09-30",
+    "dueBy": "2026-11-29",
+    "cik": "2085091",
+    "note": "Q3 N-PORT due by Nov 29."
+  },
   "navAsOf": "2026-06-30",
   "navPerShare": 25.02,
   "netAssets": 681768890,
