@@ -95,13 +95,13 @@ function formatShortDate(iso) {
   return `${m}/${d}/${String(y).slice(2)}`;
 }
 
-// Today's date (UTC) on the client only. The page is statically rendered, so a
-// server-side "stale" flag would freeze at build time.
+// Today's date in New York on the client only. The page is statically
+// rendered, so a server-side "stale" flag would freeze at build time.
 function subscribeNoop() {
   return () => {};
 }
 function todayIsoClient() {
-  return new Date().toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date());
 }
 function useTodayIso() {
   return useSyncExternalStore(subscribeNoop, todayIsoClient, () => null);
@@ -795,6 +795,14 @@ export default function PrivateBook({ companyMap, snapshots, disclosure, seconda
                         <span style={styles.headerMetaLine}>
                           {isMarket ? "NAV" : "Holdings"} {formatShortDate(navDateOf(fund.snapshot))}
                         </span>
+                        {fund.snapshot.shortSource ? (
+                          <span style={styles.headerMetaLine}>{fund.snapshot.shortSource}</span>
+                        ) : null}
+                        {fund.snapshot.showNetCash && netCashPerShare(fund.snapshot) != null ? (
+                          <span style={{ ...styles.headerMetaLine, color: "#15803d" }}>
+                            cash {formatUsd(netCashPerShare(fund.snapshot))}/sh
+                          </span>
+                        ) : null}
                         {isStaleNav(navDateOf(fund.snapshot), todayIso) ? (
                           <span style={{ ...styles.staleTag, marginLeft: 0 }}>stale</span>
                         ) : null}

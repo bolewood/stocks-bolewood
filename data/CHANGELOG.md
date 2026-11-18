@@ -6,7 +6,7 @@ Typed entries: **Data update** · **Correction** · **Methodology change** · **
 
 ### Data update
 - 2026-11-18: DXYZ 9/30 N-PORT; NSLR and RVII 9/30 10-Qs; RVII added; VCX/RVI marked pending.
-- DXYZ: no new data. The filed 9/30 N-PORT book (`0000894189-26-030445`) is now the default `/book` column. The 11/04 post-deal book is flagged `estimated` (deals at cost) and stays selectable.
+- DXYZ: no new data. The filed 9/30 N-PORT book (`0000894189-26-030445`) is now the default `/book` column. The 8/13 and 11/04 post-deal books are flagged `estimated` (deals at cost on an older NAV) and stay selectable. Each book also gains a short `shortSource` for the column header.
 - NSLR: `data/books/NSLR/2026-09-30__0001493152-26-049893.json` from the 9/30 10-Q (filed 2026-11-04).
   - NAV $12.64 (6/30: $13.44), net assets $334,698,480, 26,473,222 shares.
   - 43 position lines totalling $377,196,404 (112.7% of net assets).

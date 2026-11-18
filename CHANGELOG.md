@@ -5,7 +5,7 @@
 - `/book`, updated to the latest fund filings:
   - NSLR rolls to its September 30, 2026 10-Q.
   - RVII (Robinhood Ventures Fund II) is added from its September 30 10-Q. Its SAFEs are grouped as one row.
-  - DXYZ defaults to the filed 9/30 N-PORT. The Nov 4 post-deal view is still selectable, marked "(est.)".
+  - DXYZ defaults to the filed 9/30 N-PORT. The Aug 13 and Nov 4 post-deal views are still selectable, marked "(est.)".
   - VCX and RVI stay on their June 30 reports, marked pending: their Q3 N-PORT is due by Nov 29.
 - Every fund column and card shows:
   - its NAV date and price ÷ NAV;
