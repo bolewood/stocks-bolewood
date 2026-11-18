@@ -199,7 +199,7 @@ test("S-1 FD denominator scaling matches expected round-to-S1 ratios across all 
     assert.ok(Math.abs(newPct / oldPct - filedUnitsRatio) < 1e-12);
   }
 
-  // Series H-measured legs (AGIX, AMZN, ZM) and VCX (H-1 scaled by 863.7/965): × 1,638.3M / 1,778.4M = × 0.9213 (-7.9%)
+  // Series H-measured legs (AGIX, AMZN, ZM) and VCX (G-1 × lot multiple = H-1 price): × 1,638.3M / 1,778.4M = × 0.9213 (-7.9%)
   const h1Fd = 965_000_000_000 / 589.0095;
   const seriesHRatio = h1Fd / s1Fd;
   assert.ok(Math.abs(seriesHRatio - 0.9213) < 1e-4);

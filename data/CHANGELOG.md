@@ -2,6 +2,16 @@
 
 Typed entries: **Data update** · **Correction** · **Methodology change** · **Schema change**.
 
+## [1.4.0] - 2026-11-18 (correction: VCX Anthropic mark)
+
+### Correction
+- `marks.json` `anthropic-vcx-nport-2026-06-30`: VCX's June 30 Anthropic lots are at the Series H-1 price per share ($259.14 Series G-1 × VCX's 2.2729709 lot multiple = $589.02 ≈ $589.0095), not ≈ $527.17.
+  - `pricePerShare` 589.0095, `postMoney` $965B, `pricePerShareInferred` true.
+  - Replaces the ~$863.7B post-money scaling, which ignored the shares issued between Series G and H and overstated VCX's Anthropic share-equivalents by 11.7% (329,342.96 → 294,781.9 pre-split units).
+  - `/ai` VCX Anthropic per $100 falls 10.5% at any price.
+  - ESTIMATED VCX NAV no longer marks the leg up to Series H.
+  - Reference expected results: only VCX rows change, in all four files.
+
 ## [1.4.0] - 2026-11-18 (data update; /book only)
 
 ### Data update

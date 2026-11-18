@@ -877,7 +877,7 @@ export default function AIPerDollarFinder() {
         <h2 style={styles.notesTitle}>Sources & footnotes</h2>
         <p style={styles.caption}>
           Implied exposure is not always ownership. Disclosed means an issuer
-          or investor stated a percentage. For Anthropic, filed FV-equiv and carrying-value-equiv legs convert to pre-split share-equivalents at the measurement round&apos;s price per share (S-1 p. F-47; VCX scales Series H-1 by 863.7/965 as an explicit estimation assumption) and are valued at the scenario ANT price × 10 per pre-split share (10-for-1 split, S-1 p. 22). Filed units × scenario price needs no Anthropic fully diluted count; the selected share basis (13.09B outstanding, S-1/A No. 2 p. 20, or 18.01B fully diluted at $74, p. 24) only converts the price to $T and values the GOOG ownership-percentage leg. Legacy links use the frozen S-1 count (1,778,366,016 pre-split, S-1 p. 13). OpenAI uses an adjustable estimated FD denominator. Round-implied is dollars invested ÷ post-money. Commitments have no percentage. DXYZ PPUs are excluded from equity scaling. Source dates and assumptions can differ within a row.
+          or investor stated a percentage. For Anthropic, filed FV-equiv and carrying-value-equiv legs convert to pre-split share-equivalents at the measurement round&apos;s price per share (S-1 p. F-47; VCX&apos;s per-share mark is inferred from its lot multiple on Series G-1, which equals the Series H-1 price, as an explicit estimation assumption) and are valued at the scenario ANT price × 10 per pre-split share (10-for-1 split, S-1 p. 22). Filed units × scenario price needs no Anthropic fully diluted count; the selected share basis (13.09B outstanding, S-1/A No. 2 p. 20, or 18.01B fully diluted at $74, p. 24) only converts the price to $T and values the GOOG ownership-percentage leg. Legacy links use the frozen S-1 count (1,778,366,016 pre-split, S-1 p. 13). OpenAI uses an adjustable estimated FD denominator. Round-implied is dollars invested ÷ post-money. Commitments have no percentage. DXYZ PPUs are excluded from equity scaling. Source dates and assumptions can differ within a row.
         </p>
         {WRAPPERS.map((w) => (
           <div key={w.ticker} style={styles.noteBlock}>
@@ -892,7 +892,7 @@ export default function AIPerDollarFinder() {
               {w.anthropic ? ` Anthropic: ${w.anthropic.source}` : ""}
               {w.openai ? ` OpenAI: ${w.openai.source}` : ""}
               {w.anthropic?.kind === "fund"
-                ? ` Anth. FV ${fmt$(w.anthropic.fairValue)} at ${fmt$(w.anthropic.roundVal)} (${w.anthropic.asOf})${w.anthropic.roundPricePerShare ? `, $${w.anthropic.roundPricePerShare.toFixed(2)} per pre-split unit ($${(w.anthropic.roundPricePerShare / ANTH_SPLIT_FACTOR).toFixed(2)} per ANT share, S-1 p. F-47${w.anthropic.roundPriceIsScaled ? "; scaled 863.7/965 estimation assumption" : ""}) ⇒ ${Math.round(w.anthropic.shareEquivalents).toLocaleString("en-US")} pre-split share-equivalents` : ""}.`
+                ? ` Anth. FV ${fmt$(w.anthropic.fairValue)} at ${fmt$(w.anthropic.roundVal)} (${w.anthropic.asOf})${w.anthropic.roundPricePerShare ? `, $${w.anthropic.roundPricePerShare.toFixed(2)} per pre-split unit ($${(w.anthropic.roundPricePerShare / ANTH_SPLIT_FACTOR).toFixed(2)} per ANT share, S-1 p. F-47${w.anthropic.roundPriceIsScaled ? "; inferred from VCX's lot multiple on Series G-1 (estimation assumption)" : ""}) ⇒ ${Math.round(w.anthropic.shareEquivalents).toLocaleString("en-US")} pre-split share-equivalents` : ""}.`
                 : ""}
               {w.anthropic?.kind === "filed-units"
                 ? ` Anth. ${w.anthropic.filedUnits.toLocaleString("en-US")} filed pre-split units (${w.anthropic.asOf}); valued at 10 × the scenario ANT price per unit (10-for-1 split S-1 p. 22); no fully diluted count enters.`
@@ -923,7 +923,7 @@ function BasisPills({ anth, oai, anthLeg, oaiLeg }) {
           {anthLeg?.roundPriceIsScaled ? (
             <span
               style={styles.secondaryPill}
-              title="VCX June 30 NPORT mark ($863.7B) has no S-1 per-share price; scales Series H-1 ($589.0095, S-1 p. F-47) by 863.7/965 (≈$527.17 per pre-split unit)"
+              title="VCX files no Anthropic per-share price or share count. Per-share mark inferred as Series G-1 $259.14 (S-1 p. F-47) × 2.2729709, VCX's common March 31 → June 30 lot multiple ≈ $589.02 per pre-split unit, the Series H-1 price ($589.0095) within rounding."
             >
               EST. ROUND PPS
             </span>
@@ -1013,7 +1013,7 @@ function LegDetail({ name, leg, pct, per100, ipoVal, wrapperValue, dilution, det
           {detail?.shareEquivalents > 0 && detail?.roundPricePerShare > 0 ? (
             <>
               {" "}Round price: ${detail.roundPricePerShare.toFixed(2)} per pre-split unit (${(detail.roundPricePerShare / ANTH_SPLIT_FACTOR).toFixed(2)} per ANT share, exact ${detail.roundPricePerShare.toFixed(4)}, S-1 p. F-47)
-              {detail.roundPriceIsScaled ? " [Estimation assumption: Series H-1 $589.0095 scaled by $863.7B / $965B ≈ $527.17 per pre-split unit]" : ""}.
+              {detail.roundPriceIsScaled ? " [Estimation assumption: Series G-1 $259.14 × VCX's 2.2729709 lot multiple = the Series H-1 price, $589.0095 per pre-split unit]" : ""}.
               {" "}Share-equivalents: {detail.shareEquivalents.toLocaleString("en-US", { maximumFractionDigits: 2 })} pre-split units ÷ {detail.fdShares.toLocaleString("en-US", { maximumFractionDigits: 0 })} pre-split FD shares (S-1 p. 13).
             </>
           ) : null}{" "}

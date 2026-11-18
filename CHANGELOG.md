@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.22.1.0] — 2026-11-18
+
+- Fix `/ai` VCX Anthropic exposure, which was 11.7% too high. VCX files no Anthropic share count, so the page infers one from VCX's dollar value. VCX's June 30 lots are at the Series H-1 price per share ($58.90 per ANT share); the page had used ≈$52.72, from an ≈$863.7B company value that ignored shares issued between the Series G and H rounds.
+- At $74 and today's price, VCX Anthropic per $100 is ≈$26.88 (was ≈$30.03). DXYZ is unchanged at ≈$22.64.
+- Old `/ai` links (including `?reference=s1`) also show the corrected VCX row.
+
 ## [0.22.0.0] — 2026-11-18
 
 - `/book`, updated to the latest fund filings:

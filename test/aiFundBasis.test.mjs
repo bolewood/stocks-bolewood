@@ -91,10 +91,12 @@ test("VCX ESTIMATED keeps shares, rolls marks, and holds stake %", () => {
   const filed = resolveFund(w, { basis: BASIS_FILED, deploy: DEPLOY_CASH });
   const est = resolveFund(w, { basis: BASIS_ESTIMATED, deploy: DEPLOY_CASH });
   assert.equal(est.shares, filed.shares);
-  assert.ok(est.anthFv > filed.anthFv);
-  assert.ok(Math.abs(est.anthFv / filed.anthFv - 965e9 / w.anthropic.roundVal) < 1e-9);
-  assert.ok(est.netAssets > filed.netAssets);
-  assert.ok(est.nav > filed.nav);
+  // VCX's June 30 Anthropic mark is already the Series H-1 price, so rolling
+  // it to Series H leaves the Anthropic leg unchanged.
+  assert.equal(w.anthropic.roundVal, 965e9);
+  assert.ok(Math.abs(est.anthFv / filed.anthFv - 1) < 1e-12);
+  assert.ok(est.netAssets >= filed.netAssets);
+  assert.ok(est.nav >= filed.nav);
 
   const filedM = fundRowMetrics(w, FALLBACK_PRICES.VCX, {
     anthVal: DEFAULT_ANTH_VAL,
@@ -110,10 +112,13 @@ test("VCX ESTIMATED keeps shares, rolls marks, and holds stake %", () => {
   });
   assert.equal(filedM.anthPct, estM.anthPct);
   assert.equal(filedM.oaiPct, estM.oaiPct);
-  const remainingMarchAnth = 56_388_340 + 20_000_000;
-  const expectedVcxAnthPct =
-    (remainingMarchAnth / 380_000_000_000) * ((965_000_000_000 / 589.0095) / 1_778_366_016);
+  // June 30 FV ÷ the Series H-1 price per pre-split share. Cross-check: the
+  // March 31 value of the same lots ÷ the Series G-1 price gives the same
+  // share count within the cent rounding of $259.14.
+  const expectedVcxAnthPct = (173_628_474 / 589.0095) / 1_778_366_016;
   assert.ok(Math.abs(filedM.anthPct - expectedVcxAnthPct) < 1e-12);
+  const remainingMarchAnth = 56_388_340 + 20_000_000;
+  assert.ok(Math.abs((remainingMarchAnth / 259.14) / (173_628_474 / 589.0095) - 1) < 1e-4);
   assert.ok(Math.abs(estM.combinedPer100 - filedM.combinedPer100) < 1e-9);
   assert.ok(estM.combinedPer100 < 25, estM.combinedPer100);
   assert.ok(estM.combinedPer100 > 15, estM.combinedPer100);
