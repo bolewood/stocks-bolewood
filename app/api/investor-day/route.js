@@ -494,7 +494,7 @@ async function loadAntQuote(now) {
   if (antEntry && now - antEntry.writtenAt < ANT_TTL_MS) return antEntry.value;
   let value = null;
   try {
-    value = await fetchListedChartPrice("ANT", { listingDate }, { timeoutMs: FETCH_TIMEOUT_MS });
+    value = await fetchListedChartPrice("ANT", { listingDate, issuerPattern: /anthropic/i }, { timeoutMs: FETCH_TIMEOUT_MS });
   } catch {
     value = null;
   }

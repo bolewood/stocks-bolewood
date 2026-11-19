@@ -277,6 +277,24 @@ test("ANT listing guard rejects a recycled ticker and non-Nasdaq quotes", () => 
   assert.equal(parseListedChartPrice(payload({ exchangeName: "PNK", firstTradeDate: Date.UTC(2026, 10, 19) / 1000 }), "ANT", { listingDate }), null);
 });
 
+test("ANT listing day: no firstTradeDate yet -> accept only real trading by Anthropic", () => {
+  const listingDate = "2026-11-18";
+  const issuerPattern = /anthropic/i;
+  // Shape Yahoo served at 9:37 ET on Nov 19: IPO price placeholder, no trades.
+  const meta = { symbol: "ANT", exchangeName: "NMS", firstTradeDate: null, regularMarketPrice: 83, regularMarketTime: 1795099069, longName: "Anthropic, PBC" };
+  const withBars = (m, volume) => ({ chart: { result: [{ meta: m, indicators: { quote: [{ volume }] } }] } });
+  assert.equal(parseListedChartPrice(withBars(meta, []), "ANT", { listingDate, issuerPattern }), null);
+  assert.equal(parseListedChartPrice(withBars(meta, [null]), "ANT", { listingDate, issuerPattern }), null);
+  const trading = { ...meta, regularMarketPrice: 97.5, regularMarketTime: 1795104000 };
+  const q = parseListedChartPrice(withBars(trading, [1_250_000]), "ANT", { listingDate, issuerPattern });
+  assert.equal(q.price, 97.5);
+  assert.equal(q.firstTradeMs, null);
+  assert.equal(parseListedChartPrice(withBars({ ...trading, longName: "Other Co" }, [1_250_000]), "ANT", { listingDate, issuerPattern }), null);
+  assert.equal(parseListedChartPrice(withBars({ ...trading, regularMarketTime: Date.UTC(2026, 10, 17) / 1000 }, [5]), "ANT", { listingDate, issuerPattern }), null);
+  // Once Yahoo fills firstTradeDate it must be on or after the listing date.
+  assert.ok(parseListedChartPrice(withBars({ ...trading, firstTradeDate: 1795104000 }, []), "ANT", { listingDate, issuerPattern }));
+});
+
 test("io:ANTH records, OI comparison and bracket helpers", () => {
   const h = (t, v, hi, lo) => ({ startMs: t, volume: v, high: hi, low: lo, close: lo });
   assert.equal(candleNotional(h(0, 10, 1700, 1600)), 16500);

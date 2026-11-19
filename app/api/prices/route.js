@@ -67,7 +67,7 @@ function withAlias(prices) {
 async function loadAnt(now) {
   if (!ANT_LISTING_DATE || now < Date.parse(`${ANT_LISTING_DATE}T00:00:00Z`)) return null;
   try {
-    const q = await fetchListedChartPrice("ANT", { listingDate: ANT_LISTING_DATE });
+    const q = await fetchListedChartPrice("ANT", { listingDate: ANT_LISTING_DATE, issuerPattern: /anthropic/i });
     return q ? { price: q.price, quoteAsOf: q.quoteAsOf, isFallback: false, exchange: q.exchange } : null;
   } catch {
     return null;

@@ -1,6 +1,10 @@
 # Changelog
 
-## [0.22.1.0] — 2026-11-18
+## [0.22.2.0] — 2026-11-19
+
+- ANT listing-day guard (`/api/prices` for `/dxyz`, `/api/investor-day` for `/anthropic-ipo-tape`): Yahoo can leave `firstTradeDate` empty on IPO day, and before the first trade it shows the IPO price ($83) as a placeholder. The quote is now accepted without `firstTradeDate` only when the bar shows traded volume, the quote time is on or after the listing date, and the issuer name is Anthropic. A `firstTradeDate` before the listing date is still rejected.
+
+ — 2026-11-18
 
 - Fix `/ai` VCX Anthropic exposure, which was 11.7% too high. VCX files no Anthropic share count, so the page infers one from VCX's dollar value. VCX's June 30 lots are at the Series H-1 price per share ($58.90 per ANT share); the page had used ≈$52.72, from an ≈$863.7B company value that ignored shares issued between the Series G and H rounds.
 - At $74 and today's price, VCX Anthropic per $100 is ≈$26.88 (was ≈$30.03). DXYZ is unchanged at ≈$22.64.
