@@ -8,39 +8,46 @@ import capitalization from "../data/capitalization.json" with { type: "json" };
 
 const ipo = capitalization.anthropic.ipo;
 
-test("s1a2 fully diluted table sums to 18,012,993,381 at $74 (S-1/A No. 2 p. 24)", () => {
+test("424B4 fully diluted table sums to 18,137,587,875 at the $83 IPO price (424B4 p. 26)", () => {
   const c = ipo.fullyDilutedTable.columns;
-  assert.equal(c.classA + c.classN + c.optionsNetTreasury + c.rsus + c.classTF, 18012993381);
-  assert.equal(ipo.fullyDilutedTable.total, 18012993381);
-  assert.equal(fullyDilutedAt(74), 18012993381);
+  assert.equal(ipo.ipoPrice.price, 83);
+  assert.equal(ipo.fullyDilutedTable.atPrice, 83);
+  assert.equal(c.classA + c.classN + c.optionsNetTreasury + c.rsus + c.classTF, 18137587875);
+  assert.equal(ipo.fullyDilutedTable.total, 18137587875);
+  assert.equal(fullyDilutedAt(83), 18137587875);
+  // Same ~$5.163B exercise proceeds as S-1/A No. 2's table at $74 (69,774,828 × 74).
+  assert.ok(Math.abs(OPTION_EXERCISE_PROCEEDS - 69_774_828 * 74) < 100);
   assert.equal(ipo.fullyDilutedTable.options.gross - ipo.fullyDilutedTable.options.treasuryReductionAtTablePrice, c.optionsNetTreasury);
   assert.equal(ipo.fullyDilutedTable.rsus.unvestedAt0930 + ipo.fullyDilutedTable.rsus.grantedAfter0930, c.rsus);
   assert.equal(ipo.fullyDilutedTable.amazonNotes.sharesIssuableAtFixedPrice - ipo.fullyDilutedTable.amazonNotes.convertAtIpoShares, ipo.fullyDilutedTable.rolloverNotesClassN);
   assert.ok(Math.abs(OPTION_EXERCISE_PROCEEDS / ipo.fullyDilutedTable.options.gross - 2.91) < 0.005);
 });
 
-test("outstanding after offering and placement reconciles (S-1/A No. 2 pp. 19–20)", () => {
+test("outstanding after offering and placement reconciles (424B4 pp. 20–21)", () => {
   const o = ipo.outstandingAfterOffering;
   assert.equal(o.classA + o.classN + o.classT + o.classF, o.total);
   assert.equal(o.total + ipo.offering.underwriterOptionClassA, o.totalWithOption);
-  assert.equal(ipo.concurrentPlacement.investors.reduce((s, i) => s + i.sharesAtMidpoint, 0), ipo.concurrentPlacement.sharesAtMidpoint);
+  assert.equal(ipo.concurrentPlacement.investors.reduce((s, i) => s + i.shares, 0), ipo.concurrentPlacement.shares);
+  assert.equal(ipo.concurrentPlacement.shares, 313_253_007);
+  assert.equal(o.total, 13_219_642_276);
+  assert.equal(o.classN, 4_789_697_318 + o.publicBenefitFundClassN);
   assert.equal(ipo.offering.primaryClassA + ipo.offering.secondaryClassA, ipo.offering.totalClassA);
 });
 
-test("spot checks: $74 → $968B outstanding / $1,333B fully diluted; range table", () => {
-  const rows = [[70, 916, 1261], [74, 968, 1333], [78, 1021, 1405]];
+test("spot checks: $83 → $1,097B outstanding / $1,505B fully diluted; range table", () => {
+  const rows = [[70, 925, 1269], [74, 978, 1342], [78, 1031, 1414], [83, 1097, 1505]];
   for (const [p, out, fd] of rows) {
     assert.equal(Math.round(valuationFromPrice(p, "outstanding").value / 1e9), out);
     assert.equal(Math.round(valuationFromPrice(p, "fullyDiluted").value / 1e9), fd);
   }
-  assert.equal(valuationFromPrice(74, "fullyDilutedWithOption").shares, 18136743381);
+  assert.equal(valuationFromPrice(83, "fullyDilutedWithOption").shares, 18284587875);
 });
 
-test("Polymarket thresholds on 13.087B outstanding", () => {
-  assert.equal(priceFromValuation(1.25e12, "outstanding").value.toFixed(2), "95.52");
-  assert.equal(priceFromValuation(1.5e12, "outstanding").value.toFixed(2), "114.62");
-  assert.equal(priceFromValuation(1.75e12, "outstanding").value.toFixed(2), "133.72");
-  assert.equal(priceFromValuation(2e12, "outstanding").value.toFixed(2), "152.83");
+test("Polymarket thresholds on 13.22B outstanding", () => {
+  assert.equal(priceFromValuation(1.25e12, "outstanding").value.toFixed(2), "94.56");
+  assert.equal(priceFromValuation(1.5e12, "outstanding").value.toFixed(2), "113.47");
+  assert.equal(priceFromValuation(1.75e12, "outstanding").value.toFixed(2), "132.38");
+  assert.equal(priceFromValuation(2e12, "outstanding").value.toFixed(2), "151.29");
 });
 
 test("priceFromValuation inverts valuationFromPrice on every basis", () => {
@@ -53,10 +60,10 @@ test("priceFromValuation inverts valuationFromPrice on every basis", () => {
 });
 
 test("every conversion names its basis", () => {
-  const v = valuationFromPrice(74, "outstanding");
+  const v = valuationFromPrice(83, "outstanding");
   assert.equal(v.basis, "outstanding");
-  assert.equal(v.label, "on 13.09B outstanding");
-  assert.equal(basisLabel("fullyDiluted"), "on 18.01B fully diluted");
+  assert.equal(v.label, "on 13.22B outstanding");
+  assert.equal(basisLabel("fullyDiluted"), "on 18.14B fully diluted");
   assert.equal(priceFromValuation(1e12, "fullyDiluted").basis, "fullyDiluted");
 });
 
@@ -97,12 +104,12 @@ test("range-vs-tape panel never mixes share bases in a lane, for either perp bas
   }
   const fd = buildRangeVsTape({ perpMarkB: 1674.5, perpBasis: "fullyDiluted", thirdParty: tape.thirdPartyValuations });
   const perp = fd.lanes.find((l) => l.key === "fullyDiluted").marks.find((m) => m.key === "perp");
-  assert.equal(Math.round(perp.price), 93);
-  assert.equal(Math.round(perp.alt.price), 128);
+  assert.equal(Math.round(perp.price), 92);
+  assert.equal(Math.round(perp.alt.price), 127);
   const dam = fd.lanes.find((l) => l.key === "fullyDiluted").marks.find((m) => m.key === "damodaran");
-  assert.equal(dam.price.toFixed(1), "81.9");
+  assert.equal(dam.price.toFixed(1), "81.4");
   const ms = fd.lanes.find((l) => l.key === "unconfirmed").marks.find((m) => m.key === "morningstar");
-  assert.ok(ms.price > 94 && ms.price < 94.5 && ms.priceHigh > 129 && ms.priceHigh < 130.5);
+  assert.ok(ms.price > 93.5 && ms.price < 94 && ms.priceHigh > 128 && ms.priceHigh < 129.5);
 });
 
 test("every third-party valuation names a basis; unknown is unconfirmed", () => {

@@ -26,7 +26,7 @@ import {
 } from "../lib/disclosure.mjs";
 import disclosure from "../data/disclosure.json";
 import ipoTape from "../data/anthropic-investor-day.json";
-import { RANGE, basisLabel, publicBenefitTrigger, SHARE_BASES } from "../lib/shareBasis.mjs";
+import { RANGE, IPO_PRICE, basisLabel, publicBenefitTrigger, SHARE_BASES } from "../lib/shareBasis.mjs";
 import { buildRangeVsTape, headlineValuations, PERP_BASES } from "../lib/rangeVsTape.mjs";
 
 const FILINGS = Object.fromEntries((ipoTape.filings || []).map((f) => [f.key, f]));
@@ -292,8 +292,8 @@ function BracketChart({ brackets, noIpo, boundaries, lowTail, median, expected }
       </div>
       <div style={styles.footnote}>
         Per-share thresholds are on {basisLabel("outstanding")}: Polymarket resolves on “the number of shares outstanding multiplied by
-        the closing share price” per “the primary exchange&apos;s official listing page” (S-1/A No. 2 p. 20 count). Caveat: Nasdaq&apos;s page
-        may show only the listed Class A count (7.43B; Class N is unlisted and non-voting). On that count, $1.25T needs{" "}
+        the closing share price” per “the primary exchange&apos;s official listing page” (424B4 p. 20 count). Caveat: Nasdaq&apos;s page
+        may show only the listed Class A count (7.58B; Class N is unlisted and non-voting). On that count, $1.25T needs{" "}
         {fmtPx(1.25e12 / ipoTape_classA())}, not {fmtPx(perShareByT[1.25])}.
       </div>
     </div>
@@ -536,7 +536,7 @@ function RangeVsTapePanel({ perpMarkB, perpBasis, onPerpBasis, polymarketExpecte
         </div>
       </div>
       <div style={styles.panelSub}>
-        $ per ANT share. Shaded: the ${RANGE.low.toFixed(2)}–${RANGE.high.toFixed(2)} range (S-1/A No. 2 cover), line at the ${RANGE.midpoint.toFixed(0)} midpoint.
+        $ per ANT share. Shaded: the ${RANGE.low.toFixed(2)}–${RANGE.high.toFixed(2)} marketed range (S-1/A No. 2 cover), line at the ${RANGE.midpoint.toFixed(0)} midpoint; the IPO priced at ${IPO_PRICE.toFixed(2)} (424B4).
         Each row converts on one share basis only; filled dots refresh live, hollow dots are static and cited.
       </div>
       <div style={styles.rvtChart}>
@@ -591,8 +591,8 @@ function RangeVsTapePanel({ perpMarkB, perpBasis, onPerpBasis, polymarketExpecte
         ))}
       </ul>
       <div style={styles.footnote}>
-        Bases: outstanding = 13,086,672,593 shares after the offering and placement (S-1/A No. 2 p. 20), Polymarket&apos;s resolution basis;
-        fully diluted = 18,012,993,381 at $74 (treasury method, recomputed at each price; S-1/A No. 2 p. 24). io:ANTH is quoted in $B of
+        Bases: outstanding = 13,219,642,276 shares after the upsized offering and placement (424B4 p. 20), Polymarket&apos;s resolution basis;
+        fully diluted = 18,137,587,875 at the $83 IPO price (treasury method, recomputed at each price; 424B4 p. 26). io:ANTH is quoted in $B of
         “fully diluted valuation” per <Ext href={ipoTape.perpBasis?.sources?.[0]?.url} label="Entropy pre-IPO perpetuals docs (opens in a new tab)">Entropy&apos;s docs ↗</Ext>;
         Entropy has not yet published its Anthropic count, so the site uses its own fully diluted count and Entropy&apos;s may differ.
         Damodaran ($1.476T, Oct 28) is a site conversion on fully diluted; his own per-share figure uses a share count that does not reconcile
@@ -1432,7 +1432,7 @@ function PerpPerShare({ perShare, basis }) {
         return (
           <div key={b} style={i === 0 ? styles.perSharePrimary : styles.perShareAlt}>
             {fmtPx(r.price)}/ANT share {r.label}
-            {b === "fullyDiluted" ? " (Entropy's quote basis)" : ""} · {fmtPrem(r.vsMidpoint)} vs ${RANGE.midpoint} midpoint · {fmtPrem(r.vsTop)} vs ${RANGE.high} top
+            {b === "fullyDiluted" ? " (Entropy's quote basis)" : ""} · {r.vsIpo != null ? <>{fmtPrem(r.vsIpo)} vs ${IPO_PRICE} IPO price · </> : null}{fmtPrem(r.vsMidpoint)} vs ${RANGE.midpoint} midpoint
           </div>
         );
       })}
@@ -1514,7 +1514,7 @@ export default function InvestorDayTape() {
         LIVE TAPE · ANTHROPIC IPO
       </div>
       <h1 style={styles.title} className="vcx-title">Anthropic IPO tape</h1>
-      <p style={styles.subtitle}>Form S-1 Oct 26 · S-1/A No. 1 Nov 2 · S-1/A No. 2 Nov 10: ${RANGE.low}–${RANGE.high} range, roadshow launched · pricing Nov 18 / first trade Nov 19 (reported, not confirmed) · Nasdaq: ANT</p>
+      <p style={styles.subtitle}>Form S-1 Oct 26 · S-1/A No. 1 Nov 2 · S-1/A No. 2 Nov 10: ${RANGE.low}–${RANGE.high} range · priced Nov 18 at ${IPO_PRICE} (424B4), upsized to 980M shares · trading from Nov 19 · Nasdaq: ANT</p>
       <p style={styles.disclosure}>
         {disclosureSentence(disclosure)}
         {ageLabel ? <span style={styles.disclosureAge}> ({ageLabel})</span> : null}

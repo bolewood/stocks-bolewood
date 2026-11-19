@@ -602,8 +602,8 @@ export function validateInvestorDay(config) {
         if (!["audited", "filed, unaudited interim", "filed"].includes(row.auditStatus)) {
           fail(path, "s1Facts row requires auditStatus: audited | filed, unaudited interim | filed");
         }
-        if (typeof row.pageCitation !== "string" || !/^S-1(\/A No\. \d)? pp?\.\s/.test(row.pageCitation)) {
-          fail(path, "s1Facts row requires pageCitation starting with 'S-1 p.', 'S-1 pp.' or 'S-1/A No. N p(p).'");
+        if (typeof row.pageCitation !== "string" || !/^(?:S-1(\/A No\. \d)? pp?\.\s|424B4 (?:pp?\.\s|cover)|Pricing FWP)/.test(row.pageCitation)) {
+          fail(path, "s1Facts row requires pageCitation starting with 'S-1 p(p).', 'S-1/A No. N p(p).', '424B4 p(p).'/'424B4 cover' or 'Pricing FWP'");
         }
       }
       if (name === "thirdPartyValuations") {

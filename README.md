@@ -76,9 +76,9 @@ basis:                    filed-units
 filedUnits:               386,088        (pre-split Series B preferred equivalents; converts to Class N, S-1 p. 20)
 reportedFairValue:        $382.879609M   (as of 2026-09-30, NPORT-P)
 → markPerUnit:            $991.69        per pre-split unit ($99.169 per ANT share; 10-for-1 split, S-1 p. 22)
-→ scenario ANT price:     $74.00 per ANT share (S-1/A No. 2 range midpoint) = $740.00 per pre-split unit × (1 − dilution)
-→ implied valuation:      $1.332962T on 18,012,993,381 fully diluted ANT shares (S-1/A No. 2 p. 24; display only, not used below)
-→ scenario exposure:      0.021433861% of the selected basis (units ÷ 1,801,299,338 pre-split)
+→ scenario ANT price:     $74.00 per ANT share (IPO range midpoint, the fixture's frozen scenario price; IPO priced at $83) = $740.00 per pre-split unit × (1 − dilution)
+→ implied valuation:      $1.341622T on 18,130,021,930 fully diluted ANT shares (424B4 p. 26, treasury method at this price; display only, not used below)
+→ scenario exposure:      0.021295507% of the selected basis (units ÷ 1,813,002,193 pre-split)
 
 ΔNAV per $1 pre-split:    $0.008101      (386,088 ÷ 47,657,338; $0.08101 per $1 of ANT share price)
 denominator:              $1.565067B     (market-cap: 47,657,338 sh × $32.84)

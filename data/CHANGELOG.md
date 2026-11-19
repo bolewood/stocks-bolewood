@@ -2,6 +2,21 @@
 
 Typed entries: **Data update** · **Correction** · **Methodology change** · **Schema change**.
 
+## [1.4.0] - 2026-11-19 (data update: Anthropic IPO priced)
+
+### Data update
+- Anthropic priced its IPO at $83.00 on Nov 18, 2026, above the $70–$78 range. Sources: pricing FWP `0001628280-26-074937` and 424B4 `0001628280-26-074944`; press: AP/PBS, TechCrunch, CNN.
+- `capitalization.anthropic.ipo` rolls to dataset `424b4`:
+  - `ipoPrice` $83.
+  - Upsized offering of 980M shares, plus a 147M option.
+  - Placement of 313,253,007 Class N at $83.
+  - 13,219,642,276 shares outstanding.
+  - 18,137,587,875 fully diluted at $83.
+  - Net proceeds ~$104.8B.
+  - Default `/ai` preset is now the $83 IPO price.
+- Reference expected results (current and estimated): the `anthFdShares` and `anthVal` headers, GOOG's per-$100 (its ownership-% leg uses the share count) and the displayed `anthPct` change. Per-$100 for unit and fair-value legs is unchanged. The frozen `s1` files are unchanged.
+- `anthropic-investor-day.json`: the IPO pricing fact, share counts, proceeds, a pricing event, pricing confirmed, lock-up schedule confirmed, and the new filings.
+
 ## [1.4.0] - 2026-11-18 (correction: VCX Anthropic mark)
 
 ### Correction

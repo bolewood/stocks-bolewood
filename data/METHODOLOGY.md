@@ -213,23 +213,23 @@ Taxes, liquidation preferences, conversion terms, anti-dilution, transfer restri
 
 ## Price-first Anthropic scenarios and share bases (v1.4)
 
-Primary sources: Form S-1 (Oct 26, 2026, `0001628280-26-067168`), S-1/A No. 1 (Nov 2, 2026, `0001628280-26-068676`, EDGAR accepted 09:24:24 ET) and S-1/A No. 2 (Nov 10, 2026, `0001628280-26-072484`, accepted 06:29:24 ET). Page numbers are the printed pages of the amendment named; pages shift between amendments.
+Primary sources: Form S-1 (Oct 26, 2026, `0001628280-26-067168`), S-1/A No. 1 (Nov 2, 2026, `0001628280-26-068676`, EDGAR accepted 09:24:24 ET), S-1/A No. 2 (Nov 10, 2026, `0001628280-26-072484`, accepted 06:29:24 ET), the pricing FWP (`0001628280-26-074937`, accepted Nov 18, 2026 9:33:07 PM ET: $83.00, 980M shares) and the 424B4 final prospectus (Nov 19, 2026, `0001628280-26-074944`, accepted 06:05:50 ET). S-1/A No. 3 (`0001628280-26-074338`) is superseded by the 424B4. Page numbers are the printed pages of the amendment named; pages shift between amendments.
 
 ### Every number names its share basis
 
-A $T valuation and a $/share price are only comparable on a stated share count. The site uses three bases (dataset `s1a2`, `data/capitalization.json` → `anthropic.ipo`), implemented once in `lib/shareBasis.mjs` and `reference/unitExposure.mjs` (`anthBasisShares`):
+A $T valuation and a $/share price are only comparable on a stated share count. The site uses three bases (dataset `424b4`, the final prospectus at the $83 IPO price, `data/capitalization.json` → `anthropic.ipo`; it supersedes `s1a2`, whose counts assumed 825M offered shares at the $74 midpoint), implemented once in `lib/shareBasis.mjs` and `reference/unitExposure.mjs` (`anthBasisShares`):
 
 | Basis | Count | Source | Used for |
 | --- | ---: | --- | --- |
-| `outstanding` | 13,086,672,593 | S-1/A No. 2 p. 20 (Class A 7,427,991,791 + Class N 5,658,680,800 incl. the 846,840,960 public-benefit-fund shares + Class T 1 + Class F 1) | Market cap; Polymarket's resolution basis |
-| `fullyDiluted` | 18,012,993,381 at $74 | S-1/A No. 2 p. 24, sum of the five column totals (the table prints no grand total) | Default for implied $T on /ai and /dxyz; io:ANTH (Entropy quotes fully diluted) |
-| `fullyDilutedWithOption` | 18,136,743,381 at $74 | + 123,750,000 option shares (p. 19) | Sensitivity |
+| `outstanding` | 13,219,642,276 | 424B4 p. 20 (Class A 7,583,103,996 + Class N 5,636,538,278 incl. the 846,840,960 public-benefit-fund shares + Class T 1 + Class F 1; S-1/A No. 2 had 13,086,672,593) | Market cap; Polymarket's resolution basis |
+| `fullyDiluted` | 18,137,587,875 at $83 | 424B4 p. 26, sum of the five column totals (the table prints no grand total; S-1/A No. 2 had 18,012,993,381 at $74) | Default for implied $T on /ai and /dxyz; io:ANTH (Entropy quotes fully diluted) |
+| `fullyDilutedWithOption` | 18,284,587,875 at $83 | + 147,000,000 option shares (424B4 p. 20) | Sensitivity |
 
-Fully diluted moves with price: options are counted with the treasury stock method (1,774,342,693 gross at a $2.91 weighted-average exercise price; the company's table nets out 69,774,828 at $74, p. 24). The site keeps the implied exercise proceeds fixed (69,774,828 × $74) and recomputes the reduction at each price P: `FD(P) = 16,308,425,516 + 1,774,342,693 − 5,163,337,272 ÷ P`. Converting a valuation V to a fully diluted price solves `V = P × FD(P)` exactly, so $1.7T converts to $94.30, not $1.7T ÷ 18.013B = $94.38. Everything else in the table (RSUs 1,026,660,010 + 47,041,287 granted after 9/30; Amazon rollover notes 1,563,617,444 Class N at fixed conversion prices; vested donation-matching obligation 553,441,297; matching issuance 27,991,850; acquisition shares 561,963 A + 848,882 N; holdback 1,590,190 A; initial public benefit issuance 846,840,960) is held fixed. Plan reserves (2026 Plan 1,920,580,692 A plus the 2021 Plan remainder; ESPP 128,038,713; Donation Matching Plan 933,698,210 N, rising up to 1% a year through 2036; p. 23) are not in any basis.
+Fully diluted moves with price: options are counted with the treasury stock method (1,774,342,693 gross at a $2.91 weighted-average exercise price; the 424B4 table nets out 62,208,882 at $83, p. 26, the same ≈$5.163B of proceeds as S-1/A No. 2's 69,774,828 at $74). The site keeps the implied exercise proceeds fixed (62,208,882 × $83) and recomputes the reduction at each price P: `FD(P) = 16,425,454,064 + 1,774,342,693 − 5,163,337,206 ÷ P`. Converting a valuation V to a fully diluted price solves `V = P × FD(P)` exactly, so $1.7T converts to $94.30, not $1.7T ÷ 18.013B = $94.38. Everything else in the table (RSUs 1,026,660,010 + 47,041,287 granted after 9/30; Amazon rollover notes 1,563,617,444 Class N at fixed conversion prices; vested donation-matching obligation 553,441,297; matching issuance 27,991,850; acquisition shares 561,963 A + 848,882 N; holdback 1,590,190 A; initial public benefit issuance 846,840,960) is held fixed. Plan reserves (2026 Plan 1,920,580,692 A plus the 2021 Plan remainder; ESPP 128,038,713; Donation Matching Plan 933,698,210 N, rising up to 1% a year through 2036; p. 23) are not in any basis.
 
 Rules, enforced by `test/shareBasis.test.mjs`:
 
-- Every user-facing $T ↔ $/share conversion carries its basis label ("on 13.09B outstanding" / "on 18.01B fully diluted").
+- Every user-facing $T ↔ $/share conversion carries its basis label ("on 13.22B outstanding" / "on 18.14B fully diluted").
 - Two converted marks share an axis row only if they share a basis (`laneBasis` throws otherwise). Native per-share prices (the range, a round price, a NAV mark) need no conversion and can sit anywhere.
 - A source whose basis is not stated is `unconfirmed`. It never shares a row with another converted mark and is shown on both counts.
 

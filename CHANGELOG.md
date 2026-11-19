@@ -1,6 +1,14 @@
 # Changelog
 
-## [0.22.2.0] — 2026-11-19
+## [0.23.0.0] — 2026-11-19
+
+- Anthropic IPO priced at **$83.00** on Nov 18 (pricing FWP and 424B4; AP, TechCrunch and CNN coverage), above the $70–$78 range. The offering was upsized to 980M shares ($81.34B), alongside a $26.0B Class N placement at $83.
+- Share counts move to the final prospectus: 13.22B outstanding and 18.14B fully diluted at $83. They were 13.09B and 18.01B at $74. Every $T on the site converts on these. At $83 that's ≈$1.505T fully diluted (the press's "$1.5 trillion") or ≈$1.097T outstanding.
+- `/ai` now defaults to the $83 IPO price. Links that set `antPx` keep their price; their $T moves slightly with the new count.
+- `/dxyz` gains an "IPO price $83" preset. At $83, DXYZ's Anthropic sleeve is 0.837× the 9/30 mark, −$1.31 per DXYZ share.
+- `/anthropic-ipo-tape` shows Anthropic as priced, compares the perp-implied price with the $83 IPO price, marks pricing and lock-up dates as confirmed, and lists the FWP, 424B4 and S-1/A No. 3.
+
+ — 2026-11-19
 
 - ANT listing-day guard (`/api/prices` for `/dxyz`, `/api/investor-day` for `/anthropic-ipo-tape`): Yahoo can leave `firstTradeDate` empty on IPO day, and before the first trade it shows the IPO price ($83) as a placeholder. The quote is now accepted without `firstTradeDate` only when the bar shows traded volume, the quote time is on or after the listing date, and the issuer name is Anthropic. A `firstTradeDate` before the listing date is still rejected.
 
