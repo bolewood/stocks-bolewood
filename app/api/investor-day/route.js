@@ -5,7 +5,7 @@ import {
   parseChartPrice,
   fetchListedChartPrice,
 } from "../../../lib/yahooQuote.mjs";
-import { priceFromValuation, valuationFromPrice, RANGE, premiumTo } from "../../../lib/shareBasis.mjs";
+import { priceFromValuation, valuationFromPrice, RANGE, IPO_PRICE, premiumTo } from "../../../lib/shareBasis.mjs";
 import {
   YAHOO_FETCH_CONCURRENCY,
   createLiveQuoteCache,
@@ -506,7 +506,7 @@ function perShareBoth(valuation) {
   if (!(valuation > 0)) return null;
   const out = priceFromValuation(valuation, "outstanding");
   const fd = priceFromValuation(valuation, "fullyDiluted");
-  const leg = (r) => ({ price: r.value, basis: r.basis, shares: r.shares, label: r.label, vsMidpoint: premiumTo(r.value, RANGE.midpoint), vsTop: premiumTo(r.value, RANGE.high) });
+  const leg = (r) => ({ price: r.value, basis: r.basis, shares: r.shares, label: r.label, vsIpo: IPO_PRICE ? premiumTo(r.value, IPO_PRICE) : null, vsMidpoint: premiumTo(r.value, RANGE.midpoint), vsTop: premiumTo(r.value, RANGE.high) });
   return { outstanding: leg(out), fullyDiluted: leg(fd) };
 }
 

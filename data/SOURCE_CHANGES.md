@@ -1,4 +1,19 @@
-# Source changes — November 18, 2026 (VCX Anthropic mark correction), November 16, 2026 (DXYZ 9/30 roll), November 10, 2026 (methodology 1.4.0), October 26, 2026 (1.3.0) & September 5, 2026 (1.2.0)
+# Source changes — November 19, 2026 (Anthropic IPO priced at $83, 424B4), November 18, 2026 (VCX Anthropic mark correction), November 16, 2026 (DXYZ 9/30 roll), November 10, 2026 (methodology 1.4.0), October 26, 2026 (1.3.0) & September 5, 2026 (1.2.0)
+
+## Anthropic IPO priced at $83 — 424B4 and pricing FWP — November 19, 2026
+
+Pricing FWP ([`0001628280-26-074937`](https://www.sec.gov/Archives/edgar/data/2130357/000162828026074937/anthropicpbc-fwppricing.htm), accepted Nov 18, 9:33:07 PM ET) and 424B4 ([`0001628280-26-074944`](https://www.sec.gov/Archives/edgar/data/2130357/000162828026074944/anthropicpbc-424b4.htm), accepted Nov 19, 6:05:50 AM ET). Press: [AP via PBS](https://www.pbs.org/newshour/economy/anthropic-prices-its-ipo-at-83-per-share-valuing-the-ai-giant-at-1-5-trillion), [TechCrunch](https://techcrunch.com/2026/11/18/anthropic-reportedly-prices-ipo-at-83-a-share-above-projected-range/), [CNN](https://www.cnn.com/2026/11/18/investing/anthropic-ipo-price-stock).
+
+| Record | Evidence | Change & superseded figure |
+| --- | --- | --- |
+| `capitalization.anthropic.ipo.ipoPrice` | FWP; 424B4 cover | New: $83.00, priced Nov 18, trade Nov 19, settle Nov 20; $82.43878 to underwriters. `priceRange` $70–$78 kept as history. |
+| `ipo.offering` | 424B4 p. 20 | 956,351,354 primary + 23,648,646 secondary = 980,000,000; option 147,000,000; $81.34B. **Supersedes** 825,000,000 / 123,750,000 (S-1/A No. 2 p. 19). |
+| `ipo.concurrentPlacement` | 424B4 p. 20; FWP | 313,253,007 Class N at $83 (Google and NVIDIA 120,481,927 each; AMD 30,120,481; Broadcom, Micron, Microsoft 12,048,192 each; TSMC Partners 6,024,096). `sharesAtMidpoint` (351,351,348 at $74) kept for history. |
+| `ipo.outstandingAfterOffering` | 424B4 pp. 20–21 | 13,219,642,276 (13,366,642,276 with option). **Supersedes** 13,086,672,593. |
+| `ipo.fullyDilutedTable` | 424B4 p. 26 | 18,137,587,875 at $83 (Class A 7,585,256,149 · Class N 7,766,496,616 · options 1,712,133,811 · RSUs 1,073,701,297 · T/F 2); treasury reduction 62,208,882; rollover notes 1,547,676,309; notes converting at IPO 292,768,653 for $612.7M. **Supersedes** 18,012,993,381 at $74. |
+| `ipo.netProceedsUsd` | 424B4 p. 21 | ~$104.8B (~$117.0B with option) at $83. **Supersedes** ~$84.6B / ~$93.7B at $74. |
+| `ipo.scenarioPresets` | FWP | New default preset "IPO price $83"; $74 midpoint no longer default. |
+| `anthropic-investor-day.json` | as above | Pricing fact, share counts, proceeds, pricing event, upcoming items, lock-up status (confirmed), filings (S-1/A No. 3, FWP, 424B4). Lock-up day offsets and percentages unchanged; tranche share counts restated by class in the 424B4 (not stored). |
 
 ## Correction: VCX Anthropic per-share mark — November 18, 2026
 

@@ -110,8 +110,8 @@ basis:                    ${ex.basis}
 filedUnits:               ${col(ex.unitsLabel)} (pre-split Series B preferred equivalents; converts to Class N, S-1 p. 20)
 reportedFairValue:        ${col(ex.fvLabel)} (as of ${ex.fairValueAsOf}, ${ex.filingType})
 → markPerUnit:            ${col(ex.markLabel)} per pre-split unit (${postSplitMark} per ANT share; 10-for-1 split, S-1 p. 22)
-→ scenario ANT price:     ${fmtPrice(ex.antPrice)} per ANT share (S-1/A No. 2 range midpoint) = ${fmtPrice(ex.scenarioPps)} per pre-split unit × (1 − dilution)
-→ implied valuation:      ${fmtUsd(ex.impliedValuation)} on ${fmtShares(ex.fdShares * 10)} ${ex.shareBasis === 'outstanding' ? 'outstanding' : 'fully diluted'} ANT shares (S-1/A No. 2 p. 24; display only, not used below)
+→ scenario ANT price:     ${fmtPrice(ex.antPrice)} per ANT share (IPO range midpoint, the fixture's frozen scenario price; IPO priced at $83) = ${fmtPrice(ex.scenarioPps)} per pre-split unit × (1 − dilution)
+→ implied valuation:      ${fmtUsd(ex.impliedValuation)} on ${fmtShares(ex.fdShares * 10)} ${ex.shareBasis === 'outstanding' ? 'outstanding' : 'fully diluted'} ANT shares (424B4 p. 26, treasury method at this price; display only, not used below)
 → scenario exposure:      ${(ex.impliedExposure * 100).toPrecision(8)}% of the selected basis (units ÷ ${fmtShares(ex.fdShares)} pre-split)
 
 ΔNAV per $1 pre-split:    ${col(ex.navSensLabel)} (${ex.unitsLabel} ÷ ${ex.sharesLabel}; $${(ex.navSens * 10).toFixed(5)} per $1 of ANT share price)

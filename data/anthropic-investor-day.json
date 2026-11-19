@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.4.0",
-  "asOf": "2026-11-10",
+  "asOf": "2026-11-19",
   "note": "Anthropic's Oct 14, 2026 investor day; the Oct 26, 2026 public Form S-1 (accession 0001628280-26-067168); S-1/A No. 1 (Nov 2, 2026, accession 0001628280-26-068676: Q3 financials, commitments); and S-1/A No. 2 (Nov 10, 2026, accession 0001628280-26-072484: price range, share counts, Oct 31 Run-Rate Revenue). Every record carries sources; later filings supersede earlier figures and say so.",
   "window": {
     "multiDayStart": "2026-10-14",
@@ -283,10 +283,10 @@
     },
     {
       "label": "Share counts after the offering (both bases)",
-      "value": "13.09B outstanding · 18.01B fully diluted at $74",
+      "value": "13.22B outstanding · 18.14B fully diluted at $83",
       "auditStatus": "filed",
-      "pageCitation": "S-1/A No. 2 pp. 19–20, 22–24",
-      "detail": "Outstanding after the offering and concurrent placement: 13,086,672,593 (Class A 7,427,991,791 + Class N 5,658,680,800 incl. the 846,840,960 public-benefit-fund shares + Class T 1 + Class F 1; 13,210,422,593 with the option) (pp. 19–20). Fully diluted at $74 from the company's table: 18,012,993,381 = Class A 7,430,143,944 + Class N 7,804,580,273 + options 1,704,567,865 (treasury method) + RSUs 1,073,701,297 + Class T/F 2 (p. 24; sum of columns). Supersedes the S-1's derived June 30 count of 17,783,660,160 post-split (S-1 p. 13).",
+      "pageCitation": "424B4 pp. 20–21, 23–26",
+      "detail": "Outstanding after the upsized offering and concurrent placement: 13,219,642,276 (Class A 7,583,103,996 + Class N 5,636,538,278 incl. the 846,840,960 public-benefit-fund shares + Class T 1 + Class F 1; 13,366,642,276 with the option) (pp. 20–21). Fully diluted at the $83 IPO price from the company's table: 18,137,587,875 = Class A 7,585,256,149 + Class N 7,766,496,616 + options 1,712,133,811 (treasury method) + RSUs 1,073,701,297 + Class T/F 2 (p. 26; sum of columns). Supersedes S-1/A No. 2 (13,086,672,593 outstanding; 18,012,993,381 fully diluted at $74) and the S-1's derived June 30 count of 17,783,660,160 post-split (S-1 p. 13).",
       "sources": [
         {
           "fields": [
@@ -294,12 +294,12 @@
             "detail"
           ],
           "sourceClass": "primary",
-          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 2 (Reg. No. 333-299633)",
-          "filingId": "0001628280-26-072484",
-          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
+          "publisher": "SEC EDGAR — Anthropic, PBC final prospectus (Form 424B4, Reg. Nos. 333-299633 and 333-300148)",
+          "filingId": "0001628280-26-074944",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074944/anthropicpbc-424b4.htm",
           "measurementDate": "2026-09-30",
-          "publicationDate": "2026-11-10",
-          "note": "The Offering (pp. 19–20) and fully diluted table (p. 24)."
+          "publicationDate": "2026-11-19",
+          "note": "The Offering (pp. 20–21) and fully diluted table at $83 (p. 26)."
         },
         {
           "fields": [
@@ -318,15 +318,72 @@
       "key": "s1FullyDilutedShares"
     },
     {
-      "label": "Price range & implied value",
-      "value": "$70.00–$78.00 · midpoint $74 · Nasdaq: ANT",
+      "label": "IPO price & implied value",
+      "value": "$83.00 IPO price (priced Nov 18) · above the $70.00–$78.00 range · Nasdaq: ANT",
       "auditStatus": "filed",
-      "pageCitation": "S-1/A No. 2 pp. 19–20, 22, 24 and cover",
-      "detail": "At $70 / $74 / $78: $916B / $968B / $1,021B on 13.09B outstanding; $1,261B / $1,333B / $1,405B on 18.01B fully diluted (fully diluted recomputed at each price, treasury method). 825,000,000 Class A offered (801,351,354 by Anthropic, 23,648,646 by selling stockholders) plus a 123,750,000-share option; Goldman Sachs and Morgan Stanley lead (cover, p. 19).",
+      "pageCitation": "Pricing FWP; 424B4 cover, pp. 20–21, 26; range from S-1/A No. 2 cover",
+      "detail": "Priced Nov 18 at $83.00 per share, above the $70.00–$78.00 marketed range (S-1/A No. 2 cover). Upsized to 980,000,000 Class A shares (956,351,354 by Anthropic, 23,648,646 by selling stockholders; was 825,000,000) for $81.34B, plus a 147,000,000-share option; Goldman Sachs and Morgan Stanley lead. At $83: ≈$1.505T on 18.14B fully diluted (the press’s “$1.5 trillion”) and ≈$1.097T on 13.22B outstanding. Trading began Nov 19; settlement Nov 20.",
       "sources": [
         {
           "fields": [
             "value",
+            "detail"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC pricing free writing prospectus (Rule 433)",
+          "filingId": "0001628280-26-074937",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074937/anthropicpbc-fwppricing.htm",
+          "measurementDate": "2026-11-18",
+          "publicationDate": "2026-11-19",
+          "note": "Price to public $83.00; size $81.34B excluding option; base shares 956,351,354 primary + 23,648,646 secondary; option 147,000,000; pricing Nov 18, trade Nov 19, settlement Nov 20."
+        },
+        {
+          "fields": [
+            "detail"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC final prospectus (Form 424B4, Reg. Nos. 333-299633 and 333-300148)",
+          "filingId": "0001628280-26-074944",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074944/anthropicpbc-424b4.htm",
+          "measurementDate": "2026-09-30",
+          "publicationDate": "2026-11-19",
+          "note": "Cover; The Offering (pp. 20–21); fully diluted table at $83 (p. 26)."
+        },
+        {
+          "fields": [
+            "value"
+          ],
+          "sourceClass": "secondary",
+          "publisher": "AP via PBS NewsHour",
+          "url": "https://www.pbs.org/newshour/economy/anthropic-prices-its-ipo-at-83-per-share-valuing-the-ai-giant-at-1-5-trillion",
+          "measurementDate": "2026-11-18",
+          "publicationDate": "2026-11-18",
+          "note": "“Anthropic prices its IPO at $83 per share, valuing the AI giant at $1.5 trillion.” The $1.5T is ≈ $83 × 18.14B fully diluted (424B4); on 13.22B outstanding it is ≈ $1.10T."
+        },
+        {
+          "fields": [
+            "value"
+          ],
+          "sourceClass": "secondary",
+          "publisher": "TechCrunch",
+          "url": "https://techcrunch.com/2026/11/18/anthropic-reportedly-prices-ipo-at-83-a-share-above-projected-range/",
+          "measurementDate": "2026-11-18",
+          "publicationDate": "2026-11-18",
+          "note": "Anthropic prices IPO at $83 a share, above the projected $70–$78 range."
+        },
+        {
+          "fields": [
+            "value"
+          ],
+          "sourceClass": "secondary",
+          "publisher": "CNN",
+          "url": "https://www.cnn.com/2026/11/18/investing/anthropic-ipo-price-stock",
+          "measurementDate": "2026-11-18",
+          "publicationDate": "2026-11-18",
+          "note": "Anthropic's $83 IPO price."
+        },
+        {
+          "fields": [
             "detail"
           ],
           "sourceClass": "primary",
@@ -335,17 +392,17 @@
           "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
           "measurementDate": "2026-11-10",
           "publicationDate": "2026-11-10",
-          "note": "Cover price range, The Offering (p. 19–20), ticker (p. 22), fully diluted table (p. 24)."
+          "note": "Marketed range $70.00–$78.00 (cover). Superseded by the $83.00 price."
         }
       ],
       "key": "priceRangeAndShares"
     },
     {
       "label": "Proceeds & concurrent placement",
-      "value": "~$84.6B net at $74 · $26.0B Class N placement",
+      "value": "~$104.8B net at $83 · $26.0B Class N placement",
       "auditStatus": "filed",
-      "pageCitation": "S-1/A No. 2 pp. 19–20",
-      "detail": "Concurrent private placement of Class N at the IPO price, $26.0B: Google $10.0B, NVIDIA $10.0B, AMD $2.5B, Broadcom $1.0B, Micron $1.0B, Microsoft $1.0B, TSMC $0.5B (351,351,348 shares at $74). Restricted securities, not under lock-up (p. 19). Net proceeds to Anthropic from the IPO and placement ~$84.6B, or ~$93.7B with the option, at $74 (p. 20).",
+      "pageCitation": "424B4 pp. 20–21; pricing FWP",
+      "detail": "Concurrent private placement of Class N at the $83 IPO price, $26.0B = 313,253,007 shares: Google 120,481,927 ($10.0B), NVIDIA 120,481,927 ($10.0B), AMD 30,120,481 ($2.5B), Broadcom 12,048,192 ($1.0B), Micron 12,048,192 ($1.0B), Microsoft 12,048,192 ($1.0B), TSMC Partners 6,024,096 ($0.5B). Restricted securities, not under lock-up. Net proceeds to Anthropic from the IPO and placement ~$104.8B, or ~$117.0B with the option (p. 21). S-1/A No. 2 had ~$84.6B at the $74 midpoint for 825M shares.",
       "sources": [
         {
           "fields": [
@@ -353,12 +410,24 @@
             "detail"
           ],
           "sourceClass": "primary",
-          "publisher": "SEC EDGAR — Anthropic, PBC Form S-1/A No. 2 (Reg. No. 333-299633)",
-          "filingId": "0001628280-26-072484",
-          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
-          "measurementDate": "2026-11-10",
-          "publicationDate": "2026-11-10",
-          "note": "The Offering: concurrent private placement and use of proceeds (pp. 19–20)."
+          "publisher": "SEC EDGAR — Anthropic, PBC final prospectus (Form 424B4, Reg. Nos. 333-299633 and 333-300148)",
+          "filingId": "0001628280-26-074944",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074944/anthropicpbc-424b4.htm",
+          "measurementDate": "2026-09-30",
+          "publicationDate": "2026-11-19",
+          "note": "The Offering: concurrent private placement and use of proceeds (pp. 20–21)."
+        },
+        {
+          "fields": [
+            "detail"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC pricing free writing prospectus (Rule 433)",
+          "filingId": "0001628280-26-074937",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074937/anthropicpbc-fwppricing.htm",
+          "measurementDate": "2026-11-18",
+          "publicationDate": "2026-11-19",
+          "note": "Concurrent private placement: $26.0B of Class N (313,253,007 shares) at the price to public."
         }
       ],
       "key": "proceedsAndPlacement"
@@ -435,8 +504,8 @@
   ],
   "lockupSchedule": {
     "pricingDate": "2026-11-18",
-    "citation": "S-1/A No. 2 pp. 318–319, 333–335 (terms unchanged from S-1 pp. 321–323)",
-    "basis": "Percentages are of lock-up securities held 7 days before the prospectus date. Milestones are relative to pricing until the IPO prices.",
+    "citation": "424B4 Shares Eligible for Future Sale and Underwriting (day offsets and percentages unchanged from S-1/A No. 2 pp. 318–319, 333–335)",
+    "basis": "Percentages are of lock-up securities held 7 days before the prospectus date.",
     "groups": [
       {
         "key": "directorsOfficersEmployees",
@@ -568,8 +637,8 @@
         ]
       }
     ],
-    "pricingDateStatus": "reported (CNBC sources), not confirmed",
-    "pricingDateNote": "Dates assume pricing on Nov 18, 2026 (reported by CNBC from unnamed sources; not in the filing). Change pricingDate once the 424B4 lands; every date recomputes."
+    "pricingDateStatus": "confirmed (424B4)",
+    "pricingDateNote": "Priced Nov 18, 2026 (pricing FWP and 424B4); first trading day Nov 19."
   },
   "attribution": "Figures from the Financial Times (Oct 14, 2026), citing unnamed people with knowledge of the meeting. Anthropic declined to comment. Superseded in part by the Oct 26, 2026 Form S-1 where noted.",
   "facts": [
@@ -880,6 +949,27 @@
           "note": "EDGAR filing index: Accepted 2026-11-10 06:29:24."
         }
       ]
+    },
+    {
+      "key": "ipoPricing",
+      "label": "IPO priced at $83, 9:33 PM ET (Nov 18)",
+      "kind": "time",
+      "at": "2026-11-19T02:33:07Z",
+      "note": "Pricing free writing prospectus accepted 9:33:07 PM ET on Nov 18, 2026 (accession 0001628280-26-074937): $83.00 per share, 980M shares, $81.34B.",
+      "sources": [
+        {
+          "fields": [
+            "at"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC pricing FWP",
+          "filingId": "0001628280-26-074937",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074937/0001628280-26-074937-index.htm",
+          "measurementDate": "2026-11-18",
+          "publicationDate": "2026-11-19",
+          "note": "EDGAR acceptance 2026-11-19T02:33:07Z."
+        }
+      ]
     }
   ],
   "upcoming": [
@@ -971,11 +1061,36 @@
     },
     {
       "key": "pricing",
-      "label": "Pricing Nov 18 · first trade Nov 19",
+      "label": "Priced Nov 18 at $83 · first trade Nov 19",
       "timing": "Pricing Nov 18, 2026 · first trade Nov 19, 2026",
-      "status": "reported (CNBC sources), not confirmed",
-      "note": "Not in the filing. Flip to confirmed when the 424B4 or the pricing press release lands. Consistent with the filing's November 19, 2026 RSU service-vesting date (S-1/A No. 2 p. 22: 101,333,940 RSUs, 49,754,965 net after withholding).",
+      "status": "confirmed",
+      "note": "Priced Nov 18, 2026 at $83.00, above the $70–$78 range; trade date Nov 19, settlement Nov 20 (pricing FWP). Consistent with the November 19, 2026 RSU service-vesting date (424B4 p. 23: 101,333,940 RSUs, 49,754,965 net after withholding at $83).",
       "sources": [
+        {
+          "fields": [
+            "timing",
+            "status",
+            "note"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC pricing free writing prospectus (Rule 433)",
+          "filingId": "0001628280-26-074937",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074937/anthropicpbc-fwppricing.htm",
+          "measurementDate": "2026-11-18",
+          "publicationDate": "2026-11-19",
+          "note": "Pricing date Nov 18, trade date Nov 19, settlement Nov 20, 2026."
+        },
+        {
+          "fields": [
+            "value"
+          ],
+          "sourceClass": "secondary",
+          "publisher": "AP via PBS NewsHour",
+          "url": "https://www.pbs.org/newshour/economy/anthropic-prices-its-ipo-at-83-per-share-valuing-the-ai-giant-at-1-5-trillion",
+          "measurementDate": "2026-11-18",
+          "publicationDate": "2026-11-18",
+          "note": "“Anthropic prices its IPO at $83 per share, valuing the AI giant at $1.5 trillion.” The $1.5T is ≈ $83 × 18.14B fully diluted (424B4); on 13.22B outstanding it is ≈ $1.10T."
+        },
         {
           "fields": [
             "timing",
@@ -1005,9 +1120,22 @@
     {
       "key": "lockupReleases",
       "label": "Lock-up releases",
-      "timing": "Staged from day 1 through day 365 after pricing; dates shown if pricing is Nov 18 (reported)",
-      "status": "filed terms, pricing date TBD",
+      "timing": "Staged from day 1 (Nov 19) through day 365 after pricing (Nov 18, 2026)",
+      "status": "filed",
       "sources": [
+        {
+          "fields": [
+            "timing",
+            "status"
+          ],
+          "sourceClass": "primary",
+          "publisher": "SEC EDGAR — Anthropic, PBC final prospectus (Form 424B4, Reg. Nos. 333-299633 and 333-300148)",
+          "filingId": "0001628280-26-074944",
+          "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074944/anthropicpbc-424b4.htm",
+          "measurementDate": "2026-11-19",
+          "publicationDate": "2026-11-19",
+          "note": "Shares Eligible for Future Sale and Underwriting: release schedule with dates (first trading day Nov 19; day 27 Dec 15; day 48 Jan 5; day 62 Jan 19; day 76 Feb 2). Day offsets and percentages unchanged from S-1/A No. 2; tranche share counts restated by class."
+        },
         {
           "fields": [
             "timing",
@@ -1050,6 +1178,33 @@
       "acceptedEt": "Nov 10, 2026, 6:29:24 AM ET",
       "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
       "indexUrl": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/0001628280-26-072484-index.htm"
+    },
+    {
+      "key": "s1a3",
+      "label": "S-1/A No. 3",
+      "accession": "0001628280-26-074338",
+      "acceptedAt": "2026-11-17T11:26:31Z",
+      "acceptedEt": "Nov 17, 2026, 6:26:31 AM ET",
+      "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074338/anthropicpbc-sx1ax3.htm",
+      "indexUrl": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074338/0001628280-26-074338-index.htm"
+    },
+    {
+      "key": "fwpPricing",
+      "label": "Pricing FWP ($83)",
+      "accession": "0001628280-26-074937",
+      "acceptedAt": "2026-11-19T02:33:07Z",
+      "acceptedEt": "Nov 18, 2026, 9:33:07 PM ET",
+      "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074937/anthropicpbc-fwppricing.htm",
+      "indexUrl": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074937/0001628280-26-074937-index.htm"
+    },
+    {
+      "key": "424b4",
+      "label": "424B4 final prospectus",
+      "accession": "0001628280-26-074944",
+      "acceptedAt": "2026-11-19T11:05:50Z",
+      "acceptedEt": "Nov 19, 2026, 6:05:50 AM ET",
+      "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074944/anthropicpbc-424b4.htm",
+      "indexUrl": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074944/0001628280-26-074944-index.htm"
     }
   ],
   "s1aUrls": {

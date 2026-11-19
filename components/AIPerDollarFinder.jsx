@@ -69,7 +69,7 @@ import { startJsonPoll } from "../lib/pollLivePrices.mjs";
 import { META, MARKS, RAW_AI_WRAPPERS } from '../lib/loadAiData.mjs';
 import { createScenarioExport } from '../reference/engine.mjs';
 import { ANTH_SPLIT_FACTOR, resolveAnthScenario, unitPrice } from '../reference/unitExposure.mjs';
-import { basisLabel, SHARE_BASES, RANGE } from '../lib/shareBasis.mjs';
+import { basisLabel, SHARE_BASES, RANGE, IPO_PRICE } from '../lib/shareBasis.mjs';
 import referenceInputs from '../reference/fixtures.json';
 import estimatedInputs from '../reference/estimated-fixtures.json';
 import s1ReferenceInputs from '../reference/s1-fixtures.json';
@@ -502,12 +502,12 @@ export default function AIPerDollarFinder() {
         <p style={styles.estBanner}>
           Frozen reference view (?reference={frozenRefMode || "filed"}): {frozenRefMode === 's1'
             ? 'dataset s1 — Form S-1 (Oct 26, 2026), June 30, 2026 FD 1,778,366,016 pre-split (S-1 p. 13), legacy $965B valuation input'
-            : `dataset s1a2 — S-1/A No. 2 (Nov 10, 2026), ANT $${frozenInputs.anthPrice?.toFixed(2)} ${basisLabel(frozenInputs.anthShareBasis || 'fullyDiluted', frozenInputs.anthPrice || 74)}`}; frozen prices ({frozenInputs.priceAsOf}). ?reference=filed and ?reference=s1 pin Filed Holdings (?reference=s1&amp;holdings=estimated for Estimated); ?reference=estimated pins Estimated Holdings. Sliders remain interactive. Reload to reset.
+            : `dataset 424b4 — final prospectus (Nov 19, 2026), ANT $${frozenInputs.anthPrice?.toFixed(2)} ${basisLabel(frozenInputs.anthShareBasis || 'fullyDiluted', frozenInputs.anthPrice || 74)}`}; frozen prices ({frozenInputs.priceAsOf}). ?reference=filed and ?reference=s1 pin Filed Holdings (?reference=s1&amp;holdings=estimated for Estimated); ?reference=estimated pins Estimated Holdings. Sliders remain interactive. Reload to reset.
         </p>
       ) : null}
       <div style={styles.sliderToolbar}>
         <p style={styles.anchorNote}>
-          Anthropic IPO range $70.00–$78.00 per ANT share (S-1/A No. 2 cover). Last primary: Anthropic Series H $965B ($589.01 per pre-split unit / $58.90 per ANT share, S-1 p. F-47; 2026-05-28) / OpenAI $852B
+          Anthropic IPO priced at ${IPO_PRICE.toFixed(2)} per ANT share on Nov 18 (424B4), above the $70.00–$78.00 range (S-1/A No. 2 cover). Last primary: Anthropic Series H $965B ($589.01 per pre-split unit / $58.90 per ANT share, S-1 p. F-47; 2026-05-28) / OpenAI $852B
           (2026-03-31), verified {LAST_PRIMARY_ROUNDS.asOf}. The OpenAI slider is log-scaled $0.5T–$5.0T.
         </p>
         <button
@@ -579,7 +579,7 @@ export default function AIPerDollarFinder() {
         />
       </div>
       <p style={styles.caption}>
-        Defaults use the IPO range midpoint ($74; S-1/A No. 2) for Anthropic and 1.0× the last primary round for OpenAI ($0.852T). Anthropic legs are valued per share: filed units × 10 × ANT price (DXYZ, SKM) or fair value ÷ round price × ANT price (AGIX, AMZN, ARKVX, VCX, ZM), so no fully diluted count enters them. The share basis only converts the price to $T, and values the GOOG ownership-percentage leg. Outstanding 13,086,672,593 (S-1/A No. 2 p. 20); fully diluted 18,012,993,381 at $74, treasury method (S-1/A No. 2 p. 24). Series H ($58.90) stays a preset. Assumes pro rata dilution of existing holders. Does
+        Defaults use the $83 IPO price (424B4) for Anthropic and 1.0× the last primary round for OpenAI ($0.852T). Anthropic legs are valued per share: filed units × 10 × ANT price (DXYZ, SKM) or fair value ÷ round price × ANT price (AGIX, AMZN, ARKVX, VCX, ZM), so no fully diluted count enters them. The share basis only converts the price to $T, and values the GOOG ownership-percentage leg. Outstanding 13,219,642,276 after the upsized offering and placement (424B4 p. 20); fully diluted 18,137,587,875 at $83, treasury method (424B4 p. 26). Series H ($58.90) stays a preset. Assumes pro rata dilution of existing holders. Does
         not model participation rights, anti-dilution provisions, ownership
         caps, or security-specific conversion terms. Default 0% is gross
         look-through. Both valuations revalue every quantified holding in both holdings modes,
@@ -1252,7 +1252,7 @@ function AnthPriceControl({ price, onPrice, shareBasis, onShareBasis, valuation 
         ))}
       </div>
       <p id="ant-price-hint" style={styles.priceSub}>
-        Implied ${(valuation / 1e12).toFixed(3)}T {basisLabel(shareBasis, price)}. Range ${RANGE.low.toFixed(2)}–${RANGE.high.toFixed(2)} (S-1/A No. 2 cover); {price > RANGE.high ? "above" : price < RANGE.low ? "below" : "inside"} the range.
+        Implied ${(valuation / 1e12).toFixed(3)}T {basisLabel(shareBasis, price)}. IPO price ${IPO_PRICE.toFixed(2)} (424B4); {Math.abs(price - IPO_PRICE) < 0.005 ? "at the IPO price" : `${((price / IPO_PRICE - 1) * 100).toFixed(1)}% vs the IPO price`}. Range was ${RANGE.low.toFixed(2)}–${RANGE.high.toFixed(2)} (S-1/A No. 2 cover).
       </p>
     </div>
   );

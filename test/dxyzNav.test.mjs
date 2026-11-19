@@ -28,12 +28,12 @@ test('acceptance 1: filed basis reproduces net assets $1,826.37M and NAV/share $
   assert.ok(Math.abs(filed.navPerShare - 38.32) <= 0.01);
 });
 
-test('acceptance 2: Anthropic $99.17/sh, ~$1.79T fully diluted, 20.96% of net assets', () => {
+test('acceptance 2: Anthropic $99.17/sh, ~$1.80T fully diluted (424B4 count), 20.96% of net assets', () => {
   const filed = calculateDxyzNav({ includeSubsequent: false });
   const a = position(filed, 'Anthropic');
   assert.equal(a.pps.toFixed(2), '99.17');
   assert.equal(a.units, 3_860_880);
-  assert.equal((a.companyValue / 1e12).toFixed(2), '1.79');
+  assert.equal((a.companyValue / 1e12).toFixed(2), '1.80');
   assert.match(a.companyValueLabel, /fully diluted/);
   assert.equal((a.positionValue / FILED.netAssets * 100).toFixed(2), '20.96');
   // Sensitivity ≈ $0.081 per $1; break-even vs the 9/30 mark is $99.17.
@@ -174,9 +174,11 @@ test('impliedValuation inverts unitPrice at dilution 0; Anthropic EV is ANT pric
   near(anth.companyValue, anth.pps * fullyDilutedAt(anth.pps));
   assert.match(anth.companyValueLabel, /fully diluted/);
   const atMid = calculateDxyzNav({ includeSubsequent: false, ppsOverrides: { Anthropic: 74 } });
-  near(position(atMid, 'Anthropic').companyValue, 74 * 18012993381);
+  near(position(atMid, 'Anthropic').companyValue, 74 * fullyDilutedAt(74));
   near(position(atMid, 'Anthropic').positionValue, 3860880 * 74);
-  near(anthropicPpsFromValuation(74 * 18012993381), 74);
+  near(anthropicPpsFromValuation(74 * fullyDilutedAt(74)), 74);
+  const atIpo = calculateDxyzNav({ includeSubsequent: false, ppsOverrides: { Anthropic: 83 } });
+  near(position(atIpo, 'Anthropic').companyValue, 83 * 18137587875);
   // OpenAI FD stays the $852B ÷ June-mark calibration proxy: the 9/30 mark implies ≈$1.04T.
   assert.equal((position(filed, 'OpenAI').companyValue / 1e12).toFixed(2), '1.04');
   const marked = calculateDxyzNav({ ppsOverrides: { OpenAI: pps } });

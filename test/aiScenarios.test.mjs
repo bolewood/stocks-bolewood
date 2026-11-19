@@ -8,6 +8,7 @@ import { calculate, loadPublicDataset, readJson } from '../reference/calculate.m
 import { createScenarioExport } from '../reference/engine.mjs';
 import { unitPrice, impliedValuation, unitExposurePer100, CAPITALIZATION } from '../reference/unitExposure.mjs';
 import { WRAPPERS, parseScenarioSearch, serializeScenarioSearch } from '../lib/aiWrappers.mjs';
+import { fullyDilutedAt } from '../lib/shareBasis.mjs';
 import { fundRowMetrics, resolveFund } from '../lib/aiFundBasis.mjs';
 import { validateCapitalization, validateWrapper } from '../data/schema/validate.mjs';
 
@@ -78,7 +79,7 @@ test('Price-first: units legs ignore the share basis; only the GOOG ownership-% 
   for (const w of WRAPPERS) {
     const out = app(w, { ...estimated, anthShareBasis: 'outstanding' });
     const fd = app(w, { ...estimated, anthShareBasis: 'fullyDiluted' });
-    if (w.ticker === 'GOOG') near(fd.anthPer100 / out.anthPer100, 18012993381 / 13086672593, 'GOOG scales with basis count');
+    if (w.ticker === 'GOOG') near(fd.anthPer100 / out.anthPer100, fullyDilutedAt(estimated.anthPrice) / 13219642276, 'GOOG scales with basis count');
     else near(fd.anthPer100, out.anthPer100, `${w.ticker} basis-independent`);
   }
   const dxyz = app(WRAPPERS.find(w => w.ticker === 'DXYZ'), { ...estimated, deploy: 'cash' });
@@ -182,7 +183,7 @@ test('Old share links keep their exact numbers; new links are price-first', () =
     near(row.combinedPer100, s1Expected.rows.find(r => r.ticker === w.ticker).combinedPer100, `${w.ticker} legacy link`);
   }
   const fresh = parseScenarioSearch('');
-  assert.equal(fresh.anthPrice, 74);
+  assert.equal(fresh.anthPrice, 83);
   assert.equal(fresh.anthShareBasis, 'fullyDiluted');
   const qs = serializeScenarioSearch({ ...fresh, anthPrice: 78, anthShareBasis: 'outstanding' });
   assert.match(qs, /antPx=78/);
